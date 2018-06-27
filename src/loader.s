@@ -1,7 +1,6 @@
 .set ALIGN,    1 << 0
 .set MEMINFO,  1 << 1
-.set VIDINFO,  1 << 2
-.set FLAGS,    ALIGN | MEMINFO | VIDINFO
+.set FLAGS,    ALIGN | MEMINFO
 .set MAGIC,    0x1BADB002
 .set CHECKSUM, -(MAGIC + FLAGS)
 
@@ -9,9 +8,6 @@
     .long MAGIC
     .long FLAGS
     .long CHECKSUM
-    .long 0, 0, 0, 0, 0
-    .long 0 # 0 = set graphics mode
-    .long 0, 0, 0 # Width, height, depth
 
 
 .section .text
