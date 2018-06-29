@@ -11,6 +11,9 @@ objects = obj/loader.o \
 		  obj/core/gdt.o \
 		  obj/core/interruptstubs.o \
 		  obj/core/interrupts.o \
+		  obj/core/rtc.o \
+		  obj/core/pit.o \
+		  obj/core/memorymanagement.o \
 		  obj/common/convert.o \
 		  obj/common/math.o \
 		  obj/common/memoryoperations.o \

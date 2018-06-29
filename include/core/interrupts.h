@@ -9,13 +9,25 @@ namespace CactusOS
 {
     namespace core
     {
-        typedef common::uint32_t (*interruptHandler)(common::uint32_t esp);
+        class InterruptManager;
 
-        class InterruptManager
+        class InterruptHandler
         {
         protected:
+            common::uint8_t InterruptNumber;
+            InterruptManager* interruptManager;
+            InterruptHandler(InterruptManager* interruptManager, common::uint8_t InterruptNumber);
+            ~InterruptHandler();
+        public:
+            virtual common::uint32_t HandleInterrupt(common::uint32_t esp);
+        };
+        
+        class InterruptManager
+        {
+            friend class InterruptHandler;
+        protected:
             static InterruptManager* ActiveInterruptManager;
-            interruptHandler handlers[256];
+            InterruptHandler* handlers[256];
 
             struct GateDescriptor
             {
@@ -89,9 +101,6 @@ namespace CactusOS
             common::uint16_t HardwareInterruptOffset();
             void Activate();
             void Deactivate();
-
-            void RegisterInterruptHandler(common::uint32_t num, interruptHandler handler);
-            void UnregisterInterruptHandler(common::uint32_t num, interruptHandler handler);
         };
     }
 }

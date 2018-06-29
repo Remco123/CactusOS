@@ -3,6 +3,8 @@ using namespace CactusOS;
 using namespace CactusOS::common;
 using namespace CactusOS::core;
 
+void printf(char*);
+
 extern "C" void load_gdt(uint8_t *gdt_ptr, uint32_t data_sel, uint32_t code_sel);
 
 GlobalDescriptorTable::GlobalDescriptorTable()
@@ -19,6 +21,7 @@ GlobalDescriptorTable::GlobalDescriptorTable()
 
 GlobalDescriptorTable::~GlobalDescriptorTable()
 {
+    
 }
 
 uint16_t GlobalDescriptorTable::DataSegmentSelector()

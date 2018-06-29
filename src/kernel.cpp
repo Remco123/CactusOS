@@ -1,5 +1,8 @@
 #include <core/gdt.h>
 #include <core/interrupts.h>
+#include <core/memorymanagement.h>
+#include <core/rtc.h>
+#include <core/pit.h>
 
 using namespace CactusOS::core;
 using namespace CactusOS::common;
@@ -73,9 +76,17 @@ void printfHex32(uint32_t key)
 
 extern "C" void kernelMain(const void* multiboot_structure, unsigned int multiboot_magic)
 {
+    printf("Starting Memory Manager\n");
+    uint32_t* memupper = (uint32_t*)(((uint32_t)multiboot_structure) + 8);
+    uint32_t heap = 10*1024*1024;
+    MemoryManager memoryManager(heap, (*memupper)*1024 - heap - 10*1024);
+
     GlobalDescriptorTable gdt;
     InterruptManager interrupts(0x20, &gdt);
     interrupts.Activate();
+
+    PIT* pit = new PIT(&interrupts);
+    pit->Beep(1000, 2000);
 
     while(1);
 }

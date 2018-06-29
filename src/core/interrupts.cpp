@@ -7,6 +7,28 @@ using namespace CactusOS::core;
 void printf(char* str);
 void printfHex(uint8_t);
 
+
+
+InterruptHandler::InterruptHandler(InterruptManager* interruptManager, uint8_t InterruptNumber)
+{
+    this->InterruptNumber = InterruptNumber;
+    this->interruptManager = interruptManager;
+    interruptManager->handlers[InterruptNumber] = this;
+}
+
+InterruptHandler::~InterruptHandler()
+{
+    if(interruptManager->handlers[InterruptNumber] == this)
+        interruptManager->handlers[InterruptNumber] = 0;
+}
+
+uint32_t InterruptHandler::HandleInterrupt(uint32_t esp)
+{
+    return esp;
+}
+
+
+
 InterruptManager::GateDescriptor InterruptManager::interruptDescriptorTable[256];
 InterruptManager* InterruptManager::ActiveInterruptManager = 0;
 
@@ -139,8 +161,7 @@ uint32_t InterruptManager::DoHandleInterrupt(uint8_t interrupt, uint32_t esp)
 {
     if(handlers[interrupt] != 0)
     {
-        interruptHandler handler = handlers[interrupt];
-        esp = handler(esp);
+        esp = handlers[interrupt]->HandleInterrupt(esp);
     }
     else if(interrupt != hardwareInterruptOffset)
     {
@@ -151,7 +172,6 @@ uint32_t InterruptManager::DoHandleInterrupt(uint8_t interrupt, uint32_t esp)
     
     if(interrupt == hardwareInterruptOffset)
     {
-        printf("Timer INT\n");
         //esp = (uint32_t)taskManager->Schedule((CPUState*)esp);
     }
 
@@ -164,15 +184,4 @@ uint32_t InterruptManager::DoHandleInterrupt(uint8_t interrupt, uint32_t esp)
     }
 
     return esp;
-}
-
-void InterruptManager::RegisterInterruptHandler(common::uint32_t num, interruptHandler handler)
-{
-    if(num < 256)
-        handlers[num] = handler;
-}
-void InterruptManager::UnregisterInterruptHandler(common::uint32_t num, interruptHandler handler)
-{
-    if(handlers[num] == handler)
-        handlers[num] = 0;
 }
