@@ -1,9 +1,8 @@
-#include <core/gdt.h>
-#include <core/interrupts.h>
-#include <core/memorymanagement.h>
-#include <core/rtc.h>
-#include <core/pit.h>
+#include <system.h>
+#include <multiboot/multiboot.h>
+#include <common/convert.h>
 
+using namespace CactusOS;
 using namespace CactusOS::core;
 using namespace CactusOS::common;
 
@@ -74,19 +73,24 @@ void printfHex32(uint32_t key)
     printfHex( key & 0xFF);
 }
 
+void PrintKernelStart()
+{
+    printf("Starting kernel at: ");
+    printf(Convert::IntToString(RTC::GetHour())); printf(":"); printf(Convert::IntToString(RTC::GetMinute())); printf(":"); printf(Convert::IntToString(RTC::GetSecond()));
+    printf("   ");
+    printf(Convert::IntToString(RTC::GetDay())); printf(":"); printf(Convert::IntToString(RTC::GetMonth())); printf(":"); printf(Convert::IntToString(RTC::GetYear()));
+    printf("\n");
+}
+
 extern "C" void kernelMain(const void* multiboot_structure, unsigned int multiboot_magic)
 {
-    printf("Starting Memory Manager\n");
-    uint32_t* memupper = (uint32_t*)(((uint32_t)multiboot_structure) + 8);
-    uint32_t heap = 10*1024*1024;
-    MemoryManager memoryManager(heap, (*memupper)*1024 - heap - 10*1024);
+    PrintKernelStart();
 
-    GlobalDescriptorTable gdt;
-    InterruptManager interrupts(0x20, &gdt);
-    interrupts.Activate();
+    System::InitCore((multiboot_info_t*)multiboot_structure);
 
-    PIT* pit = new PIT(&interrupts);
-    pit->Beep(1000, 2000);
+    //Activate interrupts at last.
+    System::core->interrupts->Activate();
+    printf("Interrupts Activated\n");
 
     while(1);
 }

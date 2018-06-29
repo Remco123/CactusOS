@@ -63,12 +63,12 @@ void PIT::NoSound()
 }
 void PIT::Beep()
 {
-    Beep(1000); //1000 is default beep frequency
+    Beep(800); //800 is default beep frequency
 }
 
 void PIT::Beep(common::uint32_t freq)
 {
-    Beep(freq, 10); //10 is default beep duration
+    Beep(freq, 200); //200 is default beep duration
 }
 void PIT::Beep(common::uint32_t freq, common::uint32_t duration)
 {

@@ -17,6 +17,7 @@ objects = obj/loader.o \
 		  obj/common/convert.o \
 		  obj/common/math.o \
 		  obj/common/memoryoperations.o \
+		  obj/system.o \
           obj/kernel.o
 
 
