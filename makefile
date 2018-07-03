@@ -7,6 +7,9 @@ ASPARAMS = --32
 LDPARAMS = -melf_i386
 
 objects = obj/loader.o \
+		  obj/common/convert.o \
+		  obj/common/math.o \
+		  obj/common/memoryoperations.o \
 		  obj/core/gdtloader.o \
 		  obj/core/gdt.o \
 		  obj/core/interruptstubs.o \
@@ -14,9 +17,9 @@ objects = obj/loader.o \
 		  obj/core/rtc.o \
 		  obj/core/pit.o \
 		  obj/core/memorymanagement.o \
-		  obj/common/convert.o \
-		  obj/common/math.o \
-		  obj/common/memoryoperations.o \
+		  obj/core/sse.o \
+		  obj/core/cpu.o \
+		  obj/core/smbios.o \
 		  obj/system.o \
           obj/kernel.o
 
@@ -32,6 +35,13 @@ obj/%.o: src/%.cpp
 obj/%.o: src/%.s
 	mkdir -p $(@D)
 	i686-elf-as $(ASPARAMS) -o $@ $<
+
+#NASM assembly files
+
+obj/core/sse.o: src/core/sse.s
+	nasm -f elf $< -o $@
+
+#
 
 CactusOS.bin: linker.ld $(objects)
 	i686-elf-ld $(LDPARAMS) -T $< -o $@ $(objects)

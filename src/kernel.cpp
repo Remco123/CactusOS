@@ -15,6 +15,15 @@ extern "C" void callConstructors()
         (*i)();
 }
 
+void terminal_scroll(){
+    static uint16_t* VideoMemory = (uint16_t*)0xb8000;
+    for(int i = 0; i < 25; i++){
+        for (int m = 0; m < 80; m++){
+            VideoMemory[i * 80 + m] = VideoMemory[(i + 1) * 80 + m];
+        }
+    }
+}
+
 void printf(char* str)
 {
     static uint16_t* VideoMemory = (uint16_t*)0xb8000;
@@ -43,11 +52,12 @@ void printf(char* str)
 
         if(y >= 25)
         {
-            for(y = 0; y < 25; y++)
-                for(x = 0; x < 80; x++)
-                    VideoMemory[80*y+x] = (VideoMemory[80*y+x] & 0xFF00) | ' ';
+            //for(y = 0; y < 25; y++)
+            //    for(x = 0; x < 80; x++)
+            //        VideoMemory[80*y+x] = (VideoMemory[80*y+x] & 0xFF00) | ' ';
+            terminal_scroll();
             x = 0;
-            y = 0;
+            y = 24;
         }
     }
 }

@@ -9,6 +9,8 @@
 #include <core/pit.h>
 #include <core/port.h>
 #include <core/rtc.h>
+#include <core/cpu.h>
+#include <core/smbios.h>
 
 #include <multiboot/multiboot.h>
 
@@ -20,6 +22,7 @@ namespace CactusOS
         core::InterruptManager* interrupts;
         core::MemoryManager* memoryManager;
         core::PIT* pit;
+        core::CPU* cpu;
     };
 
     class System
