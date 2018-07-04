@@ -20,6 +20,7 @@ objects = obj/loader.o \
 		  obj/core/sse.o \
 		  obj/core/cpu.o \
 		  obj/core/smbios.o \
+		  obj/core/pci.o \
 		  obj/system.o \
           obj/kernel.o
 

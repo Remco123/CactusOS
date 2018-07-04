@@ -58,6 +58,7 @@ void* MemoryManager::malloc(common::size_t size)
     }
     
     result->allocated = true;
+
     return (void*)(((common::size_t)result) + sizeof(MemoryChunk));
 }
 
@@ -84,7 +85,6 @@ void MemoryManager::free(void* ptr)
         if(chunk->next != 0)
             chunk->next->prev = chunk;
     }
-    
 }
 
 

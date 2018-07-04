@@ -8,19 +8,20 @@ void printf(char*);
 
 Core* System::core = 0;
 
-void System::InitCore(multiboot_info_t* mbi)
+void System::InitCore()
 {
-    printf("Starting Core\n");
-    printf("CMD Parameters: "); printf((char*)mbi->cmdline); printf("\n");
-    
-    uint32_t* memupper = (uint32_t*)(((uint32_t)mbi) + 8);
-    uint32_t heap = 10*1024*1024;
-    MemoryManager memoryManager(heap, (*memupper)*1024 - heap - 10*1024);
-    printf("Memory Manager Loaded\n");
+    if(MemoryManager::activeMemoryManager == 0)
+    {
+        printf("Memory Manager is zero, error!\n");
+        while(1); //TODO: Add panic
+    }
 
     //We can use new now!
     System::core->gdt = new GlobalDescriptorTable();
     printf("GDT Loaded\n");
+
+    System::core->pit = new PIT(System::core->interrupts);
+    printf("PIT Loaded\n");
 
     System::core->cpu = new CPU();
     System::core->cpu->CollectInfo();
@@ -36,7 +37,8 @@ void System::InitCore(multiboot_info_t* mbi)
 
     System::core->interrupts = new InterruptManager(0x20, System::core->gdt);
     printf("Interrupts Loaded\n");
-    
-    System::core->pit = new PIT(System::core->interrupts);
-    printf("PIT Loaded\n");
+
+    System::core->pci = new PeripheralComponentInterconnectController();
+    System::core->pci->FindDevices();
+    printf("PCI Loaded with "); printf(Convert::IntToString(System::core->pci->NumDevices)); printf(" Devices connected\n");
 }

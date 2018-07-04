@@ -92,11 +92,19 @@ void PrintKernelStart()
     printf("\n");
 }
 
-extern "C" void kernelMain(const void* multiboot_structure, unsigned int multiboot_magic)
+extern "C" void kernelMain(const multiboot_info_t* mbi, unsigned int multiboot_magic)
 {
     PrintKernelStart();
+    printf("CMD Parameters: "); printf((char*)mbi->cmdline); printf("\n");
 
-    System::InitCore((multiboot_info_t*)multiboot_structure);
+    //Memory manager is needed for the new keyword
+    uint32_t* memupper = (uint32_t*)(((uint32_t)mbi) + 8);
+    uint32_t heap = 10*1024*1024;
+    MemoryManager memoryManager(heap, (*memupper)*1024 - heap - 10*1024);
+    printf("Memory Manager Loaded\n");
+
+    printf("Starting Core\n");
+    System::InitCore();
 
     //Activate interrupts at last.
     System::core->interrupts->Activate();

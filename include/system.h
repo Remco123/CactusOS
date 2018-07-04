@@ -10,6 +10,7 @@
 #include <core/port.h>
 #include <core/rtc.h>
 #include <core/cpu.h>
+#include <core/pci.h>
 #include <core/smbios.h>
 
 #include <multiboot/multiboot.h>
@@ -21,6 +22,7 @@ namespace CactusOS
         core::GlobalDescriptorTable* gdt;
         core::InterruptManager* interrupts;
         core::MemoryManager* memoryManager;
+        core::PeripheralComponentInterconnectController* pci;
         core::PIT* pit;
         core::CPU* cpu;
     };
@@ -30,7 +32,7 @@ namespace CactusOS
     public:
         static Core* core;
 
-        static void InitCore(multiboot_info_t* mbi);
+        static void InitCore();
     };
 }
 
