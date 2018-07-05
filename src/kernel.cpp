@@ -5,6 +5,7 @@
 using namespace CactusOS;
 using namespace CactusOS::core;
 using namespace CactusOS::common;
+using namespace CactusOS::system;
 
 typedef void (*constructor)();
 extern "C" constructor start_ctors;
@@ -39,7 +40,9 @@ void printf(char* str)
                 y++;
                 break;
             default:
-                VideoMemory[80*y+x] = (VideoMemory[80*y+x] & 0xFF00) | str[i];
+                volatile uint16_t * where;
+                where = (volatile uint16_t *)0xB8000 + (y * 80 + x) ;
+                *where = str[i] | ((0 << 4) | (0xB & 0x0F) << 8);
                 x++;
                 break;
         }
@@ -106,9 +109,17 @@ extern "C" void kernelMain(const multiboot_info_t* mbi, unsigned int multiboot_m
     printf("Starting Core\n");
     System::InitCore();
 
-    //Activate interrupts at last.
-    System::core->interrupts->Activate();
-    printf("Interrupts Activated\n");
+    printf("Starting System\n");
+    System::InitSystem();
+
+    //Testing
+    NetworkDriver* net = (NetworkDriver*) System::system->driverManager->DriverByType(DriverType::Network);
+
+    if(net != 0)
+    {
+        printf("Testing networkdriver\n");
+        net->SendData((uint8_t*)"TestPaketje", 12);
+    }
 
     while(1);
 }

@@ -21,6 +21,11 @@ objects = obj/loader.o \
 		  obj/core/cpu.o \
 		  obj/core/smbios.o \
 		  obj/core/pci.o \
+		  obj/system/drivers/driver.o \
+		  obj/system/drivers/networkdriver.o \
+		  obj/system/drivers/rtl8139.o \
+		  obj/system/drivers/amd_am79c973.o \
+		  obj/system/drivers/drivermanager.o \
 		  obj/system.o \
           obj/kernel.o
 
@@ -65,4 +70,4 @@ clean:
 	rm -rf obj CactusOS.bin CactusOS.iso
 
 qemu: CactusOS.iso
-	qemu-system-x86_64 -cdrom CactusOS.iso
+	qemu-system-i386 -cdrom CactusOS.iso -netdev user,id=u1,hostfwd=tcp::5555-:22 -device rtl8139,netdev=u1 -object filter-dump,id=f1,netdev=u1,file=netdump.pcap

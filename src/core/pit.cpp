@@ -10,7 +10,7 @@ PIT::PIT(InterruptManager* interrupts)
 {
     timer_ticks = 0;
 
-    uint64_t divisor = 1193180 / 1000;
+    uint64_t divisor = 1193180 / 1000; //Default is 1000 Hz
 
     outportb(0x43, 0x36);
     outportb(0x40, (uint8_t)divisor);
@@ -43,13 +43,13 @@ void PIT::PlaySound(common::uint32_t nFrequence)
     uint32_t Div;
  	uint8_t tmp;
  
-        //Set the PIT to the desired frequency
+    //Set the PIT to the desired frequency
  	Div = 1193180 / nFrequence;
  	outportb(0x43, 0xb6);
  	outportb(0x42, (uint8_t) (Div) );
  	outportb(0x42, (uint8_t) (Div >> 8));
  
-        //And play the sound using the PC speaker
+    //And play the sound using the PC speaker
  	tmp = inportb(0x61);
   	if (tmp != (tmp | 3)) {
  		outportb(0x61, tmp | 3);
@@ -73,6 +73,8 @@ void PIT::Beep(common::uint32_t freq)
 void PIT::Beep(common::uint32_t freq, common::uint32_t duration)
 {
     if(duration == 0)
+        return;
+    if(freq == 0)
         return;
 
     PlaySound(freq);

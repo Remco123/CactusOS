@@ -35,6 +35,7 @@ char* Convert::IntToString(char *buf, unsigned long int n, int base)
         buf[j] = buf[i];
         buf[i] = tmp;
     }
+    return buf;
 }
 int Convert::StringToInt(char* string)
 {

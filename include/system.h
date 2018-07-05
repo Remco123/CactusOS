@@ -13,11 +13,13 @@
 #include <core/pci.h>
 #include <core/smbios.h>
 
+#include <system/drivers/drivermanager.h>
+
 #include <multiboot/multiboot.h>
 
 namespace CactusOS
 {
-    struct Core
+    struct sys_Core
     {
         core::GlobalDescriptorTable* gdt;
         core::InterruptManager* interrupts;
@@ -27,12 +29,19 @@ namespace CactusOS
         core::CPU* cpu;
     };
 
+    struct sys_System
+    {
+        CactusOS::system::DriverManager* driverManager;
+    };
+
     class System
     {
     public:
-        static Core* core;
+        static sys_Core* core;
+        static sys_System* system;
 
         static void InitCore();
+        static void InitSystem();
     };
 }
 
