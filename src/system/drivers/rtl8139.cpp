@@ -95,9 +95,10 @@ void RTL8139::HandleReceive()
 
     // Now, ethernet layer starts to handle the packet(be sure to make a copy of the packet, insteading of using the buffer)
     // and probabbly this should be done in a separate thread...
-    void * packet = MemoryManager::activeMemoryManager->malloc(packet_length);
+    uint8_t* packet = (uint8_t*)MemoryManager::activeMemoryManager->malloc(packet_length);
     MemoryOperations::memcpy(packet, t, packet_length);
-    //ethernet_handle_packet(packet, packet_length);
+    if(this->NetManager != 0)
+        this->NetManager->HandlePacket(packet, packet_length);
 
     current_packet_ptr = (current_packet_ptr + packet_length + 4 + 3) & RX_READ_POINTER_MASK;
 

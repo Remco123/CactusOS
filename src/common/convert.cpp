@@ -80,3 +80,7 @@ char* Convert::CharToString(char c)
     result[0] = c;
     return result;
 }
+uint16_t Convert::ByteSwap(uint16_t key)
+{
+    return ((key & 0x00FF) << 8) | ((key & 0xFF00) >> 8);
+}

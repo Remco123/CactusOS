@@ -55,4 +55,13 @@ void System::InitSystem()
     //Activate interrupts after drivers are loaded
     System::core->interrupts->Activate();
     printf("Interrupts Activated\n");
+
+    NetworkDriver* netDriver = (NetworkDriver*) System::system->driverManager->DriverByType(DriverType::Network);
+    if(netDriver != 0)
+    {
+        System::system->networkManager = new NetworkManager(netDriver); //This way only 1 network device gets used
+        printf("Network initialized\n");
+    }
+    else
+        printf("No network device found so network is disabled\n");
 }

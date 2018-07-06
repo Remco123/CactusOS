@@ -112,14 +112,5 @@ extern "C" void kernelMain(const multiboot_info_t* mbi, unsigned int multiboot_m
     printf("Starting System\n");
     System::InitSystem();
 
-    //Testing
-    NetworkDriver* net = (NetworkDriver*) System::system->driverManager->DriverByType(DriverType::Network);
-
-    if(net != 0)
-    {
-        printf("Testing networkdriver\n");
-        net->SendData((uint8_t*)"TestPaketje", 12);
-    }
-
     while(1);
 }

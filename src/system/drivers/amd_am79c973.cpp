@@ -111,9 +111,7 @@ uint32_t amd_am79c973::HandleInterrupt(uint32_t esp)
     return esp;
 }
 void amd_am79c973::HandleReceive()
-{
-    printf("\nRECV: ");
-    
+{    
     for(; (recvBufferDescr[currentRecvBuffer].flags & 0x80000000) == 0;
         currentRecvBuffer = (currentRecvBuffer + 1) % 8)
     {
@@ -127,14 +125,9 @@ void amd_am79c973::HandleReceive()
             
             uint8_t* buffer = (uint8_t*)(recvBufferDescr[currentRecvBuffer].address);
 
-            for(int i = 0; i < size; i++)
-            {
-                printfHex(buffer[i]);
-                printf(" ");
-            }
-
             //Handle packet here
-            //HandlePacket(buffer, size)
+            if(this->NetManager != 0)
+                this->NetManager->HandlePacket(buffer, size);
         }
         
         recvBufferDescr[currentRecvBuffer].flags2 = 0;

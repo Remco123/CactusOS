@@ -16,6 +16,7 @@ namespace CactusOS
             static char* IntToString(char *buf, unsigned long int n, int base);
             static int StringToInt(char* string);
             static char* CharToString(char c);
+            static common::uint16_t ByteSwap(common::uint16_t key);
         };
     }
 }

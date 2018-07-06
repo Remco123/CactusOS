@@ -32,6 +32,7 @@ namespace CactusOS
     struct sys_System
     {
         CactusOS::system::DriverManager* driverManager;
+        CactusOS::system::NetworkManager* networkManager;
     };
 
     class System
