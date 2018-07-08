@@ -17,6 +17,7 @@ namespace CactusOS
             static int StringToInt(char* string);
             static char* CharToString(char c);
             static common::uint16_t ByteSwap(common::uint16_t key);
+            static common::uint32_t ByteSwap(common::uint32_t key);
         };
     }
 }

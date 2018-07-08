@@ -2,6 +2,7 @@
 #define __CACTUSOS__SYSTEM__DRIVERS__NETWORKDRIVER_H
 
 #include <common/types.h>
+#include <common/memoryoperations.h>
 #include <system/drivers/driver.h>
 #include <system/network/networkmanager.h>
 
@@ -28,7 +29,7 @@ namespace CactusOS
             virtual void SendData(common::uint8_t* data, common::uint32_t datalen);
             virtual void Activate();
             virtual void Reset();
-            virtual common::uint64_t GetMacAddress();
+            virtual common::uint64_t GetMacAddressBE();
         };
     }
 }

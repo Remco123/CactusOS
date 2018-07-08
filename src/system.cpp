@@ -7,8 +7,15 @@ using namespace CactusOS::system;
 
 void printf(char*);
 
-sys_Core* System::core = 0;
-sys_System* System::system = 0;
+//Static initialization
+GlobalDescriptorTable* System::gdt = 0;
+InterruptManager* System::interrupts = 0;
+MemoryManager* System::memoryManager = 0;
+PeripheralComponentInterconnectController* System::pci = 0;
+PIT* System::pit = 0;
+CPU* System::cpu = 0;
+DriverManager* System::driverManager = 0;
+NetworkManager* System::networkManager = 0;
 
 void System::InitCore()
 {
@@ -19,47 +26,52 @@ void System::InitCore()
     }
 
     //We can use new now!
-    System::core->gdt = new GlobalDescriptorTable();
+    System::gdt = new GlobalDescriptorTable();
     printf("GDT Loaded\n");
 
-    System::core->cpu = new CPU();
-    System::core->cpu->CollectInfo();
+    System::cpu = new CPU();
+    System::cpu->CollectInfo();
     printf("CPU Loaded\n");
 
     printf("Enabling CPU Specific features\n");
-    System::core->cpu->EnableFeatures();
+    System::cpu->EnableFeatures();
 
     printf("Finding SMBIOS\n");
     SMBIOS::Find();
     SMBIOS::BiosInfo();
     SMBIOS::CpuInfo();
 
-    System::core->interrupts = new InterruptManager(0x20, System::core->gdt);
+    System::interrupts = new InterruptManager(0x20, System::gdt);
     printf("Interrupts Loaded\n");
 
-    System::core->pit = new PIT(System::core->interrupts); //We need the interrupts controller for this
+    System::pit = new PIT(System::interrupts); //We need the interrupts controller for this
     printf("PIT Loaded\n");
 
-    System::core->pci = new PeripheralComponentInterconnectController();
-    System::core->pci->FindDevices();
-    printf("PCI Loaded with "); printf(Convert::IntToString(System::core->pci->NumDevices)); printf(" Devices connected\n");
+    System::pci = new PeripheralComponentInterconnectController();
+    System::pci->FindDevices();
+    printf("PCI Loaded with "); printf(Convert::IntToString(System::pci->NumDevices)); printf(" Devices connected\n");
 }
 
 void System::InitSystem()
 {
-    System::system->driverManager = new DriverManager();
+    System::driverManager = new DriverManager();
     printf("Driver manager loaded\n");
-    System::system->driverManager->AssignDrivers(System::core->pci, System::core->interrupts, System::core->pci);
-    System::system->driverManager->ActivateAll();
+    System::driverManager->AssignDrivers(System::pci, System::interrupts, System::pci);
+    System::driverManager->ActivateAll();
 
     //Activate interrupts after drivers are loaded
-    System::core->interrupts->Activate();
+    System::interrupts->Activate();
     printf("Interrupts Activated\n");
 
-    NetworkDriver* netDriver = (NetworkDriver*) System::system->driverManager->DriverByType(DriverType::Network);
+    NetworkDriver* netDriver = (NetworkDriver*) System::driverManager->DriverByType(DriverType::Network);
     if(netDriver != 0)
     {
-        System::system->networkManager = new NetworkManager(netDriver); //This way only 1 network device gets used
+        uint32_t ip_be = ((uint32_t)15 << 24)
+                | ((uint32_t)2 << 16)
+                | ((uint32_t)0 << 8)
+                | (uint32_t)10;
+                
+        System::networkManager = new NetworkManager(netDriver, ip_be); //This way only 1 network device gets used
         printf("Network initialized\n");
     }
     else

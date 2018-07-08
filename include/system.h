@@ -19,27 +19,20 @@
 
 namespace CactusOS
 {
-    struct sys_Core
-    {
-        core::GlobalDescriptorTable* gdt;
-        core::InterruptManager* interrupts;
-        core::MemoryManager* memoryManager;
-        core::PeripheralComponentInterconnectController* pci;
-        core::PIT* pit;
-        core::CPU* cpu;
-    };
-
-    struct sys_System
-    {
-        CactusOS::system::DriverManager* driverManager;
-        CactusOS::system::NetworkManager* networkManager;
-    };
-
     class System
     {
     public:
-        static sys_Core* core;
-        static sys_System* system;
+    //Core
+        static core::GlobalDescriptorTable* gdt;
+        static core::InterruptManager* interrupts;
+        static core::MemoryManager* memoryManager;
+        static core::PeripheralComponentInterconnectController* pci;
+        static core::PIT* pit;
+        static core::CPU* cpu;
+
+    //System
+        static CactusOS::system::DriverManager* driverManager;
+        static CactusOS::system::NetworkManager* networkManager;
 
         static void InitCore();
         static void InitSystem();

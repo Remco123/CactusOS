@@ -70,7 +70,7 @@ uint32_t RTL8139::HandleInterrupt(uint32_t esp)
         printf("Packet sent\n");
     }
     if (status & ROK) {
-        printf("Received packet\n");
+        printf("RTL8139 Received packet\n");
         HandleReceive();
     }
 
@@ -87,11 +87,11 @@ void RTL8139::HandleReceive()
 
     // Skip, packet header and packet length, now t points to the packet data
     t = t + 2;
-    printf("Printing packet at addr 0x"); printfHex32((uint32_t)t); printf("\n");
-    for(uint16_t i = 0; i < packet_length; i++)
-    {
-        printfHex16(t[i]); printf(" ");
-    }
+    //printf("Printing packet at addr 0x"); printfHex32((uint32_t)t); printf("\n");
+    //for(uint16_t i = 0; i < packet_length; i++)
+    //{
+    //    printfHex16(t[i]); printf(" ");
+    //}
 
     // Now, ethernet layer starts to handle the packet(be sure to make a copy of the packet, insteading of using the buffer)
     // and probabbly this should be done in a separate thread...

@@ -4,6 +4,7 @@
         "initializer_list": "cpp",
         "string_view": "cpp",
         "utility": "cpp",
-        "thread": "cpp"
+        "thread": "cpp",
+        "chrono": "cpp"
     }
 }

@@ -84,3 +84,9 @@ uint16_t Convert::ByteSwap(uint16_t key)
 {
     return ((key & 0x00FF) << 8) | ((key & 0xFF00) >> 8);
 }
+uint32_t Convert::ByteSwap(uint32_t x)
+{
+    x = (x & 0x0000FFFF) << 16 | (x & 0xFFFF0000) >> 16;
+    x = (x & 0x00FF00FF) << 8 | (x & 0xFF00FF00) >> 8;
+    return x;
+}

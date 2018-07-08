@@ -100,7 +100,7 @@ uint32_t amd_am79c973::HandleInterrupt(uint32_t esp)
     if((temp & 0x1000) == 0x1000) printf("AMD am79c973 MISSED FRAME\n");
     if((temp & 0x0800) == 0x0800) printf("AMD am79c973 MEMORY ERROR\n");
     if((temp & 0x0400) == 0x0400) HandleReceive();
-    if((temp & 0x0200) == 0x0200) printf("Packet Send\n");
+    if((temp & 0x0200) == 0x0200) printf("AMD am79c973 Packet Send\n");
                                
     // acknoledge
     outportw(device->portBase + 0x12, 0);
