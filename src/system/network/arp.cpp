@@ -126,3 +126,21 @@ uint64_t AddressResolutionProtocol::GetMACFromCache(uint32_t IP_BE)
             return ArpDatabase[i]->MACAddress;
     return -1;
 }
+
+void AddressResolutionProtocol::BroadcastMACAddress(uint32_t IP_BE)
+{
+    AddressResolutionProtocolMessage arp;
+    arp.hardwareType = 0x0100; // ethernet
+    arp.protocol = 0x0008; // ipv4
+    arp.hardwareAddressSize = 6; // mac
+    arp.protocolAddressSize = 4; // ipv4
+    arp.command = 0x0200; // "response"
+    
+    arp.srcMAC = netManager->GetMACAddress();
+    arp.srcIP = netManager->GetIPAddress();
+    arp.dstMAC = Resolve(IP_BE);
+    arp.dstIP = IP_BE;
+    
+    netManager->SendPacket(arp.dstMAC, Convert::ByteSwap((uint16_t)ETHERNET_TYPE_ARP), (uint8_t*)&arp, sizeof(AddressResolutionProtocolMessage));
+
+}

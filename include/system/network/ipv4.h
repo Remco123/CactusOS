@@ -3,6 +3,7 @@
 
 #include <common/types.h>
 #include <system/network/networkmanager.h>
+#include <system/network/icmp.h>
 
 namespace CactusOS
 {
@@ -26,6 +27,8 @@ namespace CactusOS
             common::uint32_t dstIP;
         } __attribute__((packed));
 
+        class InternetControlMessageProtocol;
+
         class IPV4Handler
         {
         private:
@@ -34,6 +37,8 @@ namespace CactusOS
             common::uint32_t subnetMask;
             
         public:
+            InternetControlMessageProtocol* icmpHandler;
+
             IPV4Handler(NetworkManager* backend,
                                      common::uint32_t gatewayIP, common::uint32_t subnetMask);
             ~IPV4Handler();

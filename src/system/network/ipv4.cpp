@@ -14,6 +14,8 @@ IPV4Handler::IPV4Handler(NetworkManager* backend,
     this->gatewayIP = gatewayIP;
     this->subnetMask = subnetMask;
     this->netManager = backend;
+
+    this->icmpHandler = new InternetControlMessageProtocol(this);
 }
 IPV4Handler::~IPV4Handler()
 {
@@ -32,18 +34,13 @@ void IPV4Handler::HandlePacket(uint8_t* etherframePayload, uint32_t size)
             length = size;
         
         printf("Packet is for us joehoe!\n");
-        
+        switch(ipmessage->protocol)
+        {
+            case 0x01:
+                if(this->icmpHandler != 0)
+                    this->icmpHandler->OnInternetProtocolReceived(ipmessage->srcIP, ipmessage->dstIP, etherframePayload + 4*ipmessage->headerLength, length - 4*ipmessage->headerLength);
+        }
     }
-    
-   //if(sendBack)
-   //{
-   //    uint32_t temp = ipmessage->dstIP;
-   //    ipmessage->dstIP = ipmessage->srcIP;
-   //    ipmessage->srcIP = temp;
-   //    
-   //    ipmessage->timeToLive = 0x40;
-   //    ipmessage->checksum = Checksum((uint16_t*)ipmessage, 4*ipmessage->headerLength);
-   //}
 }
 void IPV4Handler::Send(uint32_t dstIP_BE, uint8_t protocol, uint8_t* data, uint32_t size)
 {

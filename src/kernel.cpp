@@ -120,7 +120,9 @@ extern "C" void kernelMain(const multiboot_info_t* mbi, unsigned int multiboot_m
                    | ((uint32_t)gip2 << 8)
                    | (uint32_t)gip1;
 
-        
+        System::networkManager->arpHandler->BroadcastMACAddress(gip_be);
+        System::pit->Sleep(1000);
+        System::networkManager->ipv4Handler->icmpHandler->RequestEchoReply(gip_be);
     }
 
     while(1);
