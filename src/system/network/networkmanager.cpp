@@ -11,14 +11,14 @@ void printfHex32(uint32_t);
 
 NetworkManager* NetworkManager::instance = 0;
 
-NetworkManager::NetworkManager(NetworkDriver* device, uint32_t ip_BE)
+NetworkManager::NetworkManager(NetworkDriver* device, CactusOS::core::PIT* pit, uint32_t ip_BE)
 {
     this->instance = this;
     this->netDevice = device;
     this->IP_BE = ip_BE;
     device->NetManager = this;
 
-    this->arpHandler = new AddressResolutionProtocol(this);
+    this->arpHandler = new AddressResolutionProtocol(this, pit);
 }
 NetworkManager::~NetworkManager()
 {
@@ -40,7 +40,8 @@ void NetworkManager::HandlePacket(common::uint8_t* packet, common::uint32_t size
                     arpHandler->HandlePacket(packet + sizeof(EtherFrameHeader), size - sizeof(EtherFrameHeader));
                 break;
             case ETHERNET_TYPE_IP:
-                printf("GOT IPv4 Packet\n");
+                if(ipv4Handler != 0)
+                    ipv4Handler->HandlePacket(packet + sizeof(EtherFrameHeader), size - sizeof(EtherFrameHeader));
                 break;
             default:
                 printf("Unkown Ethernet packet\n");

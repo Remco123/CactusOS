@@ -4,6 +4,8 @@
 #include <common/types.h>
 #include <system/drivers/networkdriver.h>
 #include <system/network/arp.h>
+#include <system/network/ipv4.h>
+#include <core/pit.h>
 
 namespace CactusOS
 {
@@ -24,6 +26,7 @@ namespace CactusOS
 
         class NetworkDriver;
         class AddressResolutionProtocol;
+        class IPV4Handler;
 
         class NetworkManager
         {
@@ -34,8 +37,9 @@ namespace CactusOS
             common::uint32_t IP_BE;
         public:
             AddressResolutionProtocol* arpHandler;
+            IPV4Handler* ipv4Handler;
 
-            NetworkManager(NetworkDriver* device, common::uint32_t ip_BE);
+            NetworkManager(NetworkDriver* device, core::PIT* pit, common::uint32_t ip_BE);
             ~NetworkManager();
 
             void HandlePacket(common::uint8_t* packet, common::uint32_t size);

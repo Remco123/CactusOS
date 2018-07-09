@@ -3,6 +3,7 @@
 
 #include <common/types.h>
 #include <system/network/networkmanager.h>
+#include <core/pit.h>
 
 namespace CactusOS
 {
@@ -37,11 +38,12 @@ namespace CactusOS
             #define MACResolveMaxTries 10
         private:
             NetworkManager* netManager;
+            core::PIT* pit;
 
             ArpEntry* ArpDatabase[128];
             common::uint32_t NumArpItems;
         public:
-            AddressResolutionProtocol(NetworkManager* parent);
+            AddressResolutionProtocol(NetworkManager* parent, core::PIT* pit);
             ~AddressResolutionProtocol();
 
             void HandlePacket(common::uint8_t* packet, common::uint32_t size);

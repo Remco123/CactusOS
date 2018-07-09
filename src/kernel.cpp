@@ -114,15 +114,13 @@ extern "C" void kernelMain(const multiboot_info_t* mbi, unsigned int multiboot_m
 
     if(System::networkManager != 0)
     {
-        // IP Address of the default gateway
         uint8_t gip1 = 10, gip2 = 0, gip3 = 2, gip4 = 2;
         uint32_t gip_be = ((uint32_t)gip4 << 24)
-                        | ((uint32_t)gip3 << 16)
-                        | ((uint32_t)gip2 << 8)
-                        | (uint32_t)gip1;
+                   | ((uint32_t)gip3 << 16)
+                   | ((uint32_t)gip2 << 8)
+                   | (uint32_t)gip1;
 
-        if(System::networkManager->arpHandler->Resolve(gip_be) != 0)
-            printf("Found MAC!\n");
+        
     }
 
     while(1);

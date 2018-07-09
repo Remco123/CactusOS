@@ -8,7 +8,7 @@ using namespace CactusOS::system;
 void printf(char*);
 void printfHex(uint8_t);
 
-//Prints mac address in swapped endian format
+//Prints mac address
 void PrintMac(uint64_t key)
 {
     printfHex( key & 0xFF);
@@ -24,10 +24,11 @@ void PrintMac(uint64_t key)
     printfHex((key >> 40) & 0xFF);
 }
 
-AddressResolutionProtocol::AddressResolutionProtocol(NetworkManager* parent)
+AddressResolutionProtocol::AddressResolutionProtocol(NetworkManager* parent, PIT* pit)
 {
     this->NumArpItems = 0;
     this->netManager = parent;
+    this->pit = pit;
 }
 AddressResolutionProtocol::~AddressResolutionProtocol()
 {
@@ -48,7 +49,6 @@ void AddressResolutionProtocol::HandlePacket(uint8_t* packet, uint32_t size)
         {
             switch(arp->command)
             {
-                
                 case 0x0100: // request
                     arp->command = 0x0200;
                     arp->dstIP = arp->srcIP;
@@ -71,6 +71,7 @@ void AddressResolutionProtocol::HandlePacket(uint8_t* packet, uint32_t size)
                         ArpDatabase[NumArpItems] = entry;
                         NumArpItems++;
                         printf("Arp Entry added to database\n");
+                        printf("MAC: "); PrintMac(entry->MACAddress); printf("\n");
                     }
                     else
                         printf("ARP Database is full!\n");
@@ -104,15 +105,14 @@ uint64_t AddressResolutionProtocol::Resolve(uint32_t IP_BE)
         RequestMAC(IP_BE);
     else
         return result; //It is already in the database
-
-    //while(result == -1) // possible infinite loop
-      //  result = GetMACFromCache(IP_BE);
     
     for(int i = 0; i < MACResolveMaxTries; i++)
     {
         result = GetMACFromCache(IP_BE);
         if(result != -1)
             return result;
+        printf("*");
+        pit->Sleep(200); //Small timeout
     }
     printf("Request timed out\n");
 

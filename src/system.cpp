@@ -66,12 +66,29 @@ void System::InitSystem()
     NetworkDriver* netDriver = (NetworkDriver*) System::driverManager->DriverByType(DriverType::Network);
     if(netDriver != 0)
     {
-        uint32_t ip_be = ((uint32_t)15 << 24)
-                | ((uint32_t)2 << 16)
-                | ((uint32_t)0 << 8)
-                | (uint32_t)10;
+        // IP Address
+        uint8_t ip1 = 10, ip2 = 0, ip3 = 2, ip4 = 15;
+        uint32_t ip_be = ((uint32_t)ip4 << 24)
+                    | ((uint32_t)ip3 << 16)
+                    | ((uint32_t)ip2 << 8)
+                    | (uint32_t)ip1;    
+
+    
+        // IP Address of the default gateway
+        uint8_t gip1 = 10, gip2 = 0, gip3 = 2, gip4 = 2;
+        uint32_t gip_be = ((uint32_t)gip4 << 24)
+                   | ((uint32_t)gip3 << 16)
+                   | ((uint32_t)gip2 << 8)
+                   | (uint32_t)gip1;
+    
+        uint8_t subnet1 = 255, subnet2 = 255, subnet3 = 255, subnet4 = 0;
+        uint32_t subnet_be = ((uint32_t)subnet4 << 24)
+                   | ((uint32_t)subnet3 << 16)
+                   | ((uint32_t)subnet2 << 8)
+                    | (uint32_t)subnet1;
                 
-        System::networkManager = new NetworkManager(netDriver, ip_be); //This way only 1 network device gets used
+        System::networkManager = new NetworkManager(netDriver, System::pit, ip_be); //This way only 1 network device gets used
+        System::networkManager->ipv4Handler = new IPV4Handler(System::networkManager, gip_be, subnet_be);
         printf("Network initialized\n");
     }
     else
