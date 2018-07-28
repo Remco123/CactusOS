@@ -62,9 +62,11 @@ RTL8139::~RTL8139()
 
 uint32_t RTL8139::HandleInterrupt(uint32_t esp)
 {
-    printf("Got Interrupt\n");
+    printf("Got Interrupt ");
     
     uint16_t status = inportw(device->portBase + 0x3e);
+
+    printfHex16(status); printf(" From RTL8139\n");
 
     if(status & TOK) {
         printf("Packet sent\n");
@@ -75,8 +77,6 @@ uint32_t RTL8139::HandleInterrupt(uint32_t esp)
     }
 
     outportw(device->portBase + 0x3E, 0x5);
-
-    printf("Done\n");
     return esp;
 }
 void RTL8139::HandleReceive()
@@ -87,14 +87,7 @@ void RTL8139::HandleReceive()
 
     // Skip, packet header and packet length, now t points to the packet data
     t = t + 2;
-    //printf("Printing packet at addr 0x"); printfHex32((uint32_t)t); printf("\n");
-    //for(uint16_t i = 0; i < packet_length; i++)
-    //{
-    //    printfHex16(t[i]); printf(" ");
-    //}
 
-    // Now, ethernet layer starts to handle the packet(be sure to make a copy of the packet, insteading of using the buffer)
-    // and probabbly this should be done in a separate thread...
     uint8_t* packet = (uint8_t*)MemoryManager::activeMemoryManager->malloc(packet_length);
     MemoryOperations::memcpy(packet, t, packet_length);
     if(this->NetManager != 0)
@@ -117,8 +110,6 @@ void RTL8139::SendData(uint8_t* data, uint32_t len)
     outportl(device->portBase + TSD_array[tx_cur++], len);
     if(tx_cur > 3)
         tx_cur = 0;
-
-    printf("Packet Should be Send\n");
 }
 void RTL8139::Activate()
 {

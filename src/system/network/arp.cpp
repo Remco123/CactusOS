@@ -112,7 +112,7 @@ uint64_t AddressResolutionProtocol::Resolve(uint32_t IP_BE)
         if(result != -1)
             return result;
         printf("*");
-        pit->Sleep(200); //Small timeout
+        pit->Sleep(50); //Small timeout
     }
     printf("Request timed out\n");
 

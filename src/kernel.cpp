@@ -116,9 +116,9 @@ extern "C" void kernelMain(const multiboot_info_t* mbi, unsigned int multiboot_m
     {
         uint8_t gip1 = 10, gip2 = 0, gip3 = 2, gip4 = 2;
         uint32_t gip_be = ((uint32_t)gip4 << 24)
-                   | ((uint32_t)gip3 << 16)
-                   | ((uint32_t)gip2 << 8)
-                   | (uint32_t)gip1;
+                | ((uint32_t)gip3 << 16)
+                | ((uint32_t)gip2 << 8)
+                | (uint32_t)gip1;
 
         System::networkManager->arpHandler->BroadcastMACAddress(gip_be);
         System::pit->Sleep(1000);

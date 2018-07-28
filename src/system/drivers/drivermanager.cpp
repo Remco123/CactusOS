@@ -56,8 +56,6 @@ Driver* DriverManager::GetDriver(core::PeripheralComponentInterconnectDeviceDesc
                 case 0x2000:
                     printf("  [Loading...]\n");
                     printf("Loading AMD_AM79C973 NIC\n");
-                    //TODO: Add this nic
-
                     return new amd_am79c973(device, interrupts);
                     break;
             }
@@ -69,8 +67,6 @@ Driver* DriverManager::GetDriver(core::PeripheralComponentInterconnectDeviceDesc
                 case 0x8139: // rtl8139
                     printf("  [Loading...]\n");
                     printf("Loading RTL8139 NIC\n");
-                    //TODO: Add this nic
-
                     return new RTL8139(device, interrupts, pci);
                     break;
             }
