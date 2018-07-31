@@ -1,6 +1,7 @@
 #include <system.h>
 #include <multiboot/multiboot.h>
 #include <common/convert.h>
+#include <system/network/udp.h>
 
 using namespace CactusOS;
 using namespace CactusOS::core;
@@ -95,6 +96,20 @@ void PrintKernelStart()
     printf("\n");
 }
 
+void PrintIP2(uint32_t ip)
+{
+    unsigned char bytes[4];
+    bytes[0] = ip & 0xFF;
+    bytes[1] = (ip >> 8) & 0xFF;
+    bytes[2] = (ip >> 16) & 0xFF;
+    bytes[3] = (ip >> 24) & 0xFF;   
+    //printf("%d.%d.%d.%d\n", bytes[3], bytes[2], bytes[1], bytes[0]);
+    printf(Convert::IntToString(bytes[3])); printf(".");
+    printf(Convert::IntToString(bytes[2])); printf(".");
+    printf(Convert::IntToString(bytes[1])); printf(".");
+    printf(Convert::IntToString(bytes[0])); 
+}
+
 extern "C" void kernelMain(const multiboot_info_t* mbi, unsigned int multiboot_magic)
 {
     PrintKernelStart();
@@ -116,13 +131,25 @@ extern "C" void kernelMain(const multiboot_info_t* mbi, unsigned int multiboot_m
     {
         uint8_t gip1 = 10, gip2 = 0, gip3 = 2, gip4 = 2;
         uint32_t gip_be = ((uint32_t)gip4 << 24)
-                | ((uint32_t)gip3 << 16)
-                | ((uint32_t)gip2 << 8)
-                | (uint32_t)gip1;
+                   | ((uint32_t)gip3 << 16)
+                   | ((uint32_t)gip2 << 8)
+                   | (uint32_t)gip1;
 
-        System::networkManager->arpHandler->BroadcastMACAddress(gip_be);
-        System::pit->Sleep(1000);
-        System::networkManager->ipv4Handler->icmpHandler->RequestEchoReply(gip_be);
+        printf("Trying google ping\n");
+        uint8_t pingTest1 = 216, pingTest2 = 58, pingTest3 = 211, pingTest4 = 100;
+        uint32_t pingTest = ((uint32_t)pingTest4 << 24)
+                   | ((uint32_t)pingTest3 << 16)
+                   | ((uint32_t)pingTest2 << 8)
+                   | (uint32_t)pingTest1;
+        System::networkManager->ipv4Handler->icmpHandler->RequestEchoReply(pingTest);
+        printf("Done\n");
+
+        UDPSocket* socket = System::networkManager->ipv4Handler->udpHandler->Listen(1234);
+
+        printf("Our IP: "); PrintIP2(Convert::ByteSwap(System::networkManager->IP_BE)); printf("\n");
+        while(socket->listening);
+        printf("Connected!\n");
+        socket->Send((uint8_t*)"Hallo", 6);
     }
 
     while(1);

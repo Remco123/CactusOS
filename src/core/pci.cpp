@@ -114,12 +114,8 @@ BaseAddressRegister PeripheralComponentInterconnectController::GetBaseAddressReg
     if(bar >= maxBARs)
         return result;
     
-    
     uint32_t bar_value = Read(bus, device, function, 0x10 + 4*bar);
-    result.type = (bar_value & 0x1) ? InputOutput : MemoryMapping;
-    uint32_t temp;
-    
-    
+    result.type = (bar_value & 0x1) ? InputOutput : MemoryMapping;    
     
     if(result.type == MemoryMapping)
     {

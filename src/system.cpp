@@ -66,6 +66,8 @@ void System::InitSystem()
     NetworkDriver* netDriver = (NetworkDriver*) System::driverManager->DriverByType(DriverType::Network);
     if(netDriver != 0)
     {
+        printf("Starting Network\n");
+
         // IP Address
         uint8_t ip1 = 10, ip2 = 0, ip3 = 2, ip4 = 15;
         uint32_t ip_be = ((uint32_t)ip4 << 24)
@@ -89,6 +91,10 @@ void System::InitSystem()
                 
         System::networkManager = new NetworkManager(netDriver, System::pit, ip_be); //This way only 1 network device gets used
         System::networkManager->ipv4Handler = new IPV4Handler(System::networkManager, gip_be, subnet_be);
+        
+        printf("Resolving: 10.0.2.2\n");
+        System::networkManager->arpHandler->BroadcastMACAddress(gip_be);
+        System::networkManager->ipv4Handler->icmpHandler->RequestEchoReply(gip_be);
         printf("Network initialized\n");
     }
     else

@@ -13,7 +13,6 @@ namespace CactusOS
     {
         #define ETHERNET_TYPE_ARP 0x0806
         #define ETHERNET_TYPE_IP  0x0800
-
         #define HARDWARE_TYPE_ETHERNET 0x01
 
         struct EtherFrameHeader
@@ -33,11 +32,10 @@ namespace CactusOS
         protected:
             NetworkDriver* netDevice;
             static NetworkManager* instance;
-            
-            common::uint32_t IP_BE;
         public:
             AddressResolutionProtocol* arpHandler;
             IPV4Handler* ipv4Handler;
+            common::uint32_t IP_BE;
 
             NetworkManager(NetworkDriver* device, core::PIT* pit, common::uint32_t ip_BE);
             ~NetworkManager();

@@ -40,7 +40,7 @@ void AddressResolutionProtocol::HandlePacket(uint8_t* packet, uint32_t size)
     printf("Handling arp packet\n");
     AddressResolutionProtocolMessage* arp = (AddressResolutionProtocolMessage*)packet;
     
-    if(arp->hardwareType = 0x0100)
+    if(arp->hardwareType = (uint16_t) 0x0100)
     {
         if(arp->protocol == 0x0008
         && arp->hardwareAddressSize == 6
@@ -114,7 +114,7 @@ uint64_t AddressResolutionProtocol::Resolve(uint32_t IP_BE)
         printf("*");
         pit->Sleep(50); //Small timeout
     }
-    printf("Request timed out\n");
+    printf("Arp Resolve: Request timed out\n");
 
     return 0;
 }

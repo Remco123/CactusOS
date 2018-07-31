@@ -9,7 +9,7 @@ void printfHex(uint8_t);
 void printfHex16(uint16_t);
 
 //When we add this in the header it doesn't work for some reason, I should really look into this!
-int NumDrivers = 0;
+uint32_t NumDrivers = 0;
 Driver* drivers[32]; 
 
 DriverManager::DriverManager()

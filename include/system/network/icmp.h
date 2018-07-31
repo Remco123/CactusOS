@@ -28,7 +28,7 @@ namespace CactusOS
             InternetControlMessageProtocol(IPV4Handler* ipv4Backend);
             ~InternetControlMessageProtocol();
             
-            bool OnInternetProtocolReceived(common::uint32_t srcIP_BE, common::uint32_t dstIP_BE,
+            void OnInternetProtocolReceived(common::uint32_t srcIP_BE, common::uint32_t dstIP_BE,
                                             common::uint8_t* payload, common::uint32_t size);
             void RequestEchoReply(common::uint32_t ip_be);
         };

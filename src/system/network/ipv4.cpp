@@ -16,6 +16,7 @@ IPV4Handler::IPV4Handler(NetworkManager* backend,
     this->netManager = backend;
 
     this->icmpHandler = new InternetControlMessageProtocol(this);
+    this->udpHandler = new UserDatagramProtocolManager(this);
 }
 IPV4Handler::~IPV4Handler()
 {
@@ -36,9 +37,14 @@ void IPV4Handler::HandlePacket(uint8_t* etherframePayload, uint32_t size)
         printf("Packet is for us joehoe!\n");
         switch(ipmessage->protocol)
         {
-            case 0x01:
+            case 0x01: //icmp
                 if(this->icmpHandler != 0)
                     this->icmpHandler->OnInternetProtocolReceived(ipmessage->srcIP, ipmessage->dstIP, etherframePayload + 4*ipmessage->headerLength, length - 4*ipmessage->headerLength);
+                break;
+            case 0x11: //udp
+                if(this->udpHandler != 0)
+                    this->udpHandler->OnInternetProtocolReceived(ipmessage->srcIP, ipmessage->dstIP, etherframePayload + 4*ipmessage->headerLength, length - 4*ipmessage->headerLength);
+                break;
         }
     }
 }
@@ -70,7 +76,10 @@ void IPV4Handler::Send(uint32_t dstIP_BE, uint8_t protocol, uint8_t* data, uint3
     
     uint32_t route = dstIP_BE;
     if((dstIP_BE & subnetMask) != (message->srcIP & subnetMask))
+    {
         route = gatewayIP;
+        printf("Modified route\n");
+    }
     
     netManager->SendPacket(netManager->arpHandler->Resolve(route), Convert::ByteSwap((uint16_t)ETHERNET_TYPE_IP), buffer, sizeof(InternetProtocolV4Message) + size);
     

@@ -15,7 +15,7 @@ InternetControlMessageProtocol::InternetControlMessageProtocol(IPV4Handler* ipv4
 InternetControlMessageProtocol::~InternetControlMessageProtocol()
 {   }
 
-bool InternetControlMessageProtocol::OnInternetProtocolReceived(uint32_t srcIP_BE, uint32_t dstIP_BE,
+void InternetControlMessageProtocol::OnInternetProtocolReceived(uint32_t srcIP_BE, uint32_t dstIP_BE,
                                 uint8_t* payload, uint32_t size)
 {
     InternetControlMessageProtocolMessage* msg = (InternetControlMessageProtocolMessage*)payload;

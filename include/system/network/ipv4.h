@@ -4,6 +4,7 @@
 #include <common/types.h>
 #include <system/network/networkmanager.h>
 #include <system/network/icmp.h>
+#include <system/network/udp.h>
 
 namespace CactusOS
 {
@@ -28,16 +29,19 @@ namespace CactusOS
         } __attribute__((packed));
 
         class InternetControlMessageProtocol;
+        class UserDatagramProtocolManager;
 
         class IPV4Handler
         {
-        private:
+        friend class UserDatagramProtocolManager;
+        protected:
             NetworkManager* netManager;
             common::uint32_t gatewayIP;
             common::uint32_t subnetMask;
             
         public:
             InternetControlMessageProtocol* icmpHandler;
+            UserDatagramProtocolManager* udpHandler;
 
             IPV4Handler(NetworkManager* backend,
                                      common::uint32_t gatewayIP, common::uint32_t subnetMask);
