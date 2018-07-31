@@ -75,3 +75,4 @@ clean:
 
 qemu: CactusOS.iso
 	qemu-system-i386 -cdrom CactusOS.iso -netdev user,id=u1,hostfwd=tcp::2222-:22,hostfwd=udp::1234-:1234 -device rtl8139,netdev=u1 -object filter-dump,id=f1,netdev=u1,file=netdump.pcap #-s -S #for debug
+	

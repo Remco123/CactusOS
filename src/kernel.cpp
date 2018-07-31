@@ -110,6 +110,13 @@ void PrintIP2(uint32_t ip)
     printf(Convert::IntToString(bytes[0])); 
 }
 
+void HandleTestData(uint8_t* data, uint32_t size)
+{
+    printf("Received from socket:\n");
+    printf((char*)data);
+    printf("\n");
+}
+
 extern "C" void kernelMain(const multiboot_info_t* mbi, unsigned int multiboot_magic)
 {
     PrintKernelStart();
@@ -135,21 +142,12 @@ extern "C" void kernelMain(const multiboot_info_t* mbi, unsigned int multiboot_m
                    | ((uint32_t)gip2 << 8)
                    | (uint32_t)gip1;
 
-        printf("Trying google ping\n");
-        uint8_t pingTest1 = 216, pingTest2 = 58, pingTest3 = 211, pingTest4 = 100;
-        uint32_t pingTest = ((uint32_t)pingTest4 << 24)
-                   | ((uint32_t)pingTest3 << 16)
-                   | ((uint32_t)pingTest2 << 8)
-                   | (uint32_t)pingTest1;
-        System::networkManager->ipv4Handler->icmpHandler->RequestEchoReply(pingTest);
-        printf("Done\n");
-
         UDPSocket* socket = System::networkManager->ipv4Handler->udpHandler->Listen(1234);
+        socket->receiveHandle = HandleTestData;
 
         printf("Our IP: "); PrintIP2(Convert::ByteSwap(System::networkManager->IP_BE)); printf("\n");
         while(socket->listening);
         printf("Connected!\n");
-        socket->Send((uint8_t*)"Hallo", 6);
     }
 
     while(1);

@@ -116,7 +116,7 @@ void UserDatagramProtocolManager::OnInternetProtocolReceived(uint32_t srcIP_BE, 
         
         else if( sockets[i]->localPort == localPort
         &&  cur->localIP == dstIP_BE
-        &&  sockets[i]->remotePort == msg->srcPort
+        &&  sockets[i]->remotePort == remotePort
         &&  sockets[i]->remoteIP == srcIP_BE)
             socket = sockets[i];
 
