@@ -24,7 +24,6 @@ objects = obj/loader.o \
 		  obj/system/drivers/driver.o \
 		  obj/system/drivers/networkdriver.o \
 		  obj/system/drivers/rtl8139.o \
-		  obj/system/drivers/amd_am79c973.o \
 		  obj/system/drivers/drivermanager.o \
 		  obj/system/network/arp.o \
 		  obj/system/network/icmp.o \

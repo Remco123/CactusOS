@@ -7,7 +7,6 @@
 #include <core/interrupts.h>
 
 #include <system/drivers/rtl8139.h>
-#include <system/drivers/amd_am79c973.h>
 
 namespace CactusOS
 {

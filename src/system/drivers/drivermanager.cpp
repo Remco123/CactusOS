@@ -50,16 +50,17 @@ Driver* DriverManager::GetDriver(core::PeripheralComponentInterconnectDeviceDesc
 {
     switch (device->vendor_id)
     {
-        case 0x1022: //Amd
-            switch (device->device_id)
-            {
-                case 0x2000:
-                    printf("  [Loading...]\n");
-                    printf("Loading AMD_AM79C973 NIC\n");
-                    return new amd_am79c973(device, interrupts);
-                    break;
-            }
-            break;
+        //case 0x1022: //Amd
+        //    switch (device->device_id)
+        //    {
+        //        case 0x2000:
+        //            printf("  [Loading...]\n");
+        //            printf("Loading AMD_AM79C973 NIC\n");
+        //            return new amd_am79c973(device, interrupts);
+        //            break;
+        //    }
+        //    break;
+        //#### This device is broken at the moment
 
         case 0x10EC: //Realtek
             switch(device->device_id)
