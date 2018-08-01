@@ -82,6 +82,16 @@ namespace CactusOS
             static UDPSocket* dhcpSocket;
             static void HandleUDP(common::uint8_t* data, common::uint32_t size);
         public:
+            static bool Enabled;
+
+            static char HostName[100];
+            static common::uint32_t Dns;
+            static common::uint32_t ServerIp;
+            static common::uint32_t OurIp;
+            static common::uint32_t SubnetMask;
+            static common::uint32_t RouterIp;
+            static common::uint32_t LeaseTime;
+
             static void EnableDHCP();
         };
     }

@@ -56,19 +56,7 @@ UserDatagramProtocolManager::~UserDatagramProtocolManager()
 
 }
 
-void PrintIP(uint32_t ip)
-{
-    unsigned char bytes[4];
-    bytes[0] = ip & 0xFF;
-    bytes[1] = (ip >> 8) & 0xFF;
-    bytes[2] = (ip >> 16) & 0xFF;
-    bytes[3] = (ip >> 24) & 0xFF;   
-    //printf("%d.%d.%d.%d\n", bytes[3], bytes[2], bytes[1], bytes[0]);
-    printf(Convert::IntToString(bytes[3])); printf(".");
-    printf(Convert::IntToString(bytes[2])); printf(".");
-    printf(Convert::IntToString(bytes[1])); printf(".");
-    printf(Convert::IntToString(bytes[0])); 
-}
+void PrintIP(uint32_t ip); //Defined in kernel
 
 
 void UserDatagramProtocolManager::OnInternetProtocolReceived(uint32_t srcIP_BE, uint32_t dstIP_BE,
@@ -122,7 +110,7 @@ void UserDatagramProtocolManager::OnInternetProtocolReceived(uint32_t srcIP_BE, 
 
     }
 
-    if(remotePort = 67)
+    if(remotePort == 67)
     {
         printf("Packet is DHCP\n");
         for(uint16_t i = 0; i < numSockets; i++) //Do a special search for dhcp socket, this should be done in the loop above!

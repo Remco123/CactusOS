@@ -5,13 +5,25 @@ using namespace CactusOS::common;
 using namespace CactusOS::core;
 using namespace CactusOS::system;
 
+#define PACKET_END(p) (((uint8_t*)(p)) + sizeof(DhcpHeader))
+#define PACKET_INSIDE(i,p) (((uint8_t*)(i)) >= ((uint8_t*)(p)) && ((uint8_t*)(i)) <= PACKET_END(p))
+
 void printf(char*);
 void printfHex(uint8_t);
 void printfHex16(uint16_t);
 void printfHex32(uint32_t);
-
+void PrintIP(uint32_t ip);
 
 UDPSocket* DHCP::dhcpSocket = 0;
+bool DHCP::Enabled = false;
+
+char DHCP::HostName[]     = {};
+uint32_t DHCP::Dns          = 0;
+uint32_t DHCP::ServerIp     = 0;
+uint32_t DHCP::OurIp        = 0;
+uint32_t DHCP::SubnetMask   = 0;
+uint32_t DHCP::RouterIp     = 0;
+uint32_t DHCP::LeaseTime    = 0;
 
 void DHCP::EnableDHCP()
 {
@@ -81,6 +93,7 @@ void DHCP::EnableDHCP()
     *(options++) = 0x3;
     *(options++) = 0x6;
     *(options++) = 0xf;
+    *(options++) = 51; //Lease time
     *(options++) = 0x2c;
     *(options++) = 0x2e;
     *(options++) = 0x2f;
@@ -95,4 +108,59 @@ void DHCP::EnableDHCP()
 void DHCP::HandleUDP(common::uint8_t* data, common::uint32_t size)
 {
     printf("Parsing DHCP data\n");
+
+    DhcpHeader* header = (DhcpHeader*)data;
+    if(header->opcode == OP_REPLY)
+    {
+        if (header->options[0] != 0x63)
+		    return;
+	    if (header->options[1] != 0x82)
+		    return;
+	    if (header->options[2] != 0x53)
+		    return;
+	    if (header->options[3] != 0x63)
+            return;
+
+        printf("Header seems valid\n");
+        printf("    Our IP: "); PrintIP(Convert::ByteSwap(header->yourIpAddr)); printf("\n");
+
+        uint8_t *p = header->options + 4;
+        while (PACKET_INSIDE(p, header) && (*p & 0xff) != 0xff) {
+            switch (*p) {
+            case DhcpOptionHostName:
+                MemoryOperations::memcpy(DHCP::HostName, p + 2, *(p + 1));
+                printf("    Host Name: "); printf(DHCP::HostName); printf("\n");
+                break;
+            case DhcpOptionDNS:
+                DHCP::Dns = *(uint32_t*)(p + 2);
+                printf("    DNS: "); PrintIP(Convert::ByteSwap(DHCP::Dns)); printf("\n");
+                break;
+            case DhcpOptionIPAddrLeaseTime:
+                DHCP::LeaseTime = Convert::ByteSwap(*(uint32_t*)(p + 2));
+                printf("    Lease Time: "); printf(Convert::IntToString(DHCP::LeaseTime)); printf("\n");
+                break;
+            case DhcpOptionRoutersOnSubnet:
+                DHCP::RouterIp = *(uint32_t*)(p + 2);
+                printf("    Router IP: "); PrintIP(Convert::ByteSwap(DHCP::RouterIp)); printf("\n");
+                break;
+            case DhcpOptionServerIdentifier:
+                DHCP::ServerIp = *(uint32_t*)(p + 2);
+                printf("    Server IP: "); PrintIP(Convert::ByteSwap(DHCP::ServerIp)); printf("\n");
+                break;
+            case DhcpOptionSubnetMask:
+                DHCP::SubnetMask = *(uint32_t*)(p + 2);
+                printf("    Subnet Mask: "); PrintIP(Convert::ByteSwap(DHCP::SubnetMask)); printf("\n");
+                break;
+            default:
+                printf("    Option not used: "); printfHex(*p); printf("\n");
+                break;
+            }
+            p++;
+            p += *p + 1;
+        }
+
+        DHCP::Enabled = true;
+    }
+
+    printf("DHCP Parsed!\n");
 }

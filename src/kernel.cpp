@@ -97,7 +97,7 @@ void PrintKernelStart()
     printf("\n");
 }
 
-void PrintIP2(uint32_t ip)
+void PrintIP(uint32_t ip)
 {
     unsigned char bytes[4];
     bytes[0] = ip & 0xFF;
@@ -147,7 +147,7 @@ extern "C" void kernelMain(const multiboot_info_t* mbi, unsigned int multiboot_m
         UDPSocket* socket = System::networkManager->ipv4Handler->udpHandler->Listen(1234);
         socket->receiveHandle = HandleTestData;
 
-        printf("Our IP: "); PrintIP2(Convert::ByteSwap(System::networkManager->IP_BE)); printf("\n");
+        printf("Our IP: "); PrintIP(Convert::ByteSwap(System::networkManager->IP_BE)); printf("\n");
         while(socket->listening);
         printf("Connected!\n");
         */
