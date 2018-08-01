@@ -26,7 +26,7 @@ UDPSocket::~UDPSocket()
 }
 void UDPSocket::HandleData(uint8_t* data, uint16_t size)
 {
-    printf("Handling Data\n");
+    printf("Passing data to receiveHandle\n");
     if(receiveHandle != 0)
         receiveHandle(data, size);
 }
@@ -120,6 +120,14 @@ void UserDatagramProtocolManager::OnInternetProtocolReceived(uint32_t srcIP_BE, 
         &&  sockets[i]->remoteIP == srcIP_BE)
             socket = sockets[i];
 
+    }
+
+    if(remotePort = 67)
+    {
+        printf("Packet is DHCP\n");
+        for(uint16_t i = 0; i < numSockets; i++) //Do a special search for dhcp socket, this should be done in the loop above!
+            if(sockets[i]->localPort == 68 && sockets[i]->remotePort == 67)
+                socket = sockets[i];    
     }
     
     if(socket != 0)

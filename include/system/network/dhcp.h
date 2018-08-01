@@ -2,13 +2,14 @@
 #define __CACTUSOS__SYSTEM__NETWORK__DHCP_H
 
 #include <common/types.h>
+#include <system/network/udp.h>
 #include <system/network/ipv4.h>
+#include <system.h>
 
 namespace CactusOS
 {
     namespace system
     {
-
         #define OP_REQUEST                      1
         #define OP_REPLY                        2
         #define MAGIC_COOKIE                    0x63825363
@@ -31,7 +32,7 @@ namespace CactusOS
         #define DHCP_NAK                        6
         #define DHCP_RELEASE                    7
         #define DHCP_INFORM                     8
-
+        #define DHCP_TRANSACTION_IDENTIFIER     0x55555555
 
         struct DhcpHeader
         {
@@ -50,21 +51,38 @@ namespace CactusOS
             common::uint8_t reserved[10];
             char serverName[64];
             char bootFilename[128];
+            common::uint8_t options[64];
         } __attribute__((packed));
 
-        struct DhcpOptions
+        enum DhcpOptions {
+            DhcpOptionPadding          = 0,
+            DhcpOptionSubnetMask       = 1,
+            DhcpOptionRoutersOnSubnet  = 3,
+            DhcpOptionDNS              = 6,
+            DhcpOptionHostName         = 12,
+            DhcpOptionDomainName       = 15,
+            DhcpOptionRequestedIPaddr	= 50,
+            DhcpOptionIPAddrLeaseTime	= 51,
+            DhcpOptionOptionOverload	= 52,
+            DhcpOptionMessageType		= 53,
+            DhcpOptionServerIdentifier	= 54,
+            DhcpOptionParamRequest	   = 55,
+            DhcpOptionMsg		      	= 56,
+            DhcpOptionMaxMsgSize 		= 57,
+            DhcpOptionT1value	      	= 58,
+            DhcpOptionT2value		      = 59,
+            DhcpOptionClassIdentifier	= 60,
+            DhcpOptionClientIdentifier	= 61,
+            DhcpOptionEnd     		   = 255
+        };
+
+        class DHCP
         {
-            const common::uint32_t *subnetMask;
-            const common::uint32_t *routerList;
-            const common::uint32_t *routerEnd;
-            const common::uint32_t *dnsList;
-            const common::uint32_t *dnsEnd;
-            const common::uint32_t *requestedIpAddr;
-            common::uint32_t leaseTime;
-            common::uint32_t messageType;
-            const common::uint32_t *serverId;
-            const common::uint8_t *parameterList;
-            const common::uint8_t *parameterEnd;
+        private:
+            static UDPSocket* dhcpSocket;
+            static void HandleUDP(common::uint8_t* data, common::uint32_t size);
+        public:
+            static void EnableDHCP();
         };
     }
 }

@@ -36,6 +36,7 @@ namespace CactusOS
             AddressResolutionProtocol* arpHandler;
             IPV4Handler* ipv4Handler;
             common::uint32_t IP_BE;
+            common::uint8_t MAC[6];
 
             NetworkManager(NetworkDriver* device, core::PIT* pit, common::uint32_t ip_BE);
             ~NetworkManager();

@@ -17,6 +17,7 @@ NetworkManager::NetworkManager(NetworkDriver* device, CactusOS::core::PIT* pit, 
     this->netDevice = device;
     this->IP_BE = ip_BE;
     device->NetManager = this;
+    MemoryOperations::memcpy(this->MAC, device->MAC, 6);
 
     this->arpHandler = new AddressResolutionProtocol(this, pit);
 }

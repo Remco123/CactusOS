@@ -18,12 +18,14 @@ namespace CactusOS
         } __attribute__((packed));
 
         class UserDatagramProtocolManager;
+        class DHCP;
 
         typedef void (*SocketReceive)(common::uint8_t* packet, common::uint32_t size);
 
         class UDPSocket
         {
         friend class UserDatagramProtocolManager;
+        friend class DHCP;
         protected:
             common::uint16_t remotePort;
             common::uint32_t remoteIP; //Target ip address

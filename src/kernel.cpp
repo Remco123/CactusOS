@@ -2,6 +2,7 @@
 #include <multiboot/multiboot.h>
 #include <common/convert.h>
 #include <system/network/udp.h>
+#include <system/network/dhcp.h>
 
 using namespace CactusOS;
 using namespace CactusOS::core;
@@ -136,6 +137,7 @@ extern "C" void kernelMain(const multiboot_info_t* mbi, unsigned int multiboot_m
 
     if(System::networkManager != 0)
     {
+        /*
         uint8_t gip1 = 10, gip2 = 0, gip3 = 2, gip4 = 2;
         uint32_t gip_be = ((uint32_t)gip4 << 24)
                    | ((uint32_t)gip3 << 16)
@@ -148,6 +150,9 @@ extern "C" void kernelMain(const multiboot_info_t* mbi, unsigned int multiboot_m
         printf("Our IP: "); PrintIP2(Convert::ByteSwap(System::networkManager->IP_BE)); printf("\n");
         while(socket->listening);
         printf("Connected!\n");
+        */
+
+        DHCP::EnableDHCP();
     }
 
     while(1);

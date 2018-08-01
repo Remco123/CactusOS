@@ -28,7 +28,7 @@ void IPV4Handler::HandlePacket(uint8_t* etherframePayload, uint32_t size)
     printf("IPV4 handling packet\n");
     InternetProtocolV4Message* ipmessage = (InternetProtocolV4Message*)etherframePayload;
     
-    if(ipmessage->dstIP == netManager->GetIPAddress())
+    if(ipmessage->dstIP == netManager->GetIPAddress() || ipmessage->dstIP == 0xFFFFFFFF)
     {
         int length = ipmessage->totalLength;
         if(length > size)
