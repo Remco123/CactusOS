@@ -6,6 +6,7 @@ using namespace CactusOS::core;
 using namespace CactusOS::system;
 
 void printf(char*);
+void PrintIP(uint32_t);
 
 //Static initialization
 GlobalDescriptorTable* System::gdt = 0;
@@ -68,16 +69,29 @@ void System::InitSystem()
     {
         printf("Starting Network\n");
 
+        //// IP Address
+        //uint8_t ip1 = 10, ip2 = 0, ip3 = 2, ip4 = 15;
+        //uint32_t ip_be = ((uint32_t)ip4 << 24)
+        //            | ((uint32_t)ip3 << 16)
+        //            | ((uint32_t)ip2 << 8)
+        //            | (uint32_t)ip1;    
+
+        //// IP Address of the default gateway
+        //uint8_t gip1 = 10, gip2 = 0, gip3 = 2, gip4 = 2;
+        //uint32_t gip_be = ((uint32_t)gip4 << 24)
+        //           | ((uint32_t)gip3 << 16)
+        //           | ((uint32_t)gip2 << 8)
+        //           | (uint32_t)gip1;
+
         // IP Address
-        uint8_t ip1 = 10, ip2 = 0, ip3 = 2, ip4 = 15;
+        uint8_t ip1 = 192, ip2 = 168, ip3 = 2, ip4 = 20;
         uint32_t ip_be = ((uint32_t)ip4 << 24)
                     | ((uint32_t)ip3 << 16)
                     | ((uint32_t)ip2 << 8)
                     | (uint32_t)ip1;    
 
-    
         // IP Address of the default gateway
-        uint8_t gip1 = 10, gip2 = 0, gip3 = 2, gip4 = 2;
+        uint8_t gip1 = 192, gip2 = 168, gip3 = 2, gip4 = 254;
         uint32_t gip_be = ((uint32_t)gip4 << 24)
                    | ((uint32_t)gip3 << 16)
                    | ((uint32_t)gip2 << 8)
@@ -92,7 +106,7 @@ void System::InitSystem()
         System::networkManager = new NetworkManager(netDriver, System::pit, ip_be); //This way only 1 network device gets used
         System::networkManager->ipv4Handler = new IPV4Handler(System::networkManager, gip_be, subnet_be);
         
-        printf("Resolving: 10.0.2.2\n");
+        printf("Resolving: "); PrintIP(Convert::ByteSwap(gip_be)); printf("\n");
         System::networkManager->arpHandler->BroadcastMACAddress(gip_be);
         System::networkManager->ipv4Handler->icmpHandler->RequestEchoReply(gip_be);
         printf("Network initialized\n");

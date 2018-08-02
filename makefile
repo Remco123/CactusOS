@@ -10,6 +10,7 @@ objects = obj/loader.o \
 		  obj/common/convert.o \
 		  obj/common/math.o \
 		  obj/common/memoryoperations.o \
+		  obj/common/mmioutls.o \
 		  obj/core/gdtloader.o \
 		  obj/core/gdt.o \
 		  obj/core/interruptstubs.o \

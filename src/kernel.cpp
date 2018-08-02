@@ -143,16 +143,16 @@ extern "C" void kernelMain(const multiboot_info_t* mbi, unsigned int multiboot_m
                    | ((uint32_t)gip3 << 16)
                    | ((uint32_t)gip2 << 8)
                    | (uint32_t)gip1;
-
+        */
         UDPSocket* socket = System::networkManager->ipv4Handler->udpHandler->Listen(1234);
         socket->receiveHandle = HandleTestData;
 
         printf("Our IP: "); PrintIP(Convert::ByteSwap(System::networkManager->IP_BE)); printf("\n");
         while(socket->listening);
         printf("Connected!\n");
-        */
+        //*/
 
-        DHCP::EnableDHCP();
+        //DHCP::EnableDHCP();
     }
 
     while(1);
