@@ -9,11 +9,8 @@ void printfHex(uint8_t);
 void printfHex16(uint16_t);
 void printfHex32(uint32_t);
 
-NetworkManager* NetworkManager::instance = 0;
-
 NetworkManager::NetworkManager(NetworkDriver* device, CactusOS::core::PIT* pit, uint32_t ip_BE)
 {
-    this->instance = this;
     this->netDevice = device;
     this->IP_BE = ip_BE;
     device->NetManager = this;
@@ -75,7 +72,10 @@ void NetworkManager::SendPacket(common::uint64_t dstMAC_BE, common::uint16_t eth
 
 uint32_t NetworkManager::GetIPAddress()
 {
-    return this->IP_BE;
+    if(this->dhcpController != 0 && this->dhcpController->Enabled)
+        return this->dhcpController->OurIp; //Return the IP gathered by DHCP
+    else
+        return this->IP_BE; //Return the default IP
 }
 uint64_t NetworkManager::GetMACAddress()
 {

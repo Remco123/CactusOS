@@ -19,6 +19,7 @@ namespace CactusOS
 
         class UserDatagramProtocolManager;
         class DHCP;
+        class IPV4Handler;
 
         typedef void (*SocketReceive)(common::uint8_t* packet, common::uint32_t size);
 

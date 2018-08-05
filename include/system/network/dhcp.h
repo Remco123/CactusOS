@@ -4,7 +4,6 @@
 #include <common/types.h>
 #include <system/network/udp.h>
 #include <system/network/ipv4.h>
-#include <system.h>
 
 namespace CactusOS
 {
@@ -76,23 +75,28 @@ namespace CactusOS
             DhcpOptionEnd     		   = 255
         };
 
+        class UDPSocket;
+
         class DHCP
         {
         private:
-            static UDPSocket* dhcpSocket;
-            static void HandleUDP(common::uint8_t* data, common::uint32_t size);
+            NetworkManager* backend;
         public:
-            static bool Enabled;
+            UDPSocket* dhcpSocket;
+            void HandleUDP(unsigned char* data, unsigned int size);
+            DHCP(NetworkManager* backend);
 
-            static char HostName[100];
-            static common::uint32_t Dns;
-            static common::uint32_t ServerIp;
-            static common::uint32_t OurIp;
-            static common::uint32_t SubnetMask;
-            static common::uint32_t RouterIp;
-            static common::uint32_t LeaseTime;
+            bool Enabled;
 
-            static void EnableDHCP();
+            char HostName[100];
+            common::uint32_t Dns;
+            common::uint32_t ServerIp;
+            common::uint32_t OurIp;
+            common::uint32_t SubnetMask;
+            common::uint32_t RouterIp;
+            common::uint32_t LeaseTime;
+
+            void EnableDHCP();
         };
     }
 }

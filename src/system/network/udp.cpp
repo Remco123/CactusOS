@@ -112,10 +112,14 @@ void UserDatagramProtocolManager::OnInternetProtocolReceived(uint32_t srcIP_BE, 
 
     if(remotePort == 67)
     {
+        /*
         printf("Packet is DHCP\n");
         for(uint16_t i = 0; i < numSockets; i++) //Do a special search for dhcp socket, this should be done in the loop above!
             if(sockets[i]->localPort == 68 && sockets[i]->remotePort == 67)
                 socket = sockets[i];    
+        */
+       //TODO: Improve this
+        backend->netManager->dhcpController->HandleUDP(payload + sizeof(UserDatagramProtocolHeader), size - sizeof(UserDatagramProtocolHeader));
     }
     
     if(socket != 0)
@@ -134,7 +138,7 @@ UDPSocket* UserDatagramProtocolManager::Connect(uint32_t ip, uint16_t port)
         socket -> remotePort = port;
         socket -> remoteIP = ip;
         socket -> localPort = freePort++;   
-        socket -> localIP = backend->netManager->IP_BE;     
+        socket -> localIP = backend->netManager->GetIPAddress();     
         //socket -> remotePort = ((socket -> remotePort & 0xFF00)>>8) | ((socket -> remotePort & 0x00FF) << 8);
         //socket -> localPort = ((socket -> localPort & 0xFF00)>>8) | ((socket -> localPort & 0x00FF) << 8);
         
@@ -154,7 +158,7 @@ UDPSocket* UserDatagramProtocolManager::Listen(uint16_t port)
     {    
         socket -> listening = true;
         socket -> localPort = port;
-        socket -> localIP = backend->netManager->IP_BE;   
+        socket -> localIP = backend->netManager->GetIPAddress();   
 
         //socket -> localPort = ((socket -> localPort & 0xFF00)>>8) | ((socket -> localPort & 0x00FF) << 8);
         sockets[numSockets] = socket;
@@ -166,9 +170,10 @@ UDPSocket* UserDatagramProtocolManager::Listen(uint16_t port)
 }
 void UserDatagramProtocolManager::Disconnect(UDPSocket* socket)
 {
-    for(uint16_t i = 0; i < numSockets && socket == 0; i++)
+    for(uint16_t i = 0; i < numSockets && socket != 0; i++)
         if(sockets[i] == socket)
         {
+            printf("Socket Disconnected\n");
             sockets[i] = sockets[--numSockets];
             delete socket;
             break;

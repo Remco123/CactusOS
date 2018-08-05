@@ -5,6 +5,7 @@
 #include <system/drivers/networkdriver.h>
 #include <system/network/arp.h>
 #include <system/network/ipv4.h>
+#include <system/network/dhcp.h>
 #include <core/pit.h>
 
 namespace CactusOS
@@ -26,17 +27,20 @@ namespace CactusOS
         class NetworkDriver;
         class AddressResolutionProtocol;
         class IPV4Handler;
+        class DHCP;
 
         class NetworkManager
         {
+        friend class DHCP;
         protected:
             NetworkDriver* netDevice;
-            static NetworkManager* instance;
+
+            common::uint32_t IP_BE;
         public:
+            common::uint8_t MAC[6];
             AddressResolutionProtocol* arpHandler;
             IPV4Handler* ipv4Handler;
-            common::uint32_t IP_BE;
-            common::uint8_t MAC[6];
+            DHCP* dhcpController;
 
             NetworkManager(NetworkDriver* device, core::PIT* pit, common::uint32_t ip_BE);
             ~NetworkManager();

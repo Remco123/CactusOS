@@ -14,26 +14,18 @@ void printfHex16(uint16_t);
 void printfHex32(uint32_t);
 void PrintIP(uint32_t ip);
 
-UDPSocket* DHCP::dhcpSocket = 0;
-bool DHCP::Enabled = false;
+DHCP::DHCP(NetworkManager* backend)
+{
+    this->backend = backend;
 
-char DHCP::HostName[]     = {};
-uint32_t DHCP::Dns          = 0;
-uint32_t DHCP::ServerIp     = 0;
-uint32_t DHCP::OurIp        = 0;
-uint32_t DHCP::SubnetMask   = 0;
-uint32_t DHCP::RouterIp     = 0;
-uint32_t DHCP::LeaseTime    = 0;
+    //Start socket
+    this->dhcpSocket = backend->ipv4Handler->udpHandler->Connect(0xFFFFFFFF, 67);
+    //Set Correct port
+    this->dhcpSocket->localPort = 68;
+}
 
 void DHCP::EnableDHCP()
 {
-    //Start socket
-    DHCP::dhcpSocket = System::networkManager->ipv4Handler->udpHandler->Connect(0xFFFFFFFF, 67);
-    //Set Correct port
-    DHCP::dhcpSocket->localPort = 68;
-    //Set handler
-    DHCP::dhcpSocket->receiveHandle = DHCP::HandleUDP;
-
     DhcpHeader* header = (DhcpHeader*)MemoryManager::activeMemoryManager->malloc(sizeof(DhcpHeader));
     MemoryOperations::memset(header, 0, sizeof(DhcpHeader));
 
@@ -45,7 +37,7 @@ void DHCP::EnableDHCP()
     header->secCount = Convert::ByteSwap((uint32_t) 0);
     header->flags = Convert::ByteSwap((uint16_t)( 0 | 0x8000 ));
 
-    MemoryOperations::memcpy(header->clientEthAddr, System::networkManager->MAC, 6);
+    MemoryOperations::memcpy(header->clientEthAddr, backend->MAC, 6);
 
     uint8_t* options = header->options;
 
@@ -63,12 +55,12 @@ void DHCP::EnableDHCP()
     *(options++) = 0x01;
 
     //get_mac_addr(options);
-    *(options++) = System::networkManager->MAC[5];
-    *(options++) = System::networkManager->MAC[4];
-    *(options++) = System::networkManager->MAC[3];
-    *(options++) = System::networkManager->MAC[2];
-    *(options++) = System::networkManager->MAC[1];
-    *(options++) = System::networkManager->MAC[0];
+    *(options++) = backend->MAC[5];
+    *(options++) = backend->MAC[4];
+    *(options++) = backend->MAC[3];
+    *(options++) = backend->MAC[2];
+    *(options++) = backend->MAC[1];
+    *(options++) = backend->MAC[0];
 
     options += 6;
 
@@ -102,7 +94,7 @@ void DHCP::EnableDHCP()
 
 
     //Finally send the packet
-    DHCP::dhcpSocket->Send((uint8_t*)header, sizeof(DhcpHeader));
+    this->dhcpSocket->Send((uint8_t*)header, sizeof(DhcpHeader));
 }
 
 void DHCP::HandleUDP(common::uint8_t* data, common::uint32_t size)
@@ -123,33 +115,34 @@ void DHCP::HandleUDP(common::uint8_t* data, common::uint32_t size)
 
         printf("Header seems valid\n");
         printf("    Our IP: "); PrintIP(Convert::ByteSwap(header->yourIpAddr)); printf("\n");
+        this->OurIp = header->yourIpAddr; //Set ip address to system
 
         uint8_t *p = header->options + 4;
         while (PACKET_INSIDE(p, header) && (*p & 0xff) != 0xff) {
             switch (*p) {
             case DhcpOptionHostName:
-                MemoryOperations::memcpy(DHCP::HostName, p + 2, *(p + 1));
-                printf("    Host Name: "); printf(DHCP::HostName); printf("\n");
+                MemoryOperations::memcpy(this->HostName, p + 2, *(p + 1));
+                printf("    Host Name: "); printf(this->HostName); printf("\n");
                 break;
             case DhcpOptionDNS:
-                DHCP::Dns = *(uint32_t*)(p + 2);
-                printf("    DNS: "); PrintIP(Convert::ByteSwap(DHCP::Dns)); printf("\n");
+                this->Dns = *(uint32_t*)(p + 2);
+                printf("    DNS: "); PrintIP(Convert::ByteSwap(this->Dns)); printf("\n");
                 break;
             case DhcpOptionIPAddrLeaseTime:
-                DHCP::LeaseTime = Convert::ByteSwap(*(uint32_t*)(p + 2));
-                printf("    Lease Time: "); printf(Convert::IntToString(DHCP::LeaseTime)); printf("\n");
+                this->LeaseTime = Convert::ByteSwap(*(uint32_t*)(p + 2));
+                printf("    Lease Time: "); printf(Convert::IntToString(this->LeaseTime)); printf("\n");
                 break;
             case DhcpOptionRoutersOnSubnet:
-                DHCP::RouterIp = *(uint32_t*)(p + 2);
-                printf("    Router IP: "); PrintIP(Convert::ByteSwap(DHCP::RouterIp)); printf("\n");
+                this->RouterIp = *(uint32_t*)(p + 2);
+                printf("    Router IP: "); PrintIP(Convert::ByteSwap(this->RouterIp)); printf("\n");
                 break;
             case DhcpOptionServerIdentifier:
-                DHCP::ServerIp = *(uint32_t*)(p + 2);
-                printf("    Server IP: "); PrintIP(Convert::ByteSwap(DHCP::ServerIp)); printf("\n");
+                this->ServerIp = *(uint32_t*)(p + 2);
+                printf("    Server IP: "); PrintIP(Convert::ByteSwap(this->ServerIp)); printf("\n");
                 break;
             case DhcpOptionSubnetMask:
-                DHCP::SubnetMask = *(uint32_t*)(p + 2);
-                printf("    Subnet Mask: "); PrintIP(Convert::ByteSwap(DHCP::SubnetMask)); printf("\n");
+                this->SubnetMask = *(uint32_t*)(p + 2);
+                printf("    Subnet Mask: "); PrintIP(Convert::ByteSwap(this->SubnetMask)); printf("\n");
                 break;
             default:
                 printf("    Option not used: "); printfHex(*p); printf("\n");
@@ -159,7 +152,8 @@ void DHCP::HandleUDP(common::uint8_t* data, common::uint32_t size)
             p += *p + 1;
         }
 
-        DHCP::Enabled = true;
+        this->Enabled = true;
+        this->dhcpSocket->Disconnect(); //we don't need it anymore
     }
 
     printf("DHCP Parsed!\n");
