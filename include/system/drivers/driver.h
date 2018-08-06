@@ -12,6 +12,8 @@ namespace CactusOS
         {
             Network,
             Audio,
+            Keyboard,
+            Mouse,
             Unkown
         };
 

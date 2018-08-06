@@ -29,40 +29,45 @@ void terminal_scroll(){
 
 void printf(char* str)
 {
-    static uint16_t* VideoMemory = (uint16_t*)0xb8000;
+    if(Console::Started)
+        Console::Write(str);
+    else
+    {    
+        static uint16_t* VideoMemory = (uint16_t*)0xb8000;
 
-    static uint8_t x=0,y=0;
+        static uint8_t x=0,y=0;
 
-    for(int i = 0; str[i] != '\0'; ++i)
-    {
-        switch(str[i])
+        for(int i = 0; str[i] != '\0'; ++i)
         {
-            case '\n':
+            switch(str[i])
+            {
+                case '\n':
+                    x = 0;
+                    y++;
+                    break;
+                default:
+                    volatile uint16_t * where;
+                    where = (volatile uint16_t *)0xB8000 + (y * 80 + x) ;
+                    *where = str[i] | ((0 << 4) | (0xB & 0x0F) << 8);
+                    x++;
+                    break;
+            }
+
+            if(x >= 80)
+            {
                 x = 0;
                 y++;
-                break;
-            default:
-                volatile uint16_t * where;
-                where = (volatile uint16_t *)0xB8000 + (y * 80 + x) ;
-                *where = str[i] | ((0 << 4) | (0xB & 0x0F) << 8);
-                x++;
-                break;
-        }
+            }
 
-        if(x >= 80)
-        {
-            x = 0;
-            y++;
-        }
-
-        if(y >= 25)
-        {
-            //for(y = 0; y < 25; y++)
-            //    for(x = 0; x < 80; x++)
-            //        VideoMemory[80*y+x] = (VideoMemory[80*y+x] & 0xFF00) | ' ';
-            terminal_scroll();
-            x = 0;
-            y = 24;
+            if(y >= 25)
+            {
+                //for(y = 0; y < 25; y++)
+                //    for(x = 0; x < 80; x++)
+                //        VideoMemory[80*y+x] = (VideoMemory[80*y+x] & 0xFF00) | ' ';
+                terminal_scroll();
+                x = 0;
+                y = 24;
+            }
         }
     }
 }
@@ -111,13 +116,6 @@ void PrintIP(uint32_t ip)
     printf(Convert::IntToString(bytes[0])); 
 }
 
-void HandleTestData(uint8_t* data, uint32_t size)
-{
-    printf("Received from socket:\n");
-    printf((char*)data);
-    printf("\n");
-}
-
 extern "C" void kernelMain(const multiboot_info_t* mbi, unsigned int multiboot_magic)
 {
     PrintKernelStart();
@@ -135,23 +133,11 @@ extern "C" void kernelMain(const multiboot_info_t* mbi, unsigned int multiboot_m
     printf("Starting System\n");
     System::InitSystem();
 
-    if(System::networkManager != 0)
+    while(1)
     {
-        /*
-        uint8_t gip1 = 10, gip2 = 0, gip3 = 2, gip4 = 2;
-        uint32_t gip_be = ((uint32_t)gip4 << 24)
-                   | ((uint32_t)gip3 << 16)
-                   | ((uint32_t)gip2 << 8)
-                   | (uint32_t)gip1;
-        */
-        UDPSocket* socket = System::networkManager->ipv4Handler->udpHandler->Listen(1234);
-        socket->receiveHandle = HandleTestData;
-
-        printf("Our IP: "); PrintIP(Convert::ByteSwap(System::networkManager->GetIPAddress())); printf("\n");
-        while(socket->listening);
-        printf("Connected!\n");
-        //*/
+        Console::Write(":==> ");
+        char* input = Console::ReadLine();
+        Console::Write("You typed: ");
+        Console::WriteLine(input);
     }
-
-    while(1);
 }

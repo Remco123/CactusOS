@@ -7,6 +7,7 @@
 #include <core/interrupts.h>
 
 #include <system/drivers/rtl8139.h>
+#include <system/drivers/keyboard.h>
 
 namespace CactusOS
 {

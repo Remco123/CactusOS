@@ -60,14 +60,20 @@ void System::InitSystem()
     System::driverManager->AssignDrivers(System::pci, System::interrupts, System::pci);
     System::driverManager->ActivateAll();
 
+    printf("Starting Console\n");
+    Console::SetKeyboard((KeyboardDriver*)System::driverManager->DriverByType(DriverType::Keyboard));
+    Console::SetColors(0xA, 0x0);
+    Console::Clear();
+    Console::Started = true;
+
     //Activate interrupts after drivers are loaded
     System::interrupts->Activate();
-    printf("Interrupts Activated\n");
+    Console::WriteLine("Interrupts Activated");
 
     NetworkDriver* netDriver = (NetworkDriver*) System::driverManager->DriverByType(DriverType::Network);
     if(netDriver != 0)
     {
-        printf("Starting Network\n");
+        Console::WriteLine("Starting Network");
 
         //Default IP Address
         uint8_t ip1 = 10, ip2 = 0, ip3 = 2, ip4 = 15;
@@ -94,7 +100,7 @@ void System::InitSystem()
 
         System::networkManager->dhcpController = new DHCP(System::networkManager);
 
-        printf("Enabling DHCP\n");
+        Console::WriteLine("Enabling DHCP");
         for(int i = 0; i < DHCP_MAX_TRIES; i++)
         {
             if(!System::networkManager->dhcpController->Enabled)
@@ -104,16 +110,16 @@ void System::InitSystem()
             }
         }
         if(System::networkManager->dhcpController->Enabled)
-            printf("DHCP Enabled!\n");
+            Console::WriteLine("DHCP Enabled!");
         
         else
-            { printf("DHCP Timed out, using default ip: "); PrintIP(Convert::ByteSwap(ip_be)); printf("\n"); }
+            { Console::Write("DHCP Timed out, using default ip: "); PrintIP(Convert::ByteSwap(ip_be)); Console::Write("\n"); }
         
-        printf("Resolving: "); PrintIP(Convert::ByteSwap(gip_be)); printf("\n");
+        Console::Write("Resolving: "); PrintIP(Convert::ByteSwap(gip_be)); Console::WriteLine();
         System::networkManager->arpHandler->BroadcastMACAddress(gip_be);
         System::networkManager->ipv4Handler->icmpHandler->RequestEchoReply(gip_be);
-        printf("Network initialized\n");
+        Console::WriteLine("Network initialized");
     }
     else
-        printf("No network device found so network is disabled\n");
+        Console::WriteLine("No network device found so network is disabled");
 }

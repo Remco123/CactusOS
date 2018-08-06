@@ -2,6 +2,7 @@
 #define __CACTUSOS__CORE__CPU_H
 
 #include <common/types.h>
+#include <system/console.h>
 
 namespace CactusOS
 {

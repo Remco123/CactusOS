@@ -43,6 +43,10 @@ void DriverManager::AssignDrivers(PeripheralComponentInterconnectController* pci
             printf("  [None found]\n");
     }
 
+    //Here are the default drivers that any system has, like keyboard and mouse.
+    printf("Adding keyboard\n");
+    this->AddDriver(new KeyboardDriver(interrupts));
+
     printf("Loaded "); printf(Convert::IntToString(NumDrivers)); printf(" drivers\n");
 }
 

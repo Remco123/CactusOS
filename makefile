@@ -25,7 +25,9 @@ objects = obj/loader.o \
 		  obj/system/drivers/driver.o \
 		  obj/system/drivers/networkdriver.o \
 		  obj/system/drivers/rtl8139.o \
+		  obj/system/drivers/keyboard.o \
 		  obj/system/drivers/drivermanager.o \
+		  obj/system/console.o \
 		  obj/system/network/arp.o \
 		  obj/system/network/icmp.o \
 		  obj/system/network/udp.o \
