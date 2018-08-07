@@ -70,7 +70,7 @@ void System::InitSystem()
     System::interrupts->Activate();
     Console::WriteLine("Interrupts Activated");
 
-    /*
+    
     NetworkDriver* netDriver = (NetworkDriver*) System::driverManager->DriverByType(DriverType::Network);
     if(netDriver != 0)
     {
@@ -123,5 +123,5 @@ void System::InitSystem()
     }
     else
         Console::WriteLine("No network device found so network is disabled");
-    */
+    
 }

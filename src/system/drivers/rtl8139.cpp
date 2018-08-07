@@ -20,9 +20,6 @@ RTL8139::RTL8139(PeripheralComponentInterconnectDeviceDescriptor *dev, Interrupt
 {
     //Doesn't work without this peice of code, why? No idea!
     device->portBase = pci->Read(device->bus, device->device, device->function, 0x10);
-    pci->Write(device->bus, device->device, device->function, 0x10, ~0);
-    uint32_t size = pci->Read(device->bus, device->device, device->function, 0x10);
-    pci->Write(device->bus, device->device, device->function, 0x10,device->portBase);
 
     // Enable PCI Bus Mastering
     uint32_t pci_command_reg = pci->Read(device->bus, device->device, device->function, 0x04);
