@@ -29,47 +29,7 @@ void terminal_scroll(){
 
 void printf(char* str)
 {
-    if(Console::Started)
-        Console::Write(str);
-    else
-    {    
-        static uint16_t* VideoMemory = (uint16_t*)0xb8000;
-
-        static uint8_t x=0,y=0;
-
-        for(int i = 0; str[i] != '\0'; ++i)
-        {
-            switch(str[i])
-            {
-                case '\n':
-                    x = 0;
-                    y++;
-                    break;
-                default:
-                    volatile uint16_t * where;
-                    where = (volatile uint16_t *)0xB8000 + (y * 80 + x) ;
-                    *where = str[i] | ((0 << 4) | (0xB & 0x0F) << 8);
-                    x++;
-                    break;
-            }
-
-            if(x >= 80)
-            {
-                x = 0;
-                y++;
-            }
-
-            if(y >= 25)
-            {
-                //for(y = 0; y < 25; y++)
-                //    for(x = 0; x < 80; x++)
-                //        VideoMemory[80*y+x] = (VideoMemory[80*y+x] & 0xFF00) | ' ';
-                terminal_scroll();
-                x = 0;
-                y = 24;
-            }
-        }
-    }
+    Console::Write(str);
 }
 
 void printfHex(uint8_t key)
@@ -118,6 +78,8 @@ void PrintIP(uint32_t ip)
 
 extern "C" void kernelMain(const multiboot_info_t* mbi, unsigned int multiboot_magic)
 {
+    Console::SetColors(0xA, 0x0);
+
     PrintKernelStart();
     printf("CMD Parameters: "); printf((char*)mbi->cmdline); printf("\n");
 

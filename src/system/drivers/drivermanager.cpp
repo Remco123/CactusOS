@@ -80,12 +80,32 @@ Driver* DriverManager::GetDriver(core::PeripheralComponentInterconnectDeviceDesc
     return 0;
 }
 
+char* getTypeName(DriverType type)
+{
+    switch(type)
+    {
+        case DriverType::Audio:
+            return "Audio";
+        case DriverType::Keyboard:
+            return "Keyboard";
+        case DriverType::Mouse:
+            return "Mouse";
+        case DriverType::Network:
+            return "Network";
+        case DriverType::Unkown:
+            return "Unkown";
+        default:
+            return "No type";
+    }
+    return "No type";
+}
+
 void DriverManager::ActivateAll()
 {
     printf("Number of drivers to activate: "); printf(Convert::IntToString(NumDrivers)); printf("\n");
     for(int i = 0; i < NumDrivers; i++)
     {
-        printf("Activating "); printf(Convert::IntToString(i)); printf("\n");
+        printf("Activating "); printf(Convert::IntToString(i)); printf(" Type: "); printf(getTypeName(drivers[i]->Type)); printf("\n");
         drivers[i]->Activate(); //Every driver has this method
     }
 }

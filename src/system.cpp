@@ -8,6 +8,9 @@ using namespace CactusOS::system;
 void printf(char*);
 void PrintIP(uint32_t);
 
+//Variables
+bool System::NetworkAvailible = false;
+
 //Static initialization
 GlobalDescriptorTable* System::gdt = 0;
 InterruptManager* System::interrupts = 0;
@@ -60,16 +63,14 @@ void System::InitSystem()
     System::driverManager->AssignDrivers(System::pci, System::interrupts, System::pci);
     System::driverManager->ActivateAll();
 
-    printf("Starting Console\n");
+    printf("Adding keyboard to Console\n");
     Console::SetKeyboard((KeyboardDriver*)System::driverManager->DriverByType(DriverType::Keyboard));
-    Console::SetColors(0xA, 0x0);
-    Console::Clear();
-    Console::Started = true;
 
     //Activate interrupts after drivers are loaded
     System::interrupts->Activate();
     Console::WriteLine("Interrupts Activated");
 
+    /*
     NetworkDriver* netDriver = (NetworkDriver*) System::driverManager->DriverByType(DriverType::Network);
     if(netDriver != 0)
     {
@@ -122,4 +123,5 @@ void System::InitSystem()
     }
     else
         Console::WriteLine("No network device found so network is disabled");
+    */
 }

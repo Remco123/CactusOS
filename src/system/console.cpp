@@ -11,7 +11,6 @@ int Console::YOffset = 0;
 uint8_t Console::fg = 0xF; //Default white
 uint8_t Console::bg = 0; //Default black
 bool Console::CheckForEmptyString = false;
-bool Console::Started = false;
 
 static uint16_t* VideoMemory = (uint16_t*)0xb8000;
 

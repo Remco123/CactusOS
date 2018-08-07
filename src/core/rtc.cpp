@@ -84,3 +84,21 @@ uint32_t RTC::GetYear()
 
     return value;
 }
+
+void RTC::SleepSeconds(int secs)
+{
+    int StartSec = RTC::GetSecond();
+    int EndSec;
+    if (StartSec + secs > 59)
+    {
+        EndSec = 0;
+    }
+    else
+    {
+        EndSec = StartSec + secs;
+    }
+    while (RTC::GetSecond() != EndSec)
+    {
+        // Loop round
+    }
+}

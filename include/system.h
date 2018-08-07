@@ -24,6 +24,8 @@ namespace CactusOS
     class System
     {
     public:
+    //Variables
+        static bool NetworkAvailible;
     //Core
         static core::GlobalDescriptorTable* gdt;
         static core::InterruptManager* interrupts;

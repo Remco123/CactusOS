@@ -22,6 +22,8 @@ namespace CactusOS
             static common::uint32_t GetDay();
             static common::uint32_t GetMonth();
             static common::uint32_t GetYear();
+
+            static void SleepSeconds(int secs); //Use this for only seconds when the pit is not loaded or interrupts are deactivated
         };
     }
 }

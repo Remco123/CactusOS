@@ -22,7 +22,6 @@ namespace CactusOS
             static void Scroll();
         public:
             static bool CheckForEmptyString;
-            static bool Started;
             static void SetKeyboard(KeyboardDriver* kb);
             static void SetColors(common::uint8_t fg, common::uint8_t bg);
             
