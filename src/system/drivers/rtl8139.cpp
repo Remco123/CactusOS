@@ -18,7 +18,7 @@ uint8_t TSD_array[4] = {0x10, 0x14, 0x18, 0x1C};
 RTL8139::RTL8139(PeripheralComponentInterconnectDeviceDescriptor *dev, InterruptManager* interrupts, PeripheralComponentInterconnectController* pci)
 : NetworkDriver(dev, interrupts) //Remember the correct interrupt is also set by the networkdriver!
 {
-    //Doesn't work without this peice of code, why? No idea!
+    //Read portbase of device
     device->portBase = pci->Read(device->bus, device->device, device->function, 0x10);
 
     // Enable PCI Bus Mastering
