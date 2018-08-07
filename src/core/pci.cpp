@@ -64,7 +64,7 @@ void printfHex(uint8_t);
 
 void PeripheralComponentInterconnectController::FindDevices()
 {
-    for(int bus = 0; bus < 8; bus++)
+    for(int bus = 0; bus < 256; bus++)
     {
         for(int device = 0; device < 32; device++)
         {
