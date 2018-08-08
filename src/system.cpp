@@ -78,6 +78,7 @@ void System::InitSystem()
 
         //Default IP Address
         uint8_t ip1 = 10, ip2 = 0, ip3 = 2, ip4 = 15;
+        //uint8_t ip1 = 192, ip2 = 168, ip3 = 2, ip4 = 32;
         uint32_t ip_be = ((uint32_t)ip4 << 24)
                     | ((uint32_t)ip3 << 16)
                     | ((uint32_t)ip2 << 8)
@@ -85,6 +86,7 @@ void System::InitSystem()
 
         // IP Address of the default gateway
         uint8_t gip1 = 10, gip2 = 0, gip3 = 2, gip4 = 2;
+        //uint8_t gip1 = 192, gip2 = 168, gip3 = 2, gip4 = 254;
         uint32_t gip_be = ((uint32_t)gip4 << 24)
                    | ((uint32_t)gip3 << 16)
                    | ((uint32_t)gip2 << 8)
@@ -101,6 +103,7 @@ void System::InitSystem()
 
         System::networkManager->dhcpController = new DHCP(System::networkManager);
 
+        /*
         Console::WriteLine("Enabling DHCP");
         for(int i = 0; i < DHCP_MAX_TRIES; i++)
         {
@@ -115,7 +118,7 @@ void System::InitSystem()
         
         else
             { Console::Write("DHCP Timed out, using default ip: "); PrintIP(Convert::ByteSwap(ip_be)); Console::Write("\n"); }
-        
+        */
         Console::Write("Resolving: "); PrintIP(Convert::ByteSwap(gip_be)); Console::WriteLine();
         System::networkManager->arpHandler->BroadcastMACAddress(gip_be);
         System::networkManager->ipv4Handler->icmpHandler->RequestEchoReply(gip_be);

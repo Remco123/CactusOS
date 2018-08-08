@@ -7,6 +7,8 @@ using namespace CactusOS::system;
 
 void printf(char*);
 void printfHex(uint8_t);
+void printfHex16(uint16_t);
+void PrintIP(uint32_t);
 
 //Prints mac address
 void PrintMac(uint64_t key)
@@ -39,6 +41,10 @@ void AddressResolutionProtocol::HandlePacket(uint8_t* packet, uint32_t size)
 {
     printf("Handling arp packet\n");
     AddressResolutionProtocolMessage* arp = (AddressResolutionProtocolMessage*)packet;
+
+    printf("HW Type: "); printfHex16(arp->hardwareType); printf("\n");
+    printf("dstIP: "); PrintIP(Convert::ByteSwap(arp->dstIP)); printf("\n");
+    printf("Command: "); printfHex16(arp->command); printf("\n");
     
     if(arp->hardwareType = (uint16_t) 0x0100)
     {

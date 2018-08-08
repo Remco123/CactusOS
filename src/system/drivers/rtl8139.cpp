@@ -122,11 +122,11 @@ void RTL8139::Activate()
     // Sets the TOK and ROK bits high
     outportw(device->portBase + 0x3C, 0x0005);
 
-    // (1 << 7) is the WRAP bit, 0xf is AB+AM+APM+AAP
-    outportl(device->portBase + 0x44, 0xf | (1 << 7));
-
     // Sets the RE and TE bits high
     outportb(device->portBase + 0x37, 0x0C);
+
+    // (1 << 7) is the WRAP bit, 0xf is AB+AM+APM+AAP
+    outportl(device->portBase + 0x44, 0xF);
 }
 void RTL8139::Reset()
 {
