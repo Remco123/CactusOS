@@ -17,8 +17,6 @@
 
 #include <multiboot/multiboot.h>
 
-#define DHCP_MAX_TRIES 5
-
 namespace CactusOS
 {
     class System

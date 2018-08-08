@@ -19,7 +19,7 @@ DHCP::DHCP(NetworkManager* backend)
     this->backend = backend;
 
     //Start socket
-    this->dhcpSocket = backend->ipv4Handler->udpHandler->Connect(0xFFFFFFFF, 67);
+    this->dhcpSocket = backend->udp->Connect(0xFFFFFFFF, 67);
     //Set Correct port
     this->dhcpSocket->localPort = 68;
 }
@@ -67,8 +67,7 @@ void DHCP::EnableDHCP()
     // Requested IP address
     *(options++) = 50;
     *(options++) = 0x04;
-    *((uint32_t*)(options)) = Convert::ByteSwap((uint32_t)0x0a00020e);
-    //memcpy((uint32_t*)(options), request_ip, 4);
+
     options += 4;
 
     // Host Name
@@ -85,7 +84,6 @@ void DHCP::EnableDHCP()
     *(options++) = 0x3;
     *(options++) = 0x6;
     *(options++) = 0xf;
-    *(options++) = 51; //Lease time
     *(options++) = 0x2c;
     *(options++) = 0x2e;
     *(options++) = 0x2f;

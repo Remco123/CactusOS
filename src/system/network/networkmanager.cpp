@@ -8,20 +8,72 @@ void printf(char*);
 void printfHex(uint8_t);
 void printfHex16(uint16_t);
 void printfHex32(uint32_t);
+void PrintMac(uint64_t key);
 
-NetworkManager::NetworkManager(NetworkDriver* device, CactusOS::core::PIT* pit, uint32_t ip_BE)
+NetworkManager::NetworkManager(NetworkDriver* device)
 {
     this->netDevice = device;
-    this->IP_BE = ip_BE;
-    device->NetManager = this;
-    MemoryOperations::memcpy(this->MAC, device->MAC, 6);
-
-    this->arpHandler = new AddressResolutionProtocol(this, pit);
+    this->netDevice->NetManager = this;
+    this->NetworkAvailable = false;
 }
 NetworkManager::~NetworkManager()
 {
 
 }
+
+//Start the network Stack
+void NetworkManager::StartNetwork(core::PIT* pit)
+{
+    MemoryOperations::memcpy(this->MAC, this->netDevice->MAC, 6); //First save our mac address
+
+    //Initialize Handlers
+    printf("Adding network handlers\n");
+    printf("    -> ARP\n");
+    this->arp = new AddressResolutionProtocol(this, pit);
+    printf("    -> IPV4\n");
+    this->ipv4 = new IPV4Handler(this);
+    printf("    -> ICPM\n");
+    this->icmp = new InternetControlMessageProtocol(this);
+    printf("    -> UDP\n");
+    this->udp = new UserDatagramProtocolManager(this);
+    printf("    -> DHCP\n");
+    this->dhcp = new DHCP(this);
+    
+    printf("Trying automatic configuration via DHCP\n");
+    uint32_t DhcpTries = 0;
+    while(!dhcp->Enabled && DhcpTries < DHCP_MAX_TRIES)
+    {
+        dhcp->EnableDHCP();
+        pit->Sleep(500);
+        DhcpTries++;
+    }
+    if(dhcp->Enabled)
+    {
+        printf("DHCP is configured!\n");
+        this->NetworkAvailable = true;
+    }
+    else
+    {
+        printf("Failed to do automatic dhcp connect\n");
+        Console::Write("Do you want to do manual configuration? [y/n]: ");
+        char answer = Console::ReadLine()[0];
+        if(answer == 'y')
+        {
+            Console::WriteLine("Warning: Not implemented yet");
+        }
+        else
+        {
+            this->NetworkAvailable = false;
+            Console::WriteLine("Disabled Network");
+        }
+    }
+    if(this->NetworkAvailable)
+    {
+        this->arp->BroadcastMACAddress(this->dhcp->RouterIp);
+        this->icmp->RequestEchoReply(this->dhcp->RouterIp);
+    }
+}
+
 //Raw data received by the network driver
 void NetworkManager::HandlePacket(common::uint8_t* packet, common::uint32_t size)
 {
@@ -30,24 +82,21 @@ void NetworkManager::HandlePacket(common::uint8_t* packet, common::uint32_t size
     
     if(frame->dstMAC_BE == 0xFFFFFFFFFFFF || frame->dstMAC_BE == netDevice->GetMacAddressBE())
     {
-        printf("Received Packet that is for us!\n");
         switch(Convert::ByteSwap(frame->etherType_BE))
         {
             case ETHERNET_TYPE_ARP:
-                if(arpHandler != 0)
-                    arpHandler->HandlePacket(packet + sizeof(EtherFrameHeader), size - sizeof(EtherFrameHeader));
+                if(this->arp != 0)
+                    this->arp->HandlePacket(packet + sizeof(EtherFrameHeader), size - sizeof(EtherFrameHeader));
                 break;
             case ETHERNET_TYPE_IP:
-                if(ipv4Handler != 0)
-                    ipv4Handler->HandlePacket(packet + sizeof(EtherFrameHeader), size - sizeof(EtherFrameHeader));
+                if(this->ipv4 != 0)
+                    this->ipv4->HandlePacket(packet + sizeof(EtherFrameHeader), size - sizeof(EtherFrameHeader));
                 break;
             default:
                 printf("Unkown Ethernet packet\n");
         }
     }
 }
-
-void PrintMac(uint64_t key);
 
 //Send raw data to the network device
 void NetworkManager::SendPacket(common::uint64_t dstMAC_BE, common::uint16_t etherType_BE, common::uint8_t* buffer, common::uint32_t size)
@@ -59,7 +108,7 @@ void NetworkManager::SendPacket(common::uint64_t dstMAC_BE, common::uint16_t eth
     frame->srcMAC_BE = netDevice->GetMacAddressBE();
     frame->etherType_BE = etherType_BE;
 
-    printf("## Our mac (BE): "); PrintMac(frame->srcMAC_BE); printf("\n");
+    //printf("## Our mac (BE): "); PrintMac(frame->srcMAC_BE); printf("\n");
     
     uint8_t* src = buffer;
     uint8_t* dst = buffer2 + sizeof(EtherFrameHeader);
@@ -72,10 +121,13 @@ void NetworkManager::SendPacket(common::uint64_t dstMAC_BE, common::uint16_t eth
 
 uint32_t NetworkManager::GetIPAddress()
 {
-    if(this->dhcpController != 0 && this->dhcpController->Enabled)
-        return this->dhcpController->OurIp; //Return the IP gathered by DHCP
+    if(this->dhcp != 0)
+        return this->dhcp->OurIp; //Return the IP gathered by DHCP
     else
-        return this->IP_BE; //Return the default IP
+    {
+        printf("Warning DHCP is zero! So returning 0\n");
+        return 0;
+    }
 }
 uint64_t NetworkManager::GetMACAddress()
 {

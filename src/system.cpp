@@ -75,9 +75,12 @@ void System::InitSystem()
     if(netDriver != 0)
     {
         Console::WriteLine("Starting Network");
-        
+        System::networkManager = new NetworkManager(netDriver);
+        System::networkManager->StartNetwork(System::pit);
     }
     else
+    {
         Console::WriteLine("No network device found so network is disabled");
-    
+        System::NetworkAvailible = false;
+    }
 }

@@ -42,7 +42,7 @@ void UDPSocket::Disconnect()
 
 
 
-UserDatagramProtocolManager::UserDatagramProtocolManager(IPV4Handler* backend)
+UserDatagramProtocolManager::UserDatagramProtocolManager(NetworkManager* backend)
 {
     for(int i = 0; i < 1200; i++)
         sockets[i] = 0;
@@ -74,22 +74,20 @@ void UserDatagramProtocolManager::OnInternetProtocolReceived(uint32_t srcIP_BE, 
     //printf((char*)(payload + sizeof(UserDatagramProtocolHeader)));
 
     UDPSocket* socket = 0;
-    printf("Number of sockets: "); printf(Convert::IntToString(numSockets)); printf("\n");
+    //printf("Number of sockets: "); printf(Convert::IntToString(numSockets)); printf("\n");
     for(uint16_t i = 0; i < numSockets && socket == 0; i++)
     {
-        printf("Trying socket: "); printf(Convert::IntToString(i)); printf("\n");
-        printf("Message Data:\n");
-        printf("LocalPort: "); printf(Convert::IntToString(localPort));
-        printf("\nRemotePort: "); printf(Convert::IntToString(remotePort));
-        printf("\nSize: "); printf(Convert::IntToString(Convert::ByteSwap(msg->length) - sizeof(UserDatagramProtocolHeader))); printf("\n");
-
-        printf("Socket Data:\n");
-        printf("Listening: "); printf(sockets[i]->listening ? (char*)"True\n" : (char*)"False\n");
-        printf("Local IP: "); PrintIP(Convert::ByteSwap(dstIP_BE)); printf("\n");
-        printf("Local Port: "); printf(Convert::IntToString(sockets[i]->localPort)); printf("\n");
-
-        printf("Remote IP: "); PrintIP(Convert::ByteSwap(srcIP_BE)); printf("\n");
-        printf("Remote Port: "); printf(Convert::IntToString(sockets[i]->remotePort)); printf("\n");
+        //printf("Trying socket: "); printf(Convert::IntToString(i)); printf("\n");
+        //printf("Message Data:\n");
+        //printf("LocalPort: "); printf(Convert::IntToString(localPort));
+        //printf("\nRemotePort: "); printf(Convert::IntToString(remotePort));
+        //printf("\nSize: "); printf(Convert::IntToString(Convert::ByteSwap(msg->length) - sizeof(UserDatagramProtocolHeader))); printf("\n");
+        //printf("Socket Data:\n");
+        //printf("Listening: "); printf(sockets[i]->listening ? (char*)"True\n" : (char*)"False\n");
+        //printf("Local IP: "); PrintIP(Convert::ByteSwap(dstIP_BE)); printf("\n");
+        //printf("Local Port: "); printf(Convert::IntToString(sockets[i]->localPort)); printf("\n");
+        //printf("Remote IP: "); PrintIP(Convert::ByteSwap(srcIP_BE)); printf("\n");
+        //printf("Remote Port: "); printf(Convert::IntToString(sockets[i]->remotePort)); printf("\n");
 
         UDPSocket* cur = sockets[i];
         if(cur->localPort == localPort
@@ -119,7 +117,7 @@ void UserDatagramProtocolManager::OnInternetProtocolReceived(uint32_t srcIP_BE, 
                 socket = sockets[i];    
         */
        //TODO: Improve this
-        backend->netManager->dhcpController->HandleUDP(payload + sizeof(UserDatagramProtocolHeader), size - sizeof(UserDatagramProtocolHeader));
+        backend->dhcp->HandleUDP(payload + sizeof(UserDatagramProtocolHeader), size - sizeof(UserDatagramProtocolHeader));
     }
     
     if(socket != 0)
@@ -138,7 +136,7 @@ UDPSocket* UserDatagramProtocolManager::Connect(uint32_t ip, uint16_t port)
         socket -> remotePort = port;
         socket -> remoteIP = ip;
         socket -> localPort = freePort++;   
-        socket -> localIP = backend->netManager->GetIPAddress();     
+        socket -> localIP = backend->GetIPAddress();     
         //socket -> remotePort = ((socket -> remotePort & 0xFF00)>>8) | ((socket -> remotePort & 0x00FF) << 8);
         //socket -> localPort = ((socket -> localPort & 0xFF00)>>8) | ((socket -> localPort & 0x00FF) << 8);
         
@@ -158,7 +156,7 @@ UDPSocket* UserDatagramProtocolManager::Listen(uint16_t port)
     {    
         socket -> listening = true;
         socket -> localPort = port;
-        socket -> localIP = backend->netManager->GetIPAddress();   
+        socket -> localIP = backend->GetIPAddress();   
 
         //socket -> localPort = ((socket -> localPort & 0xFF00)>>8) | ((socket -> localPort & 0x00FF) << 8);
         sockets[numSockets] = socket;
@@ -195,7 +193,7 @@ void UserDatagramProtocolManager::Send(UDPSocket* socket, uint8_t* data, uint16_
         buffer2[i] = data[i];
     
     msg -> checksum = 0;
-    this->backend->Send(socket->remoteIP, 0x11, buffer, totalLength);
+    this->backend->ipv4->Send(socket->remoteIP, 0x11, buffer, totalLength);
 
     MemoryManager::activeMemoryManager->free(buffer);
 }

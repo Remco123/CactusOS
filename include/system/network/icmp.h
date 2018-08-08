@@ -23,9 +23,9 @@ namespace CactusOS
         class InternetControlMessageProtocol
         {
         private:
-            IPV4Handler* ipv4Backend;
+            NetworkManager* backend;
         public:
-            InternetControlMessageProtocol(IPV4Handler* ipv4Backend);
+            InternetControlMessageProtocol(NetworkManager* backend);
             ~InternetControlMessageProtocol();
             
             void OnInternetProtocolReceived(common::uint32_t srcIP_BE, common::uint32_t dstIP_BE,

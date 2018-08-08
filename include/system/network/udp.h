@@ -17,16 +17,15 @@ namespace CactusOS
             common::uint16_t checksum;
         } __attribute__((packed));
 
-        class UserDatagramProtocolManager;
-        class DHCP;
-        class IPV4Handler;
-
         typedef void (*SocketReceive)(common::uint8_t* packet, common::uint32_t size);
+
+        class DHCP;
+        class UserDatagramProtocolManager;
 
         class UDPSocket
         {
+        friend class DHCP; //DHCP needs acces to the localport parameter
         friend class UserDatagramProtocolManager;
-        friend class DHCP;
         protected:
             common::uint16_t remotePort;
             common::uint32_t remoteIP; //Target ip address
@@ -51,9 +50,9 @@ namespace CactusOS
         protected:
             common::uint16_t freePort;
 
-            IPV4Handler* backend;
+            NetworkManager* backend;
         public:
-            UserDatagramProtocolManager(IPV4Handler* backend);
+            UserDatagramProtocolManager(NetworkManager* backend);
             ~UserDatagramProtocolManager();
 
             void OnInternetProtocolReceived(common::uint32_t srcIP_BE, common::uint32_t dstIP_BE,

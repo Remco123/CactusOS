@@ -35,16 +35,9 @@ namespace CactusOS
         {
         friend class UserDatagramProtocolManager;
         protected:
-            NetworkManager* netManager;
-            common::uint32_t gatewayIP;
-            common::uint32_t subnetMask;
-            
+            NetworkManager* netManager;            
         public:
-            InternetControlMessageProtocol* icmpHandler;
-            UserDatagramProtocolManager* udpHandler;
-
-            IPV4Handler(NetworkManager* backend,
-                                     common::uint32_t gatewayIP, common::uint32_t subnetMask);
+            IPV4Handler(NetworkManager* backend);
             ~IPV4Handler();
             
             void HandlePacket(common::uint8_t* etherframePayload, common::uint32_t size);

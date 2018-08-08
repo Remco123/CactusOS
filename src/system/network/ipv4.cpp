@@ -8,15 +8,9 @@ using namespace CactusOS::system;
 void printf(char*);
 void printfHex(uint8_t);
 
-IPV4Handler::IPV4Handler(NetworkManager* backend,
-                         uint32_t gatewayIP, uint32_t subnetMask)
+IPV4Handler::IPV4Handler(NetworkManager* backend)
 {
-    this->gatewayIP = gatewayIP;
-    this->subnetMask = subnetMask;
     this->netManager = backend;
-
-    this->icmpHandler = new InternetControlMessageProtocol(this);
-    this->udpHandler = new UserDatagramProtocolManager(this);
 }
 IPV4Handler::~IPV4Handler()
 {
@@ -38,12 +32,12 @@ void IPV4Handler::HandlePacket(uint8_t* etherframePayload, uint32_t size)
         switch(ipmessage->protocol)
         {
             case 0x01: //icmp
-                if(this->icmpHandler != 0)
-                    this->icmpHandler->OnInternetProtocolReceived(ipmessage->srcIP, ipmessage->dstIP, etherframePayload + 4*ipmessage->headerLength, length - 4*ipmessage->headerLength);
+                if(this->netManager->icmp != 0)
+                    this->netManager->icmp->OnInternetProtocolReceived(ipmessage->srcIP, ipmessage->dstIP, etherframePayload + 4*ipmessage->headerLength, length - 4*ipmessage->headerLength);
                 break;
             case 0x11: //udp
-                if(this->udpHandler != 0)
-                    this->udpHandler->OnInternetProtocolReceived(ipmessage->srcIP, ipmessage->dstIP, etherframePayload + 4*ipmessage->headerLength, length - 4*ipmessage->headerLength);
+                if(this->netManager->udp != 0)
+                    this->netManager->udp->OnInternetProtocolReceived(ipmessage->srcIP, ipmessage->dstIP, etherframePayload + 4*ipmessage->headerLength, length - 4*ipmessage->headerLength);
                 break;
         }
     }
@@ -75,13 +69,13 @@ void IPV4Handler::Send(uint32_t dstIP_BE, uint8_t protocol, uint8_t* data, uint3
         databuffer[i] = data[i];
     
     uint32_t route = dstIP_BE;
-    if((dstIP_BE & subnetMask) != (message->srcIP & subnetMask))
+    if((dstIP_BE & this->netManager->dhcp->SubnetMask) != (message->srcIP & this->netManager->dhcp->SubnetMask))
     {
-        route = gatewayIP;
+        route = this->netManager->dhcp->RouterIp;
         printf("Modified route\n");
     }
     
-    netManager->SendPacket(netManager->arpHandler->Resolve(route), Convert::ByteSwap((uint16_t)ETHERNET_TYPE_IP), buffer, sizeof(InternetProtocolV4Message) + size);
+    netManager->SendPacket(netManager->arp->Resolve(route), Convert::ByteSwap((uint16_t)ETHERNET_TYPE_IP), buffer, sizeof(InternetProtocolV4Message) + size);
     
     MemoryManager::activeMemoryManager->free(buffer);   
 }

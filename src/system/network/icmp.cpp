@@ -8,9 +8,9 @@ using namespace CactusOS::system;
 void printf(char*);
 void printfHex(uint8_t);
 
-InternetControlMessageProtocol::InternetControlMessageProtocol(IPV4Handler* ipv4Backend)
+InternetControlMessageProtocol::InternetControlMessageProtocol(NetworkManager* backend)
 {
-    this->ipv4Backend = ipv4Backend;
+    this->backend = backend;
 }
 InternetControlMessageProtocol::~InternetControlMessageProtocol()
 {   }
@@ -41,7 +41,7 @@ void InternetControlMessageProtocol::OnInternetProtocolReceived(uint32_t srcIP_B
             icmp.checksum = IPV4Handler::Checksum((uint16_t*)&icmp,
                             sizeof(InternetControlMessageProtocolMessage));
             printf("Sending ping response\n");
-            ipv4Backend->Send(srcIP_BE, Convert::ByteSwap((uint16_t)0x01), (uint8_t*)&icmp, sizeof(InternetControlMessageProtocolMessage));
+            backend->ipv4->Send(srcIP_BE, Convert::ByteSwap((uint16_t)0x01), (uint8_t*)&icmp, sizeof(InternetControlMessageProtocolMessage));
             break;
     }
 }
@@ -55,5 +55,5 @@ void InternetControlMessageProtocol::RequestEchoReply(uint32_t ip_be)
     icmp.checksum = IPV4Handler::Checksum((uint16_t*)&icmp,
         sizeof(InternetControlMessageProtocolMessage));
     
-    ipv4Backend->Send(ip_be, 0x01, (uint8_t*)&icmp, sizeof(InternetControlMessageProtocolMessage));
+    backend->ipv4->Send(ip_be, 0x01, (uint8_t*)&icmp, sizeof(InternetControlMessageProtocolMessage));
 }
