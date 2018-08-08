@@ -30,7 +30,7 @@ void IPV4Handler::HandlePacket(uint8_t* etherframePayload, uint32_t size)
     
     if(ipmessage->dstIP == netManager->GetIPAddress() || ipmessage->dstIP == 0xFFFFFFFF)
     {
-        int length = ipmessage->totalLength;
+        uint32_t length = ipmessage->totalLength;
         if(length > size)
             length = size;
         
@@ -71,7 +71,7 @@ void IPV4Handler::Send(uint32_t dstIP_BE, uint8_t protocol, uint8_t* data, uint3
     message->checksum = Checksum((uint16_t*)message, sizeof(InternetProtocolV4Message));
     
     uint8_t* databuffer = buffer + sizeof(InternetProtocolV4Message);
-    for(int i = 0; i < size; i++)
+    for(uint32_t i = 0; i < size; i++)
         databuffer[i] = data[i];
     
     uint32_t route = dstIP_BE;
@@ -90,7 +90,7 @@ uint16_t IPV4Handler::Checksum(uint16_t* data, uint32_t lengthInBytes)
 {
     uint32_t temp = 0;
 
-    for(int i = 0; i < lengthInBytes/2; i++)
+    for(uint32_t i = 0; i < lengthInBytes/2; i++)
         temp += ((data[i] & 0xFF00) >> 8) | ((data[i] & 0x00FF) << 8);
 
     if(lengthInBytes % 2)

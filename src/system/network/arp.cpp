@@ -46,7 +46,7 @@ void AddressResolutionProtocol::HandlePacket(uint8_t* packet, uint32_t size)
     printf("dstIP: "); PrintIP(Convert::ByteSwap(arp->dstIP)); printf("\n");
     printf("Command: "); printfHex16(arp->command); printf("\n");
     
-    if(arp->hardwareType = (uint16_t) 0x0100)
+    if(arp->hardwareType == (uint16_t) 0x0100)
     {
         if(arp->protocol == 0x0008
         && arp->hardwareAddressSize == 6
@@ -127,7 +127,7 @@ uint64_t AddressResolutionProtocol::Resolve(uint32_t IP_BE)
 
 uint64_t AddressResolutionProtocol::GetMACFromCache(uint32_t IP_BE)
 {
-    for(int i = 0; i < NumArpItems; i++)
+    for(uint32_t i = 0; i < NumArpItems; i++)
         if(ArpDatabase[i]->IPAddress == IP_BE)
             return ArpDatabase[i]->MACAddress;
     return -1;

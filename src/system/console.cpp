@@ -122,6 +122,7 @@ char* Console::ReadLine()
                 break;
         }
     }
+    return "";
 }
 
 void Console::Clear()

@@ -103,7 +103,7 @@ char* getTypeName(DriverType type)
 void DriverManager::ActivateAll()
 {
     printf("Number of drivers to activate: "); printf(Convert::IntToString(NumDrivers)); printf("\n");
-    for(int i = 0; i < NumDrivers; i++)
+    for(uint32_t i = 0; i < NumDrivers; i++)
     {
         printf("Activating "); printf(Convert::IntToString(i)); printf(" Type: "); printf(getTypeName(drivers[i]->Type)); printf("\n");
         drivers[i]->Activate(); //Every driver has this method
