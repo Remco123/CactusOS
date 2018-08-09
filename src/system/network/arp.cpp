@@ -42,9 +42,10 @@ void AddressResolutionProtocol::HandlePacket(uint8_t* packet, uint32_t size)
     printf("Handling arp packet\n");
     AddressResolutionProtocolMessage* arp = (AddressResolutionProtocolMessage*)packet;
 
-    //printf("HW Type: "); printfHex16(arp->hardwareType); printf("\n");
-    //printf("dstIP: "); PrintIP(Convert::ByteSwap(arp->dstIP)); printf("\n");
-    //printf("Command: "); printfHex16(arp->command); printf("\n");
+    printf("HW Type: "); printfHex16(arp->hardwareType); printf("\n");
+    printf("srcIP: "); PrintIP(Convert::ByteSwap(arp->srcIP)); printf("\n");
+    printf("dstIP: "); PrintIP(Convert::ByteSwap(arp->dstIP)); printf("\n");
+    printf("Command: "); printfHex16(arp->command); printf("\n");
     
     if(arp->hardwareType == (uint16_t) 0x0100)
     {
@@ -107,7 +108,7 @@ void AddressResolutionProtocol::RequestMAC(common::uint32_t IP_BE)
 uint64_t AddressResolutionProtocol::Resolve(uint32_t IP_BE)
 {
     if(IP_BE == 0xFFFFFFFF)
-        return IP_BE;
+        return 0xFFFFFFFFFFFF;
 
     uint64_t result = GetMACFromCache(IP_BE);
     if(result == -1)

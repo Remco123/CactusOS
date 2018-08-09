@@ -55,6 +55,7 @@ namespace CactusOS
             NetworkManager(NetworkDriver* device);
             ~NetworkManager();
 
+            common::uint32_t ParseIP(char* str);
             void StartNetwork(core::PIT* pit);
 
             void HandlePacket(common::uint8_t* packet, common::uint32_t size);

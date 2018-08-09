@@ -21,6 +21,30 @@ NetworkManager::~NetworkManager()
 
 }
 
+uint32_t NetworkManager::ParseIP(char* str)
+{
+    char* parts[4];
+    int partcount = 0;
+    parts[partcount++] = str;
+
+    char* ptr = str;
+    while(*str)
+    {
+        if(*str == '.')
+        {
+            *str = 0;
+            parts[partcount++] = str + 1;
+        }
+        str++;
+    }
+
+    uint8_t ip1 = Convert::StringToInt(parts[0]), ip2 = Convert::StringToInt(parts[1]), ip3 = Convert::StringToInt(parts[2]), ip4 = Convert::StringToInt(parts[3]);
+    return ((uint32_t)ip1 << 24)
+        |  ((uint32_t)ip2 << 16)
+        |  ((uint32_t)ip3 << 8)
+        |  (uint32_t)ip4;
+}
+
 //Start the network Stack
 void NetworkManager::StartNetwork(core::PIT* pit)
 {
@@ -59,7 +83,22 @@ void NetworkManager::StartNetwork(core::PIT* pit)
         char answer = Console::ReadLine()[0];
         if(answer == 'y')
         {
-            Console::WriteLine("Warning: Not implemented yet");
+            Console::WriteLine("Warning: this feature could potentialy harm your network!");
+            Console::Write("Device MAC: "); PrintMac(this->GetMACAddress()); Console::WriteLine();
+            Console::Write("Our IP => ");
+            this->dhcp->OurIp = ParseIP(Console::ReadLine()); Console::WriteLine();
+            Console::Write("Router IP => ");
+            this->dhcp->RouterIp = ParseIP(Console::ReadLine()); Console::WriteLine();
+            this->dhcp->ServerIp = this->dhcp->RouterIp;
+            Console::Write("Subnet Mask => ");
+            this->dhcp->SubnetMask = ParseIP(Console::ReadLine()); Console::WriteLine();
+            Console::Write("DNS => ");
+            this->dhcp->Dns = ParseIP(Console::ReadLine()); Console::WriteLine();
+            Console::Write("Hostname (optional) => ");
+            char* hname = Console::ReadLine(); Console::WriteLine();
+            MemoryOperations::memcpy(this->dhcp->HostName, hname, 100);
+            Console::WriteLine("Manual network configuration done!");
+            this->NetworkAvailable = true;
         }
         else
         {
@@ -69,7 +108,8 @@ void NetworkManager::StartNetwork(core::PIT* pit)
     }
     if(this->NetworkAvailable)
     {
-        this->arp->BroadcastMACAddress(this->dhcp->RouterIp);
+        //this->arp->BroadcastMACAddress(this->dhcp->RouterIp);
+        this->arp->RequestMAC(this->dhcp->RouterIp); //This is better i think
         this->icmp->RequestEchoReply(this->dhcp->RouterIp);
     }
 }
