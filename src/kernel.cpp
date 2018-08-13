@@ -18,15 +18,6 @@ extern "C" void callConstructors()
         (*i)();
 }
 
-void terminal_scroll(){
-    static uint16_t* VideoMemory = (uint16_t*)0xb8000;
-    for(int i = 0; i < 25; i++){
-        for (int m = 0; m < 80; m++){
-            VideoMemory[i * 80 + m] = VideoMemory[(i + 1) * 80 + m];
-        }
-    }
-}
-
 void printf(char* str)
 {
     Console::Write(str);

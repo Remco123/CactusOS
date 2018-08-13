@@ -27,7 +27,6 @@ uint32_t NetworkManager::ParseIP(char* str)
     int partcount = 0;
     parts[partcount++] = str;
 
-    char* ptr = str;
     while(*str)
     {
         if(*str == '.')
@@ -138,10 +137,33 @@ void NetworkManager::HandlePacket(common::uint8_t* packet, common::uint32_t size
     }
 }
 
+void PrintPacket(uint8_t* data, uint32_t size)
+{
+    Console::WriteLine("--------------# Packet #--------------");
+
+    int x = 0;
+    for(int i = 0; i < size; i++)
+    {
+        if(x == 16)
+        {
+            Console::ReadLine();
+            x = 0;
+        }
+        printfHex(data[i]);
+        if(i < size)
+            printf(" ");
+        x++;
+    }
+
+    Console::WriteLine();
+    Console::WriteLine("-----------# End Of Packet #----------");
+}
+
 //Send raw data to the network device
 void NetworkManager::SendPacket(common::uint64_t dstMAC_BE, common::uint16_t etherType_BE, common::uint8_t* buffer, common::uint32_t size)
 {
     uint8_t* buffer2 = (uint8_t*)MemoryManager::activeMemoryManager->malloc(sizeof(EtherFrameHeader) + size);
+    MemoryOperations::memset(buffer2, 0, sizeof(EtherFrameHeader) + size);
     EtherFrameHeader* frame = (EtherFrameHeader*)buffer2;
     
     frame->dstMAC_BE = dstMAC_BE;
@@ -155,6 +177,7 @@ void NetworkManager::SendPacket(common::uint64_t dstMAC_BE, common::uint16_t eth
     for(uint32_t i = 0; i < size; i++)
         dst[i] = src[i];
     
+    //PrintPacket(buffer2, size + sizeof(EtherFrameHeader));
     netDevice->SendData(buffer2, size + sizeof(EtherFrameHeader));
     MemoryManager::activeMemoryManager->free(buffer2);
 }

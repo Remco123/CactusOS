@@ -89,8 +89,8 @@ void DHCP::EnableDHCP()
     *(options++) = 0x2f;
     *(options++) = 0x39;
     *(options++) = 0xff;
-
-
+    
+    
     //Finally send the packet
     this->dhcpSocket->Send((uint8_t*)header, sizeof(DhcpHeader));
 }

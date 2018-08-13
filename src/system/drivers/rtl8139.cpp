@@ -102,6 +102,7 @@ void RTL8139::HandleReceive()
 void RTL8139::SendData(uint8_t* data, uint32_t len)
 {
     void* transfer_data = MemoryManager::activeMemoryManager->malloc(len);
+    MemoryOperations::memset(transfer_data, 0, len);
     MemoryOperations::memcpy(transfer_data, data, len);
 
     // Second, fill in physical address of data, and length

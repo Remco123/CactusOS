@@ -40,7 +40,11 @@ void* MemoryManager::malloc(common::size_t size)
             result = chunk;
         
     if(result == 0)
+    {
+        printf("Error could not allocate memory!\n");
+        while(1);
         return 0;
+    }
     
     if(result->size >= size + sizeof(MemoryChunk) + 1)
     {

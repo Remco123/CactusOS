@@ -79,7 +79,7 @@ char* Console::ReadLine()
     if(Console::kb == 0)
     {
         Console::WriteLine("Keyboard is null so we can not read a line from it\n");
-        return;
+        return "";
     }
 
     static char buffer[100];

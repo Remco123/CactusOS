@@ -45,6 +45,7 @@ void IPV4Handler::HandlePacket(uint8_t* etherframePayload, uint32_t size)
 void IPV4Handler::Send(uint32_t dstIP_BE, uint8_t protocol, uint8_t* data, uint32_t size)
 {
     uint8_t* buffer = (uint8_t*)MemoryManager::activeMemoryManager->malloc(sizeof(InternetProtocolV4Message) + size);
+    MemoryOperations::memset(buffer, 0, sizeof(InternetProtocolV4Message) + size);
     InternetProtocolV4Message *message = (InternetProtocolV4Message*)buffer;
     
     message->version = 4;

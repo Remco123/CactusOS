@@ -111,7 +111,7 @@ uint64_t AddressResolutionProtocol::Resolve(uint32_t IP_BE)
         return 0xFFFFFFFFFFFF;
 
     uint64_t result = GetMACFromCache(IP_BE);
-    if(result == -1)
+    if(result == 0)
         RequestMAC(IP_BE);
     else
         return result; //It is already in the database
@@ -119,7 +119,7 @@ uint64_t AddressResolutionProtocol::Resolve(uint32_t IP_BE)
     for(int i = 0; i < MACResolveMaxTries; i++)
     {
         result = GetMACFromCache(IP_BE);
-        if(result != -1)
+        if(result != 0)
             return result;
         printf("*");
         pit->Sleep(50); //Small timeout
@@ -134,7 +134,7 @@ uint64_t AddressResolutionProtocol::GetMACFromCache(uint32_t IP_BE)
     for(uint32_t i = 0; i < NumArpItems; i++)
         if(ArpDatabase[i]->IPAddress == IP_BE)
             return ArpDatabase[i]->MACAddress;
-    return -1;
+    return 0;
 }
 
 void AddressResolutionProtocol::BroadcastMACAddress(uint32_t IP_BE)

@@ -181,6 +181,7 @@ void UserDatagramProtocolManager::Send(UDPSocket* socket, uint8_t* data, uint16_
 {
     uint16_t totalLength = size + sizeof(UserDatagramProtocolHeader);
     uint8_t* buffer = (uint8_t*)MemoryManager::activeMemoryManager->malloc(totalLength);
+    MemoryOperations::memset(buffer, 0, totalLength);
     uint8_t* buffer2 = buffer + sizeof(UserDatagramProtocolHeader);
     
     UserDatagramProtocolHeader* msg = (UserDatagramProtocolHeader*)buffer;
