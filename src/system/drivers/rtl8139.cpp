@@ -107,7 +107,7 @@ void RTL8139::SendData(uint8_t* data, uint32_t len)
 
     // Second, fill in physical address of data, and length
     outportl(device->portBase + TSAD_array[tx_cur], (uint32_t)transfer_data);
-    outportl(device->portBase + TSD_array[tx_cur++], len);
+    outportl(device->portBase + TSD_array[tx_cur++], (256 << 16) | 0x0 | len);
     if(tx_cur > 3)
         tx_cur = 0;
 }

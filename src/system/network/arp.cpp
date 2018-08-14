@@ -124,7 +124,7 @@ uint64_t AddressResolutionProtocol::Resolve(uint32_t IP_BE)
         printf("*");
         pit->Sleep(50); //Small timeout
     }
-    printf("Arp Resolve: Request timed out\n");
+    printf("    :Arp Resolve: Request timed out\n");
 
     return 0;
 }
