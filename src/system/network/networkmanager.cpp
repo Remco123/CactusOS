@@ -49,6 +49,46 @@ void NetworkManager::StartNetwork(core::PIT* pit)
 {
     MemoryOperations::memcpy(this->MAC, this->netDevice->MAC, 6); //First save our mac address
 
+    printf("Starting network test, press a key\n");
+    Console::kb->GetKey(true);
+    printf("Big empty packet\n");
+    uint8_t* data1 = (uint8_t*) MemoryManager::activeMemoryManager->malloc(sizeof(DhcpHeader));
+    MemoryOperations::memset(data1, 0xFF, sizeof(DhcpHeader));
+    this->netDevice->SendData(data1, sizeof(DhcpHeader));
+    Console::kb->GetKey(true);
+    printf("Big packet of 'a'\n");
+    uint8_t* data2 = (uint8_t*) MemoryManager::activeMemoryManager->malloc(328);
+    MemoryOperations::memset(data2, 'a', 328);
+    this->netDevice->SendData(data2, 328);
+    Console::kb->GetKey(true);
+
+    printf("Small packet\n");
+    uint8_t* data3 = (uint8_t*)MemoryManager::activeMemoryManager->malloc(65);
+    MemoryOperations::memset(data3, 'b', 65);
+    this->netDevice->SendData(data3, 65);
+    Console::kb->GetKey(true);
+
+    printf("Mega packet (1000 bytes)\n");
+    EtherFrameHeader* header = (EtherFrameHeader*)MemoryManager::activeMemoryManager->malloc(sizeof(EtherFrameHeader) + 1000);
+    header->dstMAC_BE = 0xFFFF;
+    header->etherType_BE = 0x0100;
+    header->srcMAC_BE = 0xAAAA;
+    this->netDevice->SendData((uint8_t*) header, sizeof(EtherFrameHeader) + 1000);
+    Console::kb->GetKey(true);
+
+    printf("Loop packets\n");
+    printf("Press a key to stop\n");
+    pit->Sleep(1000);
+    int i = 1;
+    while(!Console::kb->keyAvailibe)
+    {
+        uint8_t* data = (uint8_t*) MemoryManager::activeMemoryManager->malloc(i);
+        MemoryOperations::memset(data, '1', i);
+        this->netDevice->SendData(data, i);
+        i++;
+        MemoryManager::activeMemoryManager->free(data);
+    }
+
     //Initialize Handlers
     printf("Adding network handlers\n");
     printf("    -> ARP\n");
