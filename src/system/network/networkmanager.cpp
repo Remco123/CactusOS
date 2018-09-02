@@ -48,7 +48,7 @@ uint32_t NetworkManager::ParseIP(char* str)
 void NetworkManager::StartNetwork(core::PIT* pit)
 {
     MemoryOperations::memcpy(this->MAC, this->netDevice->MAC, 6); //First save our mac address
-
+    /*
     printf("Starting network test, press a key\n");
     Console::kb->GetKey(true);
     printf("Big empty packet\n");
@@ -88,6 +88,7 @@ void NetworkManager::StartNetwork(core::PIT* pit)
         i++;
         MemoryManager::activeMemoryManager->free(data);
     }
+    */
 
     //Initialize Handlers
     printf("Adding network handlers\n");

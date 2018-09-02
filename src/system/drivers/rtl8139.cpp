@@ -101,6 +101,12 @@ void RTL8139::HandleReceive()
 }
 void RTL8139::SendData(uint8_t* data, uint32_t len)
 {
+    if(len > 1536)
+    {
+        printf("Packet to big to send!\n");
+        while(1);
+    }
+
     void* transfer_data = MemoryManager::activeMemoryManager->malloc(len);
     MemoryOperations::memset(transfer_data, 0, len);
     MemoryOperations::memcpy(transfer_data, data, len);
