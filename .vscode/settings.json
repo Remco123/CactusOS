@@ -5,6 +5,7 @@
         "string_view": "cpp",
         "utility": "cpp",
         "thread": "cpp",
-        "chrono": "cpp"
+        "chrono": "cpp",
+        "typeinfo": "cpp"
     }
 }

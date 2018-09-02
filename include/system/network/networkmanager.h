@@ -8,6 +8,7 @@
 #include <system/network/dhcp.h>
 #include <system/network/icmp.h>
 #include <system/network/udp.h>
+#include <system/network/dns.h>
 #include <core/pit.h>
 
 #include <system/console.h>
@@ -36,6 +37,7 @@ namespace CactusOS
         class InternetControlMessageProtocol;
         class IPV4Handler;
         class UserDatagramProtocolManager;
+        class DNS;
 
         class NetworkManager
         {
@@ -50,6 +52,7 @@ namespace CactusOS
             InternetControlMessageProtocol* icmp;
             IPV4Handler* ipv4;
             UserDatagramProtocolManager* udp;
+            DNS* dns;
             bool NetworkAvailable;
 
             NetworkManager(NetworkDriver* device);

@@ -148,6 +148,9 @@ void NetworkManager::StartNetwork(core::PIT* pit)
     }
     if(this->NetworkAvailable)
     {
+        printf("Starting DNS\n");
+        this->dns = new DNS(this, pit);
+        
         //this->arp->BroadcastMACAddress(this->dhcp->RouterIp);
         this->arp->RequestMAC(this->dhcp->RouterIp); //This is better i think
         this->icmp->RequestEchoReply(this->dhcp->RouterIp);

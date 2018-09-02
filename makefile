@@ -10,6 +10,7 @@ objects = obj/loader.o \
 		  obj/common/convert.o \
 		  obj/common/math.o \
 		  obj/common/memoryoperations.o \
+		  obj/common/string.o \
 		  obj/common/mmioutls.o \
 		  obj/core/gdtloader.o \
 		  obj/core/gdt.o \
@@ -34,6 +35,7 @@ objects = obj/loader.o \
 		  obj/system/network/udp.o \
 		  obj/system/network/ipv4.o \
 		  obj/system/network/dhcp.o \
+		  obj/system/network/dns.o \
 		  obj/system/network/networkmanager.o \
 		  obj/system.o \
           obj/kernel.o
