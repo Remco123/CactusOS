@@ -17,6 +17,9 @@ uint8_t pseudo_rand_8() {
     return (uint8_t)(seed = (12657 * seed + 12345) % 256);
 }
 
+uint8_t ReceivedDNSIP[4];
+bool ReceivedDNSAnswer = false;
+
 DNS::DNS(NetworkManager* backend, PIT* pit)
 {
     this->backend = backend;
@@ -39,6 +42,7 @@ void DNS::static_handle_udp(unsigned char* data, unsigned int size)
 void DNS::HandleUDP(unsigned char* data, unsigned int size)
 {
     printf("Received DNS answer\n");
+    ReceivedDNSAnswer = true;
 }
 void DNS::GetHostByName(const char* host, common::uint8_t* into)
 {
@@ -75,8 +79,21 @@ void DNS::GetHostByName(const char* host, common::uint8_t* into)
     qinfo->qtype = Convert::ByteSwap ((uint16_t) 0x0001 ); //type of the query , A , MX , CNAME , NS etc
     qinfo->qclass = Convert::ByteSwap ((uint16_t)1); //its internet (lol)
 
+    ReceivedDNSAnswer = false;
     printf("Sending DNS Packet...\n");
     this->dnsSocket->Send(buf, sizeof(struct DNS_HEADER) + (String::strlen((const char*)qname)+1) + sizeof(struct QUESTION));
+
+    while(!ReceivedDNSAnswer);
+    {
+        printf("->");
+        if(!ReceivedDNSAnswer) //tiny timeout TODO: Add a maximum of tries
+            pit->Sleep(100);
+    }
+
+    MemoryOperations::memcpy(into, ReceivedDNSIP, 4);
+
+    ReceivedDNSAnswer = false;
+    printf("DNS Received (test)\n");
 }
 
 void DNS::ChangetoDnsNameFormat(unsigned char* dns,unsigned char* host)
