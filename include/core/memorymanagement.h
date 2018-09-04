@@ -4,6 +4,13 @@
 #include <common/types.h>
 #include <stddef.h>
 
+typedef CactusOS::common::uint16_t offset_t;
+
+#ifndef align_up
+#define align_up(num, align) \
+    (((num) + ((align) - 1)) & ~((align) - 1))
+#endif
+
 namespace CactusOS
 {
     namespace core
@@ -27,6 +34,8 @@ namespace CactusOS
             
             void* malloc(common::size_t size);
             void free(void* ptr);
+            void* aligned_malloc(common::size_t align, common::size_t size);
+            void aligned_free(void* ptr);
         };
     }
 }

@@ -107,7 +107,7 @@ void RTL8139::SendData(uint8_t* data, uint32_t len)
         while(1);
     }
 
-    void* transfer_data = MemoryManager::activeMemoryManager->malloc(len);
+    void* transfer_data = MemoryManager::activeMemoryManager->aligned_malloc(2, len);
     MemoryOperations::memset(transfer_data, 0, len);
     MemoryOperations::memcpy(transfer_data, data, len);
 

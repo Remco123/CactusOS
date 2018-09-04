@@ -91,6 +91,57 @@ void MemoryManager::free(void* ptr)
     }
 }
 
+void* MemoryManager::aligned_malloc(common::size_t align, common::size_t size)
+{
+    void * ptr = NULL;
+
+    //We want it to be a power of two since align_up operates on powers of two
+    if(!(align & (align - 1)) == 0)
+        return 0;
+
+    if(align && size)
+    {
+        /*
+         * We know we have to fit an offset value
+         * We also allocate extra bytes to ensure we can meet the alignment
+         */
+        common::uint32_t hdr_size = sizeof(offset_t) + (align - 1);
+        void * p = malloc(size + hdr_size);
+
+        if(p)
+        {
+            /*
+             * Add the offset size to malloc's pointer (we will always store that)
+             * Then align the resulting value to the arget alignment
+             */
+            ptr = (void *) align_up(((common::uintptr_t)p + sizeof(offset_t)), align);
+
+            //Calculate the offset and store it behind our aligned pointer
+            *((offset_t *)ptr - 1) = (offset_t)((common::uintptr_t)ptr - (common::uintptr_t)p);
+
+        } // else NULL, could not malloc
+    } //else NULL, invalid arguments
+
+    return ptr;
+}
+void MemoryManager::aligned_free(void* ptr)
+{
+    if(ptr == 0)
+        return;
+
+    /*
+    * Walk backwards from the passed-in pointer to get the pointer offset
+    * We convert to an offset_t pointer and rely on pointer math to get the data
+    */
+    offset_t offset = *((offset_t *)ptr - 1);
+
+    /*
+    * Once we have the offset, we can get our original pointer and call free
+    */
+    void * p = (void *)((common::uint8_t *)ptr - offset);
+    free(p);
+}
+
 
 
 

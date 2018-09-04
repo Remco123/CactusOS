@@ -86,6 +86,16 @@ extern "C" void kernelMain(const multiboot_info_t* mbi, unsigned int multiboot_m
     printf("Starting System\n");
     System::InitSystem();
 
+    //172.217.17.131 www.google.nl
+    uint8_t ip1 = 172, ip2 = 217, ip3 = 17, ip4 = 131;
+    uint32_t ip_be = ((uint32_t)ip4 << 24)
+                | ((uint32_t)ip3 << 16)
+                | ((uint32_t)ip2 << 8)
+    | (uint32_t)ip1;
+
+    System::networkManager->icmp->RequestEchoReply(ip_be);
+    System::pit->Beep(1000);
+
     while(1)
     {
         Console::Write(":==> ");
