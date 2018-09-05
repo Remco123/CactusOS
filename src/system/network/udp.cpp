@@ -110,14 +110,9 @@ void UserDatagramProtocolManager::OnInternetProtocolReceived(uint32_t srcIP_BE, 
 
     if(remotePort == 67)
     {
-        /*
-        printf("Packet is DHCP\n");
-        for(uint16_t i = 0; i < numSockets; i++) //Do a special search for dhcp socket, this should be done in the loop above!
-            if(sockets[i]->localPort == 68 && sockets[i]->remotePort == 67)
-                socket = sockets[i];    
-        */
-       //TODO: Improve this
-        backend->dhcp->HandleUDP(payload + sizeof(UserDatagramProtocolHeader), size - sizeof(UserDatagramProtocolHeader));
+        //TODO: Improve this
+        if(!backend->dhcp->Enabled) //We don't want this to receive multiple times
+            backend->dhcp->HandleUDP(payload + sizeof(UserDatagramProtocolHeader), size - sizeof(UserDatagramProtocolHeader));
     }
     
     if(socket != 0)

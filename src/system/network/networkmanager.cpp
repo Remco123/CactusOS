@@ -9,6 +9,7 @@ void printfHex(uint8_t);
 void printfHex16(uint16_t);
 void printfHex32(uint32_t);
 void PrintMac(uint64_t key);
+void PrintIP(uint32_t ip);
 
 NetworkManager::NetworkManager(NetworkDriver* device)
 {
@@ -150,6 +151,11 @@ void NetworkManager::StartNetwork(core::PIT* pit)
     {
         printf("Starting DNS\n");
         this->dns = new DNS(this, pit);
+
+        //Just for testing
+        this->arp->RequestMAC(this->dhcp->RouterIp);
+        this->icmp->RequestEchoReply(this->dhcp->RouterIp);
+        printf("Router IP: "); PrintIP(this->dhcp->RouterIp); printf("\n");
     }
 }
 
@@ -175,6 +181,8 @@ void NetworkManager::HandlePacket(common::uint8_t* packet, common::uint32_t size
                 printf("Unkown Ethernet packet\n");
         }
     }
+    else
+        printf("Packet is not for us\n");
 }
 
 void PrintPacket(uint8_t* data, uint32_t size)
