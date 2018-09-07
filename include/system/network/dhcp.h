@@ -81,10 +81,10 @@ namespace CactusOS
         {
         private:
             NetworkManager* backend;
+
+            char* getTypeString(common::uint8_t type);
         public:
             UDPSocket* dhcpSocket;
-            void HandleUDP(unsigned char* data, unsigned int size);
-            DHCP(NetworkManager* backend);
 
             bool Enabled;
 
@@ -96,7 +96,15 @@ namespace CactusOS
             common::uint32_t RouterIp;
             common::uint32_t LeaseTime;
 
+            DHCP(NetworkManager* backend);
+
             void EnableDHCP();
+            void HandleUDP(unsigned char* data, unsigned int size);
+
+            void SendDiscovery();
+            void SendRequest(common::uint8_t* requestIP, common::uint8_t* serverIP);
+            common::uint8_t GetDHCPMessageType(unsigned char* data);
+            void ParseACK(unsigned char* data);
         };
     }
 }
