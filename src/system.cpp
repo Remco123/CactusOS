@@ -19,7 +19,7 @@ PeripheralComponentInterconnectController* System::pci = 0;
 PIT* System::pit = 0;
 CPU* System::cpu = 0;
 DriverManager* System::driverManager = 0;
-NetworkManager* System::networkManager = 0;
+//NetworkManager* System::networkManager = 0;
 
 void System::InitCore()
 {
@@ -75,9 +75,11 @@ void System::InitSystem()
     NetworkDriver* netDriver = (NetworkDriver*) System::driverManager->DriverByType(DriverType::Network);
     if(netDriver != 0)
     {
+        /*
         Console::WriteLine("Starting Network");
         System::networkManager = new NetworkManager(netDriver);
         System::networkManager->StartNetwork(System::pit);
+        */
     }
     else
     {

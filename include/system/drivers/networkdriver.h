@@ -4,20 +4,20 @@
 #include <common/types.h>
 #include <common/memoryoperations.h>
 #include <system/drivers/driver.h>
-#include <system/network/networkmanager.h>
+//#include <system/network/networkmanager.h>
 
 namespace CactusOS
 {
     namespace system
     {
-        class NetworkManager; //Forward decleration
+        //class NetworkManager; //Forward decleration
 
         class NetworkDriver : public Driver, public core::InterruptHandler
         {
-        friend class NetworkManager;
+        //friend class NetworkManager;
         protected:
             core::PeripheralComponentInterconnectDeviceDescriptor* device; //The device this driver is attached to
-            system::NetworkManager* NetManager;
+            //system::NetworkManager* NetManager;
             
             common::uint8_t MAC[6]; //Every NIC has a mac
         public:

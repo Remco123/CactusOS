@@ -123,9 +123,10 @@ void PCNET::HandleReceive()
                 size -= 4;
             
             uint8_t* buffer = (uint8_t*)(recvBufferDescr[currentRecvBuffer].address);
-
+            /*
             if(this->NetManager != 0)
                 this->NetManager->HandlePacket(buffer, size);
+            */
         }
         
         recvBufferDescr[currentRecvBuffer].flags2 = 0;

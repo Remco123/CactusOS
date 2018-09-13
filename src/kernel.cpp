@@ -1,8 +1,7 @@
 #include <system.h>
 #include <multiboot/multiboot.h>
 #include <common/convert.h>
-#include <system/network/udp.h>
-#include <system/network/dhcp.h>
+
 
 using namespace CactusOS;
 using namespace CactusOS::core;
@@ -89,10 +88,6 @@ extern "C" void kernelMain(const multiboot_info_t* mbi, unsigned int multiboot_m
     Console::Write("Total Memory: "); Console::Write(Convert::IntToString(System::memoryManager->GetTotalMemory() / 1024 / 1024)); Console::WriteLine(" Mb");
     Console::Write("Free Memory: "); Console::Write(Convert::IntToString(System::memoryManager->GetFreeMemory() / 1024 / 1024)); Console::WriteLine(" Mb");
     Console::Write("Used Memory: "); Console::Write(Convert::IntToString(System::memoryManager->GetUsedMemory() > 1024 * 1024 ? System::memoryManager->GetUsedMemory() / 1024 / 1024 : System::memoryManager->GetUsedMemory() / 1024)); Console::WriteLine(System::memoryManager->GetUsedMemory() > 1024 * 1024 ? (char*)" Mb" : (char*)" Kb");
-    
-    uint8_t targetIP[4] = { 192, 168, 2, 10 };
-    UDPSocket* socket = System::networkManager->udp->Connect(NetworkManager::MakeIP(targetIP), 1234);
-    socket->Send((uint8_t*)"Hallo vanaf CactusOS\n", 22);
 
     while(1)
     {

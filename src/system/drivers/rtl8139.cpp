@@ -87,10 +87,12 @@ void RTL8139::HandleReceive()
 
     uint8_t* packet = (uint8_t*)MemoryManager::activeMemoryManager->malloc(packet_length);
     MemoryOperations::memcpy(packet, t, packet_length);
+    /*
     if(this->NetManager != 0)
         this->NetManager->HandlePacket(packet, packet_length);
     else
         printf("RTL8139: Could not pass to handler\n");
+    */
 
     current_packet_ptr = (current_packet_ptr + packet_length + 4 + 3) & RX_READ_POINTER_MASK;
 
