@@ -28,6 +28,7 @@ void System::InitCore()
         printf("Memory Manager is zero, error!\n");
         while(1); //TODO: Add panic
     }
+    System::memoryManager = MemoryManager::activeMemoryManager;
 
     //We can use new now!
     System::gdt = new GlobalDescriptorTable();

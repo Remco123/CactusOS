@@ -18,6 +18,7 @@ InternetControlMessageProtocol::~InternetControlMessageProtocol()
 void InternetControlMessageProtocol::OnInternetProtocolReceived(uint32_t srcIP_BE, uint32_t dstIP_BE,
                                 uint8_t* payload, uint32_t size)
 {
+    printf("Received ICMP\n");
     InternetControlMessageProtocolMessage* msg = (InternetControlMessageProtocolMessage*)payload;
     
     switch(msg->type)

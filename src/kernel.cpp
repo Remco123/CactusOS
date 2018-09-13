@@ -86,15 +86,13 @@ extern "C" void kernelMain(const multiboot_info_t* mbi, unsigned int multiboot_m
     printf("Starting System\n");
     System::InitSystem();
 
-    //172.217.17.131 www.google.nl
-    uint8_t ip1 = 172, ip2 = 217, ip3 = 17, ip4 = 131;
-    uint32_t ip_be = ((uint32_t)ip4 << 24)
-                | ((uint32_t)ip3 << 16)
-                | ((uint32_t)ip2 << 8)
-    | (uint32_t)ip1;
-
-    System::networkManager->icmp->RequestEchoReply(ip_be);
-    System::pit->Beep(1000);
+    Console::Write("Total Memory: "); Console::Write(Convert::IntToString(System::memoryManager->GetTotalMemory() / 1024 / 1024)); Console::WriteLine(" Mb");
+    Console::Write("Free Memory: "); Console::Write(Convert::IntToString(System::memoryManager->GetFreeMemory() / 1024 / 1024)); Console::WriteLine(" Mb");
+    Console::Write("Used Memory: "); Console::Write(Convert::IntToString(System::memoryManager->GetUsedMemory() > 1024 * 1024 ? System::memoryManager->GetUsedMemory() / 1024 / 1024 : System::memoryManager->GetUsedMemory() / 1024)); Console::WriteLine(System::memoryManager->GetUsedMemory() > 1024 * 1024 ? (char*)" Mb" : (char*)" Kb");
+    
+    uint8_t targetIP[4] = { 192, 168, 2, 10 };
+    UDPSocket* socket = System::networkManager->udp->Connect(NetworkManager::MakeIP(targetIP), 1234);
+    socket->Send((uint8_t*)"Hallo vanaf CactusOS\n", 22);
 
     while(1)
     {

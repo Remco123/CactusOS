@@ -2,6 +2,7 @@
 #define __CACTUSOS__CORE__MEMORYMANAGEMENT_H
 
 #include <common/types.h>
+#include <common/convert.h>
 #include <stddef.h>
 
 typedef CactusOS::common::uint16_t offset_t;
@@ -36,6 +37,10 @@ namespace CactusOS
             void free(void* ptr);
             void* aligned_malloc(common::size_t align, common::size_t size);
             void aligned_free(void* ptr);
+
+            common::uint32_t GetTotalMemory();
+            common::uint32_t GetUsedMemory();
+            common::uint32_t GetFreeMemory();
         };
     }
 }

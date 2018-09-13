@@ -8,8 +8,8 @@ void printf(char*);
 void printfHex(uint8_t);
 void printfHex16(uint16_t);
 void printfHex32(uint32_t);
-void PrintMac(uint64_t key);
 void PrintIP(uint32_t ip);
+void PrintMac(uint64_t key);
 
 NetworkManager::NetworkManager(NetworkDriver* device)
 {
@@ -49,47 +49,6 @@ uint32_t NetworkManager::ParseIP(char* str)
 void NetworkManager::StartNetwork(core::PIT* pit)
 {
     MemoryOperations::memcpy(this->MAC, this->netDevice->MAC, 6); //First save our mac address
-    /*
-    printf("Starting network test, press a key\n");
-    Console::kb->GetKey(true);
-    printf("Big empty packet\n");
-    uint8_t* data1 = (uint8_t*) MemoryManager::activeMemoryManager->malloc(sizeof(DhcpHeader));
-    MemoryOperations::memset(data1, 0xFF, sizeof(DhcpHeader));
-    this->netDevice->SendData(data1, sizeof(DhcpHeader));
-    Console::kb->GetKey(true);
-    printf("Big packet of 'a'\n");
-    uint8_t* data2 = (uint8_t*) MemoryManager::activeMemoryManager->malloc(328);
-    MemoryOperations::memset(data2, 'a', 328);
-    this->netDevice->SendData(data2, 328);
-    Console::kb->GetKey(true);
-
-    printf("Small packet\n");
-    uint8_t* data3 = (uint8_t*)MemoryManager::activeMemoryManager->malloc(65);
-    MemoryOperations::memset(data3, 'b', 65);
-    this->netDevice->SendData(data3, 65);
-    Console::kb->GetKey(true);
-
-    printf("Mega packet (1000 bytes)\n");
-    EtherFrameHeader* header = (EtherFrameHeader*)MemoryManager::activeMemoryManager->malloc(sizeof(EtherFrameHeader) + 1000);
-    header->dstMAC_BE = 0xFFFF;
-    header->etherType_BE = 0x0100;
-    header->srcMAC_BE = 0xAAAA;
-    this->netDevice->SendData((uint8_t*) header, sizeof(EtherFrameHeader) + 1000);
-    Console::kb->GetKey(true);
-
-    printf("Loop packets\n");
-    printf("Press a key to stop\n");
-    pit->Sleep(1000);
-    int i = 1;
-    while(!Console::kb->keyAvailibe)
-    {
-        uint8_t* data = (uint8_t*) MemoryManager::activeMemoryManager->malloc(i);
-        MemoryOperations::memset(data, '1', i);
-        this->netDevice->SendData(data, i);
-        i++;
-        MemoryManager::activeMemoryManager->free(data);
-    }
-    */
 
     //Initialize Handlers
     printf("Adding network handlers\n");
@@ -106,7 +65,7 @@ void NetworkManager::StartNetwork(core::PIT* pit)
     
     printf("Trying automatic configuration via DHCP\n");
     uint32_t DhcpTries = 0;
-    while(!dhcp->Enabled && DhcpTries < DHCP_MAX_TRIES)
+    while(!dhcp->Enabled && DhcpTries < 5)
     {
         dhcp->EnableDHCP();
         pit->Sleep(500);
@@ -149,20 +108,16 @@ void NetworkManager::StartNetwork(core::PIT* pit)
     }
     if(this->NetworkAvailable)
     {
-        printf("Starting DNS\n");
-        this->dns = new DNS(this, pit);
-
         //Just for testing
-        this->arp->RequestMAC(this->dhcp->RouterIp);
-        this->icmp->RequestEchoReply(this->dhcp->RouterIp);
-        printf("Router IP: "); PrintIP(this->dhcp->RouterIp); printf("\n");
+        uint64_t mac = this->arp->Resolve(this->dhcp->ServerIp);
+        printf("Router IP: "); PrintIP(Convert::ByteSwap(this->dhcp->ServerIp)); printf("\n");
+        printf("Router MAC: "); PrintMac(mac); printf("\n");
     }
 }
 
 //Raw data received by the network driver
 void NetworkManager::HandlePacket(common::uint8_t* packet, common::uint32_t size)
 {
-    printf("Received Packet\n");
     EtherFrameHeader* frame = (EtherFrameHeader*)packet;
     
     if(frame->dstMAC_BE == 0xFFFFFFFFFFFF || frame->dstMAC_BE == netDevice->GetMacAddressBE())
@@ -178,11 +133,9 @@ void NetworkManager::HandlePacket(common::uint8_t* packet, common::uint32_t size
                     this->ipv4->HandlePacket(packet + sizeof(EtherFrameHeader), size - sizeof(EtherFrameHeader));
                 break;
             default:
-                printf("Unkown Ethernet packet\n");
+                printf("Unkown Ethernet packet type: "); printfHex16(Convert::ByteSwap(frame->etherType_BE)); printf("\n");
         }
     }
-    else
-        printf("Packet is not for us\n");
 }
 
 void PrintPacket(uint8_t* data, uint32_t size)
@@ -218,14 +171,11 @@ void NetworkManager::SendPacket(common::uint64_t dstMAC_BE, common::uint16_t eth
     frame->srcMAC_BE = netDevice->GetMacAddressBE();
     frame->etherType_BE = etherType_BE;
 
-    //printf("## Our mac (BE): "); PrintMac(frame->srcMAC_BE); printf("\n");
-    
     uint8_t* src = buffer;
     uint8_t* dst = buffer2 + sizeof(EtherFrameHeader);
     for(uint32_t i = 0; i < size; i++)
         dst[i] = src[i];
     
-    //PrintPacket(buffer2, size + sizeof(EtherFrameHeader));
     netDevice->SendData(buffer2, size + sizeof(EtherFrameHeader));
     MemoryManager::activeMemoryManager->free(buffer2);
 }
@@ -243,4 +193,13 @@ uint32_t NetworkManager::GetIPAddress()
 uint64_t NetworkManager::GetMACAddress()
 {
     return this->netDevice->GetMacAddressBE();
+}
+
+uint32_t NetworkManager::MakeIP(uint8_t* src)
+{
+    uint32_t ip_be = ((uint32_t)src[0] << 24)
+                | ((uint32_t)src[1] << 16)
+                | ((uint32_t)src[2] << 8)
+                | (uint32_t)src[3];
+    return Convert::ByteSwap(ip_be);
 }

@@ -8,7 +8,6 @@
 #include <system/network/dhcp.h>
 #include <system/network/icmp.h>
 #include <system/network/udp.h>
-#include <system/network/dns.h>
 #include <core/pit.h>
 
 #include <system/console.h>
@@ -20,8 +19,6 @@ namespace CactusOS
         #define ETHERNET_TYPE_ARP 0x0806
         #define ETHERNET_TYPE_IP  0x0800
         #define HARDWARE_TYPE_ETHERNET 0x01
-
-        #define DHCP_MAX_TRIES 5
 
         struct EtherFrameHeader
         {
@@ -37,7 +34,6 @@ namespace CactusOS
         class InternetControlMessageProtocol;
         class IPV4Handler;
         class UserDatagramProtocolManager;
-        class DNS;
 
         class NetworkManager
         {
@@ -52,7 +48,6 @@ namespace CactusOS
             InternetControlMessageProtocol* icmp;
             IPV4Handler* ipv4;
             UserDatagramProtocolManager* udp;
-            DNS* dns;
             bool NetworkAvailable;
 
             NetworkManager(NetworkDriver* device);
@@ -66,6 +61,8 @@ namespace CactusOS
 
             common::uint32_t GetIPAddress();
             common::uint64_t GetMACAddress();
+
+            static common::uint32_t MakeIP(common::uint8_t* src);
         };
     }
 }

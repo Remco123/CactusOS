@@ -1,14 +1,20 @@
 #include <core/memorymanagement.h>
 
+using namespace CactusOS;
 using namespace CactusOS::core;
 
 void printf(char*);
 
 MemoryManager* MemoryManager::activeMemoryManager = 0;
+
+int TotalMemory = 0;
+int UsedMemory = 0;
         
 MemoryManager::MemoryManager(common::size_t start, common::size_t size)
 {
     activeMemoryManager = this;
+    TotalMemory = size;
+    UsedMemory = 0;
     
     if(size < sizeof(MemoryChunk))
     {
@@ -41,7 +47,7 @@ void* MemoryManager::malloc(common::size_t size)
         
     if(result == 0)
     {
-        printf("Error could not allocate memory!\n");
+        printf("Error could not allocate memory! amount: "); printf(common::Convert::IntToString(size)); printf(" Bytes\n");
         while(1);
         return 0;
     }
@@ -62,6 +68,7 @@ void* MemoryManager::malloc(common::size_t size)
     }
     
     result->allocated = true;
+    UsedMemory += size;
 
     return (void*)(((common::size_t)result) + sizeof(MemoryChunk));
 }
@@ -71,6 +78,7 @@ void MemoryManager::free(void* ptr)
     MemoryChunk* chunk = (MemoryChunk*)((common::size_t)ptr - sizeof(MemoryChunk));
     
     chunk -> allocated = false;
+    UsedMemory -= chunk->size;
     
     if(chunk->prev != 0 && !chunk->prev->allocated)
     {
@@ -140,6 +148,19 @@ void MemoryManager::aligned_free(void* ptr)
     */
     void * p = (void *)((common::uint8_t *)ptr - offset);
     free(p);
+}
+
+common::uint32_t MemoryManager::GetTotalMemory()
+{
+    return TotalMemory;
+}
+common::uint32_t MemoryManager::GetUsedMemory()
+{
+    return UsedMemory;
+}
+common::uint32_t MemoryManager::GetFreeMemory()
+{
+    return TotalMemory - UsedMemory;
 }
 
 

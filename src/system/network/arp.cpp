@@ -10,6 +10,8 @@ void printfHex(uint8_t);
 void printfHex16(uint16_t);
 void PrintIP(uint32_t);
 
+#define ARP_BUF_SIZE 64
+
 //Prints mac address
 void PrintMac(uint64_t key)
 {
@@ -39,7 +41,7 @@ AddressResolutionProtocol::~AddressResolutionProtocol()
 
 void AddressResolutionProtocol::HandlePacket(uint8_t* packet, uint32_t size)
 {
-    //printf("Handling arp packet\n");
+    printf("Handling arp packet\n");
     AddressResolutionProtocolMessage* arp = (AddressResolutionProtocolMessage*)packet;
 
     //printf("HW Type: "); printfHex16(arp->hardwareType); printf("\n");
@@ -57,18 +59,24 @@ void AddressResolutionProtocol::HandlePacket(uint8_t* packet, uint32_t size)
             switch(arp->command)
             {
                 case 0x0100: // request
-                    arp->command = 0x0200;
-                    arp->dstIP = arp->srcIP;
-                    arp->dstMAC = arp->srcMAC;
-                    arp->srcIP = netManager->GetIPAddress();
-                    arp->srcMAC = netManager->GetMACAddress();
+                    AddressResolutionProtocolMessage* response = (AddressResolutionProtocolMessage*)MemoryManager::activeMemoryManager->malloc(ARP_BUF_SIZE);
+                    response->hardwareType = 0x0100; // ethernet
+                    response->protocol = 0x0008; // ipv4
+                    response->hardwareAddressSize = 6; // mac
+                    response->protocolAddressSize = 4; // ipv4
+                    response->command = 0x0200; // response
+                    response->srcMAC = netManager->GetMACAddress();
+                    response->srcIP = netManager->GetIPAddress();
+                    response->dstMAC = arp->srcMAC; // broadcast
+                    response->dstIP = arp->srcIP;
                     
-                    netManager->SendPacket(arp->dstMAC, Convert::ByteSwap((uint16_t)ETHERNET_TYPE_ARP), packet, size);
+                    netManager->SendPacket(response->dstMAC, Convert::ByteSwap((uint16_t)ETHERNET_TYPE_ARP), (uint8_t*)response, ARP_BUF_SIZE);
+                    MemoryManager::activeMemoryManager->free(response);
                     printf("Arp Response send\n");
                     break;
                     
                 case 0x0200: // response
-                    //printf("Got arp response\n");
+                    printf("Got arp response\n");
                     if(NumArpItems < 128)
                     {
                         ArpEntry* entry = new ArpEntry();
@@ -90,19 +98,19 @@ void AddressResolutionProtocol::HandlePacket(uint8_t* packet, uint32_t size)
 
 void AddressResolutionProtocol::RequestMAC(common::uint32_t IP_BE)
 {
-    AddressResolutionProtocolMessage arp;
-    arp.hardwareType = 0x0100; // ethernet
-    arp.protocol = 0x0008; // ipv4
-    arp.hardwareAddressSize = 6; // mac
-    arp.protocolAddressSize = 4; // ipv4
-    arp.command = 0x0100; // request
-    
-    arp.srcMAC = netManager->GetMACAddress();
-    arp.srcIP = netManager->GetIPAddress();
-    arp.dstMAC = 0xFFFFFFFFFFFF; // broadcast
-    arp.dstIP = IP_BE;
+    AddressResolutionProtocolMessage* arp = (AddressResolutionProtocolMessage*)MemoryManager::activeMemoryManager->malloc(ARP_BUF_SIZE);
+    arp->hardwareType = 0x0100; // ethernet
+    arp->protocol = 0x0008; // ipv4
+    arp->hardwareAddressSize = 6; // mac
+    arp->protocolAddressSize = 4; // ipv4
+    arp->command = 0x0100; // request
+    arp->srcMAC = netManager->GetMACAddress();
+    arp->srcIP = netManager->GetIPAddress();
+    arp->dstMAC = 0xFFFFFFFFFFFF; // broadcast
+    arp->dstIP = IP_BE;
 
-    netManager->SendPacket(arp.dstMAC, Convert::ByteSwap((uint16_t)ETHERNET_TYPE_ARP), (uint8_t*)&arp, sizeof(AddressResolutionProtocolMessage));
+    netManager->SendPacket(arp->dstMAC, Convert::ByteSwap((uint16_t)ETHERNET_TYPE_ARP), (uint8_t*)arp, ARP_BUF_SIZE);
+    MemoryManager::activeMemoryManager->free(arp);
 }
 
 uint64_t AddressResolutionProtocol::Resolve(uint32_t IP_BE)
@@ -111,18 +119,17 @@ uint64_t AddressResolutionProtocol::Resolve(uint32_t IP_BE)
         return 0xFFFFFFFFFFFF;
 
     uint64_t result = GetMACFromCache(IP_BE);
-    if(result == 0)
-        RequestMAC(IP_BE);
-    else
+    if(result != 0)
         return result; //It is already in the database
     
     for(int i = 0; i < MACResolveMaxTries; i++)
     {
+        RequestMAC(IP_BE);
         result = GetMACFromCache(IP_BE);
         if(result != 0)
             return result;
         printf("*");
-        pit->Sleep(50); //Small timeout
+        pit->Sleep(200); //Small timeout
     }
     printf("    :Arp Resolve: Request timed out\n");
 
@@ -134,23 +141,23 @@ uint64_t AddressResolutionProtocol::GetMACFromCache(uint32_t IP_BE)
     for(uint32_t i = 0; i < NumArpItems; i++)
         if(ArpDatabase[i]->IPAddress == IP_BE)
             return ArpDatabase[i]->MACAddress;
+    printf("MAC Not found in Arp cache\n");
     return 0;
 }
 
 void AddressResolutionProtocol::BroadcastMACAddress(uint32_t IP_BE)
 {
-    AddressResolutionProtocolMessage arp;
-    arp.hardwareType = 0x0100; // ethernet
-    arp.protocol = 0x0008; // ipv4
-    arp.hardwareAddressSize = 6; // mac
-    arp.protocolAddressSize = 4; // ipv4
-    arp.command = 0x0200; // "response"
+    AddressResolutionProtocolMessage* arp = (AddressResolutionProtocolMessage*)MemoryManager::activeMemoryManager->malloc(ARP_BUF_SIZE);
+    arp->hardwareType = 0x0100; // ethernet
+    arp->protocol = 0x0008; // ipv4
+    arp->hardwareAddressSize = 6; // mac
+    arp->protocolAddressSize = 4; // ipv4
+    arp->command = 0x0200; // "response"
+    arp->srcMAC = netManager->GetMACAddress();
+    arp->srcIP = netManager->GetIPAddress();
+    arp->dstMAC = Resolve(IP_BE);
+    arp->dstIP = IP_BE;
     
-    arp.srcMAC = netManager->GetMACAddress();
-    arp.srcIP = netManager->GetIPAddress();
-    arp.dstMAC = Resolve(IP_BE);
-    arp.dstIP = IP_BE;
-    
-    netManager->SendPacket(arp.dstMAC, Convert::ByteSwap((uint16_t)ETHERNET_TYPE_ARP), (uint8_t*)&arp, sizeof(AddressResolutionProtocolMessage));
-
+    netManager->SendPacket(arp->dstMAC, Convert::ByteSwap((uint16_t)ETHERNET_TYPE_ARP), (uint8_t*)arp, ARP_BUF_SIZE);
+    MemoryManager::activeMemoryManager->free(arp);
 }
