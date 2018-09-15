@@ -90,3 +90,12 @@ uint32_t Convert::ByteSwap(uint32_t x)
     x = (x & 0x00FF00FF) << 8 | (x & 0xFF00FF00) >> 8;
     return x;
 }
+uint48_t Convert::ByteSwap(uint48_t key)
+{
+    return ((((key) & 0x0000000000ff) << 40) |    \
+            (((key) & 0x00000000ff00) << 24) |    \
+            (((key) & 0x000000ff0000) << 8)  |    \
+            (((key) & 0x0000ff000000) >> 8)  |    \
+            (((key) & 0x00ff00000000) >> 24) |    \
+            (((key) & 0xff0000000000) >> 40));
+}

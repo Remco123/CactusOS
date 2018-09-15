@@ -89,6 +89,8 @@ extern "C" void kernelMain(const multiboot_info_t* mbi, unsigned int multiboot_m
     Console::Write("Free Memory: "); Console::Write(Convert::IntToString(System::memoryManager->GetFreeMemory() / 1024 / 1024)); Console::WriteLine(" Mb");
     Console::Write("Used Memory: "); Console::Write(Convert::IntToString(System::memoryManager->GetUsedMemory() > 1024 * 1024 ? System::memoryManager->GetUsedMemory() / 1024 / 1024 : System::memoryManager->GetUsedMemory() / 1024)); Console::WriteLine(System::memoryManager->GetUsedMemory() > 1024 * 1024 ? (char*)" Mb" : (char*)" Kb");
 
+    System::networkManager->SendEthernetPacket(MAC_BROADCAST, ETHERNET_TYPE_ARP, (uint8_t*)"Hello World\n", 14);
+
     while(1)
     {
         Console::Write(":==> ");

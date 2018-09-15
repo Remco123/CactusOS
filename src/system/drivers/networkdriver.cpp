@@ -43,7 +43,7 @@ void NetworkDriver::Reset()
     printf("Warning! NetworkDriver::Reset() Should not be called\n");
 }
 
-uint64_t NetworkDriver::GetMacAddressBE()
+uint64_t NetworkDriver::GetMacAddress()
 {
     uint64_t result = ((uint64_t)MAC[0] << 40) |
                       ((uint64_t)MAC[1] << 32) |

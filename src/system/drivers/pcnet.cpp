@@ -123,10 +123,12 @@ void PCNET::HandleReceive()
                 size -= 4;
             
             uint8_t* buffer = (uint8_t*)(recvBufferDescr[currentRecvBuffer].address);
-            /*
+            
             if(this->NetManager != 0)
-                this->NetManager->HandlePacket(buffer, size);
-            */
+                this->NetManager->HandleEthernetPacket(buffer, size);
+            else
+                printf("PCNET: Could not pass to handler\n");
+    
         }
         
         recvBufferDescr[currentRecvBuffer].flags2 = 0;
@@ -170,7 +172,7 @@ void PCNET::Activate()
 
     printf("Card Mac Address = ");
     for(int i = 0; i < 6; i++)
-        printfHex(this->MAC[i]);
+        { printfHex(this->MAC[i]); if(i != 5) printf(":"); }
     printf("\n");
     printf("Activate Done\n");
 }

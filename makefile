@@ -30,6 +30,7 @@ objects = obj/loader.o \
 		  obj/system/drivers/keyboard.o \
 		  obj/system/drivers/drivermanager.o \
 		  obj/system/console.o \
+		  obj/system/network/networkmanager.o \
 		  obj/system.o \
           obj/kernel.o
 

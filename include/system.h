@@ -34,7 +34,7 @@ namespace CactusOS
 
     //System
         static CactusOS::system::DriverManager* driverManager;
-        //static CactusOS::system::NetworkManager* networkManager;
+        static CactusOS::system::NetworkManager* networkManager;
 
         static void InitCore();
         static void InitSystem();

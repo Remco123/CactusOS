@@ -4,23 +4,24 @@
 #include <common/types.h>
 #include <common/memoryoperations.h>
 #include <system/drivers/driver.h>
-//#include <system/network/networkmanager.h>
+#include <system/network/networkmanager.h>
 
 namespace CactusOS
 {
     namespace system
     {
-        //class NetworkManager; //Forward decleration
+        class NetworkManager;
 
         class NetworkDriver : public Driver, public core::InterruptHandler
         {
-        //friend class NetworkManager;
+        friend class NetworkManager;
         protected:
             core::PeripheralComponentInterconnectDeviceDescriptor* device; //The device this driver is attached to
-            //system::NetworkManager* NetManager;
+            CactusOS::system::NetworkManager* NetManager;
             
-            common::uint8_t MAC[6]; //Every NIC has a mac
         public:
+            common::uint8_t MAC[6]; //Every NIC has a mac
+
             NetworkDriver(core::PeripheralComponentInterconnectDeviceDescriptor* dev, core::InterruptManager* interrupts);
             ~NetworkDriver();
 
@@ -29,7 +30,7 @@ namespace CactusOS
             virtual void SendData(common::uint8_t* data, common::uint32_t datalen);
             virtual void Activate();
             virtual void Reset();
-            virtual common::uint64_t GetMacAddressBE();
+            virtual common::uint64_t GetMacAddress();
         };
     }
 }
