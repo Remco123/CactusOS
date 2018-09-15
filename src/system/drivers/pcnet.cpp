@@ -141,9 +141,6 @@ void PCNET::SendData(uint8_t* buffer, uint32_t size)
     int sendDescriptor = currentSendBuffer;
     currentSendBuffer = (currentSendBuffer + 1) % 8;
     
-    if(size > 1518)
-        size = 1518;
-    
     for(uint8_t *src = buffer + size -1,
                 *dst = (uint8_t*)(sendBufferDescr[sendDescriptor].address + size -1);
                 src >= buffer; src--, dst--)

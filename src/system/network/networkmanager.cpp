@@ -15,7 +15,10 @@ NetworkManager::NetworkManager(NetworkDriver* net_device)
 }
 void NetworkManager::StartNetwork(core::PIT* pit)
 {
-
+    //Initialize Handlers
+    printf("Adding network handlers\n");
+    printf("    -> ARP\n");
+    this->arp = new ARPProtocol(this, pit);
 }
 void NetworkManager::HandleEthernetPacket(common::uint8_t* packet, common::uint32_t size)
 {
@@ -27,7 +30,8 @@ void NetworkManager::HandleEthernetPacket(common::uint8_t* packet, common::uint3
         {
             case ETHERNET_TYPE_ARP:
                 {
-
+                    if(this->arp != 0)
+                        this->arp->HandlePacket(packet + sizeof(EtherFrameHeader), size - sizeof(EtherFrameHeader));
                 }
                 break;
             case ETHERNET_TYPE_IP:
@@ -42,6 +46,14 @@ void NetworkManager::HandleEthernetPacket(common::uint8_t* packet, common::uint3
 }
 void NetworkManager::SendEthernetPacket(common::uint64_t dstMAC, common::uint16_t etherType, common::uint8_t* buffer, common::uint32_t size)
 {
+    if(size > 1518 - sizeof(EtherFrameHeader))
+    {
+        printf("Packet to big to send, so packet is ignored!\n");
+        return;
+    }
+    else if(size < 64 - sizeof(EtherFrameHeader))
+        size = 64 - sizeof(EtherFrameHeader); //Add extra bytes
+
     uint8_t* buffer2 = (uint8_t*)MemoryManager::activeMemoryManager->malloc(sizeof(EtherFrameHeader) + size);
     MemoryOperations::memset(buffer2, 0, sizeof(EtherFrameHeader) + size);
     EtherFrameHeader* frame = (EtherFrameHeader*)buffer2;
@@ -57,4 +69,12 @@ void NetworkManager::SendEthernetPacket(common::uint64_t dstMAC, common::uint16_
     
     netDevice->SendData(buffer2, size + sizeof(EtherFrameHeader));
     MemoryManager::activeMemoryManager->free(buffer2);  
+}
+uint48_t NetworkManager::GetMACAddress()
+{
+    return this->netDevice->GetMacAddress();
+}
+uint32_t NetworkManager::GetIPAddress()
+{
+    return NetTools::MakeIP(10, 0, 2, 15); //TODO: Replace by dhcp
 }

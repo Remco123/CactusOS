@@ -12,7 +12,6 @@ namespace CactusOS
             common::uint64_t dstMAC_BE : 48;
             common::uint64_t srcMAC_BE : 48;
             common::uint16_t etherType_BE;
-            common::uint8_t payload[];
         } __attribute__ ((packed));
     }
 }
