@@ -19,6 +19,10 @@ void NetworkManager::StartNetwork(core::PIT* pit)
     printf("Adding network handlers\n");
     printf("    -> ARP\n");
     this->arp = new ARPProtocol(this, pit);
+    printf("    -> IPV4\n");
+    this->ipv4 = new IPV4Protocol(this);
+    printf("    -> ICMP\n");
+    this->icmp = new InternetControlMessageProtocol(this);
 }
 void NetworkManager::HandleEthernetPacket(common::uint8_t* packet, common::uint32_t size)
 {
@@ -36,7 +40,8 @@ void NetworkManager::HandleEthernetPacket(common::uint8_t* packet, common::uint3
                 break;
             case ETHERNET_TYPE_IP:
                 {
-
+                    if(this->ipv4 != 0)
+                        this->ipv4->HandlePacket(packet + sizeof(EtherFrameHeader), size - sizeof(EtherFrameHeader));
                 }
                 break;
             default:
@@ -44,7 +49,7 @@ void NetworkManager::HandleEthernetPacket(common::uint8_t* packet, common::uint3
         }
     }
 }
-void NetworkManager::SendEthernetPacket(common::uint64_t dstMAC, common::uint16_t etherType, common::uint8_t* buffer, common::uint32_t size)
+void NetworkManager::SendEthernetPacket(common::uint48_t dstMAC, common::uint16_t etherType, common::uint8_t* buffer, common::uint32_t size)
 {
     if(size > 1518 - sizeof(EtherFrameHeader))
     {
@@ -52,7 +57,7 @@ void NetworkManager::SendEthernetPacket(common::uint64_t dstMAC, common::uint16_
         return;
     }
     else if(size < 64 - sizeof(EtherFrameHeader))
-        size = 64 - sizeof(EtherFrameHeader); //Add extra bytes
+        size = 64 - sizeof(EtherFrameHeader); //Add extra bytes, this only for arp right now, otherwise it won't work
 
     uint8_t* buffer2 = (uint8_t*)MemoryManager::activeMemoryManager->malloc(sizeof(EtherFrameHeader) + size);
     MemoryOperations::memset(buffer2, 0, sizeof(EtherFrameHeader) + size);

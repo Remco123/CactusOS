@@ -52,20 +52,6 @@ void PrintKernelStart()
     printf("\n");
 }
 
-void PrintIP(uint32_t ip)
-{
-    unsigned char bytes[4];
-    bytes[0] = ip & 0xFF;
-    bytes[1] = (ip >> 8) & 0xFF;
-    bytes[2] = (ip >> 16) & 0xFF;
-    bytes[3] = (ip >> 24) & 0xFF;   
-    //printf("%d.%d.%d.%d\n", bytes[3], bytes[2], bytes[1], bytes[0]);
-    printf(Convert::IntToString(bytes[3])); printf(".");
-    printf(Convert::IntToString(bytes[2])); printf(".");
-    printf(Convert::IntToString(bytes[1])); printf(".");
-    printf(Convert::IntToString(bytes[0])); 
-}
-
 extern "C" void kernelMain(const multiboot_info_t* mbi, unsigned int multiboot_magic)
 {
     Console::SetColors(0xA, 0x0);
@@ -89,9 +75,7 @@ extern "C" void kernelMain(const multiboot_info_t* mbi, unsigned int multiboot_m
     Console::Write("Free Memory: "); Console::Write(Convert::IntToString(System::memoryManager->GetFreeMemory() / 1024 / 1024)); Console::WriteLine(" Mb");
     Console::Write("Used Memory: "); Console::Write(Convert::IntToString(System::memoryManager->GetUsedMemory() > 1024 * 1024 ? System::memoryManager->GetUsedMemory() / 1024 / 1024 : System::memoryManager->GetUsedMemory() / 1024)); Console::WriteLine(System::memoryManager->GetUsedMemory() > 1024 * 1024 ? (char*)" Mb" : (char*)" Kb");
 
-    uint32_t ip = System::networkManager->arp->Resolve(NetTools::MakeIP(10, 0, 2, 2));
-
-    printf("IP: "); printfHex32(ip); printf("\n");
+    System::networkManager->icmp->RequestEchoReply(NetTools::MakeIP(172,217,20,67));
 
     while(1)
     {

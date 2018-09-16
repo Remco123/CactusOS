@@ -41,6 +41,7 @@ void ARPProtocol::HandlePacket(uint8_t* packet, uint32_t size)
             {
                 case 0x0100: // request
                     SendResponse(Convert::ByteSwap(arp->srcMAC), Convert::ByteSwap(arp->srcIP));
+                    printf("Arp Response Send\n");
                     break;
                     
                 case 0x0200: // response
@@ -48,12 +49,13 @@ void ARPProtocol::HandlePacket(uint8_t* packet, uint32_t size)
                     if(NumArpItems < 128)
                     {
                         ArpEntry* entry = new ArpEntry();
-                        entry->MACAddress = Convert::ByteSwap(arp->srcMAC);
+                        entry->MACAddress = arp->srcMAC;
                         entry->IPAddress = Convert::ByteSwap(arp->srcIP);
 
                         ArpDatabase[NumArpItems] = entry;
                         NumArpItems++;
                         printf("Arp Entry added to database\n");
+                        printf("MAC/IP "); NetTools::PrintMac(entry->MACAddress); printf("/"); NetTools::PrintIP(entry->IPAddress); printf("\n");
                     }
                     else
                         printf("ARP Database is full!\n");
@@ -89,16 +91,16 @@ void ARPProtocol::SendResponse(uint48_t TargetMAC, uint32_t TargetIP)
     arp.srcIP = Convert::ByteSwap(netManager->GetIPAddress());
     arp.dstMAC = Convert::ByteSwap(TargetMAC);
     arp.dstIP = Convert::ByteSwap(TargetIP);
-    netManager->SendEthernetPacket(arp.dstMAC, ETHERNET_TYPE_ARP, (uint8_t*)&arp, sizeof(AddressResolutionProtocolMessage));
+    netManager->SendEthernetPacket(TargetMAC, ETHERNET_TYPE_ARP, (uint8_t*)&arp, sizeof(AddressResolutionProtocolMessage));
 }
-uint64_t ARPProtocol::Resolve(uint32_t ip)
+uint48_t ARPProtocol::Resolve(uint32_t ip)
 {
     const int MaxTries = 5;
 
     if(ip == IP_BROADCAST)
         return MAC_BROADCAST;
 
-    uint64_t result = GetMACFromDatabase(ip);
+    uint48_t result = GetMACFromDatabase(ip);
     if(result != 0)
         return result;
 
@@ -109,8 +111,18 @@ uint64_t ARPProtocol::Resolve(uint32_t ip)
         if(result != 0)
             return result;
         printf("*");
-        pit->Sleep(200); //Small timeout
+        pit->Sleep(50); //Small timeout
     }
     printf("    :Arp Resolve: Request timed out\n");
     return 0;
+}
+
+void ARPProtocol::PrintArpEntries()
+{
+    printf("Arp Database contents\n");
+    for(uint32_t i = 0; i < NumArpItems; i++)
+    {
+        ArpEntry* entry = ArpDatabase[i];
+        printf("-> MAC/IP:    "); NetTools::PrintMac(entry->MACAddress); printf("/"); NetTools::PrintIP(entry->IPAddress); printf("\n");
+    }
 }

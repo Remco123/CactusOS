@@ -32,6 +32,8 @@ objects = obj/loader.o \
 		  obj/system/console.o \
 		  obj/system/network/nettools.o \
 		  obj/system/network/arp.o \
+		  obj/system/network/ipv4.o \
+		  obj/system/network/icmp.o \
 		  obj/system/network/networkmanager.o \
 		  obj/system.o \
           obj/kernel.o
@@ -53,8 +55,6 @@ obj/%.o: src/%.s
 
 obj/core/sse.o: src/core/sse.s
 	nasm -f elf $< -o $@
-
-#
 
 CactusOS.bin: linker.ld $(objects)
 	i686-elf-ld $(LDPARAMS) -T $< -o $@ $(objects)

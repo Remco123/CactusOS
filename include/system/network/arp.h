@@ -40,14 +40,16 @@ namespace CactusOS
             ArpEntry* ArpDatabase[128];
             common::uint32_t NumArpItems;
 
-            common::uint64_t GetMACFromDatabase(common::uint32_t ip);
+            common::uint48_t GetMACFromDatabase(common::uint32_t ip);
         public:
             ARPProtocol(NetworkManager* parent, core::PIT* pit);
 
             void HandlePacket(common::uint8_t* packet, common::uint32_t size);
             void SendRequest(common::uint32_t ip);
             void SendResponse(common::uint48_t TargetMAC, common::uint32_t TargetIP);
-            common::uint64_t Resolve(common::uint32_t ip);
+            common::uint48_t Resolve(common::uint32_t ip);
+
+            void PrintArpEntries();
         };
     }
 }

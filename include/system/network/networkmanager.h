@@ -8,6 +8,8 @@
 
 #include <system/network/ethernet.h>
 #include <system/network/arp.h>
+#include <system/network/ipv4.h>
+#include <system/network/icmp.h>
 #include <system/network/nettools.h>
 
 namespace CactusOS
@@ -24,6 +26,8 @@ namespace CactusOS
         Protocols
         ///////////////*/
         class ARPProtocol;
+        class IPV4Protocol;
+        class InternetControlMessageProtocol;
 
         class NetworkManager
         {
@@ -31,6 +35,8 @@ namespace CactusOS
             NetworkDriver* netDevice;
         public:
             ARPProtocol* arp;
+            IPV4Protocol* ipv4;
+            InternetControlMessageProtocol* icmp;
 
             NetworkManager(NetworkDriver* net_device);
 
