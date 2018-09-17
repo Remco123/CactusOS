@@ -28,10 +28,11 @@ void IPV4Protocol::HandlePacket(uint8_t* etherframePayload, uint32_t size)
         {
             case 0x01: //icmp
                 if(this->netManager->icmp != 0)
-                    this->netManager->icmp->OnInternetProtocolReceived(ipmessage->srcIP, ipmessage->dstIP, etherframePayload + 4*ipmessage->headerLength, length - 4*ipmessage->headerLength);
+                    this->netManager->icmp->OnInternetProtocolReceived(Convert::ByteSwap(ipmessage->srcIP), Convert::ByteSwap(ipmessage->dstIP), etherframePayload + 4*ipmessage->headerLength, length - 4*ipmessage->headerLength);
                 break;
             case 0x11: //udp
-                
+                if(this->netManager->udp != 0)
+                    this->netManager->udp->OnInternetProtocolReceived(Convert::ByteSwap(ipmessage->srcIP), Convert::ByteSwap(ipmessage->dstIP), etherframePayload + 4*ipmessage->headerLength, length - 4*ipmessage->headerLength);
                 break;
         }
     }

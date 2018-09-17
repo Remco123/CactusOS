@@ -24,10 +24,7 @@ void InternetControlMessageProtocol::OnInternetProtocolReceived(uint32_t srcIP, 
         
         case 0: //Reply
             printf("ping response from "); 
-            printf(Convert::IntToString(srcIP & 0xFF));
-            printf("."); printf(Convert::IntToString((srcIP >> 8) & 0xFF));
-            printf("."); printf(Convert::IntToString((srcIP >> 16) & 0xFF));
-            printf("."); printf(Convert::IntToString((srcIP >> 24) & 0xFF));
+            NetTools::PrintIP(srcIP);
             printf("\n");
             break;
             
@@ -39,8 +36,8 @@ void InternetControlMessageProtocol::OnInternetProtocolReceived(uint32_t srcIP, 
             icmp.checksum = 0;
             icmp.checksum = IPV4Protocol::Checksum((uint16_t*)&icmp,
                             sizeof(InternetControlMessageProtocolMessage));
-            printf("Sending ping response to ip: "); NetTools::PrintIP(Convert::ByteSwap(srcIP)); printf("\n");
-            backend->ipv4->Send(Convert::ByteSwap(srcIP), 0x01, (uint8_t*)&icmp, sizeof(InternetControlMessageProtocolMessage));
+            printf("Sending ping response to ip: "); NetTools::PrintIP(srcIP); printf("\n");
+            backend->ipv4->Send(srcIP, 0x01, (uint8_t*)&icmp, sizeof(InternetControlMessageProtocolMessage));
             break;
     }
 }

@@ -137,7 +137,7 @@ void PCNET::HandleReceive()
 }
 void PCNET::SendData(uint8_t* buffer, uint32_t size)
 {
-    printf("Sending...");
+    //printf("Sending...");
     int sendDescriptor = currentSendBuffer;
     currentSendBuffer = (currentSendBuffer + 1) % 8;
     

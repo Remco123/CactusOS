@@ -23,6 +23,8 @@ void NetworkManager::StartNetwork(core::PIT* pit)
     this->ipv4 = new IPV4Protocol(this);
     printf("    -> ICMP\n");
     this->icmp = new InternetControlMessageProtocol(this);
+    printf("    -> UDP\n");
+    this->udp = new UserDatagramProtocolManager(this);
 }
 void NetworkManager::HandleEthernetPacket(common::uint8_t* packet, common::uint32_t size)
 {
@@ -81,5 +83,5 @@ uint48_t NetworkManager::GetMACAddress()
 }
 uint32_t NetworkManager::GetIPAddress()
 {
-    return NetTools::MakeIP(10, 0, 2, 15); //TODO: Replace by dhcp
+    return NetTools::MakeIP(192,168,2,18); //TODO: Replace by dhcp
 }

@@ -34,6 +34,7 @@ objects = obj/loader.o \
 		  obj/system/network/arp.o \
 		  obj/system/network/ipv4.o \
 		  obj/system/network/icmp.o \
+		  obj/system/network/udp.o \
 		  obj/system/network/networkmanager.o \
 		  obj/system.o \
           obj/kernel.o

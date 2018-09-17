@@ -52,6 +52,11 @@ void PrintKernelStart()
     printf("\n");
 }
 
+void HandleUDPData(uint8_t* data, uint32_t size)
+{
+    printf("UDP Data: "); printf((char*)data); printf("\n");
+}
+
 extern "C" void kernelMain(const multiboot_info_t* mbi, unsigned int multiboot_magic)
 {
     Console::SetColors(0xA, 0x0);
@@ -75,7 +80,11 @@ extern "C" void kernelMain(const multiboot_info_t* mbi, unsigned int multiboot_m
     Console::Write("Free Memory: "); Console::Write(Convert::IntToString(System::memoryManager->GetFreeMemory() / 1024 / 1024)); Console::WriteLine(" Mb");
     Console::Write("Used Memory: "); Console::Write(Convert::IntToString(System::memoryManager->GetUsedMemory() > 1024 * 1024 ? System::memoryManager->GetUsedMemory() / 1024 / 1024 : System::memoryManager->GetUsedMemory() / 1024)); Console::WriteLine(System::memoryManager->GetUsedMemory() > 1024 * 1024 ? (char*)" Mb" : (char*)" Kb");
 
-    System::networkManager->icmp->RequestEchoReply(NetTools::MakeIP(172,217,20,67));
+    UDPSocket* socket = System::networkManager->udp->Listen(1234);
+    socket->receiveHandle = HandleUDPData;
+
+    while(socket->listening);
+    socket->Send((uint8_t*)"CactusOS Zegt hallo", 20);
 
     while(1)
     {

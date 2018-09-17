@@ -27,7 +27,6 @@ ARPProtocol::ARPProtocol(NetworkManager* parent, PIT* pit)
 }
 void ARPProtocol::HandlePacket(uint8_t* packet, uint32_t size)
 {
-    printf("Handling arp packet\n");
     AddressResolutionProtocolMessage* arp = (AddressResolutionProtocolMessage*)packet;
     
     if(arp->hardwareType == (uint16_t) 0x0100)
@@ -37,6 +36,7 @@ void ARPProtocol::HandlePacket(uint8_t* packet, uint32_t size)
         && arp->protocolAddressSize == 4
         && Convert::ByteSwap(arp->dstIP) == netManager->GetIPAddress())
         {
+            printf("Handling arp packet\n");
             switch(arp->command)
             {
                 case 0x0100: // request
@@ -111,7 +111,7 @@ uint48_t ARPProtocol::Resolve(uint32_t ip)
         if(result != 0)
             return result;
         printf("*");
-        pit->Sleep(50); //Small timeout
+        pit->Sleep(200); //Small timeout
     }
     printf("    :Arp Resolve: Request timed out\n");
     return 0;

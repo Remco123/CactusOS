@@ -59,11 +59,11 @@ RTL8139::~RTL8139()
 
 uint32_t RTL8139::HandleInterrupt(uint32_t esp)
 {
-    printf("Got Interrupt ");
+    //printf("Got Interrupt ");
     
     uint16_t status = inportw(device->portBase + 0x3e);
 
-    printfHex16(status); printf(" From RTL8139\n");
+    //printfHex16(status); printf(" From RTL8139\n");
 
     if(status & TOK) {
         printf("Packet sent\n");
