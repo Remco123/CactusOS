@@ -94,11 +94,9 @@ void UserDatagramProtocolManager::OnInternetProtocolReceived(uint32_t srcIP, uin
 
     if(remotePort == 67)
     {
-        /*
         //TODO: Improve this
         if(!backend->dhcp->Enabled) //We don't want this to receive multiple times
             backend->dhcp->HandleUDP(payload + sizeof(UserDatagramProtocolHeader), size - sizeof(UserDatagramProtocolHeader));
-        */
     }
     
     if(socket != 0)

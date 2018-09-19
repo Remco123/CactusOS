@@ -65,13 +65,13 @@ void IPV4Protocol::Send(uint32_t dstIP, uint8_t protocol, uint8_t* data, uint32_
         databuffer[i] = data[i];
     
     uint32_t route = dstIP;
-    /*
-    if((dstIP & this->netManager->dhcp->SubnetMask) != (message->srcIP & this->netManager->dhcp->SubnetMask))
+
+    if((dstIP & this->netManager->Config.SubnetMask) != (message->srcIP & this->netManager->Config.SubnetMask))
     {
-        route = this->netManager->dhcp->RouterIp;
+        route = this->netManager->Config.RouterIp;
         printf("Modified route\n");
     }
-    */
+
     
     netManager->SendEthernetPacket(Convert::ByteSwap(netManager->arp->Resolve(route)), ETHERNET_TYPE_IP, buffer, sizeof(InternetProtocolV4Message) + size);
     

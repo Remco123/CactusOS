@@ -13,7 +13,7 @@ NetworkManager::NetworkManager(NetworkDriver* net_device)
     this->netDevice = net_device;
     this->netDevice->NetManager = this;
 }
-void NetworkManager::StartNetwork(core::PIT* pit)
+bool NetworkManager::StartNetwork(core::PIT* pit)
 {
     //Initialize Handlers
     printf("Adding network handlers\n");
@@ -25,6 +25,52 @@ void NetworkManager::StartNetwork(core::PIT* pit)
     this->icmp = new InternetControlMessageProtocol(this);
     printf("    -> UDP\n");
     this->udp = new UserDatagramProtocolManager(this);
+    printf("    -> DHCP\n");
+    this->dhcp = new DHCP(this);
+
+    printf("Trying automatic configuration via DHCP\n");
+    uint32_t DhcpTries = 0;
+    while(!dhcp->Enabled && DhcpTries < 5)
+    {
+        dhcp->SendDiscovery();
+        pit->Sleep(500);
+        DhcpTries++;
+    }
+    if(!dhcp->Enabled)
+    {
+        printf("Failed to do automatic dhcp connect\n");
+        Console::Write("Do you want to do manual configuration? [y/n]: ");
+        char answer = Console::ReadLine()[0];
+        if(answer == 'y')
+        {
+            Console::WriteLine("Warning: this feature could potentialy harm your network!");
+            Console::Write("Device MAC: "); NetTools::PrintMac(this->GetMACAddress()); Console::WriteLine();
+            Console::Write("Our IP => ");
+            this->Config.OurIp = NetTools::ParseIP(Console::ReadLine()); Console::WriteLine();
+            Console::Write("Router IP => ");
+            this->Config.RouterIp = NetTools::ParseIP(Console::ReadLine()); Console::WriteLine();
+            this->Config.ServerIp = this->Config.RouterIp;
+            Console::Write("Subnet Mask => ");
+            this->Config.SubnetMask = NetTools::ParseIP(Console::ReadLine()); Console::WriteLine();
+            Console::Write("DNS => ");
+            this->Config.DnsIP = NetTools::ParseIP(Console::ReadLine()); Console::WriteLine();
+            Console::Write("Hostname (optional) => ");
+            char* hname = Console::ReadLine(); Console::WriteLine();
+            MemoryOperations::memcpy(this->Config.HostName, hname, 100);
+            Console::WriteLine("Manual network configuration done!");
+            return true;
+        }
+        else
+        {
+            Console::WriteLine("Disabled Network");
+            return true;
+        }
+    }
+    else
+    {
+        printf("DHCP Is Enabled!\n");
+        return true;
+    }
 }
 void NetworkManager::HandleEthernetPacket(common::uint8_t* packet, common::uint32_t size)
 {
@@ -81,7 +127,22 @@ uint48_t NetworkManager::GetMACAddress()
 {
     return this->netDevice->GetMacAddress();
 }
+uint8_t* NetworkManager::GetMACArray()
+{
+    static uint8_t mac[6];
+    uint48_t key = GetMACAddress();
+
+    mac[0] = key & 0xFF;
+    mac[1] = ((key >> 8) & 0xFF);
+    mac[2] = ((key >> 16) & 0xFF);
+    mac[3] = ((key >> 24) & 0xFF);
+    mac[4] = ((key >> 32) & 0xFF);
+    mac[5] = ((key >> 40) & 0xFF);
+    return mac;
+}
 uint32_t NetworkManager::GetIPAddress()
 {
-    return NetTools::MakeIP(192,168,2,18); //TODO: Replace by dhcp
+    if(this->Config.OurIp != 0)
+        return this->Config.OurIp;
+    return 0;
 }

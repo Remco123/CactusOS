@@ -15,6 +15,7 @@ namespace CactusOS
             static void PrintIP(common::uint32_t key);
 
             static common::uint32_t MakeIP(common::uint8_t ip1, common::uint8_t ip2, common::uint8_t ip3, common::uint8_t ip4);
+            static common::uint32_t ParseIP(char* str);
         };
     }
 }

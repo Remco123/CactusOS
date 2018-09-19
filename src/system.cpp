@@ -77,7 +77,7 @@ void System::InitSystem()
     {
         Console::WriteLine("Starting Network");
         System::networkManager = new NetworkManager(netDriver);
-        System::networkManager->StartNetwork(System::pit);
+        System::NetworkAvailible = System::networkManager->StartNetwork(System::pit);
     }
     else
     {

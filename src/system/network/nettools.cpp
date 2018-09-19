@@ -42,3 +42,25 @@ uint32_t NetTools::MakeIP(common::uint8_t ip1, common::uint8_t ip2, common::uint
         |  ((uint32_t)ip3 << 8)
         | (uint32_t)ip4;
 }
+uint32_t NetTools::ParseIP(char* str)
+{
+    char* parts[4];
+    int partcount = 0;
+    parts[partcount++] = str;
+
+    while(*str)
+    {
+        if(*str == '.')
+        {
+            *str = 0;
+            parts[partcount++] = str + 1;
+        }
+        str++;
+    }
+
+    uint8_t ip1 = Convert::StringToInt(parts[0]), ip2 = Convert::StringToInt(parts[1]), ip3 = Convert::StringToInt(parts[2]), ip4 = Convert::StringToInt(parts[3]);
+    return ((uint32_t)ip1 << 24)
+        |  ((uint32_t)ip2 << 16)
+        |  ((uint32_t)ip3 << 8)
+        |  (uint32_t)ip4;
+}

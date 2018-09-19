@@ -1,6 +1,7 @@
 #include <system.h>
 #include <multiboot/multiboot.h>
 #include <common/convert.h>
+#include <common/string.h>
 
 
 using namespace CactusOS;
@@ -80,12 +81,7 @@ extern "C" void kernelMain(const multiboot_info_t* mbi, unsigned int multiboot_m
     Console::Write("Free Memory: "); Console::Write(Convert::IntToString(System::memoryManager->GetFreeMemory() / 1024 / 1024)); Console::WriteLine(" Mb");
     Console::Write("Used Memory: "); Console::Write(Convert::IntToString(System::memoryManager->GetUsedMemory() > 1024 * 1024 ? System::memoryManager->GetUsedMemory() / 1024 / 1024 : System::memoryManager->GetUsedMemory() / 1024)); Console::WriteLine(System::memoryManager->GetUsedMemory() > 1024 * 1024 ? (char*)" Mb" : (char*)" Kb");
 
-    UDPSocket* socket = System::networkManager->udp->Listen(1234);
-    socket->receiveHandle = HandleUDPData;
-
-    while(socket->listening);
-    socket->Send((uint8_t*)"CactusOS Zegt hallo", 20);
-
+    
     while(1)
     {
         Console::Write(":==> ");
