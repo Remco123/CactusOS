@@ -66,7 +66,7 @@ void IPV4Protocol::Send(uint32_t dstIP, uint8_t protocol, uint8_t* data, uint32_
     
     uint32_t route = dstIP;
 
-    if((dstIP & this->netManager->Config.SubnetMask) != (message->srcIP & this->netManager->Config.SubnetMask))
+    if((dstIP & this->netManager->Config.SubnetMask) != (netManager->GetIPAddress() & this->netManager->Config.SubnetMask))
     {
         route = this->netManager->Config.RouterIp;
         printf("Modified route\n");

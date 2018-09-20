@@ -39,6 +39,9 @@ void InternetControlMessageProtocol::OnInternetProtocolReceived(uint32_t srcIP, 
             printf("Sending ping response to ip: "); NetTools::PrintIP(srcIP); printf("\n");
             backend->ipv4->Send(srcIP, 0x01, (uint8_t*)&icmp, sizeof(InternetControlMessageProtocolMessage));
             break;
+        default:
+            printf("Unkown ICMP type: "); printf(Convert::IntToString(msg->type)); printf("\n");
+            break;
     }
 }
 void InternetControlMessageProtocol::RequestEchoReply(uint32_t ip)

@@ -40,30 +40,42 @@ void ARPProtocol::HandlePacket(uint8_t* packet, uint32_t size)
             switch(arp->command)
             {
                 case 0x0100: // request
+                    AddArpEntry(arp->srcMAC, Convert::ByteSwap(arp->srcIP));
                     SendResponse(Convert::ByteSwap(arp->srcMAC), Convert::ByteSwap(arp->srcIP));
                     printf("Arp Response Send\n");
                     break;
                     
                 case 0x0200: // response
                     printf("Got arp response\n");
-                    if(NumArpItems < 128)
-                    {
-                        ArpEntry* entry = new ArpEntry();
-                        entry->MACAddress = arp->srcMAC;
-                        entry->IPAddress = Convert::ByteSwap(arp->srcIP);
-
-                        ArpDatabase[NumArpItems] = entry;
-                        NumArpItems++;
-                        printf("Arp Entry added to database\n");
-                        printf("MAC/IP "); NetTools::PrintMac(entry->MACAddress); printf("/"); NetTools::PrintIP(entry->IPAddress); printf("\n");
-                    }
-                    else
-                        printf("ARP Database is full!\n");
+                    AddArpEntry(arp->srcMAC, Convert::ByteSwap(arp->srcIP));
                     break;
             }
         }
     }
 }
+
+void ARPProtocol::AddArpEntry(common::uint48_t mac, common::uint32_t ip)
+{
+    if(GetMACFromDatabase(ip) == 0)
+    {
+        if(NumArpItems < 128)
+        {
+            ArpEntry* entry = new ArpEntry();
+            entry->MACAddress = mac;
+            entry->IPAddress = ip;
+
+            ArpDatabase[NumArpItems] = entry;
+            NumArpItems++;
+            printf("Arp Entry added to database\n");
+            printf("MAC/IP "); NetTools::PrintMac(entry->MACAddress); printf("/"); NetTools::PrintIP(entry->IPAddress); printf("\n");
+        }
+        else
+             printf("ARP Database is full!\n");
+    }
+    else
+        printf("MAC Already known\n");
+}
+
 void ARPProtocol::SendRequest(uint32_t ip)
 {
     AddressResolutionProtocolMessage arp;

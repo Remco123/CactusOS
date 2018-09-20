@@ -62,6 +62,13 @@ void DHCP::HandleUDP(common::uint8_t* data, common::uint32_t size)
                     this->Enabled = true;
                     break;
                 }
+            case DHCP_NAK:
+                {
+                    printf("Received NAK for IP: "); NetTools::PrintIP(header->yourIpAddr); printf("\n");
+                    char* msg = getNAKMessage(data);
+                    printf("Reason => "); printf(msg); printf("\n");
+                    delete msg;
+                }
         }
     }
     else if(header->opcode == OP_REQUEST)
@@ -263,6 +270,24 @@ void DHCP::ParseACK(unsigned char* data)
         this->backend->Config.RouterIp = this->backend->Config.ServerIp; //If we only get the server ip
     else if(this->backend->Config.RouterIp != 0 && this->backend->Config.ServerIp == 0)
         this->backend->Config.ServerIp = this->backend->Config.RouterIp; //If we only get the router ip
+}
+
+char* DHCP::getNAKMessage(unsigned char* data)
+{
+    DhcpHeader* header = (DhcpHeader*)data;
+    uint8_t *p = header->options + 4;
+    while (PACKET_INSIDE(p, header) && (*p & 0xff) != 0xff) {
+        switch (*p) {
+        case DhcpOptionMsg:
+            uint8_t len = *(uint8_t*)(p + 1);
+            char* msg = new char[len];
+            MemoryOperations::memcpy(msg, (char*)(p + 2), len);
+            msg[len] = '\0';
+            return msg;            
+        }
+        p++;
+        p += *p + 1;
+    }
 }
 
 uint8_t DHCP::GetDHCPMessageType(unsigned char* data)

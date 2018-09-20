@@ -83,6 +83,7 @@ namespace CactusOS
             NetworkManager* backend;
 
             char* getTypeString(common::uint8_t type);
+            char* getNAKMessage(unsigned char* data);
         public:
             UDPSocket* dhcpSocket;
 

@@ -49,6 +49,7 @@ namespace CactusOS
             void SendResponse(common::uint48_t TargetMAC, common::uint32_t TargetIP);
             common::uint48_t Resolve(common::uint32_t ip);
 
+            void AddArpEntry(common::uint48_t mac, common::uint32_t ip);
             void PrintArpEntries();
         };
     }
