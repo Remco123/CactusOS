@@ -25,6 +25,8 @@ bool NetworkManager::StartNetwork(core::PIT* pit)
     this->icmp = new InternetControlMessageProtocol(this);
     printf("    -> UDP\n");
     this->udp = new UserDatagramProtocolManager(this);
+    printf("    -> TCP\n");
+    this->tcp = new TransmissionControlProtocolManager(this);
     printf("    -> DHCP\n");
     this->dhcp = new DHCP(this);
 

@@ -8,6 +8,8 @@ namespace CactusOS
 {
     namespace system
     {
+        typedef void (*SocketReceive)(common::uint8_t* packet, common::uint32_t size);
+
         class NetTools
         {
         public:

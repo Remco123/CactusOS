@@ -11,6 +11,7 @@
 #include <system/network/ipv4.h>
 #include <system/network/icmp.h>
 #include <system/network/udp.h>
+#include <system/network/tcp.h>
 #include <system/network/dhcp.h>
 #include <system/network/nettools.h>
 #include <system/console.h>
@@ -32,6 +33,7 @@ namespace CactusOS
         class IPV4Protocol;
         class InternetControlMessageProtocol;
         class UserDatagramProtocolManager;
+        class TransmissionControlProtocolManager;
         class DHCP;
 
         struct NetworkConfig
@@ -55,6 +57,7 @@ namespace CactusOS
             IPV4Protocol* ipv4;
             InternetControlMessageProtocol* icmp;
             UserDatagramProtocolManager* udp;
+            TransmissionControlProtocolManager* tcp;
             DHCP* dhcp;
 
             NetworkManager(NetworkDriver* net_device);

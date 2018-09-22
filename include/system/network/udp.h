@@ -2,6 +2,7 @@
 #define __CACTUSOS__SYSTEM__NETWORK__UDP_H
 
 #include <common/types.h>
+#include <system/network/nettools.h>
 #include <system/network/ipv4.h>
 #include <core/memorymanagement.h>
 
@@ -16,8 +17,6 @@ namespace CactusOS
             common::uint16_t length;
             common::uint16_t checksum;
         } __attribute__((packed));
-
-        typedef void (*SocketReceive)(common::uint8_t* packet, common::uint32_t size);
 
         class UserDatagramProtocolManager;
         class DHCP;
