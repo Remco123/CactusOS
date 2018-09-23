@@ -100,9 +100,124 @@ void TransmissionControlProtocolManager::OnInternetProtocolReceived(common::uint
                 else
                     reset = true;
                 break;
+            case SYN | ACK:
+                if(socket->state == SYN_SENT)
+                {
+                    socket->state = ESTABLISHED;
+                    socket->acknowledgementNumber = Convert::ByteSwap( msg->sequenceNumber ) + 1;
+                    socket->sequenceNumber++;
+                    Send(socket, 0,0, ACK);
+                }
+                else
+                    reset = true;
+                break;
+                
+                
+            case SYN | FIN:
+            case SYN | FIN | ACK:
+                reset = true;
+                break;
+
+                
+            case FIN:
+            case FIN|ACK:
+                if(socket->state == ESTABLISHED)
+                {
+                    socket->state = CLOSE_WAIT;
+                    socket->acknowledgementNumber++;
+                    Send(socket, 0,0, ACK);
+                    Send(socket, 0,0, FIN|ACK);
+                }
+                else if(socket->state == CLOSE_WAIT)
+                {
+                    socket->state = CLOSED;
+                }
+                else if(socket->state == FIN_WAIT1
+                    || socket->state == FIN_WAIT2)
+                {
+                    socket->state = CLOSED;
+                    socket->acknowledgementNumber++;
+                    Send(socket, 0,0, ACK);
+                }
+                else
+                    reset = true;
+                break;
+                
+                
+            case ACK:
+                if(socket->state == SYN_RECEIVED)
+                {
+                    socket->state = ESTABLISHED;
+                }
+                else if(socket->state == FIN_WAIT1)
+                {
+                    socket->state = FIN_WAIT2;
+                }
+                else if(socket->state == CLOSE_WAIT)
+                {
+                    socket->state = CLOSED;
+                    break;
+                }
+                
+                if(msg->flags == ACK)
+                    break;
+                
+            default:
+                
+                if(Convert::ByteSwap(msg->sequenceNumber) == socket->acknowledgementNumber)
+                {
+                    reset = !(socket->HandleTCPData(payload + msg->headerSize32*4,
+                                                                              size - msg->headerSize32*4));
+                    if(!reset)
+                    {
+                        int x = 0;
+                        for(int i = msg->headerSize32*4; i < size; i++)
+                            if(payload[i] != 0)
+                                x = i;
+                        socket->acknowledgementNumber += x - msg->headerSize32*4 + 1;
+                        Send(socket, 0,0, ACK);
+                    }
+                }
+                else
+                {
+                    // data in wrong order
+                    reset = true;
+                }
+                
         }
     }
+    
+    
+    if(reset)
+    {
+        if(socket != 0)
+        {
+            Send(socket, 0,0, RST);
+        }
+        else
+        {
+            TCPSocket socket(this);
+            socket.remotePort = msg->srcPort;
+            socket.remoteIP = srcIP;
+            socket.localPort = msg->dstPort;
+            socket.localIP = dstIP;
+            socket.sequenceNumber = Convert::ByteSwap(msg->acknowledgementNumber);
+            socket.acknowledgementNumber = Convert::ByteSwap(msg->sequenceNumber) + 1;
+            Send(&socket, 0,0, RST);
+        }
+    }
+    
+
+    if(socket != 0 && socket->state == CLOSED)
+        for(uint16_t i = 0; i < numSockets && socket == 0; i++)
+            if(sockets[i] == socket)
+            {
+                sockets[i] = sockets[--numSockets];
+                MemoryManager::activeMemoryManager->free(socket);
+                break;
+            }   
 }
+
 TCPSocket* TransmissionControlProtocolManager::Connect(common::uint32_t ip, common::uint16_t port)
 {
     TCPSocket* socket = new TCPSocket(this);
