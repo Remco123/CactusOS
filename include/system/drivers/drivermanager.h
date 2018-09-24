@@ -22,7 +22,7 @@ namespace CactusOS
 
             void AddDriver(Driver* driver);
             //Find drivers for the connected pci devices
-            void AssignDrivers(core::PeripheralComponentInterconnectController* pciController, core::InterruptManager* interrupts, core::PeripheralComponentInterconnectController* pci);
+            void AssignDrivers(core::PeripheralComponentInterconnectController* pciController, core::InterruptManager* interrupts);
             Driver* GetDriver(core::PeripheralComponentInterconnectDeviceDescriptor* device, core::InterruptManager* interrupts, core::PeripheralComponentInterconnectController* pci);
             void ActivateAll();
 

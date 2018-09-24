@@ -22,7 +22,7 @@ void DriverManager::AddDriver(Driver* driver)
     NumDrivers++;
 }
 
-void DriverManager::AssignDrivers(PeripheralComponentInterconnectController* pciController, InterruptManager* interrupts, PeripheralComponentInterconnectController* pci)
+void DriverManager::AssignDrivers(PeripheralComponentInterconnectController* pciController, InterruptManager* interrupts)
 {
     if(pciController->NumDevices == 0)
         return;
@@ -33,7 +33,7 @@ void DriverManager::AssignDrivers(PeripheralComponentInterconnectController* pci
         printf("Finding driver for device "); printf(Convert::IntToString(i));
         printf("    VendorID: "); printfHex16(dev->vendor_id); printf(" DeviceID: "); printfHex16(dev->device_id);
 
-        Driver* driver = GetDriver(dev, interrupts, pci);
+        Driver* driver = GetDriver(dev, interrupts, pciController);
         if(driver != 0)
         {
             this->AddDriver(driver);

@@ -61,7 +61,7 @@ void System::InitSystem()
 {
     System::driverManager = new DriverManager();
     printf("Driver manager loaded\n");
-    System::driverManager->AssignDrivers(System::pci, System::interrupts, System::pci);
+    System::driverManager->AssignDrivers(System::pci, System::interrupts);
     System::driverManager->ActivateAll();
 
     printf("Adding keyboard to Console\n");
