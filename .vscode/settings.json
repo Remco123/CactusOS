@@ -6,6 +6,8 @@
         "utility": "cpp",
         "thread": "cpp",
         "chrono": "cpp",
-        "typeinfo": "cpp"
+        "typeinfo": "cpp",
+        "ratio": "cpp",
+        "type_traits": "cpp"
     }
 }

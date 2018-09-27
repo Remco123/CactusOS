@@ -7,6 +7,8 @@ namespace CactusOS
 {
     namespace core
     {
+        #define insl(port, buffer, count) asm volatile("cld; rep; insl" :: "D" (buffer), "d" (port), "c" (count))
+
         inline static unsigned char inportb (unsigned short _port)
         {
             unsigned char rv;
@@ -39,6 +41,11 @@ namespace CactusOS
         inline static void outportl(unsigned short _port, unsigned int _data)
         {
             __asm__ __volatile__ ("outl %%eax, %%dx" : : "d" (_port), "a" (_data));
+        }
+
+        inline static void inportsm(unsigned short port, unsigned char * data, unsigned long size)
+        {
+            asm volatile ("rep insw" : "+D" (data), "+c" (size) : "d" (port) : "memory");
         }
     }
 }

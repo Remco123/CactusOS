@@ -12,6 +12,7 @@ objects = obj/loader.o \
 		  obj/common/memoryoperations.o \
 		  obj/common/string.o \
 		  obj/common/mmioutls.o \
+		  obj/common/list.o \
 		  obj/core/gdtloader.o \
 		  obj/core/gdt.o \
 		  obj/core/interruptstubs.o \
@@ -30,6 +31,8 @@ objects = obj/loader.o \
 		  obj/system/drivers/keyboard.o \
 		  obj/system/drivers/drivermanager.o \
 		  obj/system/console.o \
+		  obj/system/disks/diskcontroller.o \
+		  obj/system/disks/controllers/ide.o \
 		  obj/system/network/nettools.o \
 		  obj/system/network/arp.o \
 		  obj/system/network/ipv4.o \

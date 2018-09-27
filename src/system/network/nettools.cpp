@@ -64,3 +64,23 @@ uint32_t NetTools::ParseIP(char* str)
         |  ((uint32_t)ip3 << 8)
         |  (uint32_t)ip4;
 }
+
+void NetTools::PrintPacket(uint8_t* data, uint32_t size)
+{
+    printf("--------------# Packet #--------------\n");
+
+    int x = 0;
+    for(int i = 0; i < size; i++)
+    {
+        if(x == 16)
+        {
+            x = 0;
+        }
+        printfHex(data[i]);
+        if(i < size)
+            printf(" ");
+        x++;
+    }
+
+    printf("\n-----------# End Of Packet #----------\n");
+}
