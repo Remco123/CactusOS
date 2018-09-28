@@ -6,8 +6,6 @@
 #include <common/convert.h>
 #include <common/memoryoperations.h>
 
-#include <system/disks/disktype.h>
-
 namespace CactusOS
 {
     namespace system
