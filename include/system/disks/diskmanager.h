@@ -14,6 +14,11 @@ namespace CactusOS
     {
         class DiskManager
         {
+        private:
+            DiskController* controllers[32];
+            common::uint32_t numControllers;
+
+        public:
             
         };
     }

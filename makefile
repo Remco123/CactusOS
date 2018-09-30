@@ -19,6 +19,7 @@ objects = obj/loader.o \
 		  obj/core/interrupts.o \
 		  obj/core/rtc.o \
 		  obj/core/pit.o \
+		  obj/core/dma.o \
 		  obj/core/memorymanagement.o \
 		  obj/core/sse.o \
 		  obj/core/cpu.o \
@@ -33,6 +34,7 @@ objects = obj/loader.o \
 		  obj/system/console.o \
 		  obj/system/disks/diskcontroller.o \
 		  obj/system/disks/controllers/ide.o \
+		  obj/system/disks/controllers/fdc.o \
 		  obj/system/network/nettools.o \
 		  obj/system/network/arp.o \
 		  obj/system/network/ipv4.o \

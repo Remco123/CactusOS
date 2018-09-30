@@ -5,6 +5,7 @@
 #include <common/list.h>
 
 #include <system/disks/controllers/ide.h>
+#include <system/disks/controllers/fdc.h>
 
 
 using namespace CactusOS;
@@ -106,16 +107,6 @@ extern "C" void kernelMain(const multiboot_info_t* mbi, unsigned int multiboot_m
             printf("Return code: "); printfHex(error); printf("\n");
 
             NetTools::PrintPacket(buf, 512);
-            delete buf;
-        }
-        if(input[0] == 'w')
-        {
-            Console::WriteLine("Writing to disk\n");
-            uint8_t* buf = new uint8_t[512];
-            MemoryOperations::memset(buf, 0xE1, 512);
-
-            char error = ide->WriteSector(Convert::StringToInt(Convert::CharToString(input[1])), 0, buf);
-            printf("Return code: "); printfHex(error); printf("\n");
             delete buf;
         }
     }
