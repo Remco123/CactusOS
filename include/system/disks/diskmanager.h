@@ -6,20 +6,30 @@
 #include <common/convert.h>
 #include <common/memoryoperations.h>
 
-#include <system/disks/diskcontroller.h>
+#include <core/interrupts.h>
+#include <core/pit.h>
+#include <system/disks/disk.h>
 
 namespace CactusOS
 {
     namespace system
     {
+        class DiskController;
+        class Disk;
+
         class DiskManager
         {
         private:
-            DiskController* controllers[32];
+            DiskController* controllers[32]; //32 should be more than enough.
             common::uint32_t numControllers;
 
         public:
+            Disk* allDisks[32];
+            common::uint32_t numDisks;
+
+            DiskManager();
             
+            void DetectAndLoadDisks(core::InterruptManager* interrupts, core::PIT* pit);
         };
     }
 }

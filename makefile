@@ -35,6 +35,8 @@ objects = obj/loader.o \
 		  obj/system/disks/diskcontroller.o \
 		  obj/system/disks/controllers/ide.o \
 		  obj/system/disks/controllers/fdc.o \
+		  obj/system/disks/disk.o \
+		  obj/system/disks/diskmanager.o \
 		  obj/system/network/nettools.o \
 		  obj/system/network/arp.o \
 		  obj/system/network/ipv4.o \

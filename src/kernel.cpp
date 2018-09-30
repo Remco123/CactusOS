@@ -4,8 +4,7 @@
 #include <common/string.h>
 #include <common/list.h>
 
-#include <system/disks/controllers/ide.h>
-#include <system/disks/controllers/fdc.h>
+#include <system/disks/diskmanager.h>
 
 
 using namespace CactusOS;
@@ -78,10 +77,13 @@ extern "C" void kernelMain(const multiboot_info_t* mbi, unsigned int multiboot_m
 
     Console::Write("Total Memory: "); Console::Write(Convert::IntToString(System::memoryManager->GetTotalMemory() / 1024 / 1024)); Console::WriteLine(" Mb");
     Console::Write("Free Memory: "); Console::Write(Convert::IntToString(System::memoryManager->GetFreeMemory() / 1024 / 1024)); Console::WriteLine(" Mb");
-    Console::Write("Used Memory: "); Console::Write(Convert::IntToString(System::memoryManager->GetUsedMemory() > 1024 * 1024 ? System::memoryManager->GetUsedMemory() / 1024 / 1024 : System::memoryManager->GetUsedMemory() / 1024)); Console::WriteLine(System::memoryManager->GetUsedMemory() > 1024 * 1024 ? (char*)" Mb" : (char*)" Kb");
+    Console::Write("Used Memory: "); Console::Write(Convert::IntToString(System::memoryManager->GetUsedMemory() > 1024 * 1024 ? System::memoryManager->GetUsedMemory() / 1024 / 1024 : System::memoryManager->GetUsedMemory() / 1024)); Console::WriteLine(System::memoryManager->GetUsedMemory() > 1024 * 1024 ? (char*)" Mb" : (char*)" Kb");   
 
-    IDEController* ide = new IDEController(System::interrupts);
-    ide->InitIDE(0x1F0, 0x3F4, 0x170, 0x374, 0x000, System::pit);
+    DiskManager* diskManager = new DiskManager();
+    diskManager->DetectAndLoadDisks(System::interrupts, System::pit);
+
+    uint8_t* buf = new uint8_t[512];
+    diskManager->allDisks[1]->ReadSector(0, buf);
 
     while(1)
     {
@@ -89,25 +91,5 @@ extern "C" void kernelMain(const multiboot_info_t* mbi, unsigned int multiboot_m
         char* input = Console::ReadLine();
         Console::Write("You typed: ");
         Console::WriteLine(input);
-
-        if(input[0] == 'e')
-        {
-            Console::WriteLine("Ejecting Drive\n");
-            char ret = ide->EjectDrive(Convert::StringToInt(Convert::CharToString(input[1])));
-            Console::Write("Returned with: "); printfHex(ret); printf("\n");
-        }
-
-        if(input[0] == 'r')
-        {
-            Console::WriteLine("Reading disk\n");
-            uint8_t* buf = new uint8_t[2048];
-            MemoryOperations::memset(buf, 0xFA, 2048);
-
-            char error = ide->ReadSector(Convert::StringToInt(Convert::CharToString(input[1])), 0, buf);
-            printf("Return code: "); printfHex(error); printf("\n");
-
-            NetTools::PrintPacket(buf, 512);
-            delete buf;
-        }
     }
 }

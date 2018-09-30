@@ -4,8 +4,9 @@
 #define __CACTUSOS__SYSTEM__DISKS__CONTROLLERS__IDE_H
 
 #include <core/port.h>
-#include <system/disks/diskcontroller.h>
 #include <core/pit.h>
+
+#include <system/disks/diskcontroller.h>
 
 namespace CactusOS
 {
@@ -159,6 +160,7 @@ namespace CactusOS
 
             char ReadSector(common::uint16_t drive, common::uint32_t lba, common::uint8_t* buf);
             char WriteSector(common::uint16_t drive, common::uint32_t lba, common::uint8_t* buf);
+            void AsignDisks(DiskManager* manager);
         };
     }
 }

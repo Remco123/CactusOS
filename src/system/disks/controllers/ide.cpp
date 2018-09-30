@@ -670,3 +670,15 @@ char IDEController::EjectDrive(unsigned char drive) {
    }
    return returnCode;
 }
+
+void IDEController::AsignDisks(DiskManager* manager)
+{
+    for(int i = 0; i < 4; i++)
+    {
+        if(this->ide_devices[i].Reserved != 0)
+        {
+            Disk* disk = new Disk(i, this);
+            manager->allDisks[manager->numDisks++] = disk;
+        }
+    }
+}

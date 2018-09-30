@@ -323,6 +323,7 @@ void FloppyDiskController::InitController()
 }
 char FloppyDiskController::ReadSector(uint16_t drive, uint32_t lba, uint8_t* buffer)
 {
+	printf("Reading with floppy\n");
 	uint8_t *buf = ReadLBA(lba);
 	if(!buf) return 1;
     MemoryOperations::memcpy(buffer, buf, 512);
@@ -332,4 +333,20 @@ char FloppyDiskController::ReadSector(uint16_t drive, uint32_t lba, uint8_t* buf
 char FloppyDiskController::WriteSector(uint16_t drive, uint32_t lba, uint8_t* buf)
 {
     return WriteLBA(buf, lba);
+}
+
+void FloppyDiskController::AsignDisks(DiskManager* manager)
+{
+	if(FloppyDisks[0].Present)
+	{
+		Disk* disk = new Disk(0, this);
+		manager->allDisks[manager->numDisks++] = disk;
+	}
+	/*
+	if(FloppyDisks[1].Present)
+	{
+		Disk* disk = new Disk(1, this);
+		manager->allDisks[manager->numDisks++] = disk;
+	}
+	*/ //We can not read from disk 2 yet so we disable it
 }
