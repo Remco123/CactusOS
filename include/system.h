@@ -14,6 +14,7 @@
 #include <core/smbios.h>
 
 #include <system/drivers/drivermanager.h>
+#include <system/disks/diskmanager.h>
 
 #include <multiboot/multiboot.h>
 
@@ -35,6 +36,7 @@ namespace CactusOS
     //System
         static CactusOS::system::DriverManager* driverManager;
         static CactusOS::system::NetworkManager* networkManager;
+        static CactusOS::system::DiskManager* diskManager;
 
         static void InitCore();
         static void InitSystem();

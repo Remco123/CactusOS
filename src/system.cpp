@@ -20,6 +20,7 @@ PIT* System::pit = 0;
 CPU* System::cpu = 0;
 DriverManager* System::driverManager = 0;
 NetworkManager* System::networkManager = 0;
+DiskManager* System::diskManager = 0;
 
 void System::InitCore()
 {
@@ -71,7 +72,6 @@ void System::InitSystem()
     System::interrupts->Activate();
     Console::WriteLine("Interrupts Activated");
 
-    
     NetworkDriver* netDriver = (NetworkDriver*) System::driverManager->DriverByType(DriverType::Network);
     if(netDriver != 0)
     {
@@ -84,4 +84,8 @@ void System::InitSystem()
         Console::WriteLine("No network device found so network is disabled");
         System::NetworkAvailible = false;
     }
+
+    Console::WriteLine("Loading diskmanager");
+    System::diskManager = new DiskManager();
+    System::diskManager->DetectAndLoadDisks(System::interrupts, System::pit);
 }

@@ -31,5 +31,5 @@ void DiskManager::DetectAndLoadDisks(InterruptManager* interrupts, PIT* pit)
     for(int i = 0; i < this->numControllers; i++)
         this->controllers[i]->AsignDisks(this);
 
-    printf("Found: "); printf(Convert::IntToString(this->numDisks)); printf(" disks\n");
+    printf("Found: "); printf(Convert::IntToString(this->numDisks)); printf(" disks in total\n");
 }

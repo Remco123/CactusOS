@@ -12,10 +12,12 @@ Disk::Disk(uint32_t number, DiskController* controller)
 char Disk::ReadSector(uint32_t lba, uint8_t* buf)
 {
     if(this->controller != 0)
-        this->controller->ReadSector(this->diskNumber, lba, buf);
+        return this->controller->ReadSector(this->diskNumber, lba, buf);
+    return 1;
 }
 char Disk::WriteSector(uint32_t lba, uint8_t* buf)
 {
     if(this->controller != 0)
-        this->controller->WriteSector(this->diskNumber, lba, buf);
+        return this->controller->WriteSector(this->diskNumber, lba, buf);
+    return 1;
 }
