@@ -15,6 +15,7 @@
 
 #include <system/drivers/drivermanager.h>
 #include <system/disks/diskmanager.h>
+#include <system/disks/partitionmanager.h>
 
 #include <multiboot/multiboot.h>
 

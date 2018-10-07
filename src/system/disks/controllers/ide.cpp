@@ -268,7 +268,7 @@ void IDEController::ide_handle_irq()
 
 char IDEController::ReadSector(uint16_t drive, uint32_t lba, uint8_t* buf)
 {
-    printf("IDE: Read Sector\n");
+    //printf("IDE: Read Sector\n");
     char returnCode = 0;
     
     // 1: Check if the drive presents:
@@ -286,12 +286,12 @@ char IDEController::ReadSector(uint16_t drive, uint32_t lba, uint8_t* buf)
         unsigned char err;
         if (ide_devices[drive].Type == IDE_ATA)
         {
-            printf("Reading with ATA\n");
+            //printf("Reading with ATA\n");
             err = AtaReadSector(drive, lba, buf);
         }
         else if (ide_devices[drive].Type == IDE_ATAPI)
         {
-            printf("Reading with ATAPI\n");
+            //printf("Reading with ATAPI\n");
             err = ATAPIReadSector(drive, lba, buf);
         }
         returnCode = ide_print_error(drive, err);
@@ -677,7 +677,13 @@ void IDEController::AsignDisks(DiskManager* manager)
     {
         if(this->ide_devices[i].Reserved != 0)
         {
-            Disk* disk = new Disk(i, this);
+            DiskType type = DiskType::HardDisk;
+            if(this->ide_devices[i].Type == IDE_ATA)
+                type = DiskType::HardDisk;
+            else if(this->ide_devices[i].Type == IDE_ATAPI)
+                type = DiskType::CD;
+
+            Disk* disk = new Disk(i, this, type);
             manager->allDisks[manager->numDisks++] = disk;
         }
     }

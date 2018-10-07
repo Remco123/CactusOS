@@ -88,4 +88,6 @@ void System::InitSystem()
     Console::WriteLine("Loading diskmanager");
     System::diskManager = new DiskManager();
     System::diskManager->DetectAndLoadDisks(System::interrupts, System::pit);
+
+    PartitionManager::DetectAndLoadFilesystems(System::diskManager);
 }

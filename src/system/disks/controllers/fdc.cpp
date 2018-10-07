@@ -339,7 +339,7 @@ void FloppyDiskController::AsignDisks(DiskManager* manager)
 {
 	if(FloppyDisks[0].Present)
 	{
-		Disk* disk = new Disk(0, this);
+		Disk* disk = new Disk(0, this, DiskType::Floppy);
 		manager->allDisks[manager->numDisks++] = disk;
 	}
 	/*
