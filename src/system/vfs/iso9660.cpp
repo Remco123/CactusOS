@@ -7,6 +7,15 @@ using namespace CactusOS::system;
 void printf(char*);
 void printfHex(uint8_t);
 
+void printlen(char* str, int len)
+{
+    char* buf = new char[len];
+    MemoryOperations::memcpy(buf, str, len);
+    buf[len] = '\0';
+    printf(buf);
+    delete buf;
+}
+
 ISO9660::ISO9660(Disk* disk, common::uint32_t start, common::uint32_t size)
 : VirtualFileSystem(disk, start, size) 
 {
@@ -19,6 +28,7 @@ bool ISO9660::Initialize()
     printf("Finding Volume Descriptors\n");
     bool FoundPVD = false;
     int Offset = ISO_START_SECTOR;
+    int RootSector = -1;
 
     uint8_t* readBuffer = new uint8_t[CDROM_SECTOR_SIZE];
 
@@ -34,11 +44,12 @@ bool ISO9660::Initialize()
             printf("Found Primary Volume Descriptor at offset: "); printf(Convert::IntToString(Offset)); printf("\n");
 
             PrimaryVolumeDescriptor* pvd = (PrimaryVolumeDescriptor*)readBuffer;
-            printf("Identifier: "); printf((char*)pvd->Identifier); printf("\n");
-            printf("Volume Identifier: "); printf((char*)pvd->VolumeIdentifier); printf("\n");
-            printf("Version: "); printfHex(pvd->version); printf("\n");
-
-            printf("root dir size: "); printf(Convert::IntToString(pvd->root_directory.data_length)); printf("\n");
+            printf("Identifier: "); printf(pvd->id); printf("\n");
+            printf("Volume Identifier: "); printf(pvd->volume_id); printf("\n");
+            printf("Version: "); printf(Convert::IntToString((uint8_t)pvd->version)); printf("\n");
+            printf("Root directory sector: "); printf(Convert::IntToString(pvd->root_directory_record.extent_location)); printf("\n");
+            printf("Creation date: "); printlen(pvd->creation_date.Year, 5); printf("-"); printlen(pvd->creation_date.Month + 1, 2); printf("-"); printlen(pvd->creation_date.Day + 1, 2); printf(" : "); printlen(pvd->creation_date.Hour + 1, 2); printf(":"); printlen(pvd->creation_date.Minute + 1, 2); printf(":"); printlen(pvd->creation_date.Second + 1, 2); printf("\n");
+            RootSector = pvd->root_directory_record.extent_location;
         }
         else if (descriptor->Type == VolumeDescriptorType::VolumeDescriptorSetTerminator)
         {
@@ -51,9 +62,25 @@ bool ISO9660::Initialize()
         else // <----------------------------------------------------------------------------------------------- So this gets called 
         {
             printf("Could not find Primary Volume Descriptor\n");
+            delete readBuffer;
             return false;
         }
     }
+    if(RootSector == -1)
+    {
+        delete readBuffer;
+        return false;
+    }
+
+    //We found the root directory sector, now lets read it
+    this->disk->ReadSector(RootSector, readBuffer);
+    DirectoryRecord* rootDirectory = (DirectoryRecord*)readBuffer;
+    printf("Root dir length: "); printf(Convert::IntToString(rootDirectory->length)); printf("\n");
+
+    DirectoryRecord* firstDir = (DirectoryRecord*) (readBuffer + rootDirectory->length);
+    printf("First directory name: "); printlen(firstDir->name, firstDir->name_length); printf("\n");
+    DirectoryRecord* secondDir = (DirectoryRecord*) (readBuffer + rootDirectory->length + firstDir->length);
+    printf("Second directory name: "); printlen(secondDir->name, secondDir->name_length); printf("\n");
 
     delete readBuffer;
 }
