@@ -3,6 +3,8 @@
 
 #include <system/disks/diskmanager.h>
 
+#include <system/vfs/iso9660.h>
+
 namespace CactusOS
 {
     namespace system

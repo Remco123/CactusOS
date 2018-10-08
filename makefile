@@ -12,7 +12,6 @@ objects = obj/loader.o \
 		  obj/common/memoryoperations.o \
 		  obj/common/string.o \
 		  obj/common/mmioutls.o \
-		  obj/common/list.o \
 		  obj/core/gdtloader.o \
 		  obj/core/gdt.o \
 		  obj/core/interruptstubs.o \
@@ -38,6 +37,8 @@ objects = obj/loader.o \
 		  obj/system/disks/disk.o \
 		  obj/system/disks/diskmanager.o \
 		  obj/system/disks/partitionmanager.o \
+		  obj/system/vfs/iso9660.o \
+		  obj/system/vfs/virtualfilesystem.o \
 		  obj/system/network/nettools.o \
 		  obj/system/network/arp.o \
 		  obj/system/network/ipv4.o \

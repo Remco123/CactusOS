@@ -9,6 +9,8 @@ void printf(char*);
 void printfHex(uint8_t);
 void printfHex16(uint16_t);
 
+uint8_t Readbuf[512];
+
 void PartitionManager::DetectAndLoadFilesystems(DiskManager* disks /*, FilesystemManager* filesystems */)
 {
     printf("Detecting partitions on disks\n");
@@ -16,11 +18,10 @@ void PartitionManager::DetectAndLoadFilesystems(DiskManager* disks /*, Filesyste
 
     for(int i = 0; i < numDisks; i++)
     {
-        uint8_t* buf = new uint8_t[512];
-        char ret = disks->allDisks[i]->ReadSector(0, buf);
+        char ret = disks->allDisks[i]->ReadSector(0, Readbuf);
         if(ret == 0)
         {
-            MasterBootRecord* mbr = (MasterBootRecord*)buf;
+            MasterBootRecord* mbr = (MasterBootRecord*)Readbuf;
             if(mbr->magicnumber != 0xAA55)
             {
                 printf("MBR Magic Number is not correct\n");
@@ -68,7 +69,6 @@ void PartitionManager::DetectAndLoadFilesystems(DiskManager* disks /*, Filesyste
         {
             printf("Error reading disk: "); printf(Convert::IntToString(i)); printf(" Code: "); printfHex(ret); printf("\n");
         }
-        delete buf;
     }
 }
 
@@ -80,6 +80,8 @@ void PartitionManager::AssignVFS(PartitionTableEntry partition, Disk* disk)
     }
     else if(partition.partition_id == 0xCD)
     {
-        printf(" ISO9660");
+        printf(" ISO9660\n");
+        ISO9660* isoVFS = new ISO9660(disk, partition.start_lba, partition.length);
+        isoVFS->Initialize();
     }
 }

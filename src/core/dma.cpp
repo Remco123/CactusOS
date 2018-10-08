@@ -10,7 +10,7 @@ void DMAController::set_mode (uint8_t channel, uint8_t mode)
     int chan = (dma==0) ? channel : channel-4;
 
     DMAController::mask_channel (channel);
-    outportb ( (channel < 4) ? (DMA0_MODE_REG) : DMA1_MODE_REG, chan | (mode) );
+    outportb ( (channel < 4) ? (uint8_t)DMA0_MODE_REG : (uint8_t)DMA1_MODE_REG, chan | (mode) );
     DMAController::unmask_all ( dma );
 }
 void DMAController::set_read (uint8_t channel)
@@ -83,7 +83,7 @@ void DMAController::reset_flipflop (int dma)
         return;
 
     // it doesnt matter what is written to this register
-    outportb( (dma==0) ? DMA0_CLEARBYTE_FLIPFLOP_REG : DMA1_CLEARBYTE_FLIPFLOP_REG, 0xff);
+    outportb( (dma==0) ? (uint8_t)DMA0_CLEARBYTE_FLIPFLOP_REG : (uint8_t)DMA1_CLEARBYTE_FLIPFLOP_REG, 0xff);
 }
 void DMAController::reset (int dma)
 {

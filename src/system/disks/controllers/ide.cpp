@@ -332,7 +332,7 @@ unsigned char IDEController::AtaReadSector(uint16_t drive, uint32_t lba, uint8_t
     unsigned int  bus = channels[channel].base; // Bus Base, like 0x1F0 which is also data port.
     unsigned int  words      = 256; // Almost every ATA drive has a sector-size of 512-byte.
     unsigned int numsects = 1;
-    unsigned short cyl, i;
+    unsigned short cyl;
     unsigned char head, sect, err;
 
     ide_write(channel, ATA_REG_CONTROL, channels[channel].nIEN = (ide_irq_invoked = 0x0) + 0x02);
@@ -431,7 +431,7 @@ unsigned char IDEController::AtaWriteSector(uint16_t drive, uint32_t lba, uint8_
     unsigned int  bus = channels[channel].base; // Bus Base, like 0x1F0 which is also data port.
     unsigned int  words      = 256; // Almost every ATA drive has a sector-size of 512-byte.
     unsigned int numsects = 1;
-    unsigned short cyl, i;
+    unsigned short cyl;
     unsigned char head, sect, err;
 
     ide_write(channel, ATA_REG_CONTROL, channels[channel].nIEN = (ide_irq_invoked = 0x0) + 0x02);

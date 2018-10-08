@@ -2,9 +2,6 @@
 #include <multiboot/multiboot.h>
 #include <common/convert.h>
 #include <common/string.h>
-#include <common/list.h>
-
-
 
 using namespace CactusOS;
 using namespace CactusOS::core;
