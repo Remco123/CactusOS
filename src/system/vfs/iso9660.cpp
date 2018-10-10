@@ -6,6 +6,7 @@ using namespace CactusOS::system;
 
 void printf(char*);
 void printfHex(uint8_t);
+void printbits(uint8_t);
 
 void printlen(char* str, int len)
 {
@@ -28,7 +29,6 @@ bool ISO9660::Initialize()
     printf("Finding Volume Descriptors\n");
     bool FoundPVD = false;
     int Offset = ISO_START_SECTOR;
-    int RootSector = -1;
 
     uint8_t* readBuffer = new uint8_t[CDROM_SECTOR_SIZE];
 
@@ -49,7 +49,9 @@ bool ISO9660::Initialize()
             printf("Version: "); printf(Convert::IntToString((uint8_t)pvd->version)); printf("\n");
             printf("Root directory sector: "); printf(Convert::IntToString(pvd->root_directory_record.extent_location)); printf("\n");
             printf("Creation date: "); printlen(pvd->creation_date.Year, 5); printf("-"); printlen(pvd->creation_date.Month + 1, 2); printf("-"); printlen(pvd->creation_date.Day + 1, 2); printf(" : "); printlen(pvd->creation_date.Hour + 1, 2); printf(":"); printlen(pvd->creation_date.Minute + 1, 2); printf(":"); printlen(pvd->creation_date.Second + 1, 2); printf("\n");
-            RootSector = pvd->root_directory_record.extent_location;
+
+            this->primaryVolumeDescriptor = (PrimaryVolumeDescriptor*) MemoryManager::activeMemoryManager->malloc(sizeof(PrimaryVolumeDescriptor));
+            MemoryOperations::memcpy(this->primaryVolumeDescriptor, pvd, sizeof(PrimaryVolumeDescriptor));
         }
         else if (descriptor->Type == VolumeDescriptorType::VolumeDescriptorSetTerminator)
         {
@@ -66,21 +68,14 @@ bool ISO9660::Initialize()
             return false;
         }
     }
-    if(RootSector == -1)
-    {
-        delete readBuffer;
-        return false;
-    }
 
     //We found the root directory sector, now lets read it
-    this->disk->ReadSector(RootSector, readBuffer);
-    DirectoryRecord* rootDirectory = (DirectoryRecord*)readBuffer;
-    printf("Root dir length: "); printf(Convert::IntToString(rootDirectory->length)); printf("\n");
+    this->disk->ReadSector(this->primaryVolumeDescriptor->root_directory_record.extent_location, readBuffer);
+    this->rootDirectory = (DirectoryRecord*)MemoryManager::activeMemoryManager->malloc(sizeof(DirectoryRecord));
+    MemoryOperations::memcpy(this->rootDirectory, readBuffer, sizeof(DirectoryRecord));
 
-    DirectoryRecord* firstDir = (DirectoryRecord*) (readBuffer + rootDirectory->length);
-    printf("First directory name: "); printlen(firstDir->name, firstDir->name_length); printf("\n");
-    DirectoryRecord* secondDir = (DirectoryRecord*) (readBuffer + rootDirectory->length + firstDir->length);
-    printf("Second directory name: "); printlen(secondDir->name, secondDir->name_length); printf("\n");
+    printf("Root dir length: "); printf(Convert::IntToString(rootDirectory->length)); printf("\n");
+    printf("Flags: 0b"); printbits(rootDirectory->flags);
 
     delete readBuffer;
 }

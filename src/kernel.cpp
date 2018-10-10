@@ -1,7 +1,6 @@
 #include <system.h>
 #include <multiboot/multiboot.h>
-#include <common/convert.h>
-#include <common/string.h>
+#include <common/list.h>
 
 using namespace CactusOS;
 using namespace CactusOS::core;
@@ -42,6 +41,30 @@ void printfHex32(uint32_t key)
     printfHex((key >> 8) & 0xFF);
     printfHex( key & 0xFF);
 }
+void printbits(uint8_t key)
+{
+    for(int bit = 0;bit < 8; bit++)
+    {
+      printf(Convert::IntToString(key & 0x01));
+      key = key >> 1;
+    }
+}
+
+
+
+class TestClass
+{
+public:
+    TestClass()
+    {
+        printf("Constructed\n");
+    }
+    ~TestClass()
+    {
+        printf("Destructed\n");
+    }
+};
+
 
 void PrintKernelStart()
 {

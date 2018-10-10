@@ -2,6 +2,7 @@
 #define __CACTUSOS__SYSTEM__VFS__ISO9660_H
 
 #include <common/types.h>
+#include <core/memorymanagement.h>
 
 #include <system/vfs/virtualfilesystem.h>
 
@@ -101,6 +102,9 @@ namespace CactusOS
 
         class ISO9660 : public VirtualFileSystem
         {
+        private:
+            PrimaryVolumeDescriptor* primaryVolumeDescriptor;
+            DirectoryRecord* rootDirectory;
         public:
             ISO9660(Disk* disk, common::uint32_t start, common::uint32_t size);
 
