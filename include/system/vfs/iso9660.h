@@ -116,6 +116,8 @@ namespace CactusOS
             ///////////
             DirectoryRecord* SearchForEntry(DirectoryRecord* searchIn, char* name);
 
+            DirectoryRecord* GetEntry(char* path);
+
             //////////////
             // VFS Implementations
             //////////////

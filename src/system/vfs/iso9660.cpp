@@ -44,9 +44,11 @@ bool ISO9660::Initialize()
             FoundPVD = true;
             printf("Found Primary Volume Descriptor at offset: "); printf(Convert::IntToString(Offset)); printf("\n");
 
+            //Print PrimaryVolumeDescriptor information
             PrimaryVolumeDescriptor* pvd = (PrimaryVolumeDescriptor*)readBuffer;
             printf("Identifier: "); printf(pvd->id); printf("\n");
             printf("Volume Identifier: "); printf(pvd->volume_id); printf("\n");
+            printf("Preparer: "); printlen(pvd->preparer_id, 80); printf("\n");
             printf("Version: "); printf(Convert::IntToString((uint8_t)pvd->version)); printf("\n");
             printf("Root directory sector: "); printf(Convert::IntToString(pvd->root_directory_record.extent_location)); printf("\n");
             printf("Creation date: "); printlen(pvd->creation_date.Year, 5); printf("-"); printlen(pvd->creation_date.Month + 1, 2); printf("-"); printlen(pvd->creation_date.Day + 1, 2); printf(" : "); printlen(pvd->creation_date.Hour + 1, 2); printf(":"); printlen(pvd->creation_date.Minute + 1, 2); printf(":"); printlen(pvd->creation_date.Second + 1, 2); printf("\n");
@@ -64,7 +66,7 @@ bool ISO9660::Initialize()
             Offset++; //Read the next sector                                  //                               |
         else // <----------------------------------------------------------------------------------------------- So this gets called 
         {
-            printf("Could not find Primary Volume Descriptor\n");
+            printf("Could not find valid Primary Volume Descriptor\n");
             delete readBuffer;
             return false;
         }
@@ -78,17 +80,21 @@ bool ISO9660::Initialize()
     printf("Root dir length: "); printf(Convert::IntToString(rootDirectory->length)); printf("\n");
     printf("Flags: 0b"); printbits(rootDirectory->flags); printf("\n");
 
+    DirectoryRecord* grub = GetEntry("boot\\grub\\grub.cfg;1");
+    printf("Location: "); printf(Convert::IntToString(grub->extent_location)); printf(" Size: "); printf(Convert::IntToString(grub->data_length)); printf("\n");
+    this->disk->ReadSector(grub->extent_location, readBuffer);
+    printf((char*)readBuffer);
+
     delete readBuffer;
 }
 
 
 
-
+uint8_t readBuffer[CDROM_SECTOR_SIZE];
 
 DirectoryRecord* ISO9660::SearchForEntry(DirectoryRecord* searchIn, char* name)
 {
-    uint8_t* readBuffer = new uint8_t[CDROM_SECTOR_SIZE];
-    int Offset = searchIn->length;
+    int Offset = ((searchIn == rootDirectory) ? searchIn->length : 0);
     int SectorOffset = 1;
 
     this->disk->ReadSector(searchIn->extent_location, readBuffer);
@@ -113,10 +119,10 @@ DirectoryRecord* ISO9660::SearchForEntry(DirectoryRecord* searchIn, char* name)
             printf("Found entry: "); printlen(record->name, record->name_length);
             if(String::strcmp(name, record->name)) //We found the correct entry!
             {
-                printf(" [Correct]");
+                printf(" [Correct]\n");
                 //Allocate the return result, we do this because the readbuffer gets deleted so it can be overwritten
-                DirectoryRecord* returnResult = (DirectoryRecord*)MemoryManager::activeMemoryManager->malloc(sizeof(DirectoryRecord));
-                MemoryOperations::memcpy(returnResult, record, sizeof(DirectoryRecord));
+                DirectoryRecord* returnResult = (DirectoryRecord*)MemoryManager::activeMemoryManager->malloc(sizeof(DirectoryRecord) + record->name_length);
+                MemoryOperations::memcpy(returnResult, record, sizeof(DirectoryRecord) + record->name_length);
 
                 delete readBuffer;
                 return returnResult;
@@ -131,6 +137,36 @@ DirectoryRecord* ISO9660::SearchForEntry(DirectoryRecord* searchIn, char* name)
     return 0;
 }
 
+DirectoryRecord* ISO9660::GetEntry(char* path)
+{
+    DirectoryRecord* cur = this->rootDirectory;
+    char** pathArray;
+    int dirCount = String::Split(path, '\\', &pathArray);
+    for(int i = 0; i < dirCount; i++)
+    {
+        printf("Searching for "); printf(pathArray[i]); printf(" in "); printf(i > 0 ? pathArray[i - 1] : (char*)"root"); printf("\n");
+        DirectoryRecord* entry = this->SearchForEntry(cur, pathArray[i]);
+        if(entry == 0)
+        {
+            printf("Could not found entry: "); printf(pathArray[i]); printf("\n");
+            MemoryManager::activeMemoryManager->free(pathArray);
+            return 0;
+        }
+        else
+        {
+            if(String::strcmp(entry->name, pathArray[i]) && i == dirCount - 1)
+            {
+                MemoryManager::activeMemoryManager->free(pathArray);
+                return entry;
+            }
+        }
+
+        cur = entry;
+        delete entry;
+    }
+    MemoryManager::activeMemoryManager->free(pathArray);
+    return 0;
+}
 
 
 
