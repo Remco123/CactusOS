@@ -18,3 +18,8 @@ bool VirtualFileSystem::Initialize()
     printf("Can not initialize filesystem that is zero!\n");
     return false;
 }
+
+List<char*>* VirtualFileSystem::DirectoryList(char* path)
+{
+    return 0;
+}

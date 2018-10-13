@@ -7,6 +7,8 @@ using namespace CactusOS::core;
 using namespace CactusOS::common;
 using namespace CactusOS::system;
 
+#define SerialPrint
+
 typedef void (*constructor)();
 extern "C" constructor start_ctors;
 extern "C" constructor end_ctors;
@@ -16,9 +18,39 @@ extern "C" void callConstructors()
         (*i)();
 }
 
+#ifdef SerialPrint
+#define PORT 0x3f8   /* COM1 */
+ 
+void init_serial() {
+   outportb(PORT + 1, 0x00);    // Disable all interrupts
+   outportb(PORT + 3, 0x80);    // Enable DLAB (set baud rate divisor)
+   outportb(PORT + 0, 0x03);    // Set divisor to 3 (lo byte) 38400 baud
+   outportb(PORT + 1, 0x00);    //                  (hi byte)
+   outportb(PORT + 3, 0x03);    // 8 bits, no parity, one stop bit
+   outportb(PORT + 2, 0xC7);    // Enable FIFO, clear them, with 14-byte threshold
+   outportb(PORT + 4, 0x0B);    // IRQs enabled, RTS/DSR set
+}
+
+int is_transmit_empty() {
+   return inportb(PORT + 5) & 0x20;
+}
+ 
+void write_serial(char a) {
+   while (is_transmit_empty() == 0);
+ 
+   outportb(PORT,a);
+}
+#endif
+
 void printf(char* str)
 {
     Console::Write(str);
+    #ifdef SerialPrint
+    for(int i = 0; str[i] != '\0'; ++i)
+    {
+        write_serial(str[i]);
+    }
+    #endif
 }
 
 void printfHex(uint8_t key)
@@ -51,21 +83,6 @@ void printbits(uint8_t key)
 }
 
 
-
-class TestClass
-{
-public:
-    TestClass()
-    {
-        printf("Constructed\n");
-    }
-    ~TestClass()
-    {
-        printf("Destructed\n");
-    }
-};
-
-
 void PrintKernelStart()
 {
     printf("Starting kernel at: ");
@@ -81,6 +98,10 @@ extern "C" void kernelMain(const multiboot_info_t* mbi, unsigned int multiboot_m
 
     PrintKernelStart();
     printf("CMD Parameters: "); printf((char*)mbi->cmdline); printf("\n");
+
+    #ifdef SerialPrint
+    init_serial();
+    #endif
 
     //Memory manager is needed for the new keyword
     uint32_t* memupper = (uint32_t*)(((uint32_t)mbi) + 8);

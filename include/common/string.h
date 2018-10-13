@@ -3,6 +3,7 @@
 
 #include <common/types.h>
 #include <common/memoryoperations.h>
+#include <core/memorymanagement.h>
 
 namespace CactusOS
 {
@@ -11,8 +12,10 @@ namespace CactusOS
         class String
         {
         public:
-            static size_t strlen(const char* str);
+            static int strlen(const char* str);
             static void strcat(void *dest,const void *src);
+            static bool strcmp(const char* strA, const char* strB);
+            static int Split(const char* str, char c, char*** arr);
         };
     }
 }

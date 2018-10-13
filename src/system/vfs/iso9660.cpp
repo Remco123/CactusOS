@@ -21,6 +21,7 @@ ISO9660::ISO9660(Disk* disk, common::uint32_t start, common::uint32_t size)
 : VirtualFileSystem(disk, start, size) 
 {
     this->ReadOnly = true;
+    this->FilesystemName = "ISO9660 Filesystem";
 }
 
 bool ISO9660::Initialize()
@@ -75,7 +76,68 @@ bool ISO9660::Initialize()
     MemoryOperations::memcpy(this->rootDirectory, readBuffer, sizeof(DirectoryRecord));
 
     printf("Root dir length: "); printf(Convert::IntToString(rootDirectory->length)); printf("\n");
-    printf("Flags: 0b"); printbits(rootDirectory->flags);
+    printf("Flags: 0b"); printbits(rootDirectory->flags); printf("\n");
 
     delete readBuffer;
+}
+
+
+
+
+
+DirectoryRecord* ISO9660::SearchForEntry(DirectoryRecord* searchIn, char* name)
+{
+    uint8_t* readBuffer = new uint8_t[CDROM_SECTOR_SIZE];
+    int Offset = searchIn->length;
+    int SectorOffset = 1;
+
+    this->disk->ReadSector(searchIn->extent_location, readBuffer);
+
+    while(true)
+    {
+        if(Offset > CDROM_SECTOR_SIZE) //We reached the end of the sector, so we want to read the next one
+        {
+            printf("Reading new sector, we reached the end\n");
+            Offset = 0; //Reset the offset in the sector
+            this->disk->ReadSector(searchIn->extent_location + SectorOffset, readBuffer);
+            SectorOffset++;
+        }
+
+        DirectoryRecord* record = (DirectoryRecord*)(readBuffer + Offset);
+        if(record->length == 0) //We reached the end of the entry's
+        {
+            break;
+        }
+        else
+        {
+            printf("Found entry: "); printlen(record->name, record->name_length);
+            if(String::strcmp(name, record->name)) //We found the correct entry!
+            {
+                printf(" [Correct]");
+                //Allocate the return result, we do this because the readbuffer gets deleted so it can be overwritten
+                DirectoryRecord* returnResult = (DirectoryRecord*)MemoryManager::activeMemoryManager->malloc(sizeof(DirectoryRecord));
+                MemoryOperations::memcpy(returnResult, record, sizeof(DirectoryRecord));
+
+                delete readBuffer;
+                return returnResult;
+            }
+            printf("\n");
+        }
+
+        Offset += record->length;
+    }
+
+    delete readBuffer;
+    return 0;
+}
+
+
+
+
+
+
+
+List<char*>* ISO9660::DirectoryList(char* path)
+{
+
 }

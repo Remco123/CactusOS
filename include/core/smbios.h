@@ -31,7 +31,7 @@ namespace CactusOS
             common::uint8_t type;
             common::uint8_t length;
             common::uint16_t handle;
-        };
+        } __attribute__((packed));
 
         struct SMBIOSBIOSInfo
         {

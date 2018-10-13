@@ -109,6 +109,17 @@ namespace CactusOS
             ISO9660(Disk* disk, common::uint32_t start, common::uint32_t size);
 
             bool Initialize();
+
+
+            ///////////
+            // ISO9660 helper functions
+            ///////////
+            DirectoryRecord* SearchForEntry(DirectoryRecord* searchIn, char* name);
+
+            //////////////
+            // VFS Implementations
+            //////////////
+            List<char*>* DirectoryList(char* path);
         };
     }
 }
