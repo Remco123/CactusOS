@@ -120,7 +120,7 @@ void RTL8139::Activate()
 
     Reset();
 
-    rx_buffer = (char*) MemoryManager::activeMemoryManager->malloc (8192 + 16 + 1500);
+    rx_buffer = (char*) MemoryManager::activeMemoryManager->aligned_malloc (4, 8192 + 16 + 1500);
     MemoryOperations::memset(rx_buffer, 0x0, 8192 + 16 + 1500);
     outportl(device->portBase + 0x30, (uint32_t)rx_buffer);
 

@@ -21,6 +21,7 @@ CPU* System::cpu = 0;
 DriverManager* System::driverManager = 0;
 NetworkManager* System::networkManager = 0;
 DiskManager* System::diskManager = 0;
+VFSManager* System::vfsManager = 0;
 
 void System::InitCore()
 {
@@ -89,5 +90,7 @@ void System::InitSystem()
     System::diskManager = new DiskManager();
     System::diskManager->DetectAndLoadDisks(System::interrupts, System::pit);
 
-    PartitionManager::DetectAndLoadFilesystems(System::diskManager);
+    System::vfsManager = new VFSManager();
+
+    PartitionManager::DetectAndLoadFilesystems(System::diskManager, System::vfsManager);
 }

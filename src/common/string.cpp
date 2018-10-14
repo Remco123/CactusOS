@@ -91,3 +91,15 @@ int String::Split(const char *str, char c, char*** arr)
 
     return count;
 }
+
+bool String::Contains(const char* str, char c)
+{
+    int i = 0;
+	while (str[i])
+    {
+        if(str[i] == c)
+            return true;
+		i++;
+    }
+    return false;
+}

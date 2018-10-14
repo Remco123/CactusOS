@@ -17,6 +17,9 @@ void printlen(char* str, int len)
     delete buf;
 }
 
+//with this we don't need to allocate and free buffers all the time
+uint8_t readBuffer[CDROM_SECTOR_SIZE];
+
 ISO9660::ISO9660(Disk* disk, common::uint32_t start, common::uint32_t size)
 : VirtualFileSystem(disk, start, size) 
 {
@@ -30,8 +33,6 @@ bool ISO9660::Initialize()
     printf("Finding Volume Descriptors\n");
     bool FoundPVD = false;
     int Offset = ISO_START_SECTOR;
-
-    uint8_t* readBuffer = new uint8_t[CDROM_SECTOR_SIZE];
 
     while (FoundPVD == false)
     {
@@ -67,7 +68,6 @@ bool ISO9660::Initialize()
         else // <----------------------------------------------------------------------------------------------- So this gets called 
         {
             printf("Could not find valid Primary Volume Descriptor\n");
-            delete readBuffer;
             return false;
         }
     }
@@ -79,18 +79,7 @@ bool ISO9660::Initialize()
 
     printf("Root dir length: "); printf(Convert::IntToString(rootDirectory->length)); printf("\n");
     printf("Flags: 0b"); printbits(rootDirectory->flags); printf("\n");
-
-    DirectoryRecord* grub = GetEntry("boot\\grub\\grub.cfg;1");
-    printf("Location: "); printf(Convert::IntToString(grub->extent_location)); printf(" Size: "); printf(Convert::IntToString(grub->data_length)); printf("\n");
-    this->disk->ReadSector(grub->extent_location, readBuffer);
-    printf((char*)readBuffer);
-
-    delete readBuffer;
 }
-
-
-
-uint8_t readBuffer[CDROM_SECTOR_SIZE];
 
 DirectoryRecord* ISO9660::SearchForEntry(DirectoryRecord* searchIn, char* name)
 {
@@ -103,7 +92,7 @@ DirectoryRecord* ISO9660::SearchForEntry(DirectoryRecord* searchIn, char* name)
     {
         if(Offset > CDROM_SECTOR_SIZE) //We reached the end of the sector, so we want to read the next one
         {
-            printf("Reading new sector, we reached the end\n");
+            //printf("Reading new sector, we reached the end\n");
             Offset = 0; //Reset the offset in the sector
             this->disk->ReadSector(searchIn->extent_location + SectorOffset, readBuffer);
             SectorOffset++;
@@ -116,39 +105,43 @@ DirectoryRecord* ISO9660::SearchForEntry(DirectoryRecord* searchIn, char* name)
         }
         else
         {
-            printf("Found entry: "); printlen(record->name, record->name_length);
+            //printf("Found entry: "); printlen(record->name, record->name_length);
             if(String::strcmp(name, record->name)) //We found the correct entry!
             {
-                printf(" [Correct]\n");
+                //printf(" [Correct]\n");
                 //Allocate the return result, we do this because the readbuffer gets deleted so it can be overwritten
                 DirectoryRecord* returnResult = (DirectoryRecord*)MemoryManager::activeMemoryManager->malloc(sizeof(DirectoryRecord) + record->name_length);
                 MemoryOperations::memcpy(returnResult, record, sizeof(DirectoryRecord) + record->name_length);
 
-                delete readBuffer;
                 return returnResult;
             }
-            printf("\n");
+            //printf("\n");
         }
 
         Offset += record->length;
     }
 
-    delete readBuffer;
     return 0;
 }
 
 DirectoryRecord* ISO9660::GetEntry(char* path)
 {
     DirectoryRecord* cur = this->rootDirectory;
+
     char** pathArray;
     int dirCount = String::Split(path, '\\', &pathArray);
+    if(dirCount == 1 && (String::strlen(path) == 1)) //the path is the root directory
+    {
+        delete pathArray;
+        return cur;
+    }
     for(int i = 0; i < dirCount; i++)
     {
-        printf("Searching for "); printf(pathArray[i]); printf(" in "); printf(i > 0 ? pathArray[i - 1] : (char*)"root"); printf("\n");
+        //printf("Searching for "); printf(pathArray[i]); printf(" in "); printf(i > 0 ? pathArray[i - 1] : (char*)"root"); printf("\n");
         DirectoryRecord* entry = this->SearchForEntry(cur, pathArray[i]);
         if(entry == 0)
         {
-            printf("Could not found entry: "); printf(pathArray[i]); printf("\n");
+            //printf("Could not found entry: "); printf(pathArray[i]); printf("\n");
             MemoryManager::activeMemoryManager->free(pathArray);
             return 0;
         }
@@ -168,6 +161,10 @@ DirectoryRecord* ISO9660::GetEntry(char* path)
     return 0;
 }
 
+Iso_EntryType ISO9660::GetEntryType(DirectoryRecord* entry)
+{
+    return ((entry->flags >> 1) & 1) ? Iso_Directory : Iso_File;
+}
 
 
 
@@ -175,5 +172,88 @@ DirectoryRecord* ISO9660::GetEntry(char* path)
 
 List<char*>* ISO9660::DirectoryList(char* path)
 {
+    List<char*>* result = new List<char*>();
+    DirectoryRecord* parent = String::strlen(path) > 0 ? GetEntry(path) : rootDirectory;
+    if(GetEntryType(parent) == Iso_File)
+    {
+        result->push_back("[Error]");
+        return result;
+    }
 
+
+    int Offset = ((parent == rootDirectory) ? parent->length : 0);
+    int SectorOffset = 1;
+    this->disk->ReadSector(parent->extent_location, readBuffer);
+
+    while(true)
+    {
+        if(Offset > CDROM_SECTOR_SIZE) //We reached the end of the sector, so we want to read the next one
+        {
+            Offset = 0; //Reset the offset in the sector
+            this->disk->ReadSector(parent->extent_location + SectorOffset, readBuffer);
+            SectorOffset++;
+        }
+
+        DirectoryRecord* record = (DirectoryRecord*)(readBuffer + Offset);
+        if(record->length == 0) //We reached the end of the entry's
+        {
+            break;
+        }
+        else
+        {
+            if(record->name[0] != '\0' && record->name[0] != '\1') //We ignore the . and .. directories
+            {
+                char* entry = (char*)MemoryManager::activeMemoryManager->malloc(record->name_length + 1);
+                MemoryOperations::memcpy(entry, record->name, record->name_length);
+                entry[record->name_length] = '\0';
+                result->push_back(entry);
+            }
+        }
+
+        Offset += record->length;
+    }
+
+    return result;
+}
+
+char ISO9660::ReadFile(char* path, uint8_t* buffer)
+{
+    DirectoryRecord* entry = String::strlen(path) > 0 ? GetEntry(path) : rootDirectory;
+    if(entry == 0 || GetEntryType(entry) != Iso_File)
+    {
+        printf("File not found or not a file\n");
+        return 1;
+    }
+
+    int fileSize = entry->data_length;
+    printf("Reading file: "); printf(path); printf(" Size: "); printf(Convert::IntToString(fileSize)); printf(" Bytes\n");
+
+    int count = fileSize / CDROM_SECTOR_SIZE;
+    int remainder = fileSize % CDROM_SECTOR_SIZE;
+    //printf("C: "); printf(Convert::IntToString(count)); printf(" R: "); printf(Convert::IntToString(remainder)); printf("\n");
+
+    for(int i = 0; i < count; i++)
+    {
+        this->disk->ReadSector(entry->extent_location + i, buffer + (CDROM_SECTOR_SIZE * i));
+    }
+    
+    if(remainder > 0) //We have a remainder
+    {
+        this->disk->ReadSector(entry->extent_location + count, readBuffer);
+        MemoryOperations::memcpy(buffer + count, readBuffer, remainder);
+    }
+
+    return 0;
+}
+
+int ISO9660::GetFileSize(char* path)
+{
+    DirectoryRecord* entry = String::strlen(path) > 0 ? GetEntry(path) : rootDirectory;
+    if(entry == 0 || GetEntryType(entry) != Iso_File)
+    {
+        printf("File not found or not a file\n");
+        return -1;
+    }
+
+    return entry->data_length;
 }

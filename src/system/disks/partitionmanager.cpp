@@ -11,7 +11,7 @@ void printfHex16(uint16_t);
 
 uint8_t Readbuf[512];
 
-void PartitionManager::DetectAndLoadFilesystems(DiskManager* disks /*, FilesystemManager* filesystems */)
+void PartitionManager::DetectAndLoadFilesystems(DiskManager* disks , VFSManager* vfs)
 {
     printf("Detecting partitions on disks\n");
     common::uint32_t numDisks = disks->numDisks;
@@ -60,7 +60,7 @@ void PartitionManager::DetectAndLoadFilesystems(DiskManager* disks /*, Filesyste
                 printfHex(mbr->primaryPartitions[p].partition_id);
                 printf(" Sectors: "); printf(Convert::IntToString(mbr->primaryPartitions[p].length));
 
-                AssignVFS(mbr->primaryPartitions[p], disks->allDisks[i]);
+                AssignVFS(mbr->primaryPartitions[p], disks->allDisks[i], vfs);
 
                 printf("\n");
             }
@@ -72,7 +72,7 @@ void PartitionManager::DetectAndLoadFilesystems(DiskManager* disks /*, Filesyste
     }
 }
 
-void PartitionManager::AssignVFS(PartitionTableEntry partition, Disk* disk)
+void PartitionManager::AssignVFS(PartitionTableEntry partition, Disk* disk, VFSManager* vfs)
 {
     if(partition.partition_id == 0x0B)
     {
@@ -83,5 +83,7 @@ void PartitionManager::AssignVFS(PartitionTableEntry partition, Disk* disk)
         printf(" ISO9660\n");
         ISO9660* isoVFS = new ISO9660(disk, partition.start_lba, partition.length);
         isoVFS->Initialize();
+
+        vfs->Mount(isoVFS); //Mount the filesystem
     }
 }

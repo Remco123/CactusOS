@@ -123,7 +123,33 @@ extern "C" void kernelMain(const multiboot_info_t* mbi, unsigned int multiboot_m
     {
         Console::Write(":==> ");
         char* input = Console::ReadLine();
-        Console::Write("You typed: ");
-        Console::WriteLine(input);
+        
+        if(String::strcmp(input, "ls"))
+        {
+            List<char*>* dirs = System::vfsManager->DirectoryList("0:\\");
+            if(dirs != 0)
+            {
+                for(int i = 0; i < dirs->size(); i++)
+                {
+                    printf(dirs->GetAt(i)); printf("\n");
+                    delete dirs->GetAt(i);
+                }
+                delete dirs;
+            }
+        }
+        else if(String::strcmp(input, "read"))
+        {
+            int length = System::vfsManager->GetFileSize("0:\\boot\\CactusOS.bin;1");
+            if(length != -1)
+            {
+                uint8_t* buffer = new uint8_t[length];
+                if(System::vfsManager->ReadFile("0:\\boot\\CactusOS.bin;1", buffer) == 0)
+                {
+                    printf((char*)buffer);
+                }
+                delete buffer;
+                printf("\n");
+            }
+        }
     }
 }

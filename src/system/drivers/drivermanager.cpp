@@ -76,6 +76,17 @@ Driver* DriverManager::GetDriver(core::PeripheralComponentInterconnectDeviceDesc
             }
             break;
     }
+    switch (device->class_id)
+    {
+        case 0x01: //Mass Storage Controller
+            switch(device->subclass_id)
+            {
+                case 0x1: //IDE
+                    printf("  [IDE Controller] ");
+                    break;
+            }
+            break;
+    }
     return 0;
 }
 

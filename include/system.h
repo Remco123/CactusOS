@@ -16,6 +16,7 @@
 #include <system/drivers/drivermanager.h>
 #include <system/disks/diskmanager.h>
 #include <system/disks/partitionmanager.h>
+#include <system/vfs/vfsmanager.h>
 
 #include <multiboot/multiboot.h>
 
@@ -38,6 +39,7 @@ namespace CactusOS
         static CactusOS::system::DriverManager* driverManager;
         static CactusOS::system::NetworkManager* networkManager;
         static CactusOS::system::DiskManager* diskManager;
+        static CactusOS::system::VFSManager* vfsManager;
 
         static void InitCore();
         static void InitSystem();

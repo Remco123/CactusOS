@@ -16,6 +16,7 @@ namespace CactusOS
             static void strcat(void *dest,const void *src);
             static bool strcmp(const char* strA, const char* strB);
             static int Split(const char* str, char c, char*** arr);
+            static bool Contains(const char* str, char c);
         };
     }
 }

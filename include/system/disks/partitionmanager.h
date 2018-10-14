@@ -4,6 +4,7 @@
 #include <system/disks/diskmanager.h>
 
 #include <system/vfs/iso9660.h>
+#include <system/vfs/vfsmanager.h>
 
 namespace CactusOS
 {
@@ -42,9 +43,9 @@ namespace CactusOS
         class PartitionManager
         {
         private:
-            static void AssignVFS(PartitionTableEntry partition, Disk* disk);
+            static void AssignVFS(PartitionTableEntry partition, Disk* disk, VFSManager* vfs);
         public:
-            static void DetectAndLoadFilesystems(DiskManager* disks /*, FilesystemManager* filesystems */);
+            static void DetectAndLoadFilesystems(DiskManager* disks, VFSManager* vfs);
         };
     }
 }

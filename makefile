@@ -39,6 +39,7 @@ objects = obj/loader.o \
 		  obj/system/disks/partitionmanager.o \
 		  obj/system/vfs/iso9660.o \
 		  obj/system/vfs/virtualfilesystem.o \
+		  obj/system/vfs/vfsmanager.o \
 		  obj/system/network/nettools.o \
 		  obj/system/network/arp.o \
 		  obj/system/network/ipv4.o \

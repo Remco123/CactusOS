@@ -10,10 +10,9 @@ namespace CactusOS
 {
     namespace system
     {
-        #define ROOT_DIR_STR "\\"
-
         class VirtualFileSystem
         {
+        friend class VFSManager;
         protected:
             Disk* disk;
             common::uint32_t StartLBA;
@@ -31,6 +30,10 @@ namespace CactusOS
             /////////////
             
             virtual List<char*>* DirectoryList(char* path);
+
+            virtual char ReadFile(char* path, common::uint8_t* buffer);
+
+            virtual int GetFileSize(char* path);
         };
     }
 }

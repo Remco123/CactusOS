@@ -99,6 +99,12 @@ namespace CactusOS
             VolumeDescriptorSetTerminator = 255
         };
 
+        enum Iso_EntryType
+        {
+            Iso_File = 0,
+            Iso_Directory = 1
+        };
+
 
         class ISO9660 : public VirtualFileSystem
         {
@@ -115,13 +121,17 @@ namespace CactusOS
             // ISO9660 helper functions
             ///////////
             DirectoryRecord* SearchForEntry(DirectoryRecord* searchIn, char* name);
-
             DirectoryRecord* GetEntry(char* path);
+            Iso_EntryType GetEntryType(DirectoryRecord* entry);
 
             //////////////
             // VFS Implementations
             //////////////
             List<char*>* DirectoryList(char* path);
+
+            char ReadFile(char* path, common::uint8_t* buffer);
+
+            int GetFileSize(char* path);
         };
     }
 }
