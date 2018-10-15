@@ -136,8 +136,16 @@ void IDEController::InitIDE(unsigned int BAR0, unsigned int BAR1, unsigned int B
     // 4- Print Summary:
     for (i = 0; i < 4; i++)
         if (ide_devices[i].Reserved == 1) {
-            printf(" Found "); printf((char *[]){"ATA", "ATAPI"}[ide_devices[i].Type]); printf(" Drive "); printf(Convert::IntToString(ide_devices[i].Size/1024/1024/2));
-            printf("GB - "); printf((char*)ide_devices[i].Model); printf("\n");
+            if(ide_devices[i].Type == IDE_ATA)
+            {
+                printf(" Found ATA Drive "); printf(Convert::IntToString(ide_devices[i].Size/1024/1024/2));
+                printf("GB - "); printf((char*)ide_devices[i].Model); printf("\n");
+            }
+            else
+            {
+                printf(" Found ATAPI Drive "); printf(Convert::IntToString((ide_devices[i].Size = ATAPIGetCapacity(ide_devices[i].Drive) / 1024 / 1024))); printf("MB - ");
+                printf((char*)ide_devices[i].Model); printf("\n");
+            }
         }
 }
 
@@ -523,6 +531,91 @@ unsigned char IDEController::AtaWriteSector(uint16_t drive, uint32_t lba, uint8_
 }
 
 
+uint32_t IDEController::ATAPIGetCapacity(uint16_t drive)
+{
+    unsigned int   channel      = ide_devices[drive].Channel;
+    unsigned int   slavebit      = ide_devices[drive].Drive;
+    unsigned int   bus      = channels[channel].base;
+    int err;
+    ide_irq_invoked = 0;
+    
+    // 1: Check if the drive presents:
+    // ==================================
+    if (drive > 3 || ide_devices[drive].Reserved == 0)
+        return 0;      // Drive Not Found!
+    // 2: Check if drive isn't ATAPI:
+    // ==================================
+    else if (ide_devices[drive].Type == IDE_ATA)
+        return 0;         // Command Aborted.
+    // 3: Eject ATAPI Driver:
+    // ============================================
+    else {
+        // Enable IRQs:
+        ide_write(channel, ATA_REG_CONTROL, channels[channel].nIEN = ide_irq_invoked = 0x0);
+    
+        // (I): Setup SCSI Packet:
+        // ------------------------------------------------------------------
+        atapi_packet[ 0] = ATAPI_CMD_CAPACITY;
+        atapi_packet[ 1] = 0x00;
+        atapi_packet[ 2] = 0x00;
+        atapi_packet[ 3] = 0x00;
+        atapi_packet[ 4] = 0x00;
+        atapi_packet[ 5] = 0x00;
+        atapi_packet[ 6] = 0x00;
+        atapi_packet[ 7] = 0x00;
+        atapi_packet[ 8] = 0x00;
+        atapi_packet[ 9] = 0x00;
+        atapi_packet[10] = 0x00;
+        atapi_packet[11] = 0x00;
+    
+        // (II): Select the Drive:
+        // ------------------------------------------------------------------
+        ide_write(channel, ATA_REG_HDDEVSEL, slavebit << 4);
+    
+        // (III): Delay 400 nanosecond for select to complete:
+        // ------------------------------------------------------------------
+        for(int i = 0; i < 4; i++)
+            ide_read(channel, ATA_REG_ALTSTATUS); // Reading Alternate Status Port wastes 100ns.
+
+        ide_write(channel, ATA_REG_FEATURES, 0);         // PIO mode.
+        ide_write(channel, ATA_REG_LBA1, 0x0008);
+        ide_write(channel, ATA_REG_LBA2, 0x0008);
+
+    
+        // (IV): Send the Packet Command:
+        // ------------------------------------------------------------------
+        ide_write(channel, ATA_REG_COMMAND, ATA_CMD_PACKET);      // Send the Command.
+    
+        // (V): Waiting for the driver to finish or invoke an error:
+        // ------------------------------------------------------------------
+        err = ide_polling(channel, 1);            // Polling and stop if error.
+    
+        // (VI): Sending the packet data:
+        // ------------------------------------------------------------------
+        asm("rep   outsw"::"c"(6), "d"(bus), "S"(atapi_packet));// Send Packet Data
+        ide_wait_irq();                  // Wait for an IRQ.          
+        if (err = ide_polling(channel, 1))  // Polling and get error code.
+            return 0;
+
+        uint16_t data[4];
+        for(int i = 0; i < 4; ++i)
+            data[i] = inportw(bus);
+        
+        uint32_t lba, blocksize;
+        MemoryOperations::memcpy(&lba, &data[0], sizeof(uint32_t));
+        lba = Convert::ByteSwap(lba);
+        MemoryOperations::memcpy(&blocksize, &data[2], sizeof(uint32_t));
+        blocksize = Convert::ByteSwap(blocksize);
+
+        ide_print_error(drive, err); // Return;
+
+        printf("Last LBA: "); printf(Convert::IntToString(lba)); printf("  BlockSize: "); printf(Convert::IntToString(blocksize)); printf(" ");
+        return (lba + 1) * blocksize;
+    }
+    return 0;
+}
+
+
 
 unsigned char IDEController::ATAPIReadSector(common::uint16_t drive, common::uint32_t lba, common::uint8_t* buf)
 {
@@ -588,7 +681,14 @@ unsigned char IDEController::ATAPIReadSector(common::uint16_t drive, common::uin
         ide_wait_irq();                  // Wait for an IRQ.
         if (err = ide_polling(channel, 1))
             return err;      // Polling and return if error.
-        inportsm(bus, buf, words);
+
+        uint32_t readSize = ((uint32_t)ide_read(channel, ATA_REG_LBA2) << 8 | (uint32_t)ide_read(channel, ATA_REG_LBA1));
+        if(readSize != words*2)
+        {
+            printf("Warning, atapi transfer size ("); printf(Convert::IntToString(readSize)); printf(") and readsize (2048) are not equal\n");
+        }
+
+        inportsm(bus, buf, readSize/2);
     }
 
     // (X): Waiting for an IRQ:

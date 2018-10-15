@@ -109,7 +109,6 @@ namespace CactusOS
         class ISO9660 : public VirtualFileSystem
         {
         private:
-            PrimaryVolumeDescriptor* primaryVolumeDescriptor;
             DirectoryRecord* rootDirectory;
         public:
             ISO9660(Disk* disk, common::uint32_t start, common::uint32_t size);
@@ -128,8 +127,6 @@ namespace CactusOS
             // VFS Implementations
             //////////////
             List<char*>* DirectoryList(char* path);
-
-            char ReadFile(char* path, common::uint8_t* buffer);
 
             int GetFileSize(char* path);
         };

@@ -46,6 +46,7 @@ namespace CactusOS
 
         #define      ATAPI_CMD_READ             0xA8
         #define      ATAPI_CMD_EJECT            0x1B
+        #define      ATAPI_CMD_CAPACITY         0x25
 
         #define      ATA_IDENT_DEVICETYPE       0
         #define      ATA_IDENT_CYLINDERS        2
@@ -150,6 +151,7 @@ namespace CactusOS
             unsigned char AtaWriteSector(common::uint16_t drive, common::uint32_t lba, common::uint8_t* buf);
 
             unsigned char ATAPIReadSector(common::uint16_t drive, common::uint32_t lba, common::uint8_t* buf);
+            common::uint32_t ATAPIGetCapacity(common::uint16_t drive);
         public:
             IDEController(core::InterruptManager* interrupts);
 

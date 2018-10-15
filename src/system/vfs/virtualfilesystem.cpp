@@ -24,11 +24,6 @@ List<char*>* VirtualFileSystem::DirectoryList(char* path)
     return 0;
 }
 
-char VirtualFileSystem::ReadFile(char* path, uint8_t* buffer)
-{
-    return 1;
-}
-
 int VirtualFileSystem::GetFileSize(char* path)
 {
     return -1;

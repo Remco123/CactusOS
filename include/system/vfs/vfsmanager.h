@@ -24,8 +24,6 @@ namespace CactusOS
             // Filesystem functions
             /////////////
             List<char*>* DirectoryList(char* path);
-
-            char ReadFile(char* path, common::uint8_t* buffer);
             
             int GetFileSize(char* path);
         };

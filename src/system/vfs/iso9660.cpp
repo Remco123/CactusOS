@@ -53,9 +53,11 @@ bool ISO9660::Initialize()
             printf("Version: "); printf(Convert::IntToString((uint8_t)pvd->version)); printf("\n");
             printf("Root directory sector: "); printf(Convert::IntToString(pvd->root_directory_record.extent_location)); printf("\n");
             printf("Creation date: "); printlen(pvd->creation_date.Year, 5); printf("-"); printlen(pvd->creation_date.Month + 1, 2); printf("-"); printlen(pvd->creation_date.Day + 1, 2); printf(" : "); printlen(pvd->creation_date.Hour + 1, 2); printf(":"); printlen(pvd->creation_date.Minute + 1, 2); printf(":"); printlen(pvd->creation_date.Second + 1, 2); printf("\n");
-
-            this->primaryVolumeDescriptor = (PrimaryVolumeDescriptor*) MemoryManager::activeMemoryManager->malloc(sizeof(PrimaryVolumeDescriptor));
-            MemoryOperations::memcpy(this->primaryVolumeDescriptor, pvd, sizeof(PrimaryVolumeDescriptor));
+        
+            printf("Saving root directory to memory\n");
+            this->disk->ReadSector(pvd->root_directory_record.extent_location, readBuffer);
+            this->rootDirectory = (DirectoryRecord*)MemoryManager::activeMemoryManager->malloc(sizeof(DirectoryRecord));
+            MemoryOperations::memcpy(this->rootDirectory, readBuffer, sizeof(DirectoryRecord));
         }
         else if (descriptor->Type == VolumeDescriptorType::VolumeDescriptorSetTerminator)
         {
@@ -71,11 +73,6 @@ bool ISO9660::Initialize()
             return false;
         }
     }
-
-    //We found the root directory sector, now lets read it
-    this->disk->ReadSector(this->primaryVolumeDescriptor->root_directory_record.extent_location, readBuffer);
-    this->rootDirectory = (DirectoryRecord*)MemoryManager::activeMemoryManager->malloc(sizeof(DirectoryRecord));
-    MemoryOperations::memcpy(this->rootDirectory, readBuffer, sizeof(DirectoryRecord));
 
     printf("Root dir length: "); printf(Convert::IntToString(rootDirectory->length)); printf("\n");
     printf("Flags: 0b"); printbits(rootDirectory->flags); printf("\n");
@@ -130,9 +127,9 @@ DirectoryRecord* ISO9660::GetEntry(char* path)
 
     char** pathArray;
     int dirCount = String::Split(path, '\\', &pathArray);
+    //printf("Dir count: "); printf(Convert::IntToString(dirCount)); printf("\n");
     if(dirCount == 1 && (String::strlen(path) == 1)) //the path is the root directory
     {
-        delete pathArray;
         return cur;
     }
     for(int i = 0; i < dirCount; i++)
@@ -142,22 +139,18 @@ DirectoryRecord* ISO9660::GetEntry(char* path)
         if(entry == 0)
         {
             //printf("Could not found entry: "); printf(pathArray[i]); printf("\n");
-            MemoryManager::activeMemoryManager->free(pathArray);
             return 0;
         }
         else
         {
             if(String::strcmp(entry->name, pathArray[i]) && i == dirCount - 1)
             {
-                MemoryManager::activeMemoryManager->free(pathArray);
                 return entry;
             }
         }
 
         cur = entry;
-        delete entry;
     }
-    MemoryManager::activeMemoryManager->free(pathArray);
     return 0;
 }
 
@@ -216,42 +209,12 @@ List<char*>* ISO9660::DirectoryList(char* path)
     return result;
 }
 
-char ISO9660::ReadFile(char* path, uint8_t* buffer)
-{
-    DirectoryRecord* entry = String::strlen(path) > 0 ? GetEntry(path) : rootDirectory;
-    if(entry == 0 || GetEntryType(entry) != Iso_File)
-    {
-        printf("File not found or not a file\n");
-        return 1;
-    }
-
-    int fileSize = entry->data_length;
-    printf("Reading file: "); printf(path); printf(" Size: "); printf(Convert::IntToString(fileSize)); printf(" Bytes\n");
-
-    int count = fileSize / CDROM_SECTOR_SIZE;
-    int remainder = fileSize % CDROM_SECTOR_SIZE;
-    //printf("C: "); printf(Convert::IntToString(count)); printf(" R: "); printf(Convert::IntToString(remainder)); printf("\n");
-
-    for(int i = 0; i < count; i++)
-    {
-        this->disk->ReadSector(entry->extent_location + i, buffer + (CDROM_SECTOR_SIZE * i));
-    }
-    
-    if(remainder > 0) //We have a remainder
-    {
-        this->disk->ReadSector(entry->extent_location + count, readBuffer);
-        MemoryOperations::memcpy(buffer + count, readBuffer, remainder);
-    }
-
-    return 0;
-}
-
 int ISO9660::GetFileSize(char* path)
 {
     DirectoryRecord* entry = String::strlen(path) > 0 ? GetEntry(path) : rootDirectory;
-    if(entry == 0 || GetEntryType(entry) != Iso_File)
+    if(entry == 0 || GetEntryType(entry) == Iso_Directory)
     {
-        printf("File not found or not a file\n");
+        printf("File ("); printf(path); printf(") not found or not a file\n");
         return -1;
     }
 

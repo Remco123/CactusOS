@@ -37,15 +37,6 @@ List<char*>* VFSManager::DirectoryList(char* path)
         return 0;
 }
 
-char VFSManager::ReadFile(char* path, uint8_t* buffer)
-{
-    int disk = ExtractDiskNumber(path);
-    if(disk != -1 && Filesystems->size() > disk)
-        return Filesystems->GetAt(disk)->ReadFile(path + 3, buffer); // + 3 skips the 0:\ part
-    else
-        return 1;
-}
-
 int VFSManager::GetFileSize(char* path)
 {
     int disk = ExtractDiskNumber(path);

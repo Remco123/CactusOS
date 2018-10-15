@@ -7,7 +7,7 @@ using namespace CactusOS::core;
 using namespace CactusOS::common;
 using namespace CactusOS::system;
 
-#define SerialPrint
+//#define SerialPrint
 
 typedef void (*constructor)();
 extern "C" constructor start_ctors;
@@ -140,16 +140,7 @@ extern "C" void kernelMain(const multiboot_info_t* mbi, unsigned int multiboot_m
         else if(String::strcmp(input, "read"))
         {
             int length = System::vfsManager->GetFileSize("0:\\boot\\CactusOS.bin;1");
-            if(length != -1)
-            {
-                uint8_t* buffer = new uint8_t[length];
-                if(System::vfsManager->ReadFile("0:\\boot\\CactusOS.bin;1", buffer) == 0)
-                {
-                    printf((char*)buffer);
-                }
-                delete buffer;
-                printf("\n");
-            }
+            printf("File size: "); printf(Convert::IntToString(length)); printf("\n");
         }
     }
 }
