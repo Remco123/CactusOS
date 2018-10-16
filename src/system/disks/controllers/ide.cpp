@@ -619,6 +619,7 @@ uint32_t IDEController::ATAPIGetCapacity(uint16_t drive)
 
 unsigned char IDEController::ATAPIReadSector(common::uint16_t drive, common::uint32_t lba, common::uint8_t* buf)
 {
+    //printf("ATAPI reading: "); printf(Convert::IntToString(lba)); printf("\n");
     unsigned int   channel  = ide_devices[drive].Channel;
     unsigned int   slavebit = ide_devices[drive].Drive;
     unsigned int   bus      = channels[channel].base;

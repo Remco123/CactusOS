@@ -42,6 +42,9 @@ void Console::Write(char* str)
                 XOffset = 0;
                 YOffset++;
                 break;
+            case '\t':
+                Write("    "); //4 spaces for tab
+                break;
             default:
                 uint16_t attrib = (bg << 4) | (fg & 0x0F);
                 volatile uint16_t * where;
@@ -113,6 +116,10 @@ char* Console::ReadLine()
                     Console::Write(" "); //Clear old char
                     XOffset -= 1;
                 }
+                break;
+            case '\t':
+                Console::Write("    ");
+                numChars += 4;
                 break;
             default:
                 buffer[numChars] = input;
