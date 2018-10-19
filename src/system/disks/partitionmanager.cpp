@@ -82,8 +82,7 @@ void PartitionManager::AssignVFS(PartitionTableEntry partition, Disk* disk, VFSM
     {
         printf(" ISO9660\n");
         ISO9660* isoVFS = new ISO9660(disk, partition.start_lba, partition.length);
-        isoVFS->Initialize();
-
-        vfs->Mount(isoVFS); //Mount the filesystem
+        if(isoVFS->Initialize())
+            vfs->Mount(isoVFS); //Mount the filesystem
     }
 }

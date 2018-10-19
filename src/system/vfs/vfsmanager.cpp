@@ -45,3 +45,12 @@ int VFSManager::GetFileSize(char* path)
     else
         return -1;
 }
+
+int VFSManager::ReadFile(char* path, uint8_t* buffer)
+{
+    int disk = ExtractDiskNumber(path);
+    if(disk != -1 && Filesystems->size() > disk)
+        return Filesystems->GetAt(disk)->ReadFile(path + 3, buffer);
+    else
+        return -1;
+}

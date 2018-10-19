@@ -65,7 +65,7 @@ bool ISO9660::Initialize()
             Offset = this->SizeInSectors + (uint32_t)ISO_START_SECTOR + 1234; //We reached the end of the descriptors
         }                                                                     //                               |
                                                                               //                               |
-        if(Offset < (this->SizeInSectors - (uint32_t)ISO_START_SECTOR))       //                               |
+        if(Offset < (int)(this->SizeInSectors - (uint32_t)ISO_START_SECTOR))  //                               |
             Offset++; //Read the next sector                                  //                               |
         else // <----------------------------------------------------------------------------------------------- So this gets called 
         {
@@ -76,6 +76,8 @@ bool ISO9660::Initialize()
 
     printf("Root dir length: "); printf(Convert::IntToString(rootDirectory->length)); printf("\n");
     printf("Flags: 0b"); printbits(rootDirectory->flags); printf("\n");
+
+    return true;
 }
 
 DirectoryRecord* ISO9660::SearchForEntry(DirectoryRecord* searchIn, char* name)
@@ -134,13 +136,16 @@ DirectoryRecord* ISO9660::GetEntry(char* path)
 {
     DirectoryRecord* cur = this->rootDirectory;
 
+    if(String::strlen(path) == 0)
+        return cur;
+
     char** pathArray;
     int dirCount = String::Split(path, '\\', &pathArray);
     //printf("Dir count: "); printf(Convert::IntToString(dirCount)); printf("\n");
-    if(dirCount == 1 && (String::strlen(path) == 1)) //the path is the root directory
+    if(dirCount == 0) //error so we return 0
     {
         delete pathArray;
-        return cur;
+        return 0;
     }
     for(int i = 0; i < dirCount; i++)
     {
@@ -193,7 +198,7 @@ List<char*>* ISO9660::DirectoryList(char* path)
 
     while(true)
     {
-        printf("Offset: "); printf(Convert::IntToString(Offset)); printf("\n");
+        //printf("Offset: "); printf(Convert::IntToString(Offset)); printf("\n");
         if(Offset > CDROM_SECTOR_SIZE) //We reached the end of the sector, so we want to read the next one, TODO: fix this
         {
             printf("Reached end of sector, reading next one\n");
@@ -234,4 +239,32 @@ int ISO9660::GetFileSize(char* path)
     }
 
     return entry->data_length;
+}
+
+int ISO9660::ReadFile(char* path, uint8_t* buffer)
+{
+    DirectoryRecord* entry = String::strlen(path) > 0 ? GetEntry(path) : rootDirectory;
+    if(entry == 0 || GetEntryType(entry) == Iso_Directory)
+    {
+        printf("File ("); printf(path); printf(") not found or not a file\n");
+        return -1;
+    }
+    
+    int fileSize = entry->data_length;
+    printf("Reading file: "); printf(path); printf(" Size: "); printf(Convert::IntToString(fileSize)); printf(" Bytes\n");
+
+    int count = fileSize / CDROM_SECTOR_SIZE;
+    int remainder = fileSize % CDROM_SECTOR_SIZE;
+
+    for(int i = 0; i < count; i++)
+    {
+        this->disk->ReadSector(entry->extent_location + i, buffer + (CDROM_SECTOR_SIZE * i));
+    }
+    
+    if(remainder > 0) //We have a remainder
+    {
+        this->disk->ReadSector(entry->extent_location + count, readBuffer);
+        MemoryOperations::memcpy(buffer + count, readBuffer, remainder);
+    }
+    return 0;
 }

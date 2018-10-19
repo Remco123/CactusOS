@@ -47,6 +47,16 @@ int String::Split(const char *str, char c, char*** arr)
         p++;
     }
 
+    if(count == 1) //We have no delimiter in the string
+    {
+        int len = String::strlen(str);
+        *arr = (char**) core::MemoryManager::activeMemoryManager->malloc(sizeof(char*) * count);
+        (*arr)[0] = (char*)  core::MemoryManager::activeMemoryManager->malloc( sizeof(char) *  len);
+        MemoryOperations::memcpy((*arr)[0], str, len);
+        (*arr)[0][len] = '\0'; //Terminate the string
+        return 1;
+    }
+
     *arr = (char**) core::MemoryManager::activeMemoryManager->malloc(sizeof(char*) * count);
     if (*arr == NULL)
         return 0;

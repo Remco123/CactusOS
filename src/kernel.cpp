@@ -7,7 +7,7 @@ using namespace CactusOS::core;
 using namespace CactusOS::common;
 using namespace CactusOS::system;
 
-#define SerialPrint
+//#define SerialPrint
 
 typedef void (*constructor)();
 extern "C" constructor start_ctors;
@@ -143,6 +143,34 @@ extern "C" void kernelMain(const multiboot_info_t* mbi, unsigned int multiboot_m
             Console::Write("Filename: ");
             int length = System::vfsManager->GetFileSize(Console::ReadLine());
             printf("File size: "); printf(Convert::IntToString(length)); printf("\n");
+        }
+        else if(String::strcmp(input, "memtest"))
+        {
+            for(int i = 0; i < 2048; i++)
+            {
+                printf(Convert::IntToString(i)); printf("-");
+                uint8_t* buf = new uint8_t[i + 1];
+                delete buf;
+            }
+            for(int i = 0; i < 9000; i++)
+            {
+                printf(Convert::IntToString(i)); printf("-");
+                PrimaryVolumeDescriptor* pdv = (PrimaryVolumeDescriptor*)MemoryManager::activeMemoryManager->malloc(sizeof(PrimaryVolumeDescriptor));
+                delete pdv;
+            }
+            printf("\nFilling memory\n");
+            uint8_t* buf = new uint8_t[System::memoryManager->GetFreeMemory() - 1024*1024];
+            
+            Console::Write("Total Memory: "); Console::Write(Convert::IntToString(System::memoryManager->GetTotalMemory() / 1024 / 1024)); Console::WriteLine(" Mb");
+            Console::Write("Free Memory: "); Console::Write(Convert::IntToString(System::memoryManager->GetFreeMemory() / 1024 / 1024)); Console::WriteLine(" Mb");
+            Console::Write("Used Memory: "); Console::Write(Convert::IntToString(System::memoryManager->GetUsedMemory() > 1024 * 1024 ? System::memoryManager->GetUsedMemory() / 1024 / 1024 : System::memoryManager->GetUsedMemory() / 1024)); Console::WriteLine(System::memoryManager->GetUsedMemory() > 1024 * 1024 ? (char*)" Mb" : (char*)" Kb");
+
+            printf("Freeing memory\n");
+            delete buf;
+
+            Console::Write("Total Memory: "); Console::Write(Convert::IntToString(System::memoryManager->GetTotalMemory() / 1024 / 1024)); Console::WriteLine(" Mb");
+            Console::Write("Free Memory: "); Console::Write(Convert::IntToString(System::memoryManager->GetFreeMemory() / 1024 / 1024)); Console::WriteLine(" Mb");
+            Console::Write("Used Memory: "); Console::Write(Convert::IntToString(System::memoryManager->GetUsedMemory() > 1024 * 1024 ? System::memoryManager->GetUsedMemory() / 1024 / 1024 : System::memoryManager->GetUsedMemory() / 1024)); Console::WriteLine(System::memoryManager->GetUsedMemory() > 1024 * 1024 ? (char*)" Mb" : (char*)" Kb");
         }
     }
 }

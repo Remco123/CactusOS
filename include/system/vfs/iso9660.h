@@ -129,6 +129,8 @@ namespace CactusOS
             List<char*>* DirectoryList(char* path);
 
             int GetFileSize(char* path);
+
+            int ReadFile(char* path, common::uint8_t* buffer);
         };
     }
 }

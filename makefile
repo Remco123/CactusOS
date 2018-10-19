@@ -85,10 +85,14 @@ install: CactusOS.iso
 	cp $< /media/sf_Mint_OSDev/CactusOS.iso
 	cp CactusOS.bin /media/sf_Mint_OSDev/CactusOS.bin
 
-.PHONY: clean qemu
+.PHONY: clean qemu kdbg
 clean:
 	rm -rf obj CactusOS.bin CactusOS.iso
 
 qemu: CactusOS.iso
-	qemu-system-i386 -cdrom CactusOS.iso -serial stdio #-s -S #for debug
+	qemu-system-i386 -cdrom CactusOS.iso -serial stdio #-s -S
+
+kdbg: CactusOS.iso
+	qemu-system-i386 -cdrom CactusOS.iso -serial stdio -s -S &
+	kdbg -r localhost:1234 CactusOS.bin
 	

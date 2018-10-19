@@ -48,6 +48,13 @@ void* MemoryManager::malloc(common::size_t size)
     if(result == 0)
     {
         printf("Error could not allocate memory! amount: "); printf(common::Convert::IntToString(size)); printf(" Bytes\n");
+        printf("Memory layout:\n");
+
+        for(MemoryChunk* chunk = first; chunk != 0 && result == 0; chunk = chunk->next)
+        {
+            printf("[Size: "); printf(common::Convert::IntToString(chunk->size)); printf(" Alloc: "); printf(chunk->allocated ? (char*)"True" : (char*)"False"); printf("]\n");
+        }
+
         while(1);
         return 0;
     }

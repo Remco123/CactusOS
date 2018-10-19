@@ -32,6 +32,8 @@ namespace CactusOS
             virtual List<char*>* DirectoryList(char* path);
 
             virtual int GetFileSize(char* path);
+
+            virtual int ReadFile(char* path, common::uint8_t* buffer);
         };
     }
 }

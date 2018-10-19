@@ -163,6 +163,11 @@ uint32_t InterruptManager::DoHandleInterrupt(uint8_t interrupt, uint32_t esp)
     {
         esp = handlers[interrupt]->HandleInterrupt(esp);
     }
+    else if(interrupt < this->hardwareInterruptOffset)
+    {
+        printf("Got exception: "); printfHex(interrupt); printf("\n");
+        while(1); //TODO: Pass to exception handler or something
+    }
     else if(interrupt != hardwareInterruptOffset)
     {
         printf("UNHANDLED INTERRUPT 0x");
