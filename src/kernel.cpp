@@ -144,6 +144,21 @@ extern "C" void kernelMain(const multiboot_info_t* mbi, unsigned int multiboot_m
             int length = System::vfsManager->GetFileSize(Console::ReadLine());
             printf("File size: "); printf(Convert::IntToString(length)); printf("\n");
         }
+        else if(String::strcmp(input, "read"))
+        {
+            Console::Write("Filename: ");
+            int length = 1024 * 1024 * 10; //allocate a 10 mb buffer
+            if(length != -1)
+            {
+                uint8_t* buffer = new uint8_t[length];
+                if(System::vfsManager->ReadFile(Console::ReadLine(), buffer) == 0)
+                {
+                    printf((char*)buffer);
+                }
+                delete buffer;
+                printf("\n");
+            }
+        }
         else if(String::strcmp(input, "memtest"))
         {
             for(int i = 0; i < 2048; i++)

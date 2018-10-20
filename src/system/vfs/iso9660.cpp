@@ -140,11 +140,15 @@ DirectoryRecord* ISO9660::GetEntry(char* path)
         return cur;
 
     char** pathArray;
-    int dirCount = String::Split(path, '\\', &pathArray);
+    int dirCount;
+    int * stringLengths;
+
+    String::split(path, "\\", pathArray, dirCount, stringLengths);
+
+
     //printf("Dir count: "); printf(Convert::IntToString(dirCount)); printf("\n");
     if(dirCount == 0) //error so we return 0
     {
-        delete pathArray;
         return 0;
     }
     for(int i = 0; i < dirCount; i++)
@@ -154,21 +158,18 @@ DirectoryRecord* ISO9660::GetEntry(char* path)
         if(entry == 0)
         {
             //printf("Could not found entry: "); printf(pathArray[i]); printf("\n");
-            delete pathArray;
             return 0;
         }
         else
         {
             if(String::strcmp(entry->name, pathArray[i]) && i == dirCount - 1) //This is the directory we are searching for
             {
-                delete pathArray;
                 return entry;
             }
         }
 
         cur = entry;
     }
-    delete pathArray;
     return 0;
 }
 

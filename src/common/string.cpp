@@ -31,75 +31,82 @@ bool String::strcmp(const char* strA, const char* strB)
     return false;
 }
 
-int String::Split(const char *str, char c, char*** arr)
+bool String::strncmp(const char* s1, const char* s2, int n)
 {
-    int count = 1;
-    int token_len = 1;
-    int i = 0;
-    char *p;
-    char *t;
+    while(n--)
+        if(*s1++ != *s2++)
+            return false;
+    return true;
+}
 
-    p = (char*)str;
-    while (*p != '\0')
-    {
-        if (*p == c)
-            count++;
-        p++;
+void String::split(const char *original, const char *delimiter, char ** & buffer, int & numStrings, int * & stringLengths)
+{
+    const int lo = strlen(original);
+    const int ld = strlen(delimiter);
+    if(ld > lo){
+        buffer = 0;
+        numStrings = 0;
+        stringLengths = 0;
+        return;
     }
 
-    if(count == 1) //We have no delimiter in the string
-    {
-        int len = String::strlen(str);
-        *arr = (char**) core::MemoryManager::activeMemoryManager->malloc(sizeof(char*) * count);
-        (*arr)[0] = (char*)  core::MemoryManager::activeMemoryManager->malloc( sizeof(char) *  len);
-        MemoryOperations::memcpy((*arr)[0], str, len);
-        (*arr)[0][len] = '\0'; //Terminate the string
-        return 1;
-    }
+    numStrings = 1;
 
-    *arr = (char**) core::MemoryManager::activeMemoryManager->malloc(sizeof(char*) * count);
-    if (*arr == NULL)
-        return 0;
-
-    p = (char*)str;
-    while (*p != '\0')
-    {
-        if (*p == c)
-        {
-            (*arr)[i] = (char*)  core::MemoryManager::activeMemoryManager->malloc( sizeof(char) * token_len );
-            if ((*arr)[i] == NULL)
-                return 0;
-
-            token_len = 0;
-            i++;
+    for(int i = 0;i < (lo - ld);i++){
+        if(strncmp(&original[i], delimiter, ld) == true) {
+            i += (ld - 1);
+            numStrings++;
         }
-        p++;
-        token_len++;
-    }
-    (*arr)[i] = (char*)  core::MemoryManager::activeMemoryManager->malloc( sizeof(char) * token_len );
-    if ((*arr)[i] == NULL)
-        return 0;
-
-    i = 0;
-    p = (char*)str;
-    t = ((*arr)[i]);
-    while (*p != '\0')
-    {
-        if (*p != c && *p != '\0')
-        {
-            *t = *p;
-            t++;
-        }
-        else
-        {
-            *t = '\0';
-            i++;
-            t = ((*arr)[i]);
-        }
-        p++;
     }
 
-    return count;
+    stringLengths = (int *) core::MemoryManager::activeMemoryManager->malloc(sizeof(int) * numStrings);
+
+    int currentStringLength = 0;
+    int currentStringNumber = 0;
+    int delimiterTokenDecrementCounter = 0;
+    for(int i = 0;i < lo;i++){
+        if(delimiterTokenDecrementCounter > 0){
+            delimiterTokenDecrementCounter--;
+        } else if(i < (lo - ld)){
+            if(strncmp(&original[i], delimiter, ld) == true){
+                stringLengths[currentStringNumber] = currentStringLength;
+                currentStringNumber++;
+                currentStringLength = 0;
+                delimiterTokenDecrementCounter = ld - 1;
+            } else {
+                currentStringLength++;
+            }
+        } else {
+            currentStringLength++;
+        }
+
+        if(i == (lo - 1)){
+            stringLengths[currentStringNumber] = currentStringLength;
+        }
+    }
+
+    buffer = (char **) core::MemoryManager::activeMemoryManager->malloc(sizeof(char *) * numStrings);
+    for(int i = 0;i < numStrings;i++){
+        buffer[i] = (char *) core::MemoryManager::activeMemoryManager->malloc(sizeof(char) * (stringLengths[i] + 1));
+    }
+
+    currentStringNumber = 0;
+    currentStringLength = 0;
+    delimiterTokenDecrementCounter = 0;
+    for(int i = 0;i < lo;i++){
+        if(delimiterTokenDecrementCounter > 0){
+            delimiterTokenDecrementCounter--;
+        } else if(currentStringLength >= stringLengths[currentStringNumber]){
+            buffer[currentStringNumber][currentStringLength] = 0;
+            delimiterTokenDecrementCounter = ld - 1;
+            currentStringLength = 0;
+            currentStringNumber++;
+        } else {
+            buffer[currentStringNumber][currentStringLength] = (char)original[i];
+            currentStringLength++;
+        }
+    }
+    buffer[currentStringNumber][currentStringLength] = 0;
 }
 
 bool String::Contains(const char* str, char c)

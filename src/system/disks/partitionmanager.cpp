@@ -76,7 +76,12 @@ void PartitionManager::AssignVFS(PartitionTableEntry partition, Disk* disk, VFSM
 {
     if(partition.partition_id == 0x0B)
     {
-        printf(" FAT32");
+        printf(" FAT32\n");
+        FATFileSystem* fatVFS = new FATFileSystem(disk, partition.start_lba, partition.length);
+        if(fatVFS->Initialize())
+            vfs->Mount(fatVFS);
+        else
+            delete fatVFS;
     }
     else if(partition.partition_id == 0xCD)
     {
@@ -84,5 +89,7 @@ void PartitionManager::AssignVFS(PartitionTableEntry partition, Disk* disk, VFSM
         ISO9660* isoVFS = new ISO9660(disk, partition.start_lba, partition.length);
         if(isoVFS->Initialize())
             vfs->Mount(isoVFS); //Mount the filesystem
+        else
+            delete isoVFS;
     }
 }

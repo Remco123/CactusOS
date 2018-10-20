@@ -38,6 +38,7 @@ objects = obj/loader.o \
 		  obj/system/disks/diskmanager.o \
 		  obj/system/disks/partitionmanager.o \
 		  obj/system/vfs/iso9660.o \
+		  obj/system/vfs/fat.o \
 		  obj/system/vfs/virtualfilesystem.o \
 		  obj/system/vfs/vfsmanager.o \
 		  obj/system/network/nettools.o \

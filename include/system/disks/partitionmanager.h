@@ -4,6 +4,7 @@
 #include <system/disks/diskmanager.h>
 
 #include <system/vfs/iso9660.h>
+#include <system/vfs/fat.h>
 #include <system/vfs/vfsmanager.h>
 
 namespace CactusOS
