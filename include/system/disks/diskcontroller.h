@@ -16,7 +16,10 @@ namespace CactusOS
         class DiskManager;
 
         class DiskController
-        {        
+        {      
+        friend class DiskManager;
+        protected:
+            char* controllerID = "";  
         public:
             DiskController();
 

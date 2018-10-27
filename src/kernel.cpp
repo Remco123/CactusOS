@@ -7,8 +7,6 @@ using namespace CactusOS::core;
 using namespace CactusOS::common;
 using namespace CactusOS::system;
 
-//#define SerialPrint
-
 typedef void (*constructor)();
 extern "C" constructor start_ctors;
 extern "C" constructor end_ctors;
@@ -18,39 +16,37 @@ extern "C" void callConstructors()
         (*i)();
 }
 
-#ifdef SerialPrint
-#define PORT 0x3f8   /* COM1 */
+bool SerialOutputEnabled = false;
+#define COM1_PORT 0x3f8   /* COM1 */
  
-void init_serial() {
-   outportb(PORT + 1, 0x00);    // Disable all interrupts
-   outportb(PORT + 3, 0x80);    // Enable DLAB (set baud rate divisor)
-   outportb(PORT + 0, 0x03);    // Set divisor to 3 (lo byte) 38400 baud
-   outportb(PORT + 1, 0x00);    //                  (hi byte)
-   outportb(PORT + 3, 0x03);    // 8 bits, no parity, one stop bit
-   outportb(PORT + 2, 0xC7);    // Enable FIFO, clear them, with 14-byte threshold
-   outportb(PORT + 4, 0x0B);    // IRQs enabled, RTS/DSR set
+void initSerial() {
+   outportb(COM1_PORT + 1, 0x00);    // Disable all interrupts
+   outportb(COM1_PORT + 3, 0x80);    // Enable DLAB (set baud rate divisor)
+   outportb(COM1_PORT + 0, 0x03);    // Set divisor to 3 (lo byte) 38400 baud
+   outportb(COM1_PORT + 1, 0x00);    //                  (hi byte)
+   outportb(COM1_PORT + 3, 0x03);    // 8 bits, no parity, one stop bit
+   outportb(COM1_PORT + 2, 0xC7);    // Enable FIFO, clear them, with 14-byte threshold
+   outportb(COM1_PORT + 4, 0x0B);    // IRQs enabled, RTS/DSR set
 }
 
 int is_transmit_empty() {
-   return inportb(PORT + 5) & 0x20;
+   return inportb(COM1_PORT + 5) & 0x20;
 }
  
 void write_serial(char a) {
    while (is_transmit_empty() == 0);
  
-   outportb(PORT,a);
+   outportb(COM1_PORT,a);
 }
-#endif
 
 void printf(char* str)
 {
     Console::Write(str);
-    #ifdef SerialPrint
-    for(int i = 0; str[i] != '\0'; ++i)
-    {
-        write_serial(str[i]);
-    }
-    #endif
+    if(SerialOutputEnabled)
+        for(int i = 0; str[i] != '\0'; ++i)
+        {
+            write_serial(str[i]);
+        }
 }
 
 void printfHex(uint8_t key)
@@ -82,6 +78,23 @@ void printbits(uint8_t key)
     }
 }
 
+void ParseCMDLine(char* cmd)
+{
+    char** cmdArray;
+    int dirCount;
+    int * stringLengths;
+
+    String::split(cmd, "\\", cmdArray, dirCount, stringLengths);
+
+    if(dirCount > 0)
+    {
+        for(int i = 0; i < dirCount; i++)
+        {
+            if(String::strcmp(cmdArray[i], "serial"))
+                SerialOutputEnabled = true;
+        }
+    }
+}
 
 void PrintKernelStart()
 {
@@ -97,17 +110,18 @@ extern "C" void kernelMain(const multiboot_info_t* mbi, unsigned int multiboot_m
     Console::SetColors(0xA, 0x0);
 
     PrintKernelStart();
-    printf("CMD Parameters: "); printf((char*)mbi->cmdline); printf("\n");
-
-    #ifdef SerialPrint
-    init_serial();
-    #endif
 
     //Memory manager is needed for the new keyword
     uint32_t* memupper = (uint32_t*)(((uint32_t)mbi) + 8);
     uint32_t heap = 10*1024*1024;
     MemoryManager memoryManager(heap, (*memupper)*1024 - heap - 10*1024);
     printf("Memory Manager Loaded\n");
+
+    ParseCMDLine((char*)mbi->cmdline);
+    if(SerialOutputEnabled)
+        initSerial(); //Start the serial connection on COM1
+    
+    printf("CMD Parameters: "); printf((char*)mbi->cmdline); printf("\n");
 
     printf("Starting Core\n");
     System::InitCore();
@@ -144,19 +158,55 @@ extern "C" void kernelMain(const multiboot_info_t* mbi, unsigned int multiboot_m
             int length = System::vfsManager->GetFileSize(Console::ReadLine());
             printf("File size: "); printf(Convert::IntToString(length)); printf("\n");
         }
+        else if(String::strcmp(input, "eject"))
+        {
+            Console::Write("Disknumber: ");
+            int disk = Convert::StringToInt(Console::ReadLine());
+            System::diskManager->EjectDrive(disk);
+        }
+        else if(String::strcmp(input, "benchmark"))
+        {
+            Console::Write("Disknumber: ");
+            int disk = Convert::StringToInt(Console::ReadLine());
+            System::diskManager->BenchmarkDrive(disk);
+        }
+        else if(String::strcmp(input, "ticks"))
+        {
+            printf("Pit ticks: "); printf(Convert::IntToString(System::pit->Ticks())); printf("\n");
+        }
         else if(String::strcmp(input, "read"))
         {
             Console::Write("Filename: ");
-            int length = 1024 * 1024 * 10; //allocate a 10 mb buffer
+            const char* path = Console::ReadLine();
+            int length = System::vfsManager->GetFileSize((char*)path);
             if(length != -1)
             {
-                uint8_t* buffer = new uint8_t[length];
-                if(System::vfsManager->ReadFile(Console::ReadLine(), buffer) == 0)
+                uint8_t* buffer = new uint8_t[length + 1];
+                MemoryOperations::memset(buffer, 0x00, length + 1);
+                if(System::vfsManager->ReadFile((char*)path, buffer) == 0)
                 {
                     printf((char*)buffer);
                 }
                 delete buffer;
                 printf("\n");
+            }
+        }
+        else if(String::strcmp(input, "run"))
+        {
+            Console::Write("Filename: ");
+            const char* path = Console::ReadLine();
+            int length = System::vfsManager->GetFileSize((char*)path);
+            if(length != -1)
+            {
+                uint8_t* buffer = new uint8_t[length];
+                if(System::vfsManager->ReadFile((char*)path, buffer) == 0)
+                {
+                    unsigned long address=(unsigned long)buffer; 
+
+                    void (*func_ptr)(void) = (void (*)(void))address;
+                    func_ptr();
+                }
+                delete buffer;
             }
         }
         else if(String::strcmp(input, "memtest"))

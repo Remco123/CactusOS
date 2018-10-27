@@ -131,11 +131,11 @@ uint32_t KeyboardDriver::HandleInterrupt(uint32_t esp)
         {
             case CAPS_LOCK:
                 Status.CapsLock = !Status.CapsLock;
-                SetLeds(CAPS_LOCK_LED | NUM_LOCK_LED);
+                SetLeds( Status.CapsLock ? CAPS_LOCK_LED : 0 | Status.NumberLock ? NUM_LOCK_LED : 0);
                 break;
             case NUM_LOCK:
                 Status.NumberLock = !Status.NumberLock;
-                SetLeds(CAPS_LOCK_LED | NUM_LOCK_LED);
+                SetLeds(Status.CapsLock ? CAPS_LOCK_LED : 0 | Status.NumberLock ? NUM_LOCK_LED : 0);
                 break;
             case LEFT_SHIFT:
                 Status.LeftShift = true;

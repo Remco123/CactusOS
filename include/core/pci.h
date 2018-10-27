@@ -60,7 +60,7 @@ namespace CactusOS
         class PeripheralComponentInterconnectController
         {      
         public:
-            PeripheralComponentInterconnectDeviceDescriptor* Devices[32];
+            PeripheralComponentInterconnectDeviceDescriptor* Devices[128];
             common::uint32_t NumDevices = 0;      
 
             PeripheralComponentInterconnectController();

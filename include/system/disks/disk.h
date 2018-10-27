@@ -20,7 +20,8 @@ namespace CactusOS
 
         class Disk
         {
-        private:
+        friend class DiskManager;
+        protected:
             common::uint32_t diskNumber; //The real number for the disk
             DiskController* controller;
         public:

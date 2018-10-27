@@ -22,6 +22,7 @@ PeripheralComponentInterconnectDeviceDescriptor::~PeripheralComponentInterconnec
 
 PeripheralComponentInterconnectController::PeripheralComponentInterconnectController()
 {
+    this->NumDevices = 0;
 }
 
 PeripheralComponentInterconnectController::~PeripheralComponentInterconnectController()

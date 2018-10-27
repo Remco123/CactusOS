@@ -11,7 +11,7 @@ namespace CactusOS
         class PIT : public core::InterruptHandler
         {
         private:
-            common::uint32_t timer_ticks;
+            common::uint64_t timer_ticks;
         public:
             PIT(InterruptManager* interrupts);
             ~PIT();
@@ -26,6 +26,8 @@ namespace CactusOS
             void Beep();
             void Beep(common::uint32_t freq);
             void Beep(common::uint32_t freq, common::uint32_t duration);
+
+            common::uint64_t Ticks();
         };
     }
 }

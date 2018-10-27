@@ -4,6 +4,7 @@
 
 #include <common/types.h>
 #include <common/convert.h>
+#include <common/string.h>
 #include <common/memoryoperations.h>
 
 #include <core/interrupts.h>
@@ -22,6 +23,7 @@ namespace CactusOS
         private:
             DiskController* controllers[32]; //32 should be more than enough.
             common::uint32_t numControllers;
+            core::PIT* pit;
 
         public:
             Disk* allDisks[32];
@@ -30,6 +32,8 @@ namespace CactusOS
             DiskManager();
             
             void DetectAndLoadDisks(core::InterruptManager* interrupts, core::PIT* pit);
+            void EjectDrive(common::uint32_t driveNumber);
+            void BenchmarkDrive(common::uint32_t driveNumber);
         };
     }
 }

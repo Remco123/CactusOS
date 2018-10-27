@@ -36,6 +36,8 @@ IDEController::IDEController(InterruptManager* interrupts)
 {
     this->intHandle1 = new IDEInterruptHandler(this, interrupts, 14);
     this->intHandle2 = new IDEInterruptHandler(this, interrupts, 15);
+
+    this->controllerID = "IDE";
 }
 
 void IDEController::InitIDE(unsigned int BAR0, unsigned int BAR1, unsigned int BAR2, unsigned int BAR3, unsigned int BAR4, core::PIT* pit)

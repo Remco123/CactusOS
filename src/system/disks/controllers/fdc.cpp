@@ -302,7 +302,9 @@ Public methods
 
 FloppyDiskController::FloppyDiskController(InterruptManager* interrupts)
 : InterruptHandler(interrupts, interrupts->HardwareInterruptOffset() + 6)
-{}
+{
+	this->controllerID = "Floppy";
+}
 uint32_t FloppyDiskController::HandleInterrupt(uint32_t esp)
 {
     this->floppy_irq = 1;

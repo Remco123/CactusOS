@@ -81,3 +81,8 @@ void PIT::Beep(common::uint32_t freq, common::uint32_t duration)
  	Sleep(duration);
  	NoSound();
 }
+
+uint64_t PIT::Ticks()
+{
+    return this->timer_ticks;
+}
