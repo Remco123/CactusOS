@@ -93,9 +93,13 @@ void FloppyDiskController::CheckInt(uint32_t* st0, uint32_t* cy1)
 }
 uint8_t FloppyDiskController::WaitForIRQ()
 {
-    //! wait for irq to fire
-	while ( floppy_irq == 0)
-		;
+	uint32_t timeout = pitTimer->Ticks() + 1000; //1 sec timeout
+
+	while(floppy_irq == 0 && (pitTimer->Ticks() < timeout) );
+
+	if(floppy_irq == 0) //timeout
+		return 0;
+
 	floppy_irq = 0;
     return 1;
 }
@@ -128,6 +132,8 @@ void FloppyDiskController::SetMotor(uint8_t drive, uint8_t status)
 	else {
 		WriteDOR(FLPYDSK_DOR_MASK_RESET);
     }
+
+	this->pitTimer->Sleep(20);
 }
 void FloppyDiskController::DriveSet(uint8_t step, uint8_t loadt, uint8_t unloadt, uint8_t dma)
 {
@@ -226,6 +232,7 @@ uint8_t* FloppyDiskController::ReadLBA(int lba)
 	rc = Seek(track, head);
 	if(rc) {
 		printf("Failed to seek!\n");
+		SetMotor(0, 0);
 		return 0;
 	}
 
@@ -300,10 +307,11 @@ Public methods
 *////////////////////////
 
 
-FloppyDiskController::FloppyDiskController(InterruptManager* interrupts)
+FloppyDiskController::FloppyDiskController(InterruptManager* interrupts, PIT* pit)
 : InterruptHandler(interrupts, interrupts->HardwareInterruptOffset() + 6)
 {
 	this->controllerID = "Floppy";
+	this->pitTimer = pit;
 }
 uint32_t FloppyDiskController::HandleInterrupt(uint32_t esp)
 {
@@ -325,10 +333,15 @@ void FloppyDiskController::InitController()
 }
 char FloppyDiskController::ReadSector(uint16_t drive, uint32_t lba, uint8_t* buffer)
 {
-	printf("Reading with floppy\n");
+	//printf("Reading with floppy ");
 	uint8_t *buf = ReadLBA(lba);
-	if(!buf) return 1;
+	if(!buf)
+	{
+		//printf(" [Error]\n");
+		return 1;
+	}
     MemoryOperations::memcpy(buffer, buf, 512);
+	//printf(" [Done]\n");
 
     return 0;
 }

@@ -7,6 +7,8 @@ using namespace CactusOS::core;
 using namespace CactusOS::common;
 using namespace CactusOS::system;
 
+extern uint32_t kernel_end;
+
 typedef void (*constructor)();
 extern "C" constructor start_ctors;
 extern "C" constructor end_ctors;
@@ -122,6 +124,8 @@ extern "C" void kernelMain(const multiboot_info_t* mbi, unsigned int multiboot_m
         initSerial(); //Start the serial connection on COM1
     
     printf("CMD Parameters: "); printf((char*)mbi->cmdline); printf("\n");
+
+    printf("Kernel end address: "); printf(Convert::IntToString(kernel_end)); printf("\n");
 
     printf("Starting Core\n");
     System::InitCore();

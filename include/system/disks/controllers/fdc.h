@@ -160,8 +160,10 @@ namespace CactusOS
             common::uint8_t WriteLBA(common::uint8_t* buf, common::uint32_t lba);
 
             void Reset();
+
+            core::PIT* pitTimer;
         public:
-            FloppyDiskController(core::InterruptManager* interrupts);
+            FloppyDiskController(core::InterruptManager* interrupts, core::PIT* pit);
 
             common::uint32_t HandleInterrupt(common::uint32_t esp);
 

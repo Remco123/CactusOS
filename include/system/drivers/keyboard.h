@@ -42,7 +42,7 @@ namespace CactusOS
             void Activate();
 
             char GetKey(bool wait = false);
-            void SetLeds(common::uint8_t code);
+            void UpdateLeds();
         };
     }
 }

@@ -13,7 +13,9 @@ void printf(char*);
 DiskManager::DiskManager()
 {
     this->numControllers = 0;
-    this->numDisks = 0;
+
+    for(int i = 0; i < 32; i++)
+        this->allDisks[i] = 0;
 }
             
 void DiskManager::DetectAndLoadDisks(InterruptManager* interrupts, PIT* pit)
@@ -21,11 +23,14 @@ void DiskManager::DetectAndLoadDisks(InterruptManager* interrupts, PIT* pit)
     this->pit = pit; //We need this for benchmarking
 
     printf("Detecting Disks\n");
+
+    this->numDisks = 0;
+
     IDEController* ideController = new IDEController(interrupts);
     ideController->InitIDE(0x1F0, 0x3F4, 0x170, 0x374, 0x000, pit);
     this->controllers[this->numControllers++] = (DiskController*)ideController;
     
-    FloppyDiskController* floppyController = new FloppyDiskController(interrupts);
+    FloppyDiskController* floppyController = new FloppyDiskController(interrupts, pit);
     floppyController->InitController();
     this->controllers[this->numControllers++] = (DiskController*)floppyController;
 
@@ -57,18 +62,40 @@ void DiskManager::BenchmarkDrive(common::uint32_t driveNumber)
         
         printf("Read test");
         double results[10];
-        int sector = 0;
-        for(int i = 0; i < 10; i++)
-        {    
-            printf(".");
-            uint32_t startTicks = pit->Ticks();
-            for(int read = 0; read < 100; read++)
-            {
-                this->allDisks[driveNumber]->ReadSector(sector++, buffer);
+        if(String::strcmp(this->allDisks[driveNumber]->controller->controllerID, "Floppy")) //Floppy has not enough sectors to benchmark so we do an alternative test
+        {
+            int sector = 0;
+            for(int i = 0; i < 10; i++)
+            {    
+                printf(".");
+                uint32_t startTicks = pit->Ticks();
+                for(int read = 0; read < 100; read++)
+                {
+                    this->allDisks[driveNumber]->ReadSector(sector, buffer);
+                    if(sector == 0)
+                        sector = 10;
+                    else
+                        sector = 0;
+                }
+                results[i] = pit->Ticks() - startTicks;
             }
-            results[i] = pit->Ticks() - startTicks;
+            printf("\n");
         }
-        printf("\n");
+        else
+        {
+            int sector = 0;
+            for(int i = 0; i < 10; i++)
+            {    
+                printf(".");
+                uint32_t startTicks = pit->Ticks();
+                for(int read = 0; read < 100; read++)
+                {
+                    this->allDisks[driveNumber]->ReadSector(sector++, buffer);
+                }
+                results[i] = pit->Ticks() - startTicks;
+            }
+            printf("\n");
+        }
         double average = (double)(results[0] + results[1] + results[2] + results[3] + results[4] + results[5] + results[6] + results[7] + results[8] + results[9]) / (double)10;
         
         int sectorSize = 512;
@@ -79,7 +106,10 @@ void DiskManager::BenchmarkDrive(common::uint32_t driveNumber)
         double perSector = average / 100;
         double perByte = perSector / sectorSize;
 
-        printf("Speed: "); printf(Convert::IntToString(1000 / (perByte * 1024 * 1024))); printf(" Mb/s\n");
+        if((1000 / (perByte * 1024 * 1024)) > 1)
+        {   printf("Speed: "); printf(Convert::IntToString(1000 / (perByte * 1024 * 1024))); printf(" Mb/s\n"); }
+        else
+        {   printf("Speed: "); printf(Convert::IntToString(1000 / (perByte * 1024))); printf(" Kb/s\n"); }
 
         delete buffer;
     }

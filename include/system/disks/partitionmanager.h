@@ -6,6 +6,7 @@
 #include <system/vfs/iso9660.h>
 #include <system/vfs/fat.h>
 #include <system/vfs/vfsmanager.h>
+#include <system/network/nettools.h>
 
 namespace CactusOS
 {

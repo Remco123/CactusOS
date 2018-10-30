@@ -91,7 +91,7 @@ clean:
 	rm -rf obj CactusOS.bin CactusOS.iso
 
 qemu: CactusOS.iso
-	qemu-system-i386 -cdrom CactusOS.iso -serial stdio #-s -S
+	qemu-system-i386 -cdrom CactusOS.iso -serial stdio -fda /media/sf_Mint_OSDev/TestFloppy.img -boot d #-s -S
 
 kdbg: CactusOS.iso
 	qemu-system-i386 -cdrom CactusOS.iso -serial stdio -s -S &

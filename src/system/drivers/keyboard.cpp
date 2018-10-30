@@ -131,11 +131,11 @@ uint32_t KeyboardDriver::HandleInterrupt(uint32_t esp)
         {
             case CAPS_LOCK:
                 Status.CapsLock = !Status.CapsLock;
-                SetLeds( Status.CapsLock ? CAPS_LOCK_LED : 0 | Status.NumberLock ? NUM_LOCK_LED : 0);
+                UpdateLeds();
                 break;
             case NUM_LOCK:
                 Status.NumberLock = !Status.NumberLock;
-                SetLeds(Status.CapsLock ? CAPS_LOCK_LED : 0 | Status.NumberLock ? NUM_LOCK_LED : 0);
+                UpdateLeds();
                 break;
             case LEFT_SHIFT:
                 Status.LeftShift = true;
@@ -173,8 +173,16 @@ char KeyboardDriver::GetKey(bool wait)
     return lastKey;
 }
 
-void KeyboardDriver::SetLeds(uint8_t code)
+void KeyboardDriver::UpdateLeds()
 {
+	uint8_t code = 0;
+
+	if(Status.NumberLock)
+		code |= 1 << 1;
+		
+	if(Status.CapsLock)
+		code |= 1 << 2;
+
     while((inportb(0x64) & 2) != 0);
     outportb(0x60, 0xED);
     while((inportb(0x64) & 2) != 0);
