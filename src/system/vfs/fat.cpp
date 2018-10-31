@@ -57,7 +57,7 @@ bool FATFileSystem::Initialize()
             }
         }
         printf("First data sector: "); printf(Convert::IntToString(first_data_sector)); printf("\n");
-        return true;
+        return false; //FAT is really not supported yet, we will stick to iso9660 for a while
     }
     else
     {

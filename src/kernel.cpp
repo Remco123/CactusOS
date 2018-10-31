@@ -1,6 +1,7 @@
 #include <system.h>
 #include <multiboot/multiboot.h>
 #include <common/list.h>
+#include <core/usermode.h>
 
 using namespace CactusOS;
 using namespace CactusOS::core;
@@ -240,6 +241,19 @@ extern "C" void kernelMain(const multiboot_info_t* mbi, unsigned int multiboot_m
             Console::Write("Total Memory: "); Console::Write(Convert::IntToString(System::memoryManager->GetTotalMemory() / 1024 / 1024)); Console::WriteLine(" Mb");
             Console::Write("Free Memory: "); Console::Write(Convert::IntToString(System::memoryManager->GetFreeMemory() / 1024 / 1024)); Console::WriteLine(" Mb");
             Console::Write("Used Memory: "); Console::Write(Convert::IntToString(System::memoryManager->GetUsedMemory() > 1024 * 1024 ? System::memoryManager->GetUsedMemory() / 1024 / 1024 : System::memoryManager->GetUsedMemory() / 1024)); Console::WriteLine(System::memoryManager->GetUsedMemory() > 1024 * 1024 ? (char*)" Mb" : (char*)" Kb");
+        }
+        else if(String::strcmp(input, "user"))
+        {
+            printf("Entering user mode\n");
+            uint32_t esp;
+            asm volatile("mov %%esp, %0" : "=r"(esp));
+            TaskStateSegment::SetStack(0x10, esp);
+
+            Usermode::EnterUserMode();
+
+            printf("This is user text\n");
+
+            while(1);
         }
     }
 }

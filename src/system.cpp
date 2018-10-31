@@ -6,6 +6,8 @@ using namespace CactusOS::core;
 using namespace CactusOS::system;
 
 void printf(char*);
+void printfHex(uint8_t);
+void printfHex16(uint16_t);
 void PrintIP(uint32_t);
 
 //Variables
@@ -35,6 +37,17 @@ void System::InitCore()
     //We can use new now!
     System::gdt = new GlobalDescriptorTable();
     printf("GDT Loaded\n");
+
+    TaskStateSegment::InstallTSS(System::gdt, 0x10, 0);
+    printf("TSS loaded\n");
+
+    printf("GDT, Kernel Code Segment: 0x"); printfHex(System::gdt->CodeSegmentSelector()); printf("\n");
+    printf("GDT, Kernel Data Segment: 0x"); printfHex(System::gdt->DataSegmentSelector()); printf("\n");
+
+    printf("GDT, User Code Segment: 0x"); printfHex(System::gdt->UserCodeSegmentSelector()); printf("\n");
+    printf("GDT, User Data Segment: 0x"); printfHex(System::gdt->UserDataSegmentSelector()); printf("\n");
+    
+    printf("GDT, TSS Segment: 0x"); printfHex((uint8_t*)&System::gdt->tssSegmentSelector - (uint8_t*)System::gdt); printf("\n");
 
     System::cpu = new CPU();
     System::cpu->CollectInfo();

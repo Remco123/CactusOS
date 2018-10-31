@@ -27,6 +27,8 @@ SECTIONS
   {
     *(.bss)
   }
-  kernel_end = .;
+
   /DISCARD/ : { *(.fini_array*) *(.comment) }
+
+  kernel_end = .;
 }

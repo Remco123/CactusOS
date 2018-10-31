@@ -12,6 +12,8 @@ objects = obj/loader.o \
 		  obj/common/memoryoperations.o \
 		  obj/common/mmioutls.o \
 		  obj/core/gdtloader.o \
+		  obj/core/tsshelper.o \
+		  obj/core/tss.o \
 		  obj/core/gdt.o \
 		  obj/core/interruptstubs.o \
 		  obj/core/interrupts.o \
@@ -19,6 +21,8 @@ objects = obj/loader.o \
 		  obj/core/pit.o \
 		  obj/core/dma.o \
 		  obj/core/memorymanagement.o \
+		  obj/core/usermodehelper.o \
+		  obj/core/usermode.o\
 		  obj/common/string.o \
 		  obj/core/sse.o \
 		  obj/core/cpu.o \
@@ -65,10 +69,16 @@ obj/%.o: src/%.s
 	mkdir -p $(@D)
 	i686-elf-as $(ASPARAMS) -o $@ $<
 
+####################################
 #NASM assembly files
-
+####################################
 obj/core/sse.o: src/core/sse.s
 	nasm -f elf $< -o $@
+
+obj/core/usermodehelper.o: src/core/usermodehelper.s
+	nasm -f elf $< -o $@
+
+####################################
 
 CactusOS.bin: linker.ld $(objects)
 	i686-elf-ld $(LDPARAMS) -T $< -o $@ $(objects)

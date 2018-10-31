@@ -4,6 +4,7 @@
 #include <common/types.h>
 
 #include <core/gdt.h>
+#include <core/tss.h>
 #include <core/interrupts.h>
 #include <core/memorymanagement.h>
 #include <core/pit.h>

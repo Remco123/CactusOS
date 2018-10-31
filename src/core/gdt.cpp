@@ -8,10 +8,12 @@ void printf(char*);
 extern "C" void load_gdt(uint8_t *gdt_ptr, uint32_t data_sel, uint32_t code_sel);
 
 GlobalDescriptorTable::GlobalDescriptorTable()
-    : nullSegmentSelector(0, 0, 0),
-        unusedSegmentSelector(0, 0, 0),
-        codeSegmentSelector(0, 64*1024*1024, 0x9A),
-        dataSegmentSelector(0, 0xFFFFFFFF, 0x92)
+    :   nullSegmentSelector(0, 0, 0),
+        codeSegmentSelector(0, 0xFFFFFFFF, 0x9A),
+        dataSegmentSelector(0, 0xFFFFFFFF, 0x92),
+        userCodeSegmentSelector(0, 0xFFFFFFFF, 0xFA),
+        userDataSegmentSelector(0, 0xFFFFFFFF, 0xF2),
+        tssSegmentSelector(0, 0, 0) //Will be modified by tss code
 {
     uint32_t i[2];
     i[1] = (uint32_t)this;
@@ -32,6 +34,14 @@ uint16_t GlobalDescriptorTable::DataSegmentSelector()
 uint16_t GlobalDescriptorTable::CodeSegmentSelector()
 {
     return (uint8_t*)&codeSegmentSelector - (uint8_t*)this;
+}
+uint16_t GlobalDescriptorTable::UserCodeSegmentSelector()
+{
+    return (uint8_t*)&userCodeSegmentSelector - (uint8_t*)this;
+}
+uint16_t GlobalDescriptorTable::UserDataSegmentSelector()
+{
+    return (uint8_t*)&userDataSegmentSelector - (uint8_t*)this;
 }
 
 GlobalDescriptorTable::SegmentDescriptor::SegmentDescriptor(uint32_t base, uint32_t limit, uint8_t type)

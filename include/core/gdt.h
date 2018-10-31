@@ -29,17 +29,21 @@ namespace CactusOS
 
             private:
                 SegmentDescriptor nullSegmentSelector;
-                SegmentDescriptor unusedSegmentSelector;
                 SegmentDescriptor codeSegmentSelector;
                 SegmentDescriptor dataSegmentSelector;
+                SegmentDescriptor userCodeSegmentSelector;
+                SegmentDescriptor userDataSegmentSelector;
 
             public:
+                SegmentDescriptor tssSegmentSelector;
 
                 GlobalDescriptorTable();
                 ~GlobalDescriptorTable();
 
                 CactusOS::common::uint16_t CodeSegmentSelector();
                 CactusOS::common::uint16_t DataSegmentSelector();
+                CactusOS::common::uint16_t UserCodeSegmentSelector();
+                CactusOS::common::uint16_t UserDataSegmentSelector();
         };
     }
 }
