@@ -48,7 +48,7 @@ void Console::Write(char* str)
             default:
                 uint16_t attrib = (bg << 4) | (fg & 0x0F);
                 volatile uint16_t * where;
-                where = (volatile uint16_t *)0xB8000 + (YOffset * 80 + XOffset) ;
+                where = (volatile uint16_t *)VideoMemory + (YOffset * 80 + XOffset) ;
                 *where = str[i] | (attrib << 8);
                 XOffset++;
                 break;

@@ -1,7 +1,6 @@
 #include <system.h>
 #include <multiboot/multiboot.h>
 #include <common/list.h>
-#include <core/usermode.h>
 
 using namespace CactusOS;
 using namespace CactusOS::core;
@@ -242,18 +241,13 @@ extern "C" void kernelMain(const multiboot_info_t* mbi, unsigned int multiboot_m
             Console::Write("Free Memory: "); Console::Write(Convert::IntToString(System::memoryManager->GetFreeMemory() / 1024 / 1024)); Console::WriteLine(" Mb");
             Console::Write("Used Memory: "); Console::Write(Convert::IntToString(System::memoryManager->GetUsedMemory() > 1024 * 1024 ? System::memoryManager->GetUsedMemory() / 1024 / 1024 : System::memoryManager->GetUsedMemory() / 1024)); Console::WriteLine(System::memoryManager->GetUsedMemory() > 1024 * 1024 ? (char*)" Mb" : (char*)" Kb");
         }
-        else if(String::strcmp(input, "user"))
+        else if(String::strcmp(input, "alloc"))
         {
-            printf("Entering user mode\n");
-            uint32_t esp;
-            asm volatile("mov %%esp, %0" : "=r"(esp));
-            TaskStateSegment::SetStack(0x10, esp);
-
-            Usermode::EnterUserMode();
-
-            printf("This is user text\n");
-
-            while(1);
+            printf("Aligned block on 4k bounds: 0x"); printfHex32((uint32_t)System::memoryManager->aligned_malloc(4096, 4096)); printf("\n"); 
+        }
+        else if(String::strcmp(input, "loc"))
+        {
+            printf("Unaligned block: 0x"); printfHex32((uint32_t)System::memoryManager->malloc(4096)); printf("\n"); 
         }
     }
 }

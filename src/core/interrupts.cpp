@@ -166,6 +166,8 @@ uint32_t InterruptManager::DoHandleInterrupt(uint8_t interrupt, uint32_t esp)
     else if(interrupt < this->hardwareInterruptOffset)
     {
         printf("Got exception: "); printfHex(interrupt); printf("\n");
+        CPUState* state = (CPUState*)esp;
+        printf("Error Code: "); printf(Convert::IntToString(state->err_code)); printf("\n");
         while(1); //TODO: Pass to exception handler or something
     }
     else if(interrupt != hardwareInterruptOffset)

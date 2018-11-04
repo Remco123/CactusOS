@@ -4,6 +4,9 @@
 #include <core/gdt.h>
 #include <core/port.h>
 #include <common/types.h>
+#include <common/convert.h>
+
+#include <core/cpustate.h>
 
 namespace CactusOS
 {

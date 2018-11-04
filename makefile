@@ -21,8 +21,6 @@ objects = obj/loader.o \
 		  obj/core/pit.o \
 		  obj/core/dma.o \
 		  obj/core/memorymanagement.o \
-		  obj/core/usermodehelper.o \
-		  obj/core/usermode.o\
 		  obj/common/string.o \
 		  obj/core/sse.o \
 		  obj/core/cpu.o \
@@ -75,16 +73,13 @@ obj/%.o: src/%.s
 obj/core/sse.o: src/core/sse.s
 	nasm -f elf $< -o $@
 
-obj/core/usermodehelper.o: src/core/usermodehelper.s
-	nasm -f elf $< -o $@
-
 ####################################
 
 CactusOS.bin: linker.ld $(objects)
 	i686-elf-ld $(LDPARAMS) -T $< -o $@ $(objects)
 
 CactusOS.iso: CactusOS.bin
-	mkdir iso
+	cp -r isofiles/. iso
 	mkdir iso/boot
 	mkdir iso/boot/grub
 	cp CactusOS.bin iso/boot/CactusOS.bin
