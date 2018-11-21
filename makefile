@@ -1,89 +1,55 @@
+# The makefile for the CactusOS project, this file will get more complicated when the OS is in a later stage of development.
 
-# sudo apt-get install g++ binutils libc6-dev-i386
-# sudo apt-get install VirtualBox grub-legacy xorriso
+##########
+# .s files are GAS assembly
+# .asm files are nasm assembly
+##########
 
-GCCPARAMS = -m32 -g -Iinclude -fno-use-cxa-atexit -nostdlib -fno-builtin -fno-exceptions -fno-rtti -fno-leading-underscore -Wno-write-strings -fpermissive -Wall
-ASPARAMS = --32
-LDPARAMS = -melf_i386
+INCLUDEDIRS := kernel/include
 
-objects = obj/loader.o \
-		  obj/common/convert.o \
-		  obj/common/math.o \
-		  obj/common/memoryoperations.o \
-		  obj/common/mmioutls.o \
-		  obj/core/gdtloader.o \
-		  obj/core/tsshelper.o \
-		  obj/core/tss.o \
-		  obj/core/gdt.o \
-		  obj/core/interruptstubs.o \
-		  obj/core/interrupts.o \
-		  obj/core/rtc.o \
-		  obj/core/pit.o \
-		  obj/core/dma.o \
-		  obj/core/memorymanagement.o \
-		  obj/common/string.o \
-		  obj/core/sse.o \
-		  obj/core/cpu.o \
-		  obj/core/smbios.o \
-		  obj/core/pci.o \
-		  obj/system/drivers/driver.o \
-		  obj/system/drivers/networkdriver.o \
-		  obj/system/drivers/rtl8139.o \
-		  obj/system/drivers/pcnet.o \
-		  obj/system/drivers/keyboard.o \
-		  obj/system/drivers/drivermanager.o \
-		  obj/system/console.o \
-		  obj/system/disks/diskcontroller.o \
-		  obj/system/disks/controllers/ide.o \
-		  obj/system/disks/controllers/fdc.o \
-		  obj/system/disks/disk.o \
-		  obj/system/disks/diskmanager.o \
-		  obj/system/disks/partitionmanager.o \
-		  obj/system/vfs/iso9660.o \
-		  obj/system/vfs/fat.o \
-		  obj/system/vfs/virtualfilesystem.o \
-		  obj/system/vfs/vfsmanager.o \
-		  obj/system/network/nettools.o \
-		  obj/system/network/arp.o \
-		  obj/system/network/ipv4.o \
-		  obj/system/network/icmp.o \
-		  obj/system/network/dhcp.o \
-		  obj/system/network/udp.o \
-		  obj/system/network/tcp.o \
-		  obj/system/network/networkmanager.o \
-		  obj/system.o \
-          obj/kernel.o
+GCCPARAMS := -m32 -g -I $(INCLUDEDIRS) -fno-use-cxa-atexit -nostdlib -fno-builtin -fno-exceptions -fno-rtti -fno-leading-underscore -Wno-write-strings -fpermissive -Wall
+ASPARAMS := --32
+LDPARAMS := -m elf_i386
+
+KRNLSRCDIR := kernel/src
+KRNLOBJDIR := kernel/obj
+
+KRNLFILES := $(shell find $(KRNLSRCDIR) -type f \( -name \*.cpp -o -name \*.s -o -name \*.asm \)) #Find all the files that end with .cpp/.s/.asm
+KRNLOBJS := $(patsubst %.cpp,%.o,$(patsubst %.s,%.o,$(patsubst %.asm,%.o,$(KRNLFILES)))) #Replace the .cpp/.s/.asm extension with .o
+KRNLOBJS := $(subst $(KRNLSRCDIR),$(KRNLOBJDIR),$(KRNLOBJS)) #Replace the kernel/src part with kernel/obj
 
 
-run: CactusOS.iso
-	(killall VirtualBox && sleep 1) || true
-	virtualbox --startvm 'CactusOS' 
-
-obj/%.o: src/%.cpp
+####################################
+#C++ source files
+####################################
+$(KRNLOBJDIR)/%.o: $(KRNLSRCDIR)/%.cpp
 	mkdir -p $(@D)
 	i686-elf-g++ $(GCCPARAMS) -c -o $@ $<
 
-obj/%.o: src/%.s
+####################################
+#GAS assembly files
+####################################
+$(KRNLOBJDIR)/%.o: $(KRNLSRCDIR)/%.s
 	mkdir -p $(@D)
 	i686-elf-as $(ASPARAMS) -o $@ $<
 
 ####################################
 #NASM assembly files
 ####################################
-obj/core/sse.o: src/core/sse.s
+$(KRNLOBJDIR)/%.o: $(KRNLSRCDIR)/%.asm
 	nasm -f elf $< -o $@
 
-####################################
 
-CactusOS.bin: linker.ld $(objects)
-	i686-elf-ld $(LDPARAMS) -T $< -o $@ $(objects)
+
+CactusOS.bin: kernel/linker.ld $(KRNLOBJS)
+	i686-elf-ld $(LDPARAMS) -T $< -o $@ $(KRNLOBJS)
 
 CactusOS.iso: CactusOS.bin
 	cp -r isofiles/. iso
 	mkdir iso/boot
 	mkdir iso/boot/grub
 	cp CactusOS.bin iso/boot/CactusOS.bin
-	cp grub.cfg iso/boot/grub/grub.cfg #Use a existing grub config file
+	cp grub.cfg iso/boot/grub/grub.cfg
 	grub-mkrescue --output=CactusOS.iso iso
 	rm -rf iso
 
@@ -91,14 +57,23 @@ install: CactusOS.iso
 	cp $< /media/sf_Mint_OSDev/CactusOS.iso
 	cp CactusOS.bin /media/sf_Mint_OSDev/CactusOS.bin
 
-.PHONY: clean qemu kdbg
+.PHONY: clean qemu kdbg run filelist
 clean:
-	rm -rf obj CactusOS.bin CactusOS.iso
+	rm -rf $(KRNLOBJDIR) CactusOS.bin CactusOS.iso
 
 qemu: CactusOS.iso
-	qemu-system-i386 -cdrom CactusOS.iso -serial stdio -fda /media/sf_Mint_OSDev/TestFloppy.img -boot d #-s -S
+	qemu-system-i386 -cdrom CactusOS.iso -serial stdio
+
+run: CactusOS.iso
+	(killall VirtualBox && sleep 1) || true
+	virtualbox --startvm 'CactusOS' 
 
 kdbg: CactusOS.iso
 	qemu-system-i386 -cdrom CactusOS.iso -serial stdio -s -S &
 	kdbg -r localhost:1234 CactusOS.bin
-	
+
+filelist:
+	@echo "Source Files:"
+	@echo -$(KRNLFILES)
+	@echo "Object Files:"
+	@echo -$(KRNLOBJS)
