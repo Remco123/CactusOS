@@ -29,6 +29,7 @@ namespace CactusOS
         {        
         public:
             static void SetDescriptor(int number, common::uint32_t base, common::uint32_t limit, common::uint8_t access, common::uint8_t gran);
+            static GDTEntry* GetDescriptor(int number);
             static void Init();
         };
     }

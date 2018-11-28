@@ -27,6 +27,11 @@ void GlobalDescriptorTable::SetDescriptor(int number, uint32_t base, uint32_t li
     gdtEntries[number].access      = access;
 }
 
+GDTEntry* GlobalDescriptorTable::GetDescriptor(int number)
+{
+    return &gdtEntries[number];
+}
+
 void GlobalDescriptorTable::Init()
 {
     gdtPointer.limit = (sizeof(GDTEntry) * 6) - 1;
