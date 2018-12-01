@@ -57,7 +57,7 @@ install: CactusOS.iso
 	cp $< /media/sf_Mint_OSDev/CactusOS.iso
 	cp CactusOS.bin /media/sf_Mint_OSDev/CactusOS.bin
 
-.PHONY: clean qemu kdbg run filelist
+.PHONY: clean qemu kdbg run filelist serialDBG
 clean:
 	rm -rf $(KRNLOBJDIR) CactusOS.bin CactusOS.iso
 
@@ -67,6 +67,10 @@ qemu: CactusOS.iso
 run: CactusOS.iso
 	(killall VirtualBox && sleep 1) || true
 	virtualbox --startvm 'CactusOS' 
+
+serialDBG:
+	gcc -o tools/serialDebugger/a.out tools/serialDebugger/main.c
+	sudo ./tools/serialDebugger/a.out
 
 kdbg: CactusOS.iso
 	qemu-system-i386 -cdrom CactusOS.iso -serial stdio -s -S &

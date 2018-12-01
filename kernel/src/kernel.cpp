@@ -39,8 +39,6 @@ extern "C" void kernelMain(const multiboot_info_t* mbi, unsigned int multiboot_m
 
     InterruptManager::Enable();
 
-    int a = 0;
-    int b = 100 / a;
 
     while(1);
 }

@@ -107,3 +107,7 @@ void BootConsole::Clear()
     XOffset = 0;
     YOffset = 0;
 }
+uint16_t* BootConsole::GetBuffer()
+{
+    return videoMemory;
+}
