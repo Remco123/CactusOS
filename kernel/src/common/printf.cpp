@@ -1,0 +1,39 @@
+#include <common/printf.h>
+
+using namespace CactusOS;
+using namespace CactusOS::system;
+using namespace CactusOS::common;
+using namespace CactusOS::core;
+
+void Print::printf(char *str)
+{
+    system::BootConsole::Write(str);
+}
+void Print::printfHex(uint8_t key)
+{
+    char *foo = "00";
+    char *hex = "0123456789ABCDEF";
+    foo[0] = hex[(key >> 4) & 0xF];
+    foo[1] = hex[key & 0xF];
+    system::BootConsole::Write(foo);
+}
+void Print::printfHex16(uint16_t key)
+{
+    printfHex((key >> 8) & 0xFF);
+    printfHex(key & 0xFF);
+}
+void Print::printfHex32(uint32_t key)
+{
+    printfHex((key >> 24) & 0xFF);
+    printfHex((key >> 16) & 0xFF);
+    printfHex((key >> 8) & 0xFF);
+    printfHex(key & 0xFF);
+}
+void Print::printbits(uint8_t key)
+{
+    for (int bit = 0; bit < 8; bit++)
+    {
+        printf(Convert::IntToString(key & 0x01));
+        key = key >> 1;
+    }
+}

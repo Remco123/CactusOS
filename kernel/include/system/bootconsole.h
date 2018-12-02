@@ -51,6 +51,8 @@ namespace CactusOS
             static void WriteLine();
 
             static void Clear();
+            static void SetX(int x);
+            static void SetY(int y);
 
             static common::uint16_t* GetBuffer();
         };

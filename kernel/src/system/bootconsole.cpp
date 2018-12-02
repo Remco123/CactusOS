@@ -16,7 +16,7 @@ bool BootConsole::writeToSerial = false;
 /*/////////////////
 // Variables
 /*/////////////////
-static uint16_t* videoMemory = (uint16_t*)0xC03FF000;
+static uint16_t* videoMemory = (uint16_t*)0xC00B8000;
 
 
 /*/////////////////
@@ -110,4 +110,13 @@ void BootConsole::Clear()
 uint16_t* BootConsole::GetBuffer()
 {
     return videoMemory;
+}
+
+void BootConsole::SetX(int x)
+{
+    XOffset = x;
+}
+void BootConsole::SetY(int y)
+{
+    YOffset = y;
 }

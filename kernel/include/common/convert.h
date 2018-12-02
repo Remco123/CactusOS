@@ -10,7 +10,7 @@ namespace CactusOS
         class Convert
         {
         public:
-            static char* IntToString(int i);
+            static char* IntToString(common::uint32_t i);
         };
     }
 }
