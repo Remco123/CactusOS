@@ -52,7 +52,7 @@ _start:
 	mov $(_boot_page_directory - KERNEL_VIRTUAL_BASE + KERNEL_PAGE_NUMBER * 4), %ecx
 	mov $(1024 - KERNEL_PAGE_NUMBER), %ebp
 	# map only 32 pages
-	#mov $32, %ebp
+	# mov $32, %ebp
 l1:
 	movl %edx, (%ecx)
 	add $0x00400000, %edx
@@ -88,6 +88,7 @@ l1:
 
     call callConstructors
 
+	push $_kernel_base
 	push $_kernel_end
     push %eax
     push %ebx

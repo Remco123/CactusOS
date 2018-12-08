@@ -37,7 +37,8 @@ $(KRNLOBJDIR)/%.o: $(KRNLSRCDIR)/%.s
 #NASM assembly files
 ####################################
 $(KRNLOBJDIR)/%.o: $(KRNLSRCDIR)/%.asm
-	nasm -f elf $< -o $@
+	mkdir -p $(@D)
+	nasm -f elf32 -O0 $< -o $@
 
 
 

@@ -99,10 +99,7 @@ uint32_t InterruptManager::HandleInterrupt(uint8_t interrupt, uint32_t esp)
 {
     if(interrupt < IDT_INTERRUPT_OFFSET)
     {
-        BootConsole::ForegroundColor = VGA_COLOR_RED;
-        BootConsole::Write("Got exception: "); BootConsole::WriteLine(Convert::IntToString(interrupt));
-
-        while(1);
+        esp = Exceptions::HandleException(interrupt, esp);
     }
     else if(interrupt != IDT_INTERRUPT_OFFSET)
     {

@@ -4,6 +4,7 @@
 #include <common/types.h>
 #include <core/port.h>
 #include <core/registers.h>
+#include <core/exceptions.h>
 #include <system/bootconsole.h>
 #include <common/convert.h>
 #include <common/memoryoperations.h>

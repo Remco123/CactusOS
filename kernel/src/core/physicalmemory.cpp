@@ -98,12 +98,10 @@ void PhysicalMemoryManager::SetRegionUsed(uint32_t base, uint32_t size)
 
     SetBit(0);
 }
-void PhysicalMemoryManager::ParseMemoryMap(const multiboot_info_t *mbi)
+void PhysicalMemoryManager::ParseMemoryMap(const multiboot_info_t* mbi)
 {
     BootConsole::WriteLine("Parsing grub memory map");
     BootConsole::Write("Address of mmap: 0x"); Print::printfHex32(phys2virt(mbi->mmap_addr)); BootConsole::WriteLine();
-    uint8_t oldFG = BootConsole::ForegroundColor;
-    BootConsole::ForegroundColor = VGA_COLOR_BLUE;
 
     grub_multiboot_memory_map_t *mmap = (grub_multiboot_memory_map_t *)phys2virt(mbi->mmap_addr);
     BootConsole::WriteLine("-------------------------------------------------");
@@ -124,11 +122,9 @@ void PhysicalMemoryManager::ParseMemoryMap(const multiboot_info_t *mbi)
         mmap = (grub_multiboot_memory_map_t*)((unsigned int)mmap + mmap->size + sizeof(unsigned int));
     }
     BootConsole::WriteLine("-------------------------------------------------");
-
-    BootConsole::ForegroundColor = oldFG;
 }
 
-void *PhysicalMemoryManager::AllocateBlock()
+void* PhysicalMemoryManager::AllocateBlock()
 {
     if (FreeBlocks() <= 0)
         return 0;
@@ -145,7 +141,7 @@ void *PhysicalMemoryManager::AllocateBlock()
 
     return (void *)addr;
 }
-void PhysicalMemoryManager::FreeBlock(void *ptr)
+void PhysicalMemoryManager::FreeBlock(void* ptr)
 {
     uint32_t addr = (uint32_t)ptr;
     int frame = addr / BLOCK_SIZE;
@@ -154,7 +150,7 @@ void PhysicalMemoryManager::FreeBlock(void *ptr)
 
     usedBlocks--;
 }
-void *PhysicalMemoryManager::AllocateBlocks(uint32_t size)
+void* PhysicalMemoryManager::AllocateBlocks(uint32_t size)
 {
     if (FreeBlocks() <= size)
         return 0; //not enough space

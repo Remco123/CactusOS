@@ -24,11 +24,19 @@ static uint16_t* videoMemory = (uint16_t*)0xC00B8000;
 /*/////////////////
 void BootConsole::Scroll()
 {
-    for(int i = 0; i < 25; i++){
+    for(int i = 0; i < 24; i++){
         for (int m = 0; m < 80; m++){
-            videoMemory[i * 80 + m] = 0x0;
+            videoMemory[i * 80 + m] = videoMemory[(i + 1) * 80 + m];
         }
-    }   
+    }
+
+    for(int x = 0; x < 80; x++)
+    {
+        uint16_t attrib = (BackgroundColor << 4) | (ForegroundColor & 0x0F);
+        volatile uint16_t * where;
+        where = (volatile uint16_t *)videoMemory + (24 * VGA_WIDTH + x) ;
+        *where = ' ' | (attrib << 8);
+    }
 }
 
 
@@ -81,7 +89,7 @@ void BootConsole::Write(char* str)
         {
             Scroll();
             XOffset = 0;
-            YOffset = 0;
+            YOffset = 24;
         }
     }
 }

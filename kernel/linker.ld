@@ -1,23 +1,33 @@
-ENTRY(_entrypoint)
 OUTPUT_FORMAT(elf32-i386)
 OUTPUT_ARCH(i386:i386)
+
+ENTRY(_entrypoint)
 
 SECTIONS
 {
   . = 0xC0100000;
 
-	.text BLOCK(4K) : AT(ADDR(.text) - 0xC0000000) ALIGN(4K)
+  _kernel_base = .;
+
+	.text ALIGN(4K) : AT(ADDR(.text)-0xC0000000)
 	{
 		*(.multiboot)
 		*(.text*)
   }
 
-  .rodata BLOCK(4K) : AT(ADDR(.rodata) - 0xC0000000) ALIGN(4K)
+  .rodata ALIGN (4K) : AT(ADDR(.rodata)-0xC0000000)
 	{
 		*(.rodata)
   }
 
-  .data BLOCK(4K) : AT(ADDR(.data) - 0xC0000000) ALIGN(4K)
+  .bss ALIGN(4K) : AT(ADDR(.bss)-0xC0000000)
+  {
+    *(.COMMON)
+    *(.bss)
+    *(.bootstrap_stack)
+  }
+
+  .data ALIGN(4K) : AT(ADDR(.data)-0xC0000000)
   {
     start_ctors = .;
     KEEP(*( .init_array ));
@@ -25,13 +35,6 @@ SECTIONS
     end_ctors = .;
 
     *(.data*)
-  }
-
-  .bss BLOCK(4K) : AT(ADDR(.bss) - 0xC0000000) ALIGN(4K)
-  {
-    *(COMMON)
-    *(.bss*)
-    *(.bootstrap_stack)
   }
 
   /DISCARD/ : { *(.fini_array*) *(.comment) }
