@@ -21,17 +21,24 @@ stack_top:
 
 .section .data
 .align 0x1000
-_boot_page_directory:
+.global BootPageDirectory
+BootPageDirectory:
 	# identity map the first 4 MB
 	.long 0x00000083
-	# no pages until upper half
+	
+	# pages before kernel
 	.rept (KERNEL_PAGE_NUMBER - 1)
 	.long 0
 	.endr
-	# upper half will be fully mapped to lower half
-	.rept (1024 - KERNEL_PAGE_NUMBER)
+	
+	# this page contains the kernel
+	.long 0x00000083
+
+	# pages after kernel
+	.rept (1024 - KERNEL_PAGE_NUMBER - 1)
 	.long 0
 	.endr
+
 .global _kernel_virtual_base
 _kernel_virtual_base:
 	.long KERNEL_VIRTUAL_BASE
@@ -40,27 +47,9 @@ _kernel_virtual_base:
 .align 4
 .global _entrypoint
 .type _entrypoint, @function
-.set _entrypoint, (_start)
 
-.global _start
-.type _start, @function
-_start:
-	cli
-
-	# initialize page directory
-	mov $0x00000083, %edx
-	mov $(_boot_page_directory - KERNEL_VIRTUAL_BASE + KERNEL_PAGE_NUMBER * 4), %ecx
-	mov $(1024 - KERNEL_PAGE_NUMBER), %ebp
-	# map only 32 pages
-	# mov $32, %ebp
-l1:
-	movl %edx, (%ecx)
-	add $0x00400000, %edx
-	add $4, %ecx
-	dec %ebp
-	jnz l1
-
-	mov $(_boot_page_directory - KERNEL_VIRTUAL_BASE), %ecx
+_entrypoint:
+	mov $(BootPageDirectory - KERNEL_VIRTUAL_BASE), %ecx
 	mov %ecx, %cr3
 
 	# enable 4 mb pages
@@ -73,12 +62,14 @@ l1:
 	or $0x80000000, %ecx
 	mov %ecx, %cr0
 
+	# jump to higher half code
 	lea 4f, %ecx
 	jmp *%ecx
 
 4:
 	# Unmap the identity-mapped pages
-	movl $0, _boot_page_directory
+	movl $0, BootPageDirectory
+	invlpg 0
 
 	movl $stack_top, %esp
 	# Mark end of call stack for unwinding

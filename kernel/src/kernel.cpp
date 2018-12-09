@@ -3,6 +3,7 @@
 #include <core/tss.h>
 #include <core/idt.h>
 #include <core/physicalmemory.h>
+#include <core/virtualmemory.h>
 #include <system/bootconsole.h>
 #include <common/convert.h>
 
@@ -13,6 +14,7 @@ using namespace CactusOS::system;
 
 extern "C" uint32_t _kernel_base;
 extern "C" uint32_t _kernel_end;
+extern "C" uint32_t _kernel_virtual_base;
 
 typedef void (*constructor)();
 extern "C" constructor start_ctors;
@@ -38,6 +40,7 @@ extern "C" void kernelMain(const multiboot_info_t* mbi, unsigned int multiboot_m
     BootConsole::WriteLine("Starting Kernel");
     BootConsole::Write("Built on: "); BootConsole::WriteLine(__DATE__ "  " __TIME__);
 
+    BootConsole::Write("Kernel virtual base: 0x"); Print::printfHex32(_kernel_virtual_base); BootConsole::WriteLine();
     BootConsole::Write("Kernel Base: 0x"); Print::printfHex32(kernel_base); BootConsole::WriteLine();
     BootConsole::Write("Kernel End: 0x"); Print::printfHex32(kernel_end); BootConsole::WriteLine();
     BootConsole::Write("Kernel Size: "); BootConsole::Write(Convert::IntToString(kernel_size / 1024)); BootConsole::Write(" Kb      ("); BootConsole::Write(Convert::IntToString(kernel_size)); BootConsole::WriteLine(")");
@@ -60,6 +63,9 @@ extern "C" void kernelMain(const multiboot_info_t* mbi, unsigned int multiboot_m
     PhysicalMemoryManager::ParseMemoryMap(mbi);
     PhysicalMemoryManager::SetRegionUsed(0x100000, kernel_size); //mark physical kernel as used memory
     PhysicalMemoryManager::SetRegionUsed(0x0, 0x10000); //Protect the first 1mb of physical memory
+
+    VirtualMemoryManager::Intialize();
+    BootConsole::WriteLine("Virtual Memory Loaded");
 
     InterruptManager::Enable();
     BootConsole::WriteLine("Interrupts Enabled");
