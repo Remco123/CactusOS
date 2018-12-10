@@ -64,11 +64,11 @@ extern "C" void kernelMain(const multiboot_info_t* mbi, unsigned int multiboot_m
     PhysicalMemoryManager::SetRegionUsed(0x100000, kernel_size); //mark physical kernel as used memory
     PhysicalMemoryManager::SetRegionUsed(0x0, 0x10000); //Protect the first 1mb of physical memory
 
-    VirtualMemoryManager::Intialize();
-    BootConsole::WriteLine("Virtual Memory Loaded");
-
     InterruptManager::Enable();
     BootConsole::WriteLine("Interrupts Enabled");
+
+    VirtualMemoryManager::Intialize();
+    BootConsole::WriteLine("Virtual Memory Loaded");
 
     while(1);
 }
