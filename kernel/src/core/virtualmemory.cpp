@@ -5,7 +5,7 @@ using namespace CactusOS::common;
 using namespace CactusOS::core;
 using namespace CactusOS::system;
 
-PageDirectory* currentPageDirectory;
+PageDirectory* VirtualMemoryManager::currentPageDirectory = 0;
 
 void VirtualMemoryManager::PrintPageDirectoryEntry(PageDirectoryEntry pde)
 {
@@ -28,19 +28,28 @@ void VirtualMemoryManager::Intialize()
 {
     BootConsole::WriteLine("Intializing Paging");
     BootConsole::Write("Page directory virtual address: 0x"); Print::printfHex32((uint32_t)&BootPageDirectory); BootConsole::WriteLine();
+    
+    uint32_t cr3;
+    asm volatile ("mov %%cr3, %0" : "=r"(cr3));
+    BootConsole::Write("Current CR3 Value: 0x"); Print::printfHex32(cr3); BootConsole::WriteLine();
 
+    //The Page Directory created by the loader
     PageDirectory* pageDirectory = (PageDirectory*)&BootPageDirectory;
 
-    //Set all the entries before the kernel to 0
-    for(int i = 0; i < KERNEL_PTNUM; i++)
-        pageDirectory->entries[i] = {};
-
-
-    PageDirectoryEntry kernelPDE = pageDirectory->entries[KERNEL_PTNUM];
+    //The current 4mb PDE used by the kernel
+    PageDirectoryEntry currentKernelPDE = pageDirectory->entries[KERNEL_PTNUM];
     BootConsole::WriteLine("Current kernel Page Directory Entry");
-    PrintPageDirectoryEntry(kernelPDE);
+    PrintPageDirectoryEntry(currentKernelPDE);
 
-
+    //Identity map first 4mb with a 4mb page
+    PageDirectoryEntry first4MbPDE;
+    MemoryOperations::memset(&first4MbPDE, 0, sizeof(PageDirectoryEntry));
+    first4MbPDE.frame = 0;
+    first4MbPDE.pageSize = FOUR_MB;
+    first4MbPDE.isUser = 0;
+    first4MbPDE.readWrite = 1;
+    first4MbPDE.present = 1;
+    pageDirectory->entries[0] = first4MbPDE;
 
     //The last entry in the Page Directory is a pointer to itself
     PageDirectoryEntry lastPDE;
@@ -52,5 +61,75 @@ void VirtualMemoryManager::Intialize()
     lastPDE.present = 1;
     pageDirectory->entries[1023] = lastPDE;
 
+//TODO: Make the loader script generate a page table for the kernel instead of a 4mb pde
+#if !KERNEL_USES_4MB_PAGE
+    //Here we map the first 4mb of the kernel to the first 4mb of physical memory
+    void* kernelPageTableAddress = PhysicalMemoryManager::AllocateBlock(); //The physical address of the new page table
+
+    PageDirectoryEntry kernelPDE;
+    MemoryOperations::memset(&kernelPDE, 0, sizeof(PageDirectoryEntry));
+    kernelPDE.frame = (uint32_t)kernelPageTableAddress;
+    kernelPDE.pageSize = FOUR_KB;
+    kernelPDE.isUser = 0;
+    kernelPDE.readWrite = 1;
+    kernelPDE.present = 1;
+
+    //Dont asign it yet, first we fill in the page tables
+    PageTable* kernelPT = (PageTable*)kernelPageTableAddress; //We can do this since we have identity mapped the first 4mb, so it does not create a page fault
+    //Identity map kernel's 4mb
+    for(uint16_t i = 0; i < 1024; i++)
+    {
+        PageTableEntry pte;
+        MemoryOperations::memset(&pte, 0, sizeof(pte));
+        pte.frame = i * PAGE_SIZE;
+        pte.isUser = 0;
+        pte.readWrite = 1;
+        pte.present = 1;
+
+        //And then add it to the page table
+        kernelPT->entries[i] = pte;
+    }
+
+    //Print the newly created PDE
+    BootConsole::WriteLine("New Kernel Page Directory Entry");
+    PrintPageDirectoryEntry(kernelPDE);
+
+    //Then set the according entry in the page directory
+    //Here we replace the old entry that was created by the loader
+    pageDirectory->entries[KERNEL_PTNUM] = kernelPDE;
+#endif
+
+    //Finally set it as the current directory
     currentPageDirectory = pageDirectory;
+}
+
+
+void* VirtualMemoryManager::VirtualToPhysical(void* virtualAddress, PageDirectory* dir)
+{
+    if(!dir)
+        return 0;
+    
+    uint32_t pageDirectoryIndex = PAGEDIR_INDEX(virtualAddress);
+    uint32_t pageTableIndex = PAGETBL_INDEX(virtualAddress);
+    uint32_t pageFrameOffset = PAGEFRAME_INDEX(virtualAddress);
+
+    if(dir->entries[pageDirectoryIndex].present == 0)
+    {
+        BootConsole::WriteLine("Page directory entry does not exist in page directory");
+        return 0;
+    }
+
+    if(dir->entries[pageDirectoryIndex].pageSize == FOUR_MB && pageDirectoryIndex == KERNEL_PTNUM) //The kernel is a 4mb page so that means that for the first 4mb of physical memory there is no page table
+    {
+        return virt2phys(virtualAddress);
+    }
+
+    PageTable* pageTable = (PageTable*)(dir->entries[pageDirectoryIndex].frame);
+    if(pageTable == 0)
+    {
+        BootConsole::WriteLine("Page table does not exist at given index");
+        return 0;
+    }
+
+    return (void*)(pageTable->entries[pageTableIndex].frame | pageFrameOffset);
 }

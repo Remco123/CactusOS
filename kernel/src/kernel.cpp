@@ -70,5 +70,7 @@ extern "C" void kernelMain(const multiboot_info_t* mbi, unsigned int multiboot_m
     VirtualMemoryManager::Intialize();
     BootConsole::WriteLine("Virtual Memory Loaded");
 
+    Print::printfHex32((uint32_t)VirtualMemoryManager::VirtualToPhysical((void*)0xC00B8000)); BootConsole::WriteLine();
+
     while(1);
 }
