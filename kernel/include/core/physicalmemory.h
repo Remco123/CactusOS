@@ -62,7 +62,12 @@ namespace CactusOS
             static common::uint32_t UsedBlocks();
             static common::uint32_t FreeBlocks();
             static common::uint32_t TotalBlocks();
+            static common::uint32_t GetBitmapSize();
         };
+
+        //Helper functions
+        common::uint32_t pageRoundUp(common::uint32_t address);
+        common::uint32_t pageRoundDown(common::uint32_t address);
     }
 }
 

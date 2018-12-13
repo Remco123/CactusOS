@@ -73,6 +73,10 @@ void PhysicalMemoryManager::Initialize(uint32_t size, uint32_t bitmap)
     usedBlocks = maximumBlocks; //We use all at startup
 
     MemoryOperations::memset(memoryArray, 0xf, usedBlocks / BLOCKS_PER_BYTE);
+
+    BootConsole::Write("Bitmap size: ");
+    BootConsole::Write(Convert::IntToString(GetBitmapSize() / 1024));
+    BootConsole::WriteLine(" Kb");
 }
 void PhysicalMemoryManager::SetRegionFree(uint32_t base, uint32_t size)
 {
@@ -194,4 +198,27 @@ uint32_t PhysicalMemoryManager::FreeBlocks()
 uint32_t PhysicalMemoryManager::TotalBlocks()
 {
     return maximumBlocks;
+}
+uint32_t PhysicalMemoryManager::GetBitmapSize()
+{
+    return memorySize / BLOCK_SIZE / BLOCKS_PER_BYTE;
+}
+
+
+/*//////////////
+// Helper functions
+*///////////////
+uint32_t core::pageRoundUp(uint32_t address)
+{
+    if((address & 0xFFFFF000) != address)
+    {
+        address &= 0xFFFFF000;
+        address += 0x1000;
+    }
+    return address;
+}
+
+uint32_t core::pageRoundDown(uint32_t address)
+{
+    return address & 0xFFFFF000;
 }

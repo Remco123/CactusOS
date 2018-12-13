@@ -121,7 +121,7 @@ void* VirtualMemoryManager::VirtualToPhysical(void* virtualAddress, PageDirector
 
     if(dir->entries[pageDirectoryIndex].pageSize == FOUR_MB && pageDirectoryIndex == KERNEL_PTNUM) //The kernel is a 4mb page so that means that for the first 4mb of physical memory there is no page table
     {
-        return virt2phys(virtualAddress);
+        return (void*)virt2phys((uint32_t)virtualAddress);
     }
 
     PageTable* pageTable = (PageTable*)(dir->entries[pageDirectoryIndex].frame);

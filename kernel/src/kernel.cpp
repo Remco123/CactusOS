@@ -60,9 +60,13 @@ extern "C" void kernelMain(const multiboot_info_t* mbi, unsigned int multiboot_m
     PhysicalMemoryManager::Initialize(mbi->mem_upper * 1024, kernel_end);
     BootConsole::WriteLine("Physical Memory Loaded");
 
+    //Parse the memory map handled by grub
     PhysicalMemoryManager::ParseMemoryMap(mbi);
-    PhysicalMemoryManager::SetRegionUsed(0x100000, kernel_size); //mark physical kernel as used memory
-    PhysicalMemoryManager::SetRegionUsed(0x0, 0x10000); //Protect the first 1mb of physical memory
+
+    //Protect the first 1mb of physical memory + the end of kernel. 
+    //We also add the size of the bitmap so that it does not have to be staticly allocated, this makes the kernel way smaller. 
+    //Also round it to page bounds.
+    PhysicalMemoryManager::SetRegionUsed(0x0, pageRoundUp(0x100000 + kernel_size + PhysicalMemoryManager::GetBitmapSize()));
 
     InterruptManager::Enable();
     BootConsole::WriteLine("Interrupts Enabled");
@@ -71,6 +75,8 @@ extern "C" void kernelMain(const multiboot_info_t* mbi, unsigned int multiboot_m
     BootConsole::WriteLine("Virtual Memory Loaded");
 
     Print::printfHex32((uint32_t)VirtualMemoryManager::VirtualToPhysical((void*)0xC00B8000)); BootConsole::WriteLine();
+    
+    Print::printfHex32((uint32_t)PhysicalMemoryManager::AllocateBlock()); BootConsole::WriteLine();
 
     while(1);
 }
