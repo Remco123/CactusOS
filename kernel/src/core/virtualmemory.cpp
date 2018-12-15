@@ -22,6 +22,11 @@ void VirtualMemoryManager::PrintPageTableEntry(PageTableEntry pte)
     BootConsole::Write("#- User: "); BootConsole::WriteLine(Convert::IntToString(pte.isUser));
     BootConsole::Write("#- Frame: 0x"); Print::printfHex32(pte.frame); BootConsole::WriteLine();
 }
+void VirtualMemoryManager::ReloadCR3()
+{
+    asm volatile("movl	%cr3,%eax");
+	asm volatile("movl	%eax,%cr3");
+}
 
 
 void VirtualMemoryManager::Intialize()
@@ -61,27 +66,28 @@ void VirtualMemoryManager::Intialize()
     lastPDE.present = 1;
     pageDirectory->entries[1023] = lastPDE;
 
-//TODO: Make the loader script generate a page table for the kernel instead of a 4mb pde
-#if !KERNEL_USES_4MB_PAGE
+
+
     //Here we map the first 4mb of the kernel to the first 4mb of physical memory
     void* kernelPageTableAddress = PhysicalMemoryManager::AllocateBlock(); //The physical address of the new page table
 
+    //The kernel page directory entry
     PageDirectoryEntry kernelPDE;
     MemoryOperations::memset(&kernelPDE, 0, sizeof(PageDirectoryEntry));
-    kernelPDE.frame = (uint32_t)kernelPageTableAddress;
+    kernelPDE.frame = (uint32_t)kernelPageTableAddress / BLOCK_SIZE;
     kernelPDE.pageSize = FOUR_KB;
     kernelPDE.isUser = 0;
     kernelPDE.readWrite = 1;
     kernelPDE.present = 1;
 
-    //Dont asign it yet, first we fill in the page tables
-    PageTable* kernelPT = (PageTable*)kernelPageTableAddress; //We can do this since we have identity mapped the first 4mb, so it does not create a page fault
+    //Dont asign it yet, first we fill in the page table
+    PageTable* kernelPT = (PageTable*)phys2virt(kernelPageTableAddress); //We can do this since we have identity mapped the first 4mb, so it does not create a page fault
     //Identity map kernel's 4mb
     for(uint16_t i = 0; i < 1024; i++)
     {
         PageTableEntry pte;
         MemoryOperations::memset(&pte, 0, sizeof(pte));
-        pte.frame = i * PAGE_SIZE;
+        pte.frame = i;
         pte.isUser = 0;
         pte.readWrite = 1;
         pte.present = 1;
@@ -97,10 +103,12 @@ void VirtualMemoryManager::Intialize()
     //Then set the according entry in the page directory
     //Here we replace the old entry that was created by the loader
     pageDirectory->entries[KERNEL_PTNUM] = kernelPDE;
-#endif
 
     //Finally set it as the current directory
     currentPageDirectory = pageDirectory;
+
+    BootConsole::WriteLine("Reloading CR3 Register");
+    ReloadCR3();
 }
 
 
@@ -119,17 +127,33 @@ void* VirtualMemoryManager::VirtualToPhysical(void* virtualAddress, PageDirector
         return 0;
     }
 
-    if(dir->entries[pageDirectoryIndex].pageSize == FOUR_MB && pageDirectoryIndex == KERNEL_PTNUM) //The kernel is a 4mb page so that means that for the first 4mb of physical memory there is no page table
-    {
-        return (void*)virt2phys((uint32_t)virtualAddress);
-    }
-
-    PageTable* pageTable = (PageTable*)(dir->entries[pageDirectoryIndex].frame);
+    PageTable* pageTable = (PageTable*)(dir->entries[pageDirectoryIndex].frame * BLOCK_SIZE);
     if(pageTable == 0)
     {
         BootConsole::WriteLine("Page table does not exist at given index");
         return 0;
     }
 
-    return (void*)(pageTable->entries[pageTableIndex].frame | pageFrameOffset);
+    return (void*)(pageTable->entries[pageTableIndex].frame * BLOCK_SIZE | pageFrameOffset);
+}
+
+void VirtualMemoryManager::AllocatePage(PageTableEntry* page, bool kernel, bool writeable)
+{
+    void* p = PhysicalMemoryManager::AllocateBlock();
+    if(!p)
+        return;
+
+    page->present = 1;
+    page->readWrite = writeable ? 1 : 0;
+    page->isUser = kernel ? 0 : 1;
+    page->frame = (uint32_t)p / BLOCK_SIZE;
+}
+
+void VirtualMemoryManager::FreePage(PageTableEntry* page)
+{
+    void* addr = (void*)(page->frame * BLOCK_SIZE);
+    if(addr)
+        PhysicalMemoryManager::FreeBlock(addr);
+    
+    page->present = 0;
 }

@@ -24,7 +24,6 @@ namespace CactusOS
         #define PAGEDIR_INDEX(addr) (((uint32_t)addr) >> 22)
         #define PAGETBL_INDEX(addr) ((((uint32_t)addr) >> 12) & 0x3ff)
         #define PAGEFRAME_INDEX(addr) (((uint32_t)addr) & 0xfff)
-        #define KERNEL_USES_4MB_PAGE 1  //Is the kernel mapped in a 4mb page?
 
         struct PageDirectoryEntry
         {
@@ -72,12 +71,16 @@ namespace CactusOS
         private:
             static void PrintPageDirectoryEntry(PageDirectoryEntry pde);
             static void PrintPageTableEntry(PageTableEntry pte);
+            static void ReloadCR3();
         public:
             static PageDirectory* currentPageDirectory;
         
             static void Intialize();
 
             static void* VirtualToPhysical(void* virtualAddress, PageDirectory* dir = currentPageDirectory);
+
+            static void AllocatePage(PageTableEntry* page, bool kernel, bool writeable);
+            static void FreePage(PageTableEntry* page);
         };
     }
 }

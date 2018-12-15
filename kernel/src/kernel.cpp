@@ -37,6 +37,12 @@ extern "C" void kernelMain(const multiboot_info_t* mbi, unsigned int multiboot_m
     BootConsole::BackgroundColor = VGA_COLOR_LIGHT_GREY;
     BootConsole::Clear();
 
+    if(multiboot_magic != MULTIBOOT_BOOTLOADER_MAGIC)
+    {
+        BootConsole::WriteLine("Error: not booted by a multiboot bootloader");
+        return;
+    }
+
     BootConsole::WriteLine("Starting Kernel");
     BootConsole::Write("Built on: "); BootConsole::WriteLine(__DATE__ "  " __TIME__);
 
@@ -73,10 +79,6 @@ extern "C" void kernelMain(const multiboot_info_t* mbi, unsigned int multiboot_m
 
     VirtualMemoryManager::Intialize();
     BootConsole::WriteLine("Virtual Memory Loaded");
-
-    Print::printfHex32((uint32_t)VirtualMemoryManager::VirtualToPhysical((void*)0xC00B8000)); BootConsole::WriteLine();
-    
-    Print::printfHex32((uint32_t)PhysicalMemoryManager::AllocateBlock()); BootConsole::WriteLine();
 
     while(1);
 }
