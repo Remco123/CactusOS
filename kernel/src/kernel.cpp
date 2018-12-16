@@ -5,6 +5,7 @@
 #include <core/physicalmemory.h>
 #include <core/virtualmemory.h>
 #include <system/bootconsole.h>
+#include <system/heap.h>
 #include <common/convert.h>
 
 using namespace CactusOS;
@@ -79,6 +80,9 @@ extern "C" void kernelMain(const multiboot_info_t* mbi, unsigned int multiboot_m
 
     VirtualMemoryManager::Intialize();
     BootConsole::WriteLine("Virtual Memory Loaded");
+
+    KernelHeap::Initialize(KERNEL_HEAP_START, KERNEL_HEAP_START + KERNEL_HEAP_START_SIZE, KERNEL_HEAP_END);
+    BootConsole::WriteLine("Kernel Heap Initialized");
 
     while(1);
 }

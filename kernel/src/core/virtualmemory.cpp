@@ -74,14 +74,14 @@ void VirtualMemoryManager::Intialize()
     //The kernel page directory entry
     PageDirectoryEntry kernelPDE;
     MemoryOperations::memset(&kernelPDE, 0, sizeof(PageDirectoryEntry));
-    kernelPDE.frame = (uint32_t)kernelPageTableAddress / BLOCK_SIZE;
+    kernelPDE.frame = (uint32_t)kernelPageTableAddress / PAGE_SIZE;
     kernelPDE.pageSize = FOUR_KB;
     kernelPDE.isUser = 0;
     kernelPDE.readWrite = 1;
     kernelPDE.present = 1;
 
     //Dont asign it yet, first we fill in the page table
-    PageTable* kernelPT = (PageTable*)phys2virt(kernelPageTableAddress); //We can do this since we have identity mapped the first 4mb, so it does not create a page fault
+    PageTable* kernelPT = (PageTable*)phys2virt((uint32_t)kernelPageTableAddress); //We can do this since we have identity mapped the first 4mb, so it does not create a page fault
     //Identity map kernel's 4mb
     for(uint16_t i = 0; i < 1024; i++)
     {
@@ -103,6 +103,10 @@ void VirtualMemoryManager::Intialize()
     //Then set the according entry in the page directory
     //Here we replace the old entry that was created by the loader
     pageDirectory->entries[KERNEL_PTNUM] = kernelPDE;
+
+    //Here we map some pages for the intial kernel heap
+    for(uint32_t i = KERNEL_HEAP_START; i < KERNEL_HEAP_START + KERNEL_HEAP_START_SIZE; i += PAGE_SIZE)
+        AllocatePage(GetPageForAddress(i, true, pageDirectory), true, true);
 
     //Finally set it as the current directory
     currentPageDirectory = pageDirectory;
@@ -127,14 +131,14 @@ void* VirtualMemoryManager::VirtualToPhysical(void* virtualAddress, PageDirector
         return 0;
     }
 
-    PageTable* pageTable = (PageTable*)(dir->entries[pageDirectoryIndex].frame * BLOCK_SIZE);
+    PageTable* pageTable = (PageTable*)(dir->entries[pageDirectoryIndex].frame * PAGE_SIZE);
     if(pageTable == 0)
     {
         BootConsole::WriteLine("Page table does not exist at given index");
         return 0;
     }
 
-    return (void*)(pageTable->entries[pageTableIndex].frame * BLOCK_SIZE | pageFrameOffset);
+    return (void*)(pageTable->entries[pageTableIndex].frame * PAGE_SIZE | pageFrameOffset);
 }
 
 void VirtualMemoryManager::AllocatePage(PageTableEntry* page, bool kernel, bool writeable)
@@ -146,14 +150,40 @@ void VirtualMemoryManager::AllocatePage(PageTableEntry* page, bool kernel, bool 
     page->present = 1;
     page->readWrite = writeable ? 1 : 0;
     page->isUser = kernel ? 0 : 1;
-    page->frame = (uint32_t)p / BLOCK_SIZE;
+    page->frame = (uint32_t)p / PAGE_SIZE;
 }
 
 void VirtualMemoryManager::FreePage(PageTableEntry* page)
 {
-    void* addr = (void*)(page->frame * BLOCK_SIZE);
+    void* addr = (void*)(page->frame * PAGE_SIZE);
     if(addr)
         PhysicalMemoryManager::FreeBlock(addr);
     
     page->present = 0;
+}
+
+PageTableEntry* VirtualMemoryManager::GetPageForAddress(uint32_t virtualAddress, bool make, PageDirectory* dir)
+{
+    virtualAddress /= PAGE_SIZE;
+
+    uint32_t tableIndex = virtualAddress / 1024;
+
+    if(dir->entries[tableIndex].present)
+    {
+        PageTable* pt = (PageTable*)(dir->entries[tableIndex].frame * PAGE_SIZE);
+        return &pt->entries[virtualAddress % 1024];
+    }
+    else if(make)
+    {
+        void* phys = PhysicalMemoryManager::AllocateBlock(); //Allocate block for new pagetable
+        MemoryOperations::memset(phys, 0, sizeof(PageTable)); //Zero it out
+
+        dir->entries[tableIndex].frame = (uint32_t)phys / PAGE_SIZE;
+        dir->entries[tableIndex].readWrite = 1;
+        dir->entries[tableIndex].isUser = 1;
+        dir->entries[tableIndex].present = 1;
+
+        return &((PageTable*)phys)->entries[virtualAddress % 1024];
+    }
+    return 0;
 }

@@ -6,6 +6,7 @@
 #define __CACTUSOS__CORE__VIRTUALMEMORY_H
 
 #include <core/physicalmemory.h>
+#include <system/heap.h>
 
 namespace CactusOS
 {
@@ -81,6 +82,8 @@ namespace CactusOS
 
             static void AllocatePage(PageTableEntry* page, bool kernel, bool writeable);
             static void FreePage(PageTableEntry* page);
+
+            static PageTableEntry* GetPageForAddress(common::uint32_t virtualAddress, bool make, PageDirectory* dir = currentPageDirectory);
         };
     }
 }
