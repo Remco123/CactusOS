@@ -17,6 +17,11 @@ namespace CactusOS
         #define MEMORY_HEADER_MAGIC 0xF1AF //TODO: Think of something better?
         #endif
 
+        #ifndef align_up
+        #define align_up(num, align) \
+            (((num) + ((align) - 1)) & ~((align) - 1))
+        #endif
+
         struct MemoryHeader
         {
             #if USE_HEAP_MAGIC
@@ -41,10 +46,14 @@ namespace CactusOS
             static void* InternalAllocate(common::uint32_t size);
             static void InternalFree(void* ptr);
         public:
+            static bool Enabled;
             static void Initialize(common::uint32_t start, common::uint32_t end, common::uint32_t max);
 
             static void* malloc(common::uint32_t size, common::uint32_t* physReturn = 0);
             static void free(void* ptr);
+
+            static void* allignedMalloc(common::uint32_t size, common::uint32_t align, common::uint32_t* physReturn = 0);
+            static void allignedFree(void* ptr);
         };
     }
 }

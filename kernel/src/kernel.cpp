@@ -5,7 +5,8 @@
 #include <core/physicalmemory.h>
 #include <core/virtualmemory.h>
 #include <system/bootconsole.h>
-#include <system/heap.h>
+#include <system/memory/heap.h>
+#include <system/memory/new.h>
 #include <common/convert.h>
 
 using namespace CactusOS;

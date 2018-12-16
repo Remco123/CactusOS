@@ -1,4 +1,4 @@
-#include <system/heap.h>
+#include <system/memory/heap.h>
 
 using namespace CactusOS;
 using namespace CactusOS::common;
@@ -9,6 +9,7 @@ uint32_t KernelHeap::startAddress = 0;
 uint32_t KernelHeap::endAddress = 0;
 uint32_t KernelHeap::maxAddress = 0;
 MemoryHeader* KernelHeap::firstHeader = 0;
+bool KernelHeap::Enabled = false;
 
 void KernelHeap::Initialize(uint32_t start, uint32_t end, uint32_t max)
 {
@@ -31,6 +32,8 @@ void KernelHeap::Initialize(uint32_t start, uint32_t end, uint32_t max)
     #if USE_HEAP_MAGIC
     firstHeader->magic = MEMORY_HEADER_MAGIC;
     #endif
+
+    KernelHeap::Enabled = true;
 }
 
 void* KernelHeap::InternalAllocate(uint32_t size)
@@ -73,7 +76,7 @@ void* KernelHeap::InternalAllocate(uint32_t size)
 }
 void KernelHeap::InternalFree(void* ptr)
 {
-    MemoryHeader* chunk = (MemoryHeader*)((size_t)ptr - sizeof(MemoryHeader));
+    MemoryHeader* chunk = (MemoryHeader*)((uint32_t)ptr - sizeof(MemoryHeader));
     
     chunk -> allocated = false;
     
@@ -112,4 +115,38 @@ void* KernelHeap::malloc(uint32_t size, uint32_t* physReturn)
 void KernelHeap::free(void* ptr)
 {
     InternalFree(ptr);
+}
+
+void* KernelHeap::allignedMalloc(uint32_t size, uint32_t align, uint32_t* physReturn)
+{
+    void* ptr = 0;
+
+    if(!(align & (align - 1)) == 0)
+        return 0;
+
+    if(align && size)
+    {
+        uint32_t hdr_size = sizeof(uint16_t) + (align - 1);
+
+        void* p = malloc(size + hdr_size, physReturn);
+
+        if(p)
+        {
+            ptr = (void *) align_up(((uintptr_t)p + sizeof(uint16_t)), align);
+
+            *((uint16_t*)ptr - 1) = (uint16_t)((uintptr_t)ptr - (uintptr_t)p);
+        }
+    }
+    return ptr;
+}
+void KernelHeap::allignedFree(void* ptr)
+{   
+    if(ptr == 0)
+        return;
+
+    uint16_t offset = *((uint16_t *)ptr - 1);
+
+    void * p = (void *)((common::uint8_t *)ptr - offset);
+
+    free(p);
 }

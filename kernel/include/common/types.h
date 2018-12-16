@@ -13,7 +13,6 @@ namespace CactusOS
         typedef unsigned int           uint32_t;
         typedef long long int           int64_t;
         typedef unsigned long long int uint64_t;
-        typedef uint32_t size_t;
         typedef unsigned long long      uintptr_t;
     }
 }

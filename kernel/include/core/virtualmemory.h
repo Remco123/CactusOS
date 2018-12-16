@@ -6,7 +6,7 @@
 #define __CACTUSOS__CORE__VIRTUALMEMORY_H
 
 #include <core/physicalmemory.h>
-#include <system/heap.h>
+#include <system/memory/heap.h>
 
 namespace CactusOS
 {

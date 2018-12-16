@@ -175,8 +175,21 @@ PageTableEntry* VirtualMemoryManager::GetPageForAddress(uint32_t virtualAddress,
     }
     else if(make)
     {
-        void* phys = PhysicalMemoryManager::AllocateBlock(); //Allocate block for new pagetable
-        MemoryOperations::memset(phys, 0, sizeof(PageTable)); //Zero it out
+        void* phys; //The physical address of the page table
+        if(KernelHeap::Enabled) //Can we use the kernel heap?
+        {
+            uint32_t tmp;
+
+            void* virt = KernelHeap::allignedMalloc(sizeof(PageTable), PAGE_SIZE, &tmp);
+            MemoryOperations::memset(virt, 0, sizeof(PageTable));
+
+            phys = (void*)tmp;
+        }
+        else
+        {
+            phys = PhysicalMemoryManager::AllocateBlock(); //Allocate block for new pagetable
+            MemoryOperations::memset(phys, 0, sizeof(PageTable)); //Zero it out
+        }
 
         dir->entries[tableIndex].frame = (uint32_t)phys / PAGE_SIZE;
         dir->entries[tableIndex].readWrite = 1;
