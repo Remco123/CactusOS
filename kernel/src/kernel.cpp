@@ -7,6 +7,8 @@
 #include <system/bootconsole.h>
 #include <system/memory/heap.h>
 #include <system/memory/new.h>
+#include <system/components/rtc.h>
+#include <common/list.h>
 #include <common/convert.h>
 
 using namespace CactusOS;

@@ -1,0 +1,12 @@
+root dir:
+	-  .vscode 		->	project files for the Visual Studio Code IDE
+	- isofiles		->	files that will be included to the CactusOS.iso file, this will eventually contain files required for the setup (if we decide to go that way)
+	- kernel		->	the source code for the kernel
+		- include 	->	kernel header files
+		- src		-> 	kernel source files
+		- linker.ld	->	the linker script used to compile the kernel
+	- tools			->	usefull tools for developing the os, so far only a serial debug application is added
+	- .gitignore	->	used by git to ignore files, in our case we ignore the compiled object files
+	- grub.cfg		->	the grub bootloader config file, this is also added to the iso
+	- makefile		->	this projects makefile
+	- README.md 	->	contains a small summary of this repository for github

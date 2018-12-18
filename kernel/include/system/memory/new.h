@@ -15,6 +15,16 @@ void *operator new[](size_t size)
 {
     return KernelHeap::malloc(size);
 }
+
+void* operator new(size_t size, void* ptr)
+{
+    return ptr;
+}
+
+void* operator new[](size_t size, void* ptr)
+{
+    return ptr;
+}
  
 void operator delete(void *p)
 {
@@ -24,6 +34,15 @@ void operator delete(void *p)
 void operator delete[](void *p)
 {
     KernelHeap::free(p);
+}
+
+void operator delete(void* ptr, unsigned long size)
+{
+    KernelHeap::free(ptr);
+}
+void operator delete[](void* ptr, unsigned long size)
+{
+    KernelHeap::free(ptr);
 }
 
 #endif

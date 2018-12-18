@@ -12,3 +12,6 @@ The procces of creating the kernel again could take a couple months.
 - Delete old source code [Done]
 - Global Descriptor Table [Done]
 - Interrupt Descriptor Table [Done]
+- Physical Memory Manager [Done]
+- Virtual Memory Manager [Done]
+- Thinking of how to design the rest of the kernel [Started] (See docs for more info on design plan)

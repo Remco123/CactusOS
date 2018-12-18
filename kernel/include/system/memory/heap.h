@@ -14,7 +14,7 @@ namespace CactusOS
         #define USE_HEAP_MAGIC 0
         
         #if USE_HEAP_MAGIC
-        #define MEMORY_HEADER_MAGIC 0xF1AF //TODO: Think of something better?
+        #define MEMORY_HEADER_MAGIC 0xF00D
         #endif
 
         #ifndef align_up
