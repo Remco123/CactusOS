@@ -10,7 +10,7 @@ uint32_t Exceptions::DivideByZero(uint32_t esp)
     BootConsole::ForegroundColor = VGA_COLOR_RED;
     BootConsole::WriteLine("Got Divide by zero Exception");
 
-    InterruptManager::Disable();
+    InterruptDescriptorTable::DisableInterrupts();
     while(1);
 }
 uint32_t Exceptions::GeneralProtectionFault(uint32_t esp)
@@ -18,14 +18,14 @@ uint32_t Exceptions::GeneralProtectionFault(uint32_t esp)
     BootConsole::ForegroundColor = VGA_COLOR_RED;
     BootConsole::WriteLine("Got General Protection Fault Exception");
 
-    InterruptManager::Disable();
+    InterruptDescriptorTable::DisableInterrupts();
     while(1);
 }
 uint32_t Exceptions::PageFault(uint32_t esp)
 {
     BootConsole::ForegroundColor = VGA_COLOR_BROWN;
 
-    InterruptManager::Disable();
+    InterruptDescriptorTable::DisableInterrupts();
 
     uint32_t errorAddress;
     asm volatile("mov %%cr2, %0" : "=r" (errorAddress));

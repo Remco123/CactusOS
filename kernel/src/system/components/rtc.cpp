@@ -4,23 +4,7 @@ using namespace CactusOS;
 using namespace CactusOS::common;
 using namespace CactusOS::core;
 using namespace CactusOS::system;
-/*
-        class RTC : public SystemComponent
-        {
-        private:
-            bool UpdateInProgress();
-            common::uint8_t ReadRegister(int reg);
-        public:
-            RTC();
 
-            common::uint32_t GetSecond();
-            common::uint32_t GetMinute();
-            common::uint32_t GetHour();
-            common::uint32_t GetDay();
-            common::uint32_t GetMonth();
-            common::uint32_t GetYear();
-        };  
-*/
 bool RTC::UpdateInProgress()
 {
     outportb(0x70, 0x0A);

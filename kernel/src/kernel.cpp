@@ -7,7 +7,7 @@
 #include <system/bootconsole.h>
 #include <system/memory/heap.h>
 #include <system/memory/new.h>
-#include <system/components/rtc.h>
+#include <system/system.h>
 #include <common/list.h>
 #include <common/convert.h>
 
@@ -64,8 +64,8 @@ extern "C" void kernelMain(const multiboot_info_t* mbi, unsigned int multiboot_m
     TSS::Install(5, 0x10, 0);
     BootConsole::WriteLine("TSS Loaded");
 
-    InterruptManager::Install();
-    BootConsole::WriteLine("Interrupts Loaded");
+    InterruptDescriptorTable::Install();
+    BootConsole::WriteLine("IDT Loaded");
 
     PhysicalMemoryManager::Initialize(mbi->mem_upper * 1024, kernel_end);
     BootConsole::WriteLine("Physical Memory Loaded");
@@ -78,7 +78,7 @@ extern "C" void kernelMain(const multiboot_info_t* mbi, unsigned int multiboot_m
     //Also round it to page bounds.
     PhysicalMemoryManager::SetRegionUsed(0x0, pageRoundUp(0x100000 + kernel_size + PhysicalMemoryManager::GetBitmapSize()));
 
-    InterruptManager::Enable();
+    InterruptDescriptorTable::EnableInterrupts();
     BootConsole::WriteLine("Interrupts Enabled");
 
     VirtualMemoryManager::Intialize();
@@ -86,6 +86,12 @@ extern "C" void kernelMain(const multiboot_info_t* mbi, unsigned int multiboot_m
 
     KernelHeap::Initialize(KERNEL_HEAP_START, KERNEL_HEAP_START + KERNEL_HEAP_START_SIZE, KERNEL_HEAP_END);
     BootConsole::WriteLine("Kernel Heap Initialized");
+
+    BootConsole::ForegroundColor = VGA_COLOR_MAGENTA;
+    BootConsole::WriteLine("-Kernel core intialized-");
+
+    //Further intialisation is done in the system class
+    System::Start();
 
     while(1);
 }

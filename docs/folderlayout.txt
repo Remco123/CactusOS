@@ -1,5 +1,5 @@
 root dir:
-	-  .vscode 		->	project files for the Visual Studio Code IDE
+	- .vscode 		->	project files for the Visual Studio Code IDE
 	- isofiles		->	files that will be included to the CactusOS.iso file, this will eventually contain files required for the setup (if we decide to go that way)
 	- kernel		->	the source code for the kernel
 		- include 	->	kernel header files

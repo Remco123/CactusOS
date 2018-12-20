@@ -12,7 +12,7 @@ IDTEntry idtEntries[IDT_ENTRY_SIZE];
 IDTPointer idtPointer;
 
 
-void InterruptManager::SetDescriptor(uint32_t number, void (*handler)())
+void InterruptDescriptorTable::SetDescriptor(uint32_t number, void (*handler)())
 {
     const int DescriptorPrivilegeLevel = 0;
 
@@ -25,7 +25,7 @@ void InterruptManager::SetDescriptor(uint32_t number, void (*handler)())
     idtEntries[number].selector = 0x8;
 }
 
-void InterruptManager::Install()
+void InterruptDescriptorTable::Install()
 {
     idtPointer.size = sizeof(IDTEntry) * IDT_ENTRY_SIZE - 1;
     idtPointer.base = (uint32_t)&idtEntries[0];
@@ -95,15 +95,16 @@ void InterruptManager::Install()
         
 
 //Gets called for every interrupt from assembly code
-uint32_t InterruptManager::HandleInterrupt(uint8_t interrupt, uint32_t esp)
+uint32_t InterruptDescriptorTable::HandleInterrupt(uint8_t interrupt, uint32_t esp)
 {
     if(interrupt < IDT_INTERRUPT_OFFSET)
     {
         esp = Exceptions::HandleException(interrupt, esp);
     }
-    else if(interrupt != IDT_INTERRUPT_OFFSET)
+    else
     {
-        BootConsole::Write("Interrupt Handler for int: "); BootConsole::WriteLine(Convert::IntToString(interrupt));
+        //BootConsole::Write("Interrupt Handler for int: "); BootConsole::WriteLine(Convert::IntToString(interrupt));
+        esp = InterruptManager::HandleInterrupt(interrupt, esp);
     }
 
     // hardware interrupts must be acknowledged
@@ -117,11 +118,11 @@ uint32_t InterruptManager::HandleInterrupt(uint8_t interrupt, uint32_t esp)
     return esp;
 }
 
-void InterruptManager::Enable()
+void InterruptDescriptorTable::EnableInterrupts()
 {
     asm volatile ("sti");
 }
-void InterruptManager::Disable()
+void InterruptDescriptorTable::DisableInterrupts()
 {
     asm volatile ("cli");
 }

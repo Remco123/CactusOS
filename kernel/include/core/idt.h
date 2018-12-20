@@ -8,6 +8,7 @@
 #include <system/bootconsole.h>
 #include <common/convert.h>
 #include <common/memoryoperations.h>
+#include <system/interruptmanager.h>
 
 namespace CactusOS
 {
@@ -73,7 +74,7 @@ namespace CactusOS
         extern "C" void HandleException0x12();
         extern "C" void HandleException0x13();        
 
-        class InterruptManager
+        class InterruptDescriptorTable
         {
         private:
             static void SetDescriptor(common::uint32_t number,  void (*handler)());
@@ -82,8 +83,8 @@ namespace CactusOS
         public:
             static void Install();
 
-            static void Enable();
-            static void Disable();
+            static void EnableInterrupts();
+            static void DisableInterrupts();
         };
     }
 }

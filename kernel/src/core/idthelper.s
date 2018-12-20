@@ -66,7 +66,7 @@ interrupthandler:
     # call C++ Handler
     pushl %esp
     push (interruptnumber)
-    call _ZN8CactusOS4core16InterruptManager15HandleInterruptEhj
+    call _ZN8CactusOS4core24InterruptDescriptorTable15HandleInterruptEhj
 
     mov %eax, %esp # switch the stack that is returned from the function
 
