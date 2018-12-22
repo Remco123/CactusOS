@@ -5,6 +5,7 @@
 #include <system/components/systemcomponent.h>
 #include <system/components/pit.h>
 #include <system/components/rtc.h>
+#include <system/components/smbios.h>
 
 namespace CactusOS
 {
@@ -15,6 +16,7 @@ namespace CactusOS
         public:
             static PIT* pit;
             static RTC* rtc;
+            static SMBIOS* smbios;
 
             static void Start();
         };

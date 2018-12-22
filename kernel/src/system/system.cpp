@@ -7,6 +7,7 @@ using namespace CactusOS::system;
 
 PIT* System::pit = 0;
 RTC* System::rtc = 0;
+SMBIOS* System::smbios = 0;
 
 void System::Start()
 {
@@ -20,4 +21,8 @@ void System::Start()
     BootConsole::Write("    - PIT");
     System::pit = new PIT();
     BootConsole::WriteLine(" [Done]");
+
+    BootConsole::WriteLine("    - SMBIOS [Done]");
+    System::smbios = new SMBIOS(true);
+    System::smbios->PrintSummary();
 }
