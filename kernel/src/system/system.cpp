@@ -11,7 +11,7 @@ SMBIOS* System::smbios = 0;
 
 void System::Start()
 {
-    BootConsole::ForegroundColor = VGA_COLOR_GREEN;
+    BootConsole::ForegroundColor = VGA_COLOR_BLACK;
     BootConsole::WriteLine("Adding system components");
     
     BootConsole::Write("    - RTC");

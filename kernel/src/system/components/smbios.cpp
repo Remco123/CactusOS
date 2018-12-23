@@ -129,6 +129,16 @@ void SMBIOS::PrintHeaderSummary(SMBIOSTag* header)
         BootConsole::Write("Manufacturer: "); BootConsole::WriteLine(stringList->GetAt(info->manufacturer));
         BootConsole::Write("Version: "); BootConsole::WriteLine(stringList->GetAt(info->version));
 
+        BootConsole::Write("Voltage: ");
+        if ((info->voltage >> 7) & 1)
+        {
+            BootConsole::Write(Convert::IntToString((info->voltage & 0b1111111)/10.0)); BootConsole::WriteLine("V");
+        }
+        else
+        {
+            BootConsole::Write((char*)(info->voltage == 0 ? "5" : info->voltage == 1 ? "3.3" : info->voltage == 2 ? "2.9" : "-1")); BootConsole::WriteLine("V");
+        }
+
         BootConsole::Write("Clock Speed: "); BootConsole::Write(Convert::IntToString(info->clock)); BootConsole::WriteLine(" MHz");
         BootConsole::Write("Max Speed: "); BootConsole::Write(Convert::IntToString(info->maxSpeed)); BootConsole::WriteLine(" MHz");
         BootConsole::Write("Current Speed: "); BootConsole::Write(Convert::IntToString(info->currentSpeed)); BootConsole::WriteLine(" MHz");
@@ -145,32 +155,103 @@ void SMBIOS::PrintHeaderSummary(SMBIOSTag* header)
     } 
     else if(header->type == SMBIOSTableType::CacheInformation)
     {
+        BootConsole::WriteLine("- Cache Information Header -");
+        SMBIOSCacheInformation* info = (SMBIOSCacheInformation*)header;
 
+        BootConsole::Write("Socket Designation: "); BootConsole::WriteLine(stringList->GetAt(info->socketDesignation));
+        
+        //2.1+
+        if(BiosMajorVersion >= 2 && BiosMinorVersion > 1) {
+            BootConsole::Write("Cache Speed: "); BootConsole::Write(Convert::IntToString(info->cacheSpeed)); BootConsole::WriteLine(" Ns");
+        }
+
+        BootConsole::WriteLine("----------------------------");
     } 
     else if(header->type == SMBIOSTableType::SystemSlotsInformation)
     {
+        BootConsole::WriteLine("- System Slots Information Header -");
+        SMBIOSSystemSlotInformation* info = (SMBIOSSystemSlotInformation*)header;
 
+        BootConsole::Write("Slot Designation: "); BootConsole::WriteLine(stringList->GetAt(info->slotDesignation));
+        BootConsole::Write("Slot Type: "); BootConsole::WriteLine(Convert::IntToString(info->slotType));
+        BootConsole::Write("Slot Data Bus Width: "); BootConsole::WriteLine(Convert::IntToString(info->slotDataBusWidth));
+        BootConsole::Write("Current Usage: "); BootConsole::WriteLine(Convert::IntToString(info->currentUsage));
+        BootConsole::Write("Slot Length: "); BootConsole::WriteLine(Convert::IntToString(info->slotLength));
+
+        BootConsole::WriteLine("-----------------------------------");
     } 
     else if(header->type == SMBIOSTableType::PhysicalMemoryArray)
     {
+        BootConsole::WriteLine("- Physical Memory Array Header -");
+        SMBIOSPhysicalMemoryArray* info = (SMBIOSPhysicalMemoryArray*)header;
 
+        //2.1+
+        if(BiosMajorVersion >= 2 && BiosMinorVersion > 1)
+        {
+            BootConsole::Write("Location: "); BootConsole::WriteLine(Convert::IntToString(info->location));
+            BootConsole::Write("Use: "); BootConsole::WriteLine(Convert::IntToString(info->use));
+            BootConsole::Write("Memory Error Correction: "); BootConsole::WriteLine(Convert::IntToString(info->memoryErrorCorrection));
+            BootConsole::Write("Maximum Capacity: "); BootConsole::Write(Convert::IntToString(info->maximumCapacity)); BootConsole::WriteLine(" Kb");
+            BootConsole::Write("Number of Mem-Devices: "); BootConsole::WriteLine(Convert::IntToString(info->numberOfMemoryDevices));
+        }
+
+        BootConsole::WriteLine("--------------------------------");
     } 
     else if(header->type == SMBIOSTableType::MemoryDevice)
     {
+        BootConsole::WriteLine("- Memory Device Header -");
+        SMBIOSMemoryDevice* info = (SMBIOSMemoryDevice*)header;
 
-    } 
-    else if(header->type == SMBIOSTableType::MemoryArrayMappedAddress)
-    {
+        //2.1+
+        if(BiosMajorVersion >= 2 && BiosMinorVersion > 1)
+        {
+            BootConsole::Write("Total Width: "); BootConsole::WriteLine(Convert::IntToString(info->totalWidth));
+            BootConsole::Write("Data Width: "); BootConsole::WriteLine(Convert::IntToString(info->dataWidth));
+            BootConsole::Write("Size: "); BootConsole::WriteLine(Convert::IntToString(info->size));
+            BootConsole::Write("Form Factor: "); BootConsole::WriteLine(Convert::IntToString(info->formFactor));
+            BootConsole::Write("Device Set: "); BootConsole::WriteLine(Convert::IntToString(info->deviceSet));
+            BootConsole::Write("Device Locator: "); BootConsole::WriteLine(stringList->GetAt(info->deviceLocator));
+            BootConsole::Write("Bank Locator: "); BootConsole::WriteLine(stringList->GetAt(info->bankLocator));
+            BootConsole::Write("Memory Type: "); BootConsole::WriteLine(Convert::IntToString(info->memoryType));
+        }
 
-    } 
-    else if(header->type == SMBIOSTableType::MemoryDeviceMappedAddress)
-    {
+        //2.3+
+        if(BiosMajorVersion >= 2 && BiosMinorVersion > 3)
+        {
+            BootConsole::Write("Speed: "); BootConsole::Write(Convert::IntToString(info->speed)); BootConsole::WriteLine(" MT/s");
+            BootConsole::Write("Manufacturer: "); BootConsole::WriteLine(stringList->GetAt(info->manufacturer));
+            BootConsole::Write("Serial Number: "); BootConsole::WriteLine(stringList->GetAt(info->serialNumber));
+            BootConsole::Write("Asset Tag: "); BootConsole::WriteLine(stringList->GetAt(info->assetTag));
+            BootConsole::Write("Part Number: "); BootConsole::WriteLine(stringList->GetAt(info->partNumber));
+        }
 
-    } 
+        //2.8+
+        if(BiosMajorVersion >= 2 && BiosMinorVersion > 8)
+        {
+            BootConsole::Write("Minimum Voltage: "); BootConsole::Write(Convert::IntToString(info->minimumVoltage)); BootConsole::WriteLine(" MiV");
+            BootConsole::Write("Maximum Voltage: "); BootConsole::Write(Convert::IntToString(info->maximumVoltage)); BootConsole::WriteLine(" MiV");
+            BootConsole::Write("Configured Voltage: "); BootConsole::Write(Convert::IntToString(info->configuredVoltage)); BootConsole::WriteLine(" MiV");
+        }
+
+        BootConsole::WriteLine("------------------------");
+    }
     else if(header->type == SMBIOSTableType::SystemBootInformation)
     {
+        BootConsole::WriteLine("- System Boot Information Header -");
+        SMBIOSBootInformation* info = (SMBIOSBootInformation*)header;
 
+        //2.3
+        if(BiosMajorVersion >= 2 && BiosMinorVersion >= 3)
+        {
+            BootConsole::Write("Boot Status: "); BootConsole::WriteLine(Convert::IntToString(info->bootStatus));
+        }
+
+        BootConsole::WriteLine("----------------------------------");
     } 
+    else  //Unkown header type
+    {
+        BootConsole::Write("- Unkown Header type: "); BootConsole::Write(Convert::IntToString(header->type)); BootConsole::WriteLine(" -");
+    }
 
     delete stringList;
 

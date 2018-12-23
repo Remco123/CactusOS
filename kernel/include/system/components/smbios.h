@@ -155,6 +155,116 @@ namespace CactusOS
             common::uint16_t characteristics;
         } __attribute__((packed));
 
+        struct SMBIOSCacheInformation : public SMBIOSTag
+        {
+            common::uint8_t socketDesignation;
+            common::uint16_t cacheConfiguration;
+            common::uint16_t maximumCacheSize;
+            common::uint16_t installedSize;
+            common::uint16_t supportedSRAMType;
+            common::uint16_t currentSRAMType;
+
+            //2.1+
+            common::uint8_t cacheSpeed;
+            common::uint8_t errorCorrectionType;
+            common::uint8_t systemCacheType;
+            common::uint8_t associativity;
+
+            //3.1+
+            common::uint32_t maximumCacheSize2;
+            common::uint32_t installedSize2;
+        } __attribute__((packed));
+
+        struct SMBIOSSystemSlotInformation : public SMBIOSTag
+        {
+            common::uint8_t slotDesignation;
+            common::uint8_t slotType;
+            common::uint8_t slotDataBusWidth;
+            common::uint8_t currentUsage;
+            common::uint8_t slotLength;
+            common::uint16_t slotID;
+            common::uint8_t slotCharacteristics1;
+
+            //2.1+
+            common::uint8_t slotCharacteristics2;
+
+            //2.6+
+            common::uint16_t segmentGroupNumber;
+            common::uint8_t busNumber;
+            common::uint8_t deviceFunctionNumber;
+
+            //3.2
+            common::uint8_t dataBusWidth;
+        } __attribute__((packed));
+
+        struct SMBIOSPhysicalMemoryArray : public SMBIOSTag
+        {
+            //2.1+
+            common::uint8_t location;
+            common::uint8_t use;
+            common::uint8_t memoryErrorCorrection;
+            common::uint32_t maximumCapacity;
+            common::uint16_t memoryErrorInformationHandle;
+            common::uint16_t numberOfMemoryDevices;
+
+            //2.7+
+            common::uint64_t extendedMaximumCapacity;
+        } __attribute__((packed));
+
+        struct SMBIOSMemoryDevice : public SMBIOSTag
+        {
+            //2.1+
+            common::uint16_t memoryArrayHandle;
+            common::uint16_t memoryErrorInformationHandle;
+            common::uint16_t totalWidth;
+            common::uint16_t dataWidth;
+            common::uint16_t size;
+            common::uint8_t formFactor;
+            common::uint8_t deviceSet;
+            common::uint8_t deviceLocator;
+            common::uint8_t bankLocator;
+            common::uint8_t memoryType;
+            common::uint16_t typeDetail;
+
+            //2.3+
+            common::uint16_t speed;
+            common::uint8_t manufacturer;
+            common::uint8_t serialNumber;
+            common::uint8_t assetTag;
+            common::uint8_t partNumber;
+
+            //2.6+
+            common::uint8_t attributes;
+
+            //2.7+
+            common::uint32_t extendedSize;
+            common::uint16_t configuredMemorySpeed;
+
+            //2.8+
+            common::uint16_t minimumVoltage;
+            common::uint16_t maximumVoltage;
+            common::uint16_t configuredVoltage;
+
+            //3.2+
+            common::uint8_t memoryTechnology;
+            common::uint16_t memoryOperatingModeCapability;
+            common::uint8_t firwareVersion;
+            common::uint16_t moduleManufacturerID;
+            common::uint16_t moduleProductID;
+            common::uint16_t memorySubsystemControllerManufacturerID;
+            common::uint16_t memorySubsystemControllerProductID;
+            common::uint64_t nonVolatileSize;
+            common::uint64_t volatileSize;
+            common::uint64_t cacheSize;
+            common::uint64_t logicalSize;
+        } __attribute__((packed));
+
+        struct SMBIOSBootInformation : public SMBIOSTag
+        {
+            common::uint8_t reserved[6];
+            common::uint8_t bootStatus;
+        } __attribute__((packed));
+
         struct SMBIOSEntryPoint
         {
             char EntryPointString[4];               //This is _SM_
