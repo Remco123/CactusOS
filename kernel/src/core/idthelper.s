@@ -1,7 +1,15 @@
-.macro HandleException num
+.macro HandleExceptionWithError num
 .global HandleException\num\()
 HandleException\num\():
-    movb $\num, (interruptnumber)
+    pushl $\num
+    jmp interrupthandler
+.endm
+
+.macro HandleExceptionNoError num
+.global HandleException\num\()
+HandleException\num\():
+    pushl $0 # Add empty error code
+    pushl $\num
     jmp interrupthandler
 .endm
 
@@ -9,31 +17,31 @@ HandleException\num\():
 .macro HandleInterruptRequest num
 .global HandleInterruptRequest\num\()
 HandleInterruptRequest\num\():
-    movb $\num + 0x20, (interruptnumber)
     pushl $0
+    pushl $\num + 0x20
     jmp interrupthandler
 .endm
 
-HandleException 0x00
-HandleException 0x01
-HandleException 0x02
-HandleException 0x03
-HandleException 0x04
-HandleException 0x05
-HandleException 0x06
-HandleException 0x07
-HandleException 0x08
-HandleException 0x09
-HandleException 0x0A
-HandleException 0x0B
-HandleException 0x0C
-HandleException 0x0D
-HandleException 0x0E
-HandleException 0x0F
-HandleException 0x10
-HandleException 0x11
-HandleException 0x12
-HandleException 0x13
+HandleExceptionNoError 0x00
+HandleExceptionNoError 0x01
+HandleExceptionNoError 0x02
+HandleExceptionNoError 0x03
+HandleExceptionNoError 0x04
+HandleExceptionNoError 0x05
+HandleExceptionNoError 0x06
+HandleExceptionNoError 0x07
+HandleExceptionWithError 0x08
+HandleExceptionNoError 0x09
+HandleExceptionWithError 0x0A
+HandleExceptionWithError 0x0B
+HandleExceptionWithError 0x0C
+HandleExceptionWithError 0x0D
+HandleExceptionWithError 0x0E
+HandleExceptionNoError 0x0F
+HandleExceptionNoError 0x10
+HandleExceptionNoError 0x11
+HandleExceptionNoError 0x12
+HandleExceptionNoError 0x13
 
 HandleInterruptRequest 0x00
 HandleInterruptRequest 0x01
@@ -53,38 +61,40 @@ HandleInterruptRequest 0x0E
 HandleInterruptRequest 0x0F
 HandleInterruptRequest 0x31
 
+HandleInterruptRequest 0xDD
+
 interrupthandler:    
-    pushl %ebp
-    pushl %edi
-    pushl %esi
+    # Save Registers
+    pusha
+	pushl %ds
+	pushl %es
+	pushl %fs
+	pushl %gs
 
-    pushl %edx
-    pushl %ecx
-    pushl %ebx
-    pushl %eax
+    # load the kernel data segment descriptor
+	mov $0x10, %ax
+	mov %ax, %ds
+	mov %ax, %es
+	mov %ax, %fs
+	mov %ax, %gs
 
-    # call C++ Handler
-    pushl %esp
-    push (interruptnumber)
-    call _ZN8CactusOS4core24InterruptDescriptorTable15HandleInterruptEhj
+	mov %esp, %eax
+	push %eax
+	// Call the kernel IRQ handler
+	call _ZN8CactusOS4core24InterruptDescriptorTable15HandleInterruptEPNS0_8CPUStateE
+	popl %eax
 
-    mov %eax, %esp # switch the stack that is returned from the function
+    # Restore Registers
+	popl %gs
+	popl %fs
+	popl %es
+	popl %ds
+	popa
 
-    # restore registers
-    popl %eax
-    popl %ebx
-    popl %ecx
-    popl %edx
-
-    popl %esi
-    popl %edi
-    popl %ebp
-    
-    add $4, %esp
+    # Clean up
+	add $8, %esp
+    iret
 
 .global IgnoreInterrupt
 IgnoreInterrupt:
     iret
-
-.data
-interruptnumber: .byte 0

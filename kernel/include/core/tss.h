@@ -44,6 +44,7 @@ namespace CactusOS
         public:
             static void Install(common::uint32_t idx, common::uint16_t kernelSS, common::uint16_t kernelESP);
             static void SetStack(common::uint16_t kernelSS, common::uint16_t kernelESP);
+            static TSSEntry* GetCurrent();
         };
     }
 }

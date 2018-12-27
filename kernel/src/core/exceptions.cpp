@@ -33,11 +33,11 @@ uint32_t Exceptions::PageFault(uint32_t esp)
     CPUState* regs = (CPUState*)esp;
 
     // The error code gives us details of what happened.
-    int present   = !(regs->err_code & 0x1); // Page not present
-    int rw = regs->err_code & 0x2;           // Write operation?
-    int us = regs->err_code & 0x4;           // Processor was in user-mode?
-    int reserved = regs->err_code & 0x8;     // Overwritten CPU-reserved bits of page entry?
-    int id = regs->err_code & 0x10;          // Caused by an instruction fetch?
+    int present   = !(regs->ErrorCode & 0x1); // Page not present
+    int rw = regs->ErrorCode & 0x2;           // Write operation?
+    int us = regs->ErrorCode & 0x4;           // Processor was in user-mode?
+    int reserved = regs->ErrorCode & 0x8;     // Overwritten CPU-reserved bits of page entry?
+    int id = regs->ErrorCode & 0x10;          // Caused by an instruction fetch?
 
     BootConsole::Write("Got Page Fault (");
 

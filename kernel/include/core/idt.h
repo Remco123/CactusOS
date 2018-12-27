@@ -53,6 +53,8 @@ namespace CactusOS
         extern "C" void HandleInterruptRequest0x0F();
         extern "C" void HandleInterruptRequest0x31();
 
+        extern "C" void HandleInterruptRequest0xDD();
+
         extern "C" void HandleException0x00();
         extern "C" void HandleException0x01();
         extern "C" void HandleException0x02();
@@ -79,7 +81,7 @@ namespace CactusOS
         private:
             static void SetDescriptor(common::uint32_t number,  void (*handler)());
 
-            static common::uint32_t HandleInterrupt(common::uint8_t interrupt, common::uint32_t esp);
+            static void HandleInterrupt(CPUState* state);
         public:
             static void Install();
 

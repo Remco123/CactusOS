@@ -38,3 +38,8 @@ void TSS::SetStack(uint16_t kernelSS, uint16_t kernelESP)
     tss.ss0 = kernelSS;
     tss.esp0 = kernelESP;
 }
+
+TSSEntry* TSS::GetCurrent()
+{
+	return &tss;
+}

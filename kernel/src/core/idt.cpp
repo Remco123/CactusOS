@@ -73,6 +73,8 @@ void InterruptDescriptorTable::Install()
     SetDescriptor(IDT_INTERRUPT_OFFSET + 0x0E, HandleInterruptRequest0x0E);
     SetDescriptor(IDT_INTERRUPT_OFFSET + 0x0F, HandleInterruptRequest0x0F);
 
+    SetDescriptor((IDT_INTERRUPT_OFFSET + 0xDD), HandleInterruptRequest0xDD);
+
     // Remap the PIC
     outportb(0x20, 0x11);
     outportb(0xA0, 0x11);
@@ -95,16 +97,23 @@ void InterruptDescriptorTable::Install()
         
 
 //Gets called for every interrupt from assembly code
-uint32_t InterruptDescriptorTable::HandleInterrupt(uint8_t interrupt, uint32_t esp)
+void InterruptDescriptorTable::HandleInterrupt(CPUState* state)
 {
-    if(interrupt < IDT_INTERRUPT_OFFSET)
+    uint8_t interrupt = state->InterruptNumber;
+    if(interrupt == 0xD && (state->EFLAGS & (1 << 17)))
     {
-        esp = Exceptions::HandleException(interrupt, esp);
+        //BootConsole::WriteLine("[IDT] VM86 Interrupt");
+        //VM86 Interrupt
+        InterruptManager::HandleInterrupt(interrupt, (uint32_t)state);
+    }
+    else if(interrupt < IDT_INTERRUPT_OFFSET)
+    {
+        Exceptions::HandleException(interrupt, (uint32_t)state);
     }
     else
     {
         //BootConsole::Write("Interrupt Handler for int: "); BootConsole::WriteLine(Convert::IntToString(interrupt));
-        esp = InterruptManager::HandleInterrupt(interrupt, esp);
+        InterruptManager::HandleInterrupt(interrupt, (uint32_t)state);
     }
 
     // hardware interrupts must be acknowledged
@@ -114,8 +123,6 @@ uint32_t InterruptDescriptorTable::HandleInterrupt(uint8_t interrupt, uint32_t e
         if(IDT_INTERRUPT_OFFSET + 8 <= interrupt)
             outportb(0xA0, 0x20);
     }
-
-    return esp;
 }
 
 void InterruptDescriptorTable::EnableInterrupts()

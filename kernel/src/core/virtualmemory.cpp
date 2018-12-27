@@ -51,7 +51,7 @@ void VirtualMemoryManager::Intialize()
     MemoryOperations::memset(&first4MbPDE, 0, sizeof(PageDirectoryEntry));
     first4MbPDE.frame = 0;
     first4MbPDE.pageSize = FOUR_MB;
-    first4MbPDE.isUser = 0;
+    first4MbPDE.isUser = 1; //VM86 code needs to run in first 1mb of memory and runs in level 3
     first4MbPDE.readWrite = 1;
     first4MbPDE.present = 1;
     pageDirectory->entries[0] = first4MbPDE;
