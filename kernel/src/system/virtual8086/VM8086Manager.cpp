@@ -42,7 +42,7 @@ uint32_t Virtual8086Manager::HandleInterrupt(common::uint32_t esp)
     TSS::GetCurrent()->esp0 = cpuGetESP();
     TSS::GetCurrent()->eip = cpuGetEIP();
 
-    BootConsole::WriteLine("[CPU] Entering VM8086 Mode");
+    //BootConsole::WriteLine("[CPU] Entering VM8086 Mode");
     cpuEnterV86(args[1], args[2], args[3], args[4], args[5]);
 
     return esp;
