@@ -21,7 +21,12 @@ namespace CactusOS
         };
 
         #define PAGE_SIZE 4096
-        #define KERNEL_PTNUM 768        //The kernel is in the 768th entry
+        #define KERNEL_PTNUM 768 //The kernel is in the 768th entry
+        #define PAGE_TABLE_ADDRESS 0xFFC00000
+        #define PAGE_DIRECTORY_ADDRESS 0xFFFFF000
+
+        #define PAGE_OFFSET_BITS 12
+
         #define PAGEDIR_INDEX(addr) (((uint32_t)addr) >> 22)
         #define PAGETBL_INDEX(addr) ((((uint32_t)addr) >> 12) & 0x3ff)
         #define PAGEFRAME_INDEX(addr) (((uint32_t)addr) & 0xfff)
@@ -73,17 +78,16 @@ namespace CactusOS
             static void PrintPageDirectoryEntry(PageDirectoryEntry pde);
             static void PrintPageTableEntry(PageTableEntry pte);
             static void ReloadCR3();
-        public:
-            static PageDirectory* currentPageDirectory;
-        
+        public:        
             static void Intialize();
-
-            static void* VirtualToPhysical(void* virtualAddress, PageDirectory* dir = currentPageDirectory);
-
             static void AllocatePage(PageTableEntry* page, bool kernel, bool writeable);
             static void FreePage(PageTableEntry* page);
 
-            static PageTableEntry* GetPageForAddress(common::uint32_t virtualAddress, bool make, PageDirectory* dir = currentPageDirectory);
+            static PageTableEntry* GetPageForAddress(common::uint32_t virtualAddress, bool shouldCreate);
+            static void* GetPageTableAddress(common::uint16_t pageTableNumber);
+            static void* virtualToPhysical(void* virtAddress);
+            static void mapVirtualToPhysical(void* physAddress, void* virtAddress, bool kernel = true, bool writeable = true);
+            static void mapVirtualToPhysical(void* physAddress, void* virtAddress, common::uint32_t size, bool kernel = true, bool writeable = true);
         };
     }
 }

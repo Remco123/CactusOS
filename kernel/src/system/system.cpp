@@ -33,9 +33,8 @@ void System::Start()
     System::vm86Manager = new Virtual8086Manager();
     System::vm86Monitor = new Virtual8086Monitor();
 
+    //The vesa component is added here but not used right away, we don't need to be in video mode so early.
     BootConsole::Write("VESA VBE");
     System::vesa = new VESA(System::vm86Manager);
     BootConsole::WriteLine(" [Done]");
-
-    System::vesa->SelectBestVideoMode();
 }

@@ -19,11 +19,6 @@ VESA::VESA(Virtual8086Manager* vm86)
     this->virtual8086Manager = vm86;
 }
 
-
-uint32_t* VESA::GetActiveFramebuffer()
-{ return (uint32_t*)this->framebufferAddress; }
-
-
 VESAModeInfo* VESA::GetModeInfo(uint16_t mode)
 {
     VESAModeInfo* info = (VESAModeInfo*)0x8000;
@@ -97,12 +92,13 @@ bool VESA::SelectBestVideoMode()
 			BootConsole::Write("Switching to video mode: 0x"); Print::printfHex16(selectedModeNumber); BootConsole::WriteLine();
 			this->SetVideoMode(selectedModeNumber);
 
-			//Set the framebuffer Address
-			this->framebufferAddress = GetModeInfo(selectedModeNumber)->PhysBasePtr;
+			//Set the current mode info
+			MemoryOperations::memcpy(&this->currentVideoMode, GetModeInfo(selectedModeNumber), sizeof(VESAModeInfo));
 
-			BootConsole::Write("Framebuffer is at: 0x"); Print::printfHex32(this->framebufferAddress); BootConsole::WriteLine();
+			BootConsole::Write("Framebuffer is at: 0x"); Print::printfHex32(this->currentVideoMode.PhysBasePtr); BootConsole::WriteLine();
 
-			*(uint32_t*)this->framebufferAddress = 0xFFFFFFFF;
+			BootConsole::WriteLine("Mapping framebuffer");
+			VirtualMemoryManager::mapVirtualToPhysical((void*)this->currentVideoMode.PhysBasePtr, (void*)this->currentVideoMode.PhysBasePtr, this->currentVideoMode.YResolution * this->currentVideoMode.BytesPerScanLine, true, true);
 
 			return true;
 		}

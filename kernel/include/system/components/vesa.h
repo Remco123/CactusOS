@@ -4,7 +4,7 @@
 #include <common/types.h>
 #include <system/virtual8086/VM86Manager.h>
 #include <system/components/systemcomponent.h>
-#include <core/physicalmemory.h>
+#include <core/virtualmemory.h>
 
 namespace CactusOS
 {
@@ -66,12 +66,10 @@ namespace CactusOS
         class VESA : public SystemComponent
         {
         private:
-            common::uint32_t framebufferAddress;
             Virtual8086Manager* virtual8086Manager;
         public:
+            VESAModeInfo currentVideoMode;
             VESA(Virtual8086Manager* vm86);
-
-            common::uint32_t* GetActiveFramebuffer(); 
 
             VESAModeInfo* GetModeInfo(common::uint16_t mode);
             void SetVideoMode(common::uint16_t mode);
