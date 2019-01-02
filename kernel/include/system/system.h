@@ -10,6 +10,8 @@
 #include <system/virtual8086/VM86Manager.h>
 #include <system/virtual8086/VM86Monitor.h>
 
+#include <system/initrd.h>
+
 namespace CactusOS
 {
     namespace system
@@ -17,6 +19,7 @@ namespace CactusOS
         class System
         {
         public:
+            static multiboot_info_t* mbi;
             static PIT* pit;
             static RTC* rtc;
             static SMBIOS* smbios;

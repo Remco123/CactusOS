@@ -5,10 +5,6 @@ using namespace CactusOS::system;
 using namespace CactusOS::common;
 using namespace CactusOS::core;
 
-void Print::printf(char *str)
-{
-    system::BootConsole::Write(str);
-}
 void Print::printfHex(uint8_t key)
 {
     char *foo = "00";
@@ -33,7 +29,7 @@ void Print::printbits(uint8_t key)
 {
     for (int bit = 0; bit < 8; bit++)
     {
-        printf(Convert::IntToString(key & 0x01));
+        BootConsole::Write(Convert::IntToString(key & 0x01));
         key = key >> 1;
     }
 }

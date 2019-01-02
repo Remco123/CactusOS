@@ -5,6 +5,7 @@ using namespace CactusOS::common;
 using namespace CactusOS::core;
 using namespace CactusOS::system;
 
+multiboot_info_t* System::mbi = 0;
 PIT* System::pit = 0;
 RTC* System::rtc = 0;
 SMBIOS* System::smbios = 0;
@@ -37,4 +38,7 @@ void System::Start()
     BootConsole::Write("VESA VBE");
     System::vesa = new VESA(System::vm86Manager);
     BootConsole::WriteLine(" [Done]");
+
+    BootConsole::WriteLine("Loading Initial Ramdisk");
+    InitialRamDisk::Initialize(System::mbi);
 }

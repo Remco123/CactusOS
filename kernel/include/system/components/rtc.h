@@ -8,7 +8,7 @@ namespace CactusOS
 {
     namespace system
     {
-        #define CURRENT_YEAR 2018
+        #define CURRENT_YEAR 2019
 
         class RTC : public SystemComponent
         {

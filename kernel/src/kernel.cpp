@@ -36,7 +36,7 @@ extern "C" void kernelMain(const multiboot_info_t* mbi, unsigned int multiboot_m
     uint32_t kernel_end = (uint32_t) &_kernel_end;
     uint32_t kernel_size = kernel_end - kernel_base;
 
-    BootConsole::Init(true);
+    BootConsole::Init(String::strncmp((char*)phys2virt(mbi->cmdline), "serial", 7));
     BootConsole::ForegroundColor = VGA_COLOR_BLUE;
     BootConsole::BackgroundColor = VGA_COLOR_LIGHT_GREY;
     BootConsole::Clear();
@@ -86,6 +86,10 @@ extern "C" void kernelMain(const multiboot_info_t* mbi, unsigned int multiboot_m
 
     KernelHeap::Initialize(KERNEL_HEAP_START, KERNEL_HEAP_START + KERNEL_HEAP_START_SIZE, KERNEL_HEAP_END);
     BootConsole::WriteLine("Kernel Heap Initialized");
+
+    BootConsole::WriteLine("Passing mbi to system");
+    System::mbi = (multiboot_info_t*)KernelHeap::malloc(sizeof(multiboot_info_t));
+    MemoryOperations::memcpy(System::mbi, mbi, sizeof(multiboot_info_t));
 
     BootConsole::ForegroundColor = VGA_COLOR_MAGENTA;
     BootConsole::WriteLine("-Kernel core intialized-");

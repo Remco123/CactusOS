@@ -12,6 +12,8 @@ namespace CactusOS
         {
         public:
             static int strlen(const char* str);
+            static bool strcmp(const char* strA, const char* strB);
+            static bool strncmp(const char* s1, const char* s2, int n);
         };
     }
 }

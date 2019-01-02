@@ -10,3 +10,23 @@ int String::strlen(const char* str)
 		len++;
 	return len;
 }
+
+bool String::strcmp(const char* strA, const char* strB)
+{
+    while(*strA == *strB)
+    {
+        if(*strA == '\0')
+            return true; //If we reach this the strings are equal
+        ++strA;
+        ++strB;
+    }
+    return false;
+}
+
+bool String::strncmp(const char* s1, const char* s2, int n)
+{
+    while(n--)
+        if(*s1++ != *s2++)
+            return false;
+    return true;
+}

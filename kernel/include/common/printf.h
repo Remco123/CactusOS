@@ -12,7 +12,6 @@ namespace CactusOS
         class Print
         {
         public:
-            static void printf(char *str);
             static void printfHex(uint8_t key);
             static void printfHex16(uint16_t key);
             static void printfHex32(uint32_t key);
