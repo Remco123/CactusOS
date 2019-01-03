@@ -7,6 +7,7 @@
 #include <system/components/rtc.h>
 #include <system/components/smbios.h>
 #include <system/components/vesa.h>
+#include <system/components/pci.h>
 #include <system/virtual8086/VM86Manager.h>
 #include <system/virtual8086/VM86Monitor.h>
 
@@ -26,6 +27,7 @@ namespace CactusOS
             static Virtual8086Manager* vm86Manager;
             static Virtual8086Monitor* vm86Monitor;
             static VESA* vesa;
+            static PCIController* pci;
 
             static void Start();
         };

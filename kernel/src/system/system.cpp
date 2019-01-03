@@ -12,6 +12,7 @@ SMBIOS* System::smbios = 0;
 Virtual8086Manager* System::vm86Manager = 0;
 Virtual8086Monitor* System::vm86Monitor = 0;
 VESA* System::vesa = 0;
+PCIController* System::pci = 0;
 
 void System::Start()
 {
@@ -41,4 +42,10 @@ void System::Start()
 
     BootConsole::WriteLine("Loading Initial Ramdisk");
     InitialRamDisk::Initialize(System::mbi);
+
+    BootConsole::Write("PCI");
+    System::pci = new PCIController();
+    BootConsole::WriteLine(" [Done]");
+
+    System::pci->PopulateDeviceList();
 }

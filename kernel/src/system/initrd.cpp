@@ -35,7 +35,7 @@ void* InitialRamDisk::ReadFile(const char* path, uint32_t* fileSizeReturn)
             return (void*)((uint32_t)header + sizeof(InitrdFileHeader));
         }
         
-        header = header + header->size;
+        header = (InitrdFileHeader*)((uint32_t)header + sizeof(InitrdFileHeader) + header->size);
     }
     return 0;
 }

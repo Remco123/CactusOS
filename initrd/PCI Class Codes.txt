@@ -1,0 +1,110 @@
+00:00 Unclassified
+01:00 Mass Storage Controller - SCSI Bus Controller
+01:01 Mass Storage Controller - IDE Controller
+01:02 Mass Storage Controller - Floppy Disk Controller
+01:03 Mass Storage Controller - IPI Bus Controller
+01:04 Mass Storage Controller - RAID Controller
+01:05 Mass Storage Controller - ATA Controller
+01:06 Mass Storage Controller - Serial ATA
+01:07 Mass Storage Controller - Serial Attached SCSI
+01:08 Mass Storage Controller - Non-Volatile Memory Controller
+01:80 Mass Storage Controller - Other
+02:00 Network Controller - Ethernet Controller
+02:01 Network Controller - Token Ring Controller
+02:02 Network Controller - FDDI Controller
+02:03 Network Controller - ATM Controller
+02:04 Network Controller - ISDN Controller
+02:05 Network Controller - WorldFip Controller
+02:06 Network Controller - PICMG 2.14 Multi Computing
+02:07 Network Controller - Infiniband Controller
+02:08 Network Controller - Fabric Controller
+02:80 Network Controller - Other
+03:00 Display Controller - VGA Compatible Controller
+03:01 Display Controller - XGA Controller
+03:02 Display Controller - 3D Controller (Not VGA-Compatible)
+03:80 Display Controller - Other
+04:00 Multimedia Controller - Multimedia Video Controller
+04:01 Multimedia Controller - Multimedia Audio Controller
+04:02 Multimedia Controller - Computer Telephony Device
+04:03 Multimedia Controller - Audio Device
+04:80 Multimedia Controller - Other
+05:00 Memory Controller - RAM Controller
+05:01 Memory Controller - Flash Controller
+05:80 Memory Controller - Other
+06:00 Bridge Device - Host Bridge
+06:01 Bridge Device - ISA Bridge
+06:02 Bridge Device - EISA Bridge
+06:03 Bridge Device - MCA Bridge
+06:04 Bridge Device - PCI-to-PCI Bridge
+06:05 Bridge Device - PCMCIA Bridge
+06:06 Bridge Device - NuBus Bridge
+06:07 Bridge Device - CardBus Bridge
+06:08 Bridge Device - RACEway Bridge
+06:09 Bridge Device - PCI-to-PCI Bridge
+06:0A Bridge Device - InfiniBand-to-PCI Host Bridge
+06:80 Bridge Device - Other
+07:00 Simple Communication Controller - Serial Controller
+07:01 Simple Communication Controller - Parallel Controller
+07:02 Simple Communication Controller - Multiport Serial Controller
+07:03 Simple Communication Controller - Modem
+07:04 Simple Communication Controller - IEEE 488.1/2 (GPIB) Controller
+07:05 Simple Communication Controller - Smart Card
+07:80 Simple Communication Controller - Other
+08:00 Base System Peripheral - PIC
+08:01 Base System Peripheral - DMA Controller
+08:02 Base System Peripheral - Timer
+08:03 Base System Peripheral - RTC Controller
+08:04 Base System Peripheral - PCI Hot-Plug Controller
+08:05 Base System Peripheral - SD Host controller
+08:06 Base System Peripheral - IOMMU
+08:80 Base System Peripheral - Other
+09:00 Input Device Controller - Keyboard Controller
+09:01 Input Device Controller - Digitizer Pen
+09:02 Input Device Controller - Mouse Controller
+09:03 Input Device Controller - Scanner Controller
+09:04 Input Device Controller - Gameport Controller
+09:80 Input Device Controller - Other
+0A:00 Docking Station - Generic
+0A:80 Docking Station - Other
+0B:00 Processor - 386
+0B:01 Processor - 486
+0B:02 Processor - Pentium
+0B:10 Processor - Alpha
+0B:20 Processor - PowerPC
+0B:30 Processor - MIPS
+0B:40 Processor - Co-Processor
+0C:00 Serial Bus Controller - FireWire (IEEE 1394) Controller
+0C:01 Serial Bus Controller - ACCESS Bus
+0C:02 Serial Bus Controller - SSA
+0C:03 Serial Bus Controller - USB Controller
+0C:04 Serial Bus Controller - Fibre Channel
+0C:05 Serial Bus Controller - SMBus
+0C:06 Serial Bus Controller - InfiniBand
+0C:07 Serial Bus Controller - IPMI Interface
+0C:08 Serial Bus Controller - SERCOS Interface (IEC 61491)
+0C:09 Serial Bus Controller - CANbus
+0D:00 Wireless Controller - iRDA Compatible Controller
+0D:01 Wireless Controller - Consumer IR Controller
+0D:10 Wireless Controller - RF Controller
+0D:11 Wireless Controller - Bluetooth Controller
+0D:12 Wireless Controller - Broadband Controller
+0D:20 Wireless Controller - Ethernet Controller (802.1a)
+0D:21 Wireless Controller - Ethernet Controller (802.1b)
+0D:80 Wireless Controller - Other
+0E:00 Intelligent Controller - I20
+0F:01 Satellite Communication Controller - Satellite TV Controller
+0F:02 Satellite Communication Controller - Satellite Audio Controller
+0F:03 Satellite Communication Controller - Satellite Voice Controller
+0F:04 Satellite Communication Controller - Satellite Data Controller
+10:00 Encryption Controller - Network and Computing Encrpytion/Decryption
+10:10 Encryption Controller - Entertainment Encryption/Decryption
+10:80 Encryption Controller - Other Encryption/Decryption
+11:00 Signal Processing Controller - DPIO Modules
+11:01 Signal Processing Controller - Performance Counters
+11:10 Signal Processing Controller - Communication Synchronizer
+11:20 Signal Processing Controller - Signal Processing Management
+11:80 Signal Processing Controller - Other
+12:00 Processing Accelerator
+13:00 Non-Essential Instrumentation
+40:00 Co-Processor
+FF:00 Unassigned Class
