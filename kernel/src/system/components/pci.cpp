@@ -77,11 +77,19 @@ void PCIController::PopulateDeviceList()
                 pciDevice->revisionID = Read(bus, device, function, 0x08);
                 pciDevice->interrupt = Read(bus, device, function, 0x3C);
 
-                BootConsole::Write("   ");
-                Print::printfHex16(pciDevice->vendorID); BootConsole::Write(":");
-                Print::printfHex16(pciDevice->deviceID); BootConsole::Write("   ");
-                BootConsole::WriteLine(GetClassCodeString(pciDevice->classID, pciDevice->subclassID));
+                //Get the portBase from the base address registers
+                for(int barNum = 0; barNum < 6; barNum++)
+                {
+                    BaseAddressRegister bar = GetBaseAddressRegister(bus, device, function, barNum);
+                    if(bar.address && (bar.type == InputOutput))
+                        pciDevice->portBase = (uint32_t)bar.address;
+                }
 
+                BootConsole::SetX(8); BootConsole::Write("  ");
+                Print::printfHex16(pciDevice->vendorID); BootConsole::Write(":");
+                Print::printfHex16(pciDevice->deviceID); BootConsole::Write("  ");
+                BootConsole::WriteLine(GetClassCodeString(pciDevice->classID, pciDevice->subclassID));
+                
                 deviceList.push_back(pciDevice);
             }
         }
@@ -101,10 +109,13 @@ char* PCIController::GetClassCodeString(uint8_t classID, uint8_t subClassID)
     idString[3] = subClassIDString[0];
     idString[4] = subClassIDString[1];
 
-    uint32_t lookupTableSize;
+    uint32_t lookupTableSize = 0;
     char* lookupTable = (char*)InitialRamDisk::ReadFile("/PCI Class Codes.txt", &lookupTableSize);
-    if(lookupTable == 0 || lookupTableSize == 0)
+    if(lookupTable == 0 || lookupTableSize == 0) {
+        delete classIDString;
+        delete subClassIDString;
         return "Database Error";
+    }
 
     uint32_t tableIndex = 0;
     while(tableIndex < lookupTableSize)
@@ -133,4 +144,49 @@ char* PCIController::GetClassCodeString(uint8_t classID, uint8_t subClassID)
     delete classIDString;
     delete subClassIDString;
     return "Unkown";
+}
+
+BaseAddressRegister PCIController::GetBaseAddressRegister(uint16_t bus, uint16_t device, uint16_t function, uint16_t bar)
+{
+    BaseAddressRegister result;
+    MemoryOperations::memset(&result, 0, sizeof(BaseAddressRegister));
+
+    uint32_t barRegister = 0x10 + (bar * sizeof(uint32_t));
+    uint32_t barValue = Read(bus, device, function, barRegister);
+
+    if(barValue == 0)
+        return result;
+    
+    uint32_t headertype = Read(bus, device, function, 0x0E) & 0x7F;
+    int maxBARs = 6 - (4*headertype);
+    if(bar >= maxBARs)
+        return result;
+
+    //Get The size of the BAR
+    Write(bus, device, function, barRegister, 0xffffffff);
+    uint32_t sizeMask = Read(bus, device, function, barRegister);
+    //Write back the original value
+    Write(bus, device, function, barRegister, barValue);
+
+    //Fill in the structure
+    result.type = (barValue & 0x1) ? InputOutput : MemoryMapping;
+
+    if(result.type == MemoryMapping)
+    {
+        switch((barValue >> 1) & 0x3)
+        {
+            case 0: // 32 Bit Mode
+                result.address = (uint8_t*)(uintptr_t)(barValue & ~0xf);
+                result.size = ~(sizeMask & ~0xf) + 1;
+                result.prefetchable = barValue & 0x8;
+                break;
+            case 2: // 64 Bit Mode
+                break;
+        }   
+    }
+    else // InputOutput
+    {
+        result.address = (uint8_t*)(barValue & ~0x3);
+        result.size = (uint16_t)(~(sizeMask & ~0x3) + 1);
+    }
 }

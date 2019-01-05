@@ -30,6 +30,20 @@ namespace CactusOS
             common::uint8_t revisionID;
         } __attribute__((packed));
 
+        enum BaseAddressRegisterType
+        {
+            MemoryMapping = 0,
+            InputOutput = 1
+        };
+
+        struct BaseAddressRegister
+        {
+            bool prefetchable;
+            CactusOS::common::uint8_t* address;
+            CactusOS::common::uint32_t size;
+            BaseAddressRegisterType type;
+        } __attribute__((packed));
+
         class PCIController : public SystemComponent
         {
         private:
@@ -38,6 +52,7 @@ namespace CactusOS
         protected:
             common::uint32_t Read(common::uint16_t bus, common::uint16_t device, common::uint16_t function, common::uint32_t registeroffset);
             void Write(common::uint16_t bus, common::uint16_t device, common::uint16_t function, common::uint32_t registeroffset, common::uint32_t value);
+            BaseAddressRegister GetBaseAddressRegister(common::uint16_t bus, common::uint16_t device, common::uint16_t function, common::uint16_t bar);
         public:
             List<PCIDevice*> deviceList;
 
