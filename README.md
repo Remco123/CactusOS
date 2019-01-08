@@ -11,8 +11,8 @@ A simple operating system made for fun.
 - SMBios Parsing [Done]
 - Virtual 8086 Mode [Done]
 - VESA Vbe after boot [Done] (Just not used yet, but working)
+- IDE support (ATA/ATAPI)
 
 # Planned Features
-- IDE support (ATA/ATAPI)
 - ISO9660 filesystem
 - Simple GUI

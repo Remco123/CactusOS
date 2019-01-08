@@ -7,6 +7,8 @@ namespace CactusOS
 {
     namespace core
     {
+        #define insl(port, buffer, count) asm volatile("cld; rep; insl" :: "D" (buffer), "d" (port), "c" (count))
+
         inline static unsigned char inportb (unsigned short _port)
         {
             unsigned char rv;

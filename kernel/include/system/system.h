@@ -12,6 +12,8 @@
 #include <system/virtual8086/VM86Monitor.h>
 
 #include <system/initrd.h>
+#include <system/drivers/drivermanager.h>
+#include <system/drivers/pcidrivers.h>
 
 namespace CactusOS
 {
@@ -28,6 +30,7 @@ namespace CactusOS
             static Virtual8086Monitor* vm86Monitor;
             static VESA* vesa;
             static PCIController* pci;
+            static drivers::DriverManager* driverManager;
 
             static void Start();
         };

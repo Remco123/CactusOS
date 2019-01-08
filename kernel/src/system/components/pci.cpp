@@ -176,7 +176,7 @@ BaseAddressRegister PCIController::GetBaseAddressRegister(uint16_t bus, uint16_t
         switch((barValue >> 1) & 0x3)
         {
             case 0: // 32 Bit Mode
-                result.address = (uint8_t*)(uintptr_t)(barValue & ~0xf);
+                result.address = (uint32_t)(uintptr_t)(barValue & ~0xf);
                 result.size = ~(sizeMask & ~0xf) + 1;
                 result.prefetchable = barValue & 0x8;
                 break;
@@ -186,7 +186,7 @@ BaseAddressRegister PCIController::GetBaseAddressRegister(uint16_t bus, uint16_t
     }
     else // InputOutput
     {
-        result.address = (uint8_t*)(barValue & ~0x3);
+        result.address = (uint32_t)(barValue & ~0x3);
         result.size = (uint16_t)(~(sizeMask & ~0x3) + 1);
     }
 }

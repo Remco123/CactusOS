@@ -4,6 +4,7 @@ using namespace CactusOS;
 using namespace CactusOS::common;
 using namespace CactusOS::core;
 using namespace CactusOS::system;
+using namespace CactusOS::system::drivers;
 
 multiboot_info_t* System::mbi = 0;
 PIT* System::pit = 0;
@@ -13,6 +14,7 @@ Virtual8086Manager* System::vm86Manager = 0;
 Virtual8086Monitor* System::vm86Monitor = 0;
 VESA* System::vesa = 0;
 PCIController* System::pci = 0;
+DriverManager* System::driverManager = 0;
 
 void System::Start()
 {
@@ -29,7 +31,10 @@ void System::Start()
 
     BootConsole::WriteLine("SMBIOS [Done]");
     System::smbios = new SMBIOS(true);
+#if 0
+//This does not work on bochs for some weird reason, we get a page-fault then.
     System::smbios->PrintSummary();
+#endif
 
     BootConsole::WriteLine("Adding Virtual 8086");
     System::vm86Manager = new Virtual8086Manager();
@@ -48,4 +53,13 @@ void System::Start()
     BootConsole::WriteLine(" [Done]");
 
     System::pci->PopulateDeviceList();
+
+    BootConsole::WriteLine("Starting Driver Manager");
+    System::driverManager = new DriverManager();
+
+    BootConsole::WriteLine("Assigning PCI Drivers");
+    PCIDrivers::AssignDriversFromPCI(System::pci, System::driverManager);
+
+    BootConsole::WriteLine("Activating Drivers");
+    System::driverManager->ActivateAll();
 }

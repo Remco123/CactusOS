@@ -39,7 +39,7 @@ namespace CactusOS
         struct BaseAddressRegister
         {
             bool prefetchable;
-            CactusOS::common::uint8_t* address;
+            CactusOS::common::uint32_t address;
             CactusOS::common::uint32_t size;
             BaseAddressRegisterType type;
         } __attribute__((packed));
@@ -49,7 +49,7 @@ namespace CactusOS
         private:
             bool DeviceHasFunctions(common::uint16_t bus, common::uint16_t device);
             char* GetClassCodeString(common::uint8_t classID, common::uint8_t subClassID);
-        protected:
+        public:
             common::uint32_t Read(common::uint16_t bus, common::uint16_t device, common::uint16_t function, common::uint32_t registeroffset);
             void Write(common::uint16_t bus, common::uint16_t device, common::uint16_t function, common::uint32_t registeroffset, common::uint32_t value);
             BaseAddressRegister GetBaseAddressRegister(common::uint16_t bus, common::uint16_t device, common::uint16_t function, common::uint16_t bar);
