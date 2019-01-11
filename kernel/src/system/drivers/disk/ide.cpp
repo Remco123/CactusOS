@@ -28,7 +28,8 @@ uint32_t IDEInterruptHandler::HandleInterrupt(uint32_t esp)
 
 
 IDEController::IDEController(PCIDevice* device)
-: Driver("PCI IDE Controller", "PCI IDE Controller")
+: Driver("PCI IDE Controller", "PCI IDE Controller"),
+  DiskController()
 {
     this->pciDevice = device;
 
@@ -146,6 +147,8 @@ bool IDEController::Initialize()
             BootConsole::Write("Found "); BootConsole::Write(ideDevices[i].Type == 0 ? (char*)"ATA" : (char*)"ATAPI");
             BootConsole::Write(" Drive "); BootConsole::Write(Convert::IntToString(ideDevices[i].Size / 1024 / 2));
             BootConsole::Write("MB - "); BootConsole::WriteLine((char*)ideDevices[i].Model);
+
+            System::diskManager->AddDisk(new Disk(i, this));
         }
 
     return true;
@@ -303,7 +306,7 @@ uint8_t IDEController::PrintErrorCode(uint32_t drive, uint8_t err)
     return err;
 }
 
-uint8_t IDEController::ReadSector(uint16_t drive, uint32_t lba, uint8_t* buf)
+char IDEController::ReadSector(uint16_t drive, uint32_t lba, uint8_t* buf)
 {
     uint8_t returnCode = 0;
     
@@ -330,7 +333,7 @@ uint8_t IDEController::ReadSector(uint16_t drive, uint32_t lba, uint8_t* buf)
     return returnCode;
 }
 
-uint8_t IDEController::WriteSector(uint16_t drive, uint32_t lba, uint8_t* buf)
+char IDEController::WriteSector(uint16_t drive, uint32_t lba, uint8_t* buf)
 {
     uint8_t returnCode = 0;
 

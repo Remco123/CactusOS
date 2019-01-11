@@ -9,6 +9,8 @@ https://wiki.osdev.org/PCI_IDE_Controller
 #include <system/components/pci.h>
 #include <system/interruptmanager.h>
 
+#include <system/disks/diskcontroller.h>
+
 namespace CactusOS
 {
     namespace system
@@ -124,7 +126,7 @@ namespace CactusOS
                 common::uint32_t HandleInterrupt(common::uint32_t esp);
             };
 
-            class IDEController : public Driver
+            class IDEController : public Driver, public DiskController
             {
             private:
                 PCIDevice* pciDevice;
@@ -157,9 +159,9 @@ namespace CactusOS
 
                 bool Initialize();
 
-                //Read Functions
-                common::uint8_t ReadSector(common::uint16_t drive, common::uint32_t lba, common::uint8_t* buf);
-                common::uint8_t WriteSector(common::uint16_t drive, common::uint32_t lba, common::uint8_t* buf);
+                //DiskController Functions
+                char ReadSector(common::uint16_t drive, common::uint32_t lba, common::uint8_t* buf);
+                char WriteSector(common::uint16_t drive, common::uint32_t lba, common::uint8_t* buf);
 
                 common::uint8_t EjectDrive(common::uint8_t drive);
             };

@@ -15,6 +15,7 @@ Virtual8086Monitor* System::vm86Monitor = 0;
 VESA* System::vesa = 0;
 PCIController* System::pci = 0;
 DriverManager* System::driverManager = 0;
+DiskManager* System::diskManager = 0;
 
 void System::Start()
 {
@@ -57,9 +58,14 @@ void System::Start()
     BootConsole::WriteLine("Starting Driver Manager");
     System::driverManager = new DriverManager();
 
+    BootConsole::WriteLine("Starting Disk Manager");
+    System::diskManager = new DiskManager();
+
     BootConsole::WriteLine("Assigning PCI Drivers");
     PCIDrivers::AssignDriversFromPCI(System::pci, System::driverManager);
 
     BootConsole::WriteLine("Activating Drivers");
     System::driverManager->ActivateAll();
+
+    BootConsole::Write("Found a total of: "); BootConsole::Write(Convert::IntToString(System::diskManager->allDisks.size())); BootConsole::WriteLine(System::diskManager->allDisks.size() > 1 ? (char*)" disks" : (char*)" disk");
 }

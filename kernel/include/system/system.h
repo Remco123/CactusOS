@@ -14,6 +14,7 @@
 #include <system/initrd.h>
 #include <system/drivers/drivermanager.h>
 #include <system/drivers/pcidrivers.h>
+#include <system/disks/diskmanager.h>
 
 namespace CactusOS
 {
@@ -31,6 +32,7 @@ namespace CactusOS
             static VESA* vesa;
             static PCIController* pci;
             static drivers::DriverManager* driverManager;
+            static DiskManager* diskManager;
 
             static void Start();
         };
