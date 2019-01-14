@@ -2,7 +2,12 @@
 
 using namespace CactusOS::common;
 
-char* Convert::IntToString(uint32_t n)
+int IsSpace(char c)
+{
+    return c == ' ' || c == '\t' || c == '\n' || c == '\v' || c == '\f' || c == '\r';
+}
+
+char* Convert::IntToString(int n)
 {
     static char ret[24];
     int numChars = 0;
@@ -46,4 +51,42 @@ char* Convert::IntToHexString(uint8_t w)
     for (uint32_t i=0, j=(hexSize-1)*4 ; i<hexSize; ++i,j-=4)
         rc[i] = digits[(w>>j) & 0x0f];
     return rc;
+}
+
+int Convert::StringToInt(char* string)
+{
+    int result = 0;
+    unsigned int digit;
+    int sign;
+
+    while (IsSpace(*string)) {
+        string += 1;
+    }
+
+    /*
+    * Check for a sign.
+    */
+
+    if (*string == '-') {
+        sign = 1;
+        string += 1;
+    } else {
+        sign = 0;
+        if (*string == '+') {
+            string += 1;
+        }
+    }
+
+    for ( ; ; string += 1) {
+        digit = *string - '0';
+        if (digit > 9) {
+            break;
+        }
+        result = (10*result) + digit;
+    }
+
+    if (sign) {
+        return -result;
+    }
+    return result;
 }

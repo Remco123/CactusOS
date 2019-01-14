@@ -189,4 +189,5 @@ BaseAddressRegister PCIController::GetBaseAddressRegister(uint16_t bus, uint16_t
         result.address = (uint32_t)(barValue & ~0x3);
         result.size = (uint16_t)(~(sizeMask & ~0x3) + 1);
     }
+    return result;
 }

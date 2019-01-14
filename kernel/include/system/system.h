@@ -15,6 +15,8 @@
 #include <system/drivers/drivermanager.h>
 #include <system/drivers/pcidrivers.h>
 #include <system/disks/diskmanager.h>
+#include <system/disks/partitionmanager.h>
+#include <system/vfs/vfsmanager.h>
 
 namespace CactusOS
 {
@@ -33,6 +35,7 @@ namespace CactusOS
             static PCIController* pci;
             static drivers::DriverManager* driverManager;
             static DiskManager* diskManager;
+            static VFSManager* vfs;
 
             static void Start();
         };
