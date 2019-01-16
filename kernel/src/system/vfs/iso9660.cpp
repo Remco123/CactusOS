@@ -1,3 +1,5 @@
+//TODO: There is probably a bit of a memory leak here, fix this in the future
+
 #include <system/vfs/iso9660.h>
 
 #include <system/memory/heap.h>

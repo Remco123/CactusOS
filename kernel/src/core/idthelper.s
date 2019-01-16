@@ -80,7 +80,7 @@ interrupthandler:
 
 	mov %esp, %eax
 	push %eax
-	// Call the kernel IRQ handler
+	# Call the kernel IRQ handler
 	call _ZN8CactusOS4core24InterruptDescriptorTable15HandleInterruptEPNS0_8CPUStateE
 	popl %eax
 

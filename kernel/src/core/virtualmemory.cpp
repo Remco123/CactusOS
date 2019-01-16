@@ -49,6 +49,14 @@ void VirtualMemoryManager::Intialize()
     lastPDE.present = 1;
     pageDirectory->entries[1023] = lastPDE;
 
+    /*
+    What we do here is create a new pagetable for the kernel, currently is mapped by a 4mb page by the bootloader
+    But because we can (at least should) not access the physical allocated block directly, we need to add
+    it to the page directory first. But when we do that the physical page table is empty or contains junk, here is where the problem occurs.
+    Because of the junk qemu sometimes crashes and this could be posible on real hardware as well.
+    So for now just use the 4mb page for the kernel setup by the loader until we find a solution to this.
+    */
+#if 0
     //One pagetable for the kernel
     void* kernelPageTablePhysAddress = PhysicalMemoryManager::AllocateBlock();
     PageDirectoryEntry kernelPDE;
@@ -68,7 +76,7 @@ void VirtualMemoryManager::Intialize()
         kernelPageTable->entries[i].readWrite = 1;
         kernelPageTable->entries[i].present = 1;
     }
-
+#endif
     //Here we map some pages for the intial kernel heap
     for(uint32_t i = KERNEL_HEAP_START; i < KERNEL_HEAP_START + KERNEL_HEAP_START_SIZE; i += PAGE_SIZE)
         AllocatePage(GetPageForAddress(i, true), true, true);
