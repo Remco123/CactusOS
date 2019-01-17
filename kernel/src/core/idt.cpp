@@ -97,23 +97,23 @@ void InterruptDescriptorTable::Install()
         
 
 //Gets called for every interrupt from assembly code
-void InterruptDescriptorTable::HandleInterrupt(CPUState* state)
+uint32_t InterruptDescriptorTable::HandleInterrupt(CPUState* state)
 {
     uint8_t interrupt = state->InterruptNumber;
     if(interrupt == 0xD && (state->EFLAGS & (1 << 17)))
     {
         //BootConsole::WriteLine("[IDT] VM86 Interrupt");
         //VM86 Interrupt
-        InterruptManager::HandleInterrupt(interrupt, (uint32_t)state);
+        state = (CPUState*)InterruptManager::HandleInterrupt(interrupt, (uint32_t)state);
     }
     else if(interrupt < IDT_INTERRUPT_OFFSET)
     {
-        Exceptions::HandleException(interrupt, (uint32_t)state);
+        state = (CPUState*)Exceptions::HandleException(interrupt, (uint32_t)state);
     }
     else
     {
         //BootConsole::Write("Interrupt Handler for int: "); BootConsole::WriteLine(Convert::IntToString(interrupt));
-        InterruptManager::HandleInterrupt(interrupt, (uint32_t)state);
+        state = (CPUState*)InterruptManager::HandleInterrupt(interrupt, (uint32_t)state);
     }
 
     // hardware interrupts must be acknowledged
@@ -123,6 +123,8 @@ void InterruptDescriptorTable::HandleInterrupt(CPUState* state)
         if(IDT_INTERRUPT_OFFSET + 8 <= interrupt)
             outportb(0xA0, 0x20);
     }
+
+    return (uint32_t)state;
 }
 
 void InterruptDescriptorTable::EnableInterrupts()

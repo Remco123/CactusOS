@@ -78,11 +78,10 @@ interrupthandler:
 	mov %ax, %fs
 	mov %ax, %gs
 
-	mov %esp, %eax
-	push %eax
+	pushl %esp
 	# Call the kernel IRQ handler
 	call _ZN8CactusOS4core24InterruptDescriptorTable15HandleInterruptEPNS0_8CPUStateE
-	popl %eax
+	mov %eax, %esp
 
     # Restore Registers
 	popl %gs

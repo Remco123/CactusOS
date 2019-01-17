@@ -81,7 +81,7 @@ namespace CactusOS
         private:
             static void SetDescriptor(common::uint32_t number,  void (*handler)());
 
-            static void HandleInterrupt(CPUState* state);
+            static common::uint32_t HandleInterrupt(CPUState* state);
         public:
             static void Install();
 

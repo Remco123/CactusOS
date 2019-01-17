@@ -17,6 +17,24 @@ PCIController* System::pci = 0;
 DriverManager* System::driverManager = 0;
 DiskManager* System::diskManager = 0;
 VFSManager* System::vfs = 0;
+Scheduler* System::scheduler = 0;
+
+void TaskA()
+{
+    while(1)
+    {
+        BootConsole::Write("A");
+        for(int i = 0; i < 6000000; i++);
+    }
+}
+void TaskB()
+{
+    while(1)
+    {
+        BootConsole::Write("B");
+        for(int i = 0; i < 6000000; i++);
+    }
+}
 
 void System::Start()
 {
@@ -73,4 +91,17 @@ void System::Start()
     System::vfs = new VFSManager();
 
     PartitionManager::DetectAndLoadFilesystems(System::diskManager, System::vfs);
+
+    BootConsole::WriteLine("Starting Multitasking");
+
+    System::scheduler = new Scheduler(SCHEDULER_FREQ);
+    System::scheduler->Threads.push_back(Thread::Create(TaskA));
+    System::scheduler->Threads.push_back(Thread::Create(TaskB));
+
+    for(int i = 0; i < SCHEDULER_FREQ; i++)
+        asm("int $32");
+
+    //This is not called
+    while(1)
+        BootConsole::WriteLine("ERROR!");
 }
