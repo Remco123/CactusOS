@@ -61,7 +61,10 @@ extern "C" void kernelMain(const multiboot_info_t* mbi, unsigned int multiboot_m
     GlobalDescriptorTable::Init();
     BootConsole::WriteLine("GDT Loaded");
 
-    TSS::Install(5, 0x10, 0);
+    uint32_t esp;
+    asm volatile("mov %%esp, %0" : "=r"(esp));
+
+    TSS::Install(5, 0x10, esp);
     BootConsole::WriteLine("TSS Loaded");
 
     InterruptDescriptorTable::Install();

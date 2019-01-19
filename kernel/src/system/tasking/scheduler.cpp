@@ -37,6 +37,9 @@ uint32_t Scheduler::HandleInterrupt(uint32_t esp)
             currentThread %= Threads.size();
 
         esp = (uint32_t)Threads[currentThread]->cpuState;
+
+        //Update tss
+        //TSS::SetStack(Threads[currentThread]->cpuState->UserSS, Threads[currentThread]->cpuState->UserESP);
     }
 
     return esp;

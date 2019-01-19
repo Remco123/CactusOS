@@ -8,7 +8,7 @@ static TSSEntry tss;
 
 extern "C" void flush_tss();
 
-void TSS::Install(uint32_t idx, uint16_t kernelSS, uint16_t kernelESP)
+void TSS::Install(uint32_t idx, uint32_t kernelSS, uint32_t kernelESP)
 {
     //! install TSS descriptor
 	uint32_t base = (uint32_t) &tss;
@@ -33,7 +33,7 @@ void TSS::Install(uint32_t idx, uint16_t kernelSS, uint16_t kernelESP)
 	flush_tss();
 }
 
-void TSS::SetStack(uint16_t kernelSS, uint16_t kernelESP)
+void TSS::SetStack(uint32_t kernelSS, uint32_t kernelESP)
 {
     tss.ss0 = kernelSS;
     tss.esp0 = kernelESP;

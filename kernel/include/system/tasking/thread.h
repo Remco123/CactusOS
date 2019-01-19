@@ -22,7 +22,7 @@ namespace CactusOS
             common::uint8_t stack[4096];
             core::CPUState* cpuState;
         public:
-            static Thread* Create(void (*entryPoint)());
+            static Thread* Create(void (*entryPoint)(), bool kernel);
         };
     }
 }

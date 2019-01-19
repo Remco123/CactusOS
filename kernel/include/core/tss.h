@@ -42,8 +42,8 @@ namespace CactusOS
         class TSS
         {
         public:
-            static void Install(common::uint32_t idx, common::uint16_t kernelSS, common::uint16_t kernelESP);
-            static void SetStack(common::uint16_t kernelSS, common::uint16_t kernelESP);
+            static void Install(common::uint32_t idx, common::uint32_t kernelSS, common::uint32_t kernelESP);
+            static void SetStack(common::uint32_t kernelSS, common::uint32_t kernelESP);
             static TSSEntry* GetCurrent();
         };
     }
