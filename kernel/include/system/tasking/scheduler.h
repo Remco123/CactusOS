@@ -7,7 +7,7 @@
 #include <core/registers.h>
 #include <core/tss.h>
 #include <system/interruptmanager.h>
-#include <system/tasking/thread.h>
+#include <system/tasking/procces.h>
 
 namespace CactusOS
 {
@@ -30,12 +30,16 @@ namespace CactusOS
 
             common::uint32_t currentThread = 0;
         public:
-            List<Thread*> Threads;
+            List<Thread*> threadList;
             
             Scheduler(common::uint32_t freq);
 
             //Called every timer tick
             common::uint32_t HandleInterrupt(common::uint32_t esp);
+
+            Thread* GetCurrentThread();
+            Procces* GetCurrentProcces();
+            void ForceSwitch();
         };
     }
 }
