@@ -12,16 +12,14 @@ IDTEntry idtEntries[IDT_ENTRY_SIZE];
 IDTPointer idtPointer;
 
 
-void InterruptDescriptorTable::SetDescriptor(uint32_t number, void (*handler)())
+void InterruptDescriptorTable::SetDescriptor(uint32_t number, void (*handler)(), int accesLevel)
 {
-    const int DescriptorPrivilegeLevel = 0;
-
     uint32_t callerBase = (uint32_t)handler;
 
     idtEntries[number].handlerLowBits = (uint16_t)(callerBase & 0xFFFF);
     idtEntries[number].handlerHighBits = (uint16_t)((callerBase >> 16) & 0xFFFF);
     idtEntries[number].reserved = 0;
-    idtEntries[number].access = IDT_PRESENT | ((DescriptorPrivilegeLevel & 3) << 5) | IDT_INTERRUPT;
+    idtEntries[number].access = IDT_PRESENT | ((accesLevel & 3) << 5) | IDT_INTERRUPT;
     idtEntries[number].selector = 0x8;
 }
 
@@ -74,6 +72,7 @@ void InterruptDescriptorTable::Install()
     SetDescriptor(IDT_INTERRUPT_OFFSET + 0x0F, HandleInterruptRequest0x0F);
 
     SetDescriptor((IDT_INTERRUPT_OFFSET + 0xDD), HandleInterruptRequest0xDD);
+    SetDescriptor(0x80, HandleInterruptRequest0x60, 3);
 
     // Remap the PIC
     outportb(0x20, 0x11);

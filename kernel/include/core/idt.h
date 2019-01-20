@@ -54,6 +54,7 @@ namespace CactusOS
         extern "C" void HandleInterruptRequest0x31();
 
         extern "C" void HandleInterruptRequest0xDD();
+        extern "C" void HandleInterruptRequest0x60();
 
         extern "C" void HandleException0x00();
         extern "C" void HandleException0x01();
@@ -79,7 +80,7 @@ namespace CactusOS
         class InterruptDescriptorTable
         {
         private:
-            static void SetDescriptor(common::uint32_t number,  void (*handler)());
+            static void SetDescriptor(common::uint32_t number,  void (*handler)(), int accesLevel = 0);
 
             static common::uint32_t HandleInterrupt(CPUState* state);
         public:

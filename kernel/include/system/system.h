@@ -18,6 +18,7 @@
 #include <system/disks/partitionmanager.h>
 #include <system/vfs/vfsmanager.h>
 #include <system/tasking/scheduler.h>
+#include <system/syscalls/systemcalls.h>
 
 namespace CactusOS
 {
@@ -38,6 +39,7 @@ namespace CactusOS
             static DiskManager* diskManager;
             static VFSManager* vfs;
             static Scheduler* scheduler;
+            static SystemCalls* sysCalls;
 
             static void Start();
         };

@@ -62,6 +62,7 @@ HandleInterruptRequest 0x0F
 HandleInterruptRequest 0x31
 
 HandleInterruptRequest 0xDD
+HandleInterruptRequest 0x60
 
 interrupthandler:    
     # Save Registers
