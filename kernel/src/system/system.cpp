@@ -17,8 +17,6 @@ PCIController* System::pci = 0;
 DriverManager* System::driverManager = 0;
 DiskManager* System::diskManager = 0;
 VFSManager* System::vfs = 0;
-Scheduler* System::scheduler = 0;
-SystemCalls* System::sysCalls = 0;
 
 void System::Start()
 {
@@ -75,12 +73,6 @@ void System::Start()
     System::vfs = new VFSManager();
 
     PartitionManager::DetectAndLoadFilesystems(System::diskManager, System::vfs);
-
-    BootConsole::WriteLine("Starting Multitasking");
-    System::scheduler = new Scheduler(SCHEDULER_FREQ);
-
-    BootConsole::WriteLine("Starting SystemCalls");
-    System::sysCalls = new SystemCalls();
 
     while(1);
 }
