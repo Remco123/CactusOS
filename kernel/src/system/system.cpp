@@ -71,8 +71,5 @@ void System::Start()
     BootConsole::Write("Found a total of: "); BootConsole::Write(Convert::IntToString(System::diskManager->allDisks.size())); BootConsole::WriteLine(System::diskManager->allDisks.size() > 1 ? (char*)" disks" : (char*)" disk");
     BootConsole::WriteLine("Initializing Virtual File System");
     System::vfs = new VFSManager();
-
     PartitionManager::DetectAndLoadFilesystems(System::diskManager, System::vfs);
-
-    while(1);
 }
