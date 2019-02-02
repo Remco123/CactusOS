@@ -11,6 +11,14 @@ namespace CactusOS
 {
     namespace core
     {
+        struct SelectorErrorCode
+        {
+            common::uint8_t External : 1;
+            common::uint8_t Table : 2;
+            common::uint16_t TableIndex : 13;
+        } __attribute__((packed));
+        
+
         class Exceptions
         {
         private:

@@ -66,3 +66,25 @@ int VFSManager::ReadFile(char* path, uint8_t* buffer, uint32_t offset, int size)
     else
         return -1;
 }
+
+bool VFSManager::FileExists(char* path)
+{
+    uint8_t idSize = 0;
+    int disk = ExtractDiskNumber(path, &idSize);
+
+    if(disk != -1 && Filesystems->size() > disk)
+        return Filesystems->GetAt(disk)->FileExists(path + idSize + 2);
+    else
+        return false;
+}
+
+bool VFSManager::DirectoryExists(char* path)
+{
+    uint8_t idSize = 0;
+    int disk = ExtractDiskNumber(path, &idSize);
+
+    if(disk != -1 && Filesystems->size() > disk)
+        return Filesystems->GetAt(disk)->DirectoryExists(path + idSize + 2);
+    else
+        return false;
+}

@@ -31,3 +31,12 @@ int VirtualFileSystem::ReadFile(char* path, uint8_t* buffer, uint32_t offset, in
 {
     return -1;
 }
+
+bool VirtualFileSystem::FileExists(char* path)
+{
+    return false;
+}
+bool VirtualFileSystem::DirectoryExists(char* path)
+{
+    return false;
+}

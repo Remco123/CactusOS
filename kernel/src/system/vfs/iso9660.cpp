@@ -251,3 +251,25 @@ int ISO9660::ReadFile(char* path, uint8_t* buffer, uint32_t offset, int size)
     
     return 0;
 }
+
+bool ISO9660::FileExists(char* path)
+{
+    DirectoryRecord* entry = GetEntry(path);
+    if(entry == 0 || GetEntryType(entry) == Iso_Directory)
+    {
+        return false;
+    }
+
+    return true;
+}
+
+bool ISO9660::DirectoryExists(char* path)
+{
+    DirectoryRecord* entry = GetEntry(path);
+    if(entry == 0 || GetEntryType(entry) == Iso_File)
+    {
+        return false;
+    }
+
+    return true;
+}

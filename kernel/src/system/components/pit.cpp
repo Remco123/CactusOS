@@ -14,7 +14,7 @@ InterruptHandler(IDT_INTERRUPT_OFFSET + 0)
 
     uint64_t divisor = 1193180 / PIT_FREQUENCY; //Default is 1000 Hz
 
-    outportb(0x43, 0x36);
+    outportb(0x43, 0x34);
     outportb(0x40, (uint8_t)divisor);
     outportb(0x40, (uint8_t)(divisor >> 8));
 }

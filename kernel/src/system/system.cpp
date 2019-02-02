@@ -17,6 +17,7 @@ PCIController* System::pci = 0;
 DriverManager* System::driverManager = 0;
 DiskManager* System::diskManager = 0;
 VFSManager* System::vfs = 0;
+Scheduler* System::scheduler = 0;
 
 void System::Start()
 {
@@ -72,4 +73,7 @@ void System::Start()
     BootConsole::WriteLine("Initializing Virtual File System");
     System::vfs = new VFSManager();
     PartitionManager::DetectAndLoadFilesystems(System::diskManager, System::vfs);
+
+    BootConsole::WriteLine("Starting Scheduler");
+    System::scheduler = new Scheduler();
 }

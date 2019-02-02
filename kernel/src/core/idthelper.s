@@ -65,6 +65,8 @@ HandleInterruptRequest 0xDD
 HandleInterruptRequest 0x60
 
 interrupthandler:    
+	cli # Stop Interrupts
+	
     # Save Registers
     pusha
 	pushl %ds
@@ -93,6 +95,8 @@ interrupthandler:
 
     # Clean up
 	add $8, %esp
+
+	sti # Restart Interrupts
     iret
 
 .global IgnoreInterrupt

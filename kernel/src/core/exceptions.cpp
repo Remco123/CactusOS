@@ -18,6 +18,16 @@ uint32_t Exceptions::GeneralProtectionFault(uint32_t esp)
     BootConsole::ForegroundColor = VGA_COLOR_RED;
     BootConsole::WriteLine("Got General Protection Fault Exception");
 
+    CPUState* state = (CPUState*)esp;
+
+    if(state->ErrorCode != 0)
+    {
+        SelectorErrorCode* error = (SelectorErrorCode*)&state->ErrorCode;
+        BootConsole::Write("External: "); BootConsole::WriteLine(Convert::IntToString(error->External));
+        BootConsole::Write("Table: "); BootConsole::WriteLine(Convert::IntToString(error->Table));
+        BootConsole::Write("Index: "); BootConsole::WriteLine(Convert::IntToString(error->TableIndex));
+    }
+
     InterruptDescriptorTable::DisableInterrupts();
     while(1);
 }
