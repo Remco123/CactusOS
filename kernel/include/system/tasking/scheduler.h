@@ -9,6 +9,14 @@ namespace CactusOS
 {
     namespace system
     {
+        #define DECLARE_LOCK(name) volatile int name ## Locked
+        #define LOCK(name) \
+	        while (!__sync_bool_compare_and_swap(& name ## Locked, 0, 1)); \
+	        __sync_synchronize();
+        #define UNLOCK(name) \
+	        __sync_synchronize(); \
+	        name ## Locked = 0;
+
         #define SCHEDULER_FREQUENCY 30
 
         class Scheduler : public InterruptHandler
@@ -28,6 +36,9 @@ namespace CactusOS
 
             void AddThread(Thread* thread, bool forceSwitch = false);
             void ForceSwitch();
+
+            Thread* CurrentThread();
+            Process* CurrentProcess();
         };
     }   
 }

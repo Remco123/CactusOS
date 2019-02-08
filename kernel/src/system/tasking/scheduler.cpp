@@ -44,6 +44,10 @@ uint32_t Scheduler::HandleInterrupt(uint32_t esp)
 
             //Load new registers
             esp = (uint32_t)nextThread->regsPtr;
+
+            //Load page directory
+            if(nextThread->parent && nextThread->parent->pageDirPhys != 0)
+                VirtualMemoryManager::SwitchPageDirectory(nextThread->parent->pageDirPhys);
         }
     }
 
@@ -73,4 +77,13 @@ void Scheduler::ForceSwitch()
 {
     this->tickCount = frequency - 1;
     asm volatile ("int $0x20"); //Call timer interrupt
+}
+
+Thread* Scheduler::CurrentThread()
+{
+    return threadsList[currentThreadIndex]; 
+}
+Process* Scheduler::CurrentProcess()
+{
+    return threadsList[currentThreadIndex]->parent;
 }

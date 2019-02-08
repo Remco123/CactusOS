@@ -3,6 +3,7 @@
 
 #include <system/tasking/thread.h>
 #include <common/list.h>
+#include <common/types.h>
 
 namespace CactusOS
 {
@@ -21,6 +22,7 @@ namespace CactusOS
             int id;
             ProcessState state;
             List<Thread*> Threads;
+            common::uint32_t pageDirPhys;
 
             //For Debuging
             char fileName[32];

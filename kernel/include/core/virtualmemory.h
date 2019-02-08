@@ -83,11 +83,17 @@ namespace CactusOS
             static void AllocatePage(PageTableEntry* page, bool kernel, bool writeable);
             static void FreePage(PageTableEntry* page);
 
-            static PageTableEntry* GetPageForAddress(common::uint32_t virtualAddress, bool shouldCreate);
+            static PageTableEntry* GetPageForAddress(common::uint32_t virtualAddress, bool shouldCreate, bool readWrite = true, bool userPages = false);
+            
             static void* GetPageTableAddress(common::uint16_t pageTableNumber);
+            
             static void* virtualToPhysical(void* virtAddress);
+            
             static void mapVirtualToPhysical(void* physAddress, void* virtAddress, bool kernel = true, bool writeable = true);
             static void mapVirtualToPhysical(void* physAddress, void* virtAddress, common::uint32_t size, bool kernel = true, bool writeable = true);
+            
+            static void SwitchPageDirectory(common::uint32_t physAddr);
+            static common::uint32_t GetPageDirectoryAddress();
         };
     }
 }

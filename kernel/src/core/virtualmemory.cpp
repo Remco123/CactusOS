@@ -94,19 +94,20 @@ void VirtualMemoryManager::Intialize()
     ReloadCR3();
 }
 
-PageTableEntry* VirtualMemoryManager::GetPageForAddress(uint32_t virtualAddress, bool shouldCreate)
+PageTableEntry* VirtualMemoryManager::GetPageForAddress(uint32_t virtualAddress, bool shouldCreate, bool readWrite, bool userPages)
 {
     uint32_t pageDirIndex = PAGEDIR_INDEX(virtualAddress);
     uint32_t pageTableIndex = PAGETBL_INDEX(virtualAddress);
 
     PageDirectory* pageDir = (PageDirectory*)PAGE_DIRECTORY_ADDRESS;
-    if(pageDir->entries[pageDirIndex].present == 0)
+    if(pageDir->entries[pageDirIndex].present == 0 && shouldCreate)
     {
         void* pageTablePhys = PhysicalMemoryManager::AllocateBlock();
         MemoryOperations::memset(&pageDir->entries[pageDirIndex], 0, sizeof(PageDirectoryEntry));
 
         pageDir->entries[pageDirIndex].frame = (uint32_t)pageTablePhys / PAGE_SIZE;
-        pageDir->entries[pageDirIndex].readWrite = 1;
+        pageDir->entries[pageDirIndex].readWrite = readWrite;
+        pageDir->entries[pageDirIndex].isUser = userPages;
         pageDir->entries[pageDirIndex].pageSize = FOUR_KB;
         pageDir->entries[pageDirIndex].present = 1;
 
@@ -180,4 +181,16 @@ void VirtualMemoryManager::mapVirtualToPhysical(void* physAddress, void* virtAdd
     {
         mapVirtualToPhysical((void*)((uint32_t)physAddress + i), (void*)((uint32_t)virtAddress + i), kernel, writeable);
     }
+}
+
+void VirtualMemoryManager::SwitchPageDirectory(uint32_t physAddr)
+{
+    asm volatile("mov %0, %%cr3" :: "r"(physAddr));
+}
+
+uint32_t VirtualMemoryManager::GetPageDirectoryAddress()
+{
+    uint32_t cr3;
+    asm volatile("mov %%cr3, %0" : "=r"(cr3));
+    return cr3;
 }
