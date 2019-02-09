@@ -103,16 +103,18 @@ PageTableEntry* VirtualMemoryManager::GetPageForAddress(uint32_t virtualAddress,
     if(pageDir->entries[pageDirIndex].present == 0 && shouldCreate)
     {
         void* pageTablePhys = PhysicalMemoryManager::AllocateBlock();
+        
         MemoryOperations::memset(&pageDir->entries[pageDirIndex], 0, sizeof(PageDirectoryEntry));
-
         pageDir->entries[pageDirIndex].frame = (uint32_t)pageTablePhys / PAGE_SIZE;
         pageDir->entries[pageDirIndex].readWrite = readWrite;
         pageDir->entries[pageDirIndex].isUser = userPages;
         pageDir->entries[pageDirIndex].pageSize = FOUR_KB;
         pageDir->entries[pageDirIndex].present = 1;
 
-        void* pageTableVirt = GetPageTableAddress(pageDirIndex);
+        PageTable* pageTableVirt = (PageTable*)GetPageTableAddress(pageDirIndex);
         MemoryOperations::memset(pageTableVirt, 0, sizeof(PageTable));
+
+        return &(pageTableVirt->entries[pageTableIndex]);
     }
 
     PageTable* pageTable = (PageTable*)GetPageTableAddress(pageDirIndex);

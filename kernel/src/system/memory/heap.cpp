@@ -133,7 +133,8 @@ void* KernelHeap::allignedMalloc(uint32_t size, uint32_t align, uint32_t* physRe
         if(p)
         {
             ptr = (void *) align_up(((uintptr_t)p + sizeof(uint16_t)), align);
-            *physReturn = align_up(*physReturn, align);
+            if(physReturn)
+                *physReturn = align_up(*physReturn, align);
 
             *((uint16_t*)ptr - 1) = (uint16_t)((uintptr_t)ptr - (uintptr_t)p);
         }

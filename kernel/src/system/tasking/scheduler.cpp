@@ -27,7 +27,7 @@ uint32_t Scheduler::HandleInterrupt(uint32_t esp)
         //Reset tick count first
         tickCount = 0;
 
-        if(threadsList.size() > 0)
+        if(threadsList.size() > 0 && this->Enabled)
         {
             Thread* currentThread = threadsList[currentThreadIndex];
             Thread* nextThread = GetNextReadyThread();
@@ -75,6 +75,7 @@ void Scheduler::AddThread(Thread* thread, bool forceSwitch)
 
 void Scheduler::ForceSwitch()
 {
+    this->Enabled = true;
     this->tickCount = frequency - 1;
     asm volatile ("int $0x20"); //Call timer interrupt
 }

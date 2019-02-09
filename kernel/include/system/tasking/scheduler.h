@@ -30,6 +30,7 @@ namespace CactusOS
 
             Thread* GetNextReadyThread();
         public:
+            bool Enabled = true;
             Scheduler();
 
             common::uint32_t HandleInterrupt(common::uint32_t esp);

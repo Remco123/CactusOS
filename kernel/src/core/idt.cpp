@@ -109,6 +109,10 @@ uint32_t InterruptDescriptorTable::HandleInterrupt(CPUState* state)
     {
         state = (CPUState*)Exceptions::HandleException(interrupt, (uint32_t)state);
     }
+    else if(interrupt == 0x80)
+    {
+        BootConsole::Write("Syscall num="); BootConsole::Write(Convert::IntToString(state->EAX)); BootConsole::WriteLine();
+    }
     else
     {
         //BootConsole::Write("Interrupt Handler for int: "); BootConsole::WriteLine(Convert::IntToString(interrupt));

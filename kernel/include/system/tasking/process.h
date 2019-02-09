@@ -33,7 +33,7 @@ namespace CactusOS
         private:
             ProcessHelper();
         public:
-            static Process* CreateFromBin(char* fileName, bool isKernel = false);
+            static Process* Create(char* fileName, bool isKernel = false);
         };
     }
 }

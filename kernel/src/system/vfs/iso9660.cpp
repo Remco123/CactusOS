@@ -246,7 +246,7 @@ int ISO9660::ReadFile(char* path, uint8_t* buffer, uint32_t offset, int size)
     {
         if(this->disk->ReadSector(entry->extent_location + sectorCount, readBuffer) != 0)
             return -1;
-        MemoryOperations::memcpy(buffer + sectorCount, readBuffer, dataRemainder);
+        MemoryOperations::memcpy(buffer + (sectorCount*CDROM_SECTOR_SIZE), readBuffer, dataRemainder);
     }
     
     return 0;

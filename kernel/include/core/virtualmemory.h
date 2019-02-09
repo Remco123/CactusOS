@@ -77,8 +77,8 @@ namespace CactusOS
         private:
             static void PrintPageDirectoryEntry(PageDirectoryEntry pde);
             static void PrintPageTableEntry(PageTableEntry pte);
-            static void ReloadCR3();
-        public:        
+        public:      
+            static void ReloadCR3();  
             static void Intialize();
             static void AllocatePage(PageTableEntry* page, bool kernel, bool writeable);
             static void FreePage(PageTableEntry* page);

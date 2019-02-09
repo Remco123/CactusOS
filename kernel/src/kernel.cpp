@@ -100,9 +100,15 @@ extern "C" void kernelMain(const multiboot_info_t* mbi, unsigned int multiboot_m
     //Further intialisation is done in the system class
     System::Start();
 
-    Process* proc = ProcessHelper::CreateFromBin("0:\\build\\program.bin", true);
+    System::scheduler->Enabled = false;
+
+    Process* proc = ProcessHelper::Create("0:\\app 1\\test.bin", true);
     if(proc != 0)
-        System::scheduler->AddThread(proc->Threads[0], true);
+        System::scheduler->AddThread(proc->Threads[0], false);
+
+    Process* proc2 = ProcessHelper::Create("0:\\app 2\\test.bin", true);
+    if(proc2 != 0)
+        System::scheduler->AddThread(proc2->Threads[0], true);
 
     while(1);
 }
