@@ -20,6 +20,7 @@ namespace CactusOS
         struct Process
         {
             int id;
+            int syscallID;
             ProcessState state;
             List<Thread*> Threads;
             common::uint32_t pageDirPhys;

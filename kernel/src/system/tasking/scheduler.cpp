@@ -46,7 +46,7 @@ uint32_t Scheduler::HandleInterrupt(uint32_t esp)
             esp = (uint32_t)nextThread->regsPtr;
 
             //Load page directory
-            if(nextThread->parent && nextThread->parent->pageDirPhys != 0)
+            if(nextThread->parent && nextThread->parent->pageDirPhys != 0 && nextThread->parent != currentThread->parent)
                 VirtualMemoryManager::SwitchPageDirectory(nextThread->parent->pageDirPhys);
         }
     }

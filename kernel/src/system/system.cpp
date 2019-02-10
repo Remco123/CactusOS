@@ -18,6 +18,7 @@ DriverManager* System::driverManager = 0;
 DiskManager* System::diskManager = 0;
 VFSManager* System::vfs = 0;
 Scheduler* System::scheduler = 0;
+SystemCallHandler* System::syscalls = 0;
 
 void System::Start()
 {
@@ -76,4 +77,7 @@ void System::Start()
 
     BootConsole::WriteLine("Starting Scheduler");
     System::scheduler = new Scheduler();
+
+    BootConsole::WriteLine("Starting Systemcalls");
+    System::syscalls = new SystemCallHandler();
 }
