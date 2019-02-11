@@ -9,6 +9,8 @@ namespace CactusOS
 {
     namespace common
     {
+        #define isalpha(c) (((unsigned)c|32)-'a' < 26)
+
         class String
         {
         public:

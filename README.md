@@ -13,8 +13,8 @@ A simple operating system made for fun.
 - VESA Vbe after boot [Done] (Just not used yet, but working)
 - IDE support (ATA/ATAPI) [Done]
 - ISO9660 filesystem [Basic]
+- Multitasking [Basic]
 
 # Planned Features
 - Usermode
-- Multitasking
 - Simple GUI

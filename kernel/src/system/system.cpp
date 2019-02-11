@@ -75,6 +75,13 @@ void System::Start()
     System::vfs = new VFSManager();
     PartitionManager::DetectAndLoadFilesystems(System::diskManager, System::vfs);
 
+    BootConsole::Write("Searching for boot partition");
+    if(System::vfs->SearchBootPartition()) {
+        BootConsole::Write(" [Found] ("); BootConsole::Write(Convert::IntToString(System::vfs->bootPartitionID)); BootConsole::WriteLine(")");
+    }
+    else
+        BootConsole::WriteLine(" [Not found]");
+
     BootConsole::WriteLine("Starting Scheduler");
     System::scheduler = new Scheduler();
 

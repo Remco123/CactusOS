@@ -16,14 +16,14 @@ Thread* ThreadHelper::CreateFromFunction(void (*entryPoint)(), bool isKernel, ui
     Thread* result = new Thread();
 
     //Create stack for process
-    result->stack = (uint8_t*)KernelHeap::allignedMalloc(THREAD_HEAP_SIZE, THREAD_HEAP_SIZE);
-    MemoryOperations::memset(result->stack, 0, THREAD_HEAP_SIZE);
+    result->stack = (uint8_t*)KernelHeap::allignedMalloc(THREAD_STACK_SIZE, THREAD_STACK_SIZE);
+    MemoryOperations::memset(result->stack, 0, THREAD_STACK_SIZE);
 
     //Create cpu registers for thread
-    result->regsPtr = (CPUState*)((uint32_t)result->stack + THREAD_HEAP_SIZE - sizeof(CPUState));
+    result->regsPtr = (CPUState*)((uint32_t)result->stack + THREAD_STACK_SIZE - sizeof(CPUState));
 
     //Set the stack pointer
-    result->regsPtr->ESP = (uint32_t)result->stack + THREAD_HEAP_SIZE;
+    result->regsPtr->ESP = (uint32_t)result->stack + THREAD_STACK_SIZE;
 
     //And set the instruction pointer
     result->regsPtr->EIP = (uint32_t)entryPoint;

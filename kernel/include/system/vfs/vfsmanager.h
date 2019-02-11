@@ -12,10 +12,13 @@ namespace CactusOS
         private:
             List<VirtualFileSystem*>* Filesystems;
         public:
+            int bootPartitionID = 0;
+
             VFSManager();
             void Mount(VirtualFileSystem* vfs);
 
             int ExtractDiskNumber(char* path, common::uint8_t* idSizeReturn);
+            bool SearchBootPartition();
 
             /////////////
             // Filesystem functions

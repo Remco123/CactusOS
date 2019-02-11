@@ -19,7 +19,24 @@ int VFSManager::ExtractDiskNumber(char* path, uint8_t* idSizeReturn)
         char* idStr = new char[idLength];
         MemoryOperations::memcpy(idStr, path, idLength);
 
-        int idValue = Convert::StringToInt(idStr);
+        int idValue = 0;
+
+        if(isalpha(idStr[0])) //Are we using a character instead of a integer
+        {
+            switch (idStr[0])
+            {
+                case 'b':
+                case 'B': //Boot partition
+                    idValue = this->bootPartitionID;
+                    break;      
+                default:
+                    delete idStr;
+                    return -1;
+                    break;
+            }
+        }
+        else
+            idValue = Convert::StringToInt(idStr);
 
         delete idStr;
 
@@ -34,6 +51,25 @@ int VFSManager::ExtractDiskNumber(char* path, uint8_t* idSizeReturn)
 void VFSManager::Mount(VirtualFileSystem* vfs)
 {
     this->Filesystems->push_back(vfs); //Just add it to the list of known filesystems, easy.
+}
+
+bool VFSManager::SearchBootPartition()
+{
+    char* pathString = "####:\\boot\\CactusOS.bin";
+    for(int i = 0; i < Filesystems->size(); i++)
+    {
+        char* idStr = Convert::IntToString(i);
+        int idStrLen = String::strlen(idStr);
+
+        MemoryOperations::memcpy(pathString + (4-idStrLen), idStr, idStrLen);
+
+        if(Filesystems->GetAt(i)->FileExists(pathString + (4-idStrLen) + 3))
+        {
+            this->bootPartitionID = i;
+            return true;
+        }
+    }
+    return false;
 }
 
 List<char*>* VFSManager::DirectoryList(char* path)
