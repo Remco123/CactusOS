@@ -1,6 +1,8 @@
 #include <system/syscalls/syscalls.h>
 
 #include <system/system.h>
+#include <system/syscalls/implementations/cactusos.h>
+#include <system/syscalls/implementations/linux.h>
 
 using namespace CactusOS;
 using namespace CactusOS::common;
@@ -21,11 +23,11 @@ uint32_t SystemCallHandler::HandleInterrupt(uint32_t esp)
     switch (ID)
     {
         case 0: //Linux Systemcall
-            
+            return (uint32_t)LinuxSyscalls::HandleSyscall((CPUState*)esp);
             break;
         case 1: //CactusOS Systemcall
-
-            break;    
+            return (uint32_t)CactusOSSyscalls::HandleSyscall((CPUState*)esp);
+            break;
             
         default:
             break;

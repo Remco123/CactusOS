@@ -46,7 +46,7 @@ CactusOS.bin: kernel/linker.ld $(KRNLOBJS)
 	i686-elf-ld $(LDPARAMS) -T $< -o $@ $(KRNLOBJS)
 
 CactusOS.iso: CactusOS.bin
-	cp -r isofiles/. iso
+	cp -r sysroot/. iso
 	mkdir iso/boot
 	mkdir iso/boot/grub
 	cp CactusOS.bin iso/boot/CactusOS.bin
