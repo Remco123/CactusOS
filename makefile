@@ -46,7 +46,7 @@ CactusOS.bin: kernel/linker.ld $(KRNLOBJS)
 	i686-elf-ld $(LDPARAMS) -T $< -o $@ $(KRNLOBJS)
 
 CactusOS.iso: CactusOS.bin
-	cp -r sysroot/. iso
+	cp -r isofiles/. iso
 	mkdir iso/boot
 	mkdir iso/boot/grub
 	cp CactusOS.bin iso/boot/CactusOS.bin
@@ -58,12 +58,15 @@ install: CactusOS.iso
 	cp $< /media/sf_Mint_OSDev/CactusOS.iso
 	cp CactusOS.bin /media/sf_Mint_OSDev/CactusOS.bin
 
-.PHONY: clean qemu kdbg run filelist serialDBG
+.PHONY: clean qemu kdbg run filelist serialDBG qemuDBG
 clean:
 	rm -rf $(KRNLOBJDIR) CactusOS.bin CactusOS.iso
 
 qemu: CactusOS.iso
 	qemu-system-i386 -cdrom CactusOS.iso -serial stdio
+
+qemuDBG: CactusOS.iso
+	qemu-system-i386 -cdrom CactusOS.iso -serial stdio -s -S &
 
 run: CactusOS.iso
 	(killall VirtualBox && sleep 1) || true

@@ -100,9 +100,13 @@ extern "C" void kernelMain(const multiboot_info_t* mbi, unsigned int multiboot_m
     //Further intialisation is done in the system class
     System::Start();
 
-    Process* proc = ProcessHelper::Create("B:\\init.bin", true);
+    Process* proc = ProcessHelper::Create("B:\\apps\\init.bin", true);
     if(proc != 0)
         System::scheduler->AddThread(proc->Threads[0], true);
+    
+    BootConsole::ForegroundColor = VGA_COLOR_RED;
+    BootConsole::WriteLine("Could not load process init.bin, halting system");
 
+    InterruptDescriptorTable::DisableInterrupts();
     while(1);
 }
