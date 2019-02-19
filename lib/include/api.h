@@ -1,12 +1,12 @@
 #ifndef __CACTUSOSLIB__API_H
 #define __CACTUSOSLIB__API_H
 
-namespace CactusOSLIB
+namespace LIBCactusOS
 {
     class API
     {
     public:
-        static bool InitializeAPI();
+        static void Initialize();
     };
 }
 

@@ -9,6 +9,7 @@ using namespace CactusOS::system;
 // Static variable initialisations
 /*/////////////////
 COMPort Serialport::PortAddress = COMPort::COM1;
+bool Serialport::Initialized = false;
 
 /*/////////////////
 // Private functions
@@ -54,4 +55,6 @@ void Serialport::Init(COMPort port)
     outportb(PortAddress + 3, 0x03);    // 8 bits, no parity, one stop bit
     outportb(PortAddress + 2, 0xC7);    // Enable FIFO, clear them, with 14-byte threshold
     outportb(PortAddress + 4, 0x0B);    // IRQs enabled, RTS/DSR set
+
+    Serialport::Initialized = true;
 }

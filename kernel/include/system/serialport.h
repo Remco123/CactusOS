@@ -25,6 +25,7 @@ namespace CactusOS
             static int SerialReceiveReady();
             static int SerialSendReady();
         public:
+            static bool Initialized;
             static void Init(COMPort port);
 
             static char Read();

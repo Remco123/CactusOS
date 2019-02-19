@@ -20,10 +20,17 @@
 #include <system/tasking/scheduler.h>
 #include <system/syscalls/syscalls.h>
 
+#include <system/log.h>
+
 namespace CactusOS
 {
     namespace system
     {
+        enum BootState
+        {
+            Booting,
+            Booted
+        };
         class System
         {
         public:
@@ -40,6 +47,8 @@ namespace CactusOS
             static VFSManager* vfs;
             static Scheduler* scheduler;
             static SystemCallHandler* syscalls;
+
+            static BootState bootState;
 
             static void Start();
         };

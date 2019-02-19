@@ -11,7 +11,7 @@ APPOUT := ../isofiles/apps
 SRCFILES := $(shell find $(APPS) -type f \( -name \*.cpp -o -name \*.s -o -name \*.asm \))
 OBJFILES := $(patsubst %.cpp,%.o,$(patsubst %.s,%.o,$(patsubst %.asm,%.o,$(SRCFILES)))) #Replace the .cpp/.s/.asm extension with .o
 
-
+.PHONY: all clean
 
 all: linker.ld $(LIBFILE) $(OBJFILES)
 	for app in $(APPS) ; do \
@@ -19,7 +19,8 @@ all: linker.ld $(LIBFILE) $(OBJFILES)
     	i686-elf-ld $(LDPARAMS) -T $< -o $(APPOUT)/$$app.bin $$app/*.o -L$(LIBDIR) --library=cactusos; \
 	done
 
-
+clean:
+	rm -rf $(OBJFILES) $(LIBFILE)
 
 # Build libcactusos.a with makefile in the LIBDIR
 $(LIBFILE):

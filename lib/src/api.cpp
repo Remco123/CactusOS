@@ -1,8 +1,11 @@
 #include <api.h>
 
-using namespace CactusOSLIB;
+#include <syscall.h>
 
-bool API::InitializeAPI()
+using namespace LIBCactusOS;
+
+void API::Initialize()
 {
-    return false;
+    //Call kernel to set this process as a cactusos process
+    DoSyscall(SYSCALL_SET_CACTUSOS_LIB);
 }

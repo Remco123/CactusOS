@@ -20,6 +20,8 @@ VFSManager* System::vfs = 0;
 Scheduler* System::scheduler = 0;
 SystemCallHandler* System::syscalls = 0;
 
+BootState System::bootState = BootState::Booting;
+
 void System::Start()
 {
     BootConsole::ForegroundColor = VGA_COLOR_BLACK;
@@ -87,4 +89,7 @@ void System::Start()
 
     BootConsole::WriteLine("Starting Systemcalls");
     System::syscalls = new SystemCallHandler();
+
+    Log(Info, "System Initialized, changed bootstate to Booted");
+    System::bootState = BootState::Booted;
 }

@@ -18,7 +18,7 @@ uint32_t SystemCallHandler::HandleInterrupt(uint32_t esp)
 {
     int ID = System::scheduler->CurrentProcess()->syscallID;
 
-    BootConsole::Write("Got syscall "); BootConsole::Write(Convert::IntToString(((CPUState*)esp)->EAX)); BootConsole::Write(" from process with id: "); BootConsole::WriteLine(Convert::IntToString(System::scheduler->CurrentProcess()->id));
+    //BootConsole::Write("Got syscall "); BootConsole::Write(Convert::IntToString(((CPUState*)esp)->EAX)); BootConsole::Write(" from process with id: "); BootConsole::WriteLine(Convert::IntToString(System::scheduler->CurrentProcess()->id));
 
     switch (ID)
     {

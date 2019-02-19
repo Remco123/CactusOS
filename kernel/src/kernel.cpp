@@ -104,8 +104,7 @@ extern "C" void kernelMain(const multiboot_info_t* mbi, unsigned int multiboot_m
     if(proc != 0)
         System::scheduler->AddThread(proc->Threads[0], true);
     
-    BootConsole::ForegroundColor = VGA_COLOR_RED;
-    BootConsole::WriteLine("Could not load process init.bin, halting system");
+    Log(Error, "Could not load process init.bin, halting system");
 
     InterruptDescriptorTable::DisableInterrupts();
     while(1);

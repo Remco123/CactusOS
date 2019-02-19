@@ -1,8 +1,13 @@
+#include <log.h>
 #include <api.h>
 
-using namespace CactusOSLIB;
+using namespace LIBCactusOS;
 
 int main()
 {
-    return API::InitializeAPI();
+    API::Initialize();
+
+    Log(LogLevel::Info, "Init process started!");
+    
+    return 0;
 }
