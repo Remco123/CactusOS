@@ -90,6 +90,6 @@ void System::Start()
     BootConsole::WriteLine("Starting Systemcalls");
     System::syscalls = new SystemCallHandler();
 
-    Log(Info, "System Initialized, changed bootstate to Booted");
+    BootConsole::WriteLine("System Initialized, changed bootstate to Booted");
     System::bootState = BootState::Booted;
 }

@@ -40,6 +40,8 @@ namespace CactusOS
 
             Thread* CurrentThread();
             Process* CurrentProcess();
+
+            void DeleteThread(Thread* thread);
         };
     }   
 }

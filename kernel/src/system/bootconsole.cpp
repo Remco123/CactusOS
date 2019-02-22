@@ -54,6 +54,13 @@ void BootConsole::Init(bool enableSerial)
     }
 }
 
+void BootConsole::Write(char c)
+{
+    static char* str = " ";
+    str[0] = c;
+    Write(str);
+}
+
 void BootConsole::Write(char* str)
 {
     if (writeToSerial)

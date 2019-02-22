@@ -10,6 +10,8 @@ extern "C" void flush_tss();
 
 void TSS::Install(uint32_t idx, uint32_t kernelSS, uint32_t kernelESP)
 {
+	MemoryOperations::memset(&tss, 0, sizeof(TSSEntry));
+
     //! install TSS descriptor
 	uint32_t base = (uint32_t) &tss;
 
@@ -22,12 +24,7 @@ void TSS::Install(uint32_t idx, uint32_t kernelSS, uint32_t kernelESP)
 	//! set stack and segments
 	tss.ss0 = kernelSS;
 	tss.esp0 = kernelESP;
-	tss.cs = 0x0b;
-	tss.ss = 0x13;
-	tss.es = 0x13;
-	tss.ds = 0x13;
-	tss.fs = 0x13;
-	tss.gs = 0x13;
+	tss.iomap = sizeof(TSSEntry);
 
 	//! flush tss
 	flush_tss();

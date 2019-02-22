@@ -46,6 +46,7 @@ namespace CactusOS
 
             static void Init(bool enableSerial = false);
 
+            static void Write(char c);
             static void Write(char* str);
             static void WriteLine(char* str);
             static void WriteLine();

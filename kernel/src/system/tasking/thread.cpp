@@ -1,6 +1,7 @@
 #include <system/tasking/thread.h>
 
 #include <system/memory/heap.h> 
+#include <system/system.h>
 
 using namespace CactusOS;
 using namespace CactusOS::common;
@@ -46,4 +47,11 @@ Thread* ThreadHelper::CreateFromFunction(void (*entryPoint)(), bool isKernel, ui
 
     //Return the result
     return result;
+}
+
+void ThreadHelper::RemoveThread(Thread* thread)
+{
+    KernelHeap::allignedFree(thread->stack);
+
+    thread->state = ThreadState::Stopped;
 }

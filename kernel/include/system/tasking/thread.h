@@ -20,7 +20,8 @@ namespace CactusOS
         enum ThreadState
         {
             Wait,
-            Ready
+            Ready,
+            Stopped
         };
 
         struct Process;
@@ -39,6 +40,7 @@ namespace CactusOS
             ThreadHelper();
         public:
             static Thread* CreateFromFunction(void (*entryPoint)(), bool isKernel = false, common::uint32_t flags = 0x202);
+            static void RemoveThread(Thread* thread);
         };
     }
 }

@@ -14,7 +14,7 @@ namespace CactusOS
             Error
         };
 
-        void Log(LogLevel level, char* msg);
+        void Log(LogLevel level, const char* __restrict__ format, ...);
     }
 }
 

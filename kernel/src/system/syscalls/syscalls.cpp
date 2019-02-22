@@ -18,8 +18,6 @@ uint32_t SystemCallHandler::HandleInterrupt(uint32_t esp)
 {
     int ID = System::scheduler->CurrentProcess()->syscallID;
 
-    //BootConsole::Write("Got syscall "); BootConsole::Write(Convert::IntToString(((CPUState*)esp)->EAX)); BootConsole::Write(" from process with id: "); BootConsole::WriteLine(Convert::IntToString(System::scheduler->CurrentProcess()->id));
-
     switch (ID)
     {
         case 0: //Linux Systemcall
@@ -27,9 +25,9 @@ uint32_t SystemCallHandler::HandleInterrupt(uint32_t esp)
             break;
         case 1: //CactusOS Systemcall
             return (uint32_t)CactusOSSyscalls::HandleSyscall((CPUState*)esp);
-            break;
-            
+            break;   
         default:
+            Log(Error, "Process %d has unkown syscallID %d", System::scheduler->CurrentProcess()->syscallID, ID);
             break;
     }
 

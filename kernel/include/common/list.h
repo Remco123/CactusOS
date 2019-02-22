@@ -34,6 +34,8 @@ namespace CactusOS
             T GetAt(int index);
             T operator[](int index);
 
+            void Remove(int index);
+            void Remove(const T &e);
         private:
             ListNode<T>* head_;
             ListNode<T>* tail_;
@@ -41,6 +43,7 @@ namespace CactusOS
             int size_;
 
             ListNode<T>* insertInternal(const T &e, ListNode<T>* pos);
+            void removeInternal(ListNode<T> *pos);
         };
     }
 }
@@ -93,6 +96,41 @@ void List<T>::push_front(const T &e)
 {
     // insert before the head
     insertInternal(e, head_);
+}
+
+template <typename T>
+void List<T>::removeInternal(ListNode<T> *pos)
+{
+	if(pos)
+	{
+		if(pos->prev)
+			pos->prev->next = pos->next;
+		if(pos->next)
+			pos->next->prev = pos->prev;
+		if(pos == head_)
+			head_ = pos->next;
+		if(pos == tail_)
+			tail_ = pos->prev;
+		delete pos;
+		size_--;
+	}
+}
+
+template <typename T>
+void List<T>::Remove(int index)
+{
+    ListNode<T>* cur = head_;
+    for(int i = 0; i < index; ++i)
+        cur = cur->next;
+    removeInternal(cur);
+}
+
+template <typename T>
+void List<T>::Remove(const T &e)
+{
+    for(int i = 0; i < size_; i++)
+        if(GetAt(i) == e)
+            Remove(i);
 }
 
 template <typename T>

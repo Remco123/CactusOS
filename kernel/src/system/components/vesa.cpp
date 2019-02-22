@@ -98,7 +98,7 @@ bool VESA::SelectBestVideoMode()
 			BootConsole::Write("Framebuffer is at: 0x"); Print::printfHex32(this->currentVideoMode.PhysBasePtr); BootConsole::WriteLine();
 
 			BootConsole::WriteLine("Mapping framebuffer");
-			VirtualMemoryManager::mapVirtualToPhysical((void*)this->currentVideoMode.PhysBasePtr, (void*)this->currentVideoMode.PhysBasePtr, this->currentVideoMode.YResolution * this->currentVideoMode.BytesPerScanLine, true, true);
+			VirtualMemoryManager::mapVirtualToPhysical((void*)this->currentVideoMode.PhysBasePtr, (void*)0xE0000000, this->currentVideoMode.YResolution * this->currentVideoMode.BytesPerScanLine, true, true);
 
 			return true;
 		}
@@ -113,4 +113,9 @@ bool VESA::SelectBestVideoMode()
 		BootConsole::WriteLine("Vesa info block does not have valid signature");
 		return false;
 	}
+}
+
+uint32_t VESA::GetBufferSize()
+{
+	return this->currentVideoMode.XResolution * this->currentVideoMode.YResolution * (this->currentVideoMode.BitsPerPixel/8);
 }

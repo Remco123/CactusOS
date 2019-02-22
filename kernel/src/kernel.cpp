@@ -19,6 +19,7 @@ using namespace CactusOS::system;
 extern "C" uint32_t _kernel_base;
 extern "C" uint32_t _kernel_end;
 extern "C" uint32_t _kernel_virtual_base;
+extern "C" uint32_t stack_top;
 
 typedef void (*constructor)();
 extern "C" constructor start_ctors;
@@ -27,6 +28,13 @@ extern "C" void callConstructors()
 {
     for(constructor* i = &start_ctors; i != &end_ctors; i++)
         (*i)();
+}
+
+void IdleThread()
+{
+    while(1){
+        asm volatile("sti;hlt");
+    }
 }
 
 extern "C" void kernelMain(const multiboot_info_t* mbi, unsigned int multiboot_magic)
@@ -61,10 +69,7 @@ extern "C" void kernelMain(const multiboot_info_t* mbi, unsigned int multiboot_m
     GlobalDescriptorTable::Init();
     BootConsole::WriteLine("GDT Loaded");
 
-    uint32_t esp;
-    asm volatile("mov %%esp, %0" : "=r"(esp));
-
-    TSS::Install(5, 0x10, esp);
+    TSS::Install(5, 0x10, (uint32_t)&stack_top);
     BootConsole::WriteLine("TSS Loaded");
 
     InterruptDescriptorTable::Install();
@@ -99,6 +104,14 @@ extern "C" void kernelMain(const multiboot_info_t* mbi, unsigned int multiboot_m
 
     //Further intialisation is done in the system class
     System::Start();
+
+    Log(Info, "Loading Kernel Process");
+    Process* kernelProcess = ProcessHelper::CreateKernelProcess();
+    kernelProcess->Threads.push_back(ThreadHelper::CreateFromFunction(IdleThread, true));
+    kernelProcess->Threads[0]->parent = kernelProcess;
+    System::scheduler->AddThread(kernelProcess->Threads[0], false);
+
+    Log(Info, "Loading Init.bin");
 
     Process* proc = ProcessHelper::Create("B:\\apps\\init.bin", true);
     if(proc != 0)

@@ -14,6 +14,7 @@ Scheduler::Scheduler()
     this->frequency = SCHEDULER_FREQUENCY;
     this->currentThreadIndex = 0;
     this->threadsList.Clear();
+    this->Enabled = false;
 }
 
 uint32_t Scheduler::HandleInterrupt(uint32_t esp)
@@ -32,11 +33,17 @@ uint32_t Scheduler::HandleInterrupt(uint32_t esp)
             Thread* currentThread = threadsList[currentThreadIndex];
             Thread* nextThread = GetNextReadyThread();
 
+            if(currentThread->state == Stopped)
+            {
+                threadsList.Remove(currentThread);
+                delete currentThread;
+            }
+
             //At the first context switch the esp is pointing at the stack pointer used by the kernel,
             //we do not want to save this info otherwise we will be running the kernel instead of the task
             //Since all the stack pointers are allocated by the kernel we can check if it is kernel or not
             //TODO: Is there no better way for this?
-            if(esp >= KERNEL_HEAP_START)
+            else if(esp >= KERNEL_HEAP_START)
             {
                 //Save old registers
                 currentThread->regsPtr = (CPUState*)esp;

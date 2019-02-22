@@ -10,6 +10,8 @@ namespace CactusOS
 {
     namespace system
     {
+        #define VESA_FRAMEBUFFER_VIRT 0xE0000000
+
         typedef uint16_t Real_Pointer[2];
 
         struct VESAControllerInfo
@@ -74,6 +76,7 @@ namespace CactusOS
             VESAModeInfo* GetModeInfo(common::uint16_t mode);
             void SetVideoMode(common::uint16_t mode);
             bool SelectBestVideoMode();
+            common::uint32_t GetBufferSize();
         };
     }
 }

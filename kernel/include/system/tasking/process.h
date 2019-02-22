@@ -35,6 +35,8 @@ namespace CactusOS
             ProcessHelper();
         public:
             static Process* Create(char* fileName, bool isKernel = false);
+            static Process* CreateKernelProcess();
+            static void RemoveProcess(Process* proc);
         };
     }
 }

@@ -108,3 +108,34 @@ Process* ProcessHelper::Create(char* fileName, bool isKernel)
 
     return proc;
 }   
+
+Process* ProcessHelper::CreateKernelProcess()
+{
+    /*////////////////////
+    Create PCB
+    */////////////////////
+    Process* proc = new Process();
+    MemoryOperations::memset(proc, 0, sizeof(Process));
+
+    MemoryOperations::memcpy(proc->fileName, "Kernel Process", 15);
+    proc->id = currentPID++;
+    proc->pageDirPhys = virt2phys((uint32_t)&BootPageDirectory);
+    proc->state = ProcessState::Active;
+    proc->syscallID = 1;
+
+    return proc;
+}
+
+void ProcessHelper::RemoveProcess(Process* proc)
+{
+    Log(Info, "Removing process %d from system", proc->id);
+    System::scheduler->Enabled = false; //We do not want to be interrupted during the switch
+
+    for(int i = 0; i < proc->Threads.size(); i++)
+        ThreadHelper::RemoveThread(proc->Threads[i]);
+
+    delete proc;
+
+    //Finally force a contex switch so that we never return to this process again.
+    System::scheduler->ForceSwitch();
+}

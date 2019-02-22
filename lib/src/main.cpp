@@ -1,6 +1,12 @@
+#include <syscall.h>
+
+using namespace LIBCactusOS;
+
 extern int main();
 
-extern "C" int libMain()
+extern "C" void libMain()
 {
-    return main();
+    int ret = main();
+
+    DoSyscall(SYSCALL_EXIT, ret);
 }
