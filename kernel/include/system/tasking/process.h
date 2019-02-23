@@ -21,6 +21,7 @@ namespace CactusOS
         {
             int id;
             int syscallID;
+            bool isUserspace;
             ProcessState state;
             List<Thread*> Threads;
             common::uint32_t pageDirPhys;

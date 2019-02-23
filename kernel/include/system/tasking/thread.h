@@ -30,6 +30,8 @@ namespace CactusOS
         {
             Process* parent;
             common::uint8_t* stack;
+            common::uint8_t* userStack;
+            common::uint32_t userStackSize;
             ThreadState state;
             core::CPUState* regsPtr;
         };

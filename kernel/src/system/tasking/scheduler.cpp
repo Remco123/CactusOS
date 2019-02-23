@@ -55,6 +55,8 @@ uint32_t Scheduler::HandleInterrupt(uint32_t esp)
             //Load page directory
             if(nextThread->parent && nextThread->parent->pageDirPhys != 0)
                 VirtualMemoryManager::SwitchPageDirectory(nextThread->parent->pageDirPhys);
+
+            TSS::SetStack(0x10, (uint32_t)nextThread->stack + THREAD_STACK_SIZE);
         }
     }
 
@@ -72,12 +74,31 @@ Thread* Scheduler::GetNextReadyThread()
     return threadsList[currentThreadIndex]; 
 }
 
+extern "C" void enter_usermode(uint32_t location, uint32_t stackAddress);
+
 void Scheduler::AddThread(Thread* thread, bool forceSwitch)
 {
     threadsList.push_back(thread);
 
     if(forceSwitch)
+    {
+        if(thread->parent) {
+            if(thread->parent->isUserspace)
+            {
+                InterruptDescriptorTable::DisableInterrupts();
+
+                TSS::SetStack(0x10, (uint32_t)thread->stack + THREAD_STACK_SIZE);
+
+                //Dont forget to load the page directory
+                VirtualMemoryManager::SwitchPageDirectory(thread->parent->pageDirPhys);
+
+                currentThreadIndex = threadsList.size() - 1;
+
+                enter_usermode(thread->regsPtr->EIP, (uint32_t)thread->userStack + thread->userStackSize);
+            }
+        }
         this->ForceSwitch();
+    }
 }
 
 void Scheduler::ForceSwitch()

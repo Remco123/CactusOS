@@ -14,7 +14,7 @@ A simple operating system made for fun.
 - IDE support (ATA/ATAPI) [Done]
 - ISO9660 filesystem [Basic]
 - Multitasking [Basic]
+- Usermode [Basic]
 
 # Planned Features
-- Usermode
 - Simple GUI

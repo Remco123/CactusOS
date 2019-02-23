@@ -20,6 +20,11 @@ namespace CactusOS
             FOUR_MB = 1
         };
 
+        #define KERNEL_VIRT_ADDR 0xC0000000
+        #define USER_STACK_SIZE 0x8000
+        #define USER_STACK_TOP (KERNEL_VIRT_ADDR)
+        #define USER_STACK (USER_STACK_TOP - USER_STACK_SIZE)
+
         #define PAGE_SIZE 4096
         #define KERNEL_PTNUM 768 //The kernel is in the 768th entry
         #define PAGE_TABLE_ADDRESS 0xFFC00000

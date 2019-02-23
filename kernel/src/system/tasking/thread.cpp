@@ -20,6 +20,10 @@ Thread* ThreadHelper::CreateFromFunction(void (*entryPoint)(), bool isKernel, ui
     result->stack = (uint8_t*)KernelHeap::allignedMalloc(THREAD_STACK_SIZE, THREAD_STACK_SIZE);
     MemoryOperations::memset(result->stack, 0, THREAD_STACK_SIZE);
 
+    //Assign user stack, needs to be mapped into address space by elf loader if we are loading a .bin
+    result->userStack = (uint8_t*)USER_STACK;
+    result->userStackSize = USER_STACK_SIZE;
+
     //Create cpu registers for thread
     result->regsPtr = (CPUState*)((uint32_t)result->stack + THREAD_STACK_SIZE - sizeof(CPUState));
 
@@ -52,6 +56,8 @@ Thread* ThreadHelper::CreateFromFunction(void (*entryPoint)(), bool isKernel, ui
 void ThreadHelper::RemoveThread(Thread* thread)
 {
     KernelHeap::allignedFree(thread->stack);
+    for(uint32_t i = (uint32_t)thread->userStack; i < (uint32_t)thread->userStack + thread->userStackSize; i+=PAGE_SIZE)
+        VirtualMemoryManager::FreePage(VirtualMemoryManager::GetPageForAddress(i, false));
 
     thread->state = ThreadState::Stopped;
 }

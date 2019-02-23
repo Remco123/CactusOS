@@ -113,7 +113,7 @@ extern "C" void kernelMain(const multiboot_info_t* mbi, unsigned int multiboot_m
 
     Log(Info, "Loading Init.bin");
 
-    Process* proc = ProcessHelper::Create("B:\\apps\\init.bin", true);
+    Process* proc = ProcessHelper::Create("B:\\apps\\init.bin", false);
     if(proc != 0)
         System::scheduler->AddThread(proc->Threads[0], true);
     

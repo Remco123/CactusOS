@@ -7,7 +7,7 @@ int main()
 {
     API::Initialize();
 
-    Log(LogLevel::Info, "Init process started!");
+    Log(LogLevel::Info, "Init process started!");    
     
     return 0;
 }

@@ -76,17 +76,18 @@ Process* ProcessHelper::Create(char* fileName, bool isKernel)
     ElfProgramHeader* prgmHeader = (ElfProgramHeader*)(fileBuffer + header->e_phoff);
 
     for(int i = 0; i < header->e_phnum; i++, prgmHeader++)
-    {
         if(prgmHeader->p_type == 1)
-        {   
             for(uint32_t x = 0; x < prgmHeader->p_memsz; x+=PAGE_SIZE)
                 VirtualMemoryManager::AllocatePage(VirtualMemoryManager::GetPageForAddress(prgmHeader->p_vaddr + x, true, true, !isKernel), isKernel, true);
+    
+    VirtualMemoryManager::ReloadCR3();
 
-            VirtualMemoryManager::ReloadCR3();
+    //Reset it otherwise the code will not be copied
+    prgmHeader = (ElfProgramHeader*)(fileBuffer + header->e_phoff);
 
+    for(int i = 0; i < header->e_phnum; i++, prgmHeader++)
+        if(prgmHeader->p_type == 1) 
             MemoryOperations::memcpy((void*)prgmHeader->p_vaddr, fileBuffer + prgmHeader->p_offset, prgmHeader->p_memsz);
-        }
-    }
 
     /*////////////////////
     Create PCB
@@ -98,9 +99,22 @@ Process* ProcessHelper::Create(char* fileName, bool isKernel)
     proc->id = currentPID++;
     proc->pageDirPhys = pageDirPhys;
     proc->state = ProcessState::Active;
+    proc->isUserspace = !isKernel;
     proc->Threads.push_back(ThreadHelper::CreateFromFunction((void (*)())header->e_entry, isKernel));
 
-    proc->Threads[0]->parent = proc;
+    Thread* mainThread = proc->Threads[0];
+
+    //Create userstack for process
+    for(uint32_t i = (uint32_t)mainThread->userStack; i < ((uint32_t)mainThread->userStack + mainThread->userStackSize); i+=PAGE_SIZE)
+        VirtualMemoryManager::AllocatePage(VirtualMemoryManager::GetPageForAddress(i, true, true, !isKernel), isKernel, true);
+
+    /*
+    //Create heap for user process
+    for(uint32_t i = 0; i < 50; i++)
+        VirtualMemoryManager::AllocatePage(VirtualMemoryManager::GetPageForAddress(0x800000 + i*PAGE_SIZE, true, true, !isKernel), isKernel, true);
+    */
+   
+    mainThread->parent = proc;
 
     VirtualMemoryManager::SwitchPageDirectory(oldCR3);
 
