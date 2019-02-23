@@ -23,7 +23,7 @@ uint32_t Scheduler::HandleInterrupt(uint32_t esp)
 
     if(tickCount == frequency)
     {
-        //BootConsole::WriteLine("Performing Task Switch");
+        //Log(Info, "Performing Task Switch");
         
         //Reset tick count first
         tickCount = 0;
@@ -93,6 +93,8 @@ void Scheduler::AddThread(Thread* thread, bool forceSwitch)
                 VirtualMemoryManager::SwitchPageDirectory(thread->parent->pageDirPhys);
 
                 currentThreadIndex = threadsList.size() - 1;
+
+                this->Enabled = true;
 
                 enter_usermode(thread->regsPtr->EIP, (uint32_t)thread->userStack + thread->userStackSize);
             }
