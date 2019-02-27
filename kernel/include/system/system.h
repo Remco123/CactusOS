@@ -19,6 +19,7 @@
 #include <system/vfs/vfsmanager.h>
 #include <system/tasking/scheduler.h>
 #include <system/syscalls/syscalls.h>
+#include <common/random.h>
 
 #include <system/log.h>
 
@@ -26,11 +27,12 @@ namespace CactusOS
 {
     namespace system
     {
-        enum BootState
+        enum ScreenMode
         {
-            Booting,
-            Booted
+            TextMode,
+            GraphicsMode
         };
+
         class System
         {
         public:
@@ -48,7 +50,7 @@ namespace CactusOS
             static Scheduler* scheduler;
             static SystemCallHandler* syscalls;
 
-            static BootState bootState;
+            static ScreenMode screenMode;
 
             static void Start();
         };

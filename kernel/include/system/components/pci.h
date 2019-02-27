@@ -5,7 +5,7 @@
 #include <common/list.h>
 #include <system/components/systemcomponent.h>
 #include <system/bootconsole.h>
-#include <common/printf.h>
+#include <common/print.h>
 #include <system/initrd.h>
 
 namespace CactusOS

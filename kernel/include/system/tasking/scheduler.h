@@ -36,12 +36,11 @@ namespace CactusOS
             common::uint32_t HandleInterrupt(common::uint32_t esp);
 
             void AddThread(Thread* thread, bool forceSwitch = false);
+            void DeleteThread(Thread* thread);
             void ForceSwitch();
 
             Thread* CurrentThread();
             Process* CurrentProcess();
-
-            void DeleteThread(Thread* thread);
         };
     }   
 }

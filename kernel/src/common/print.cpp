@@ -1,4 +1,4 @@
-#include <common/printf.h>
+#include <common/print.h>
 
 using namespace CactusOS;
 using namespace CactusOS::system;

@@ -19,7 +19,7 @@ namespace CactusOS
 
         enum ThreadState
         {
-            Wait,
+            Blocked,
             Ready,
             Stopped
         };
@@ -34,6 +34,8 @@ namespace CactusOS
             common::uint32_t userStackSize;
             ThreadState state;
             core::CPUState* regsPtr;
+
+            common::uint32_t timeDelta;
         };
 
         class ThreadHelper

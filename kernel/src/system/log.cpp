@@ -29,7 +29,7 @@ uint32_t GetMSSinceBoot()
 #endif
 
 static void print(const char* data, uint32_t length) {
-    if(System::bootState == BootState::Booting)
+    if(System::screenMode == ScreenMode::TextMode)
     {
         for (uint32_t i = 0; i < length; i++)
             BootConsole::Write(data[i]);
@@ -44,7 +44,7 @@ static void print(const char* data, uint32_t length) {
 void CactusOS::system::Log(LogLevel level, const char* __restrict__ format, ...)
 {
     uint8_t prevColor = BootConsole::ForegroundColor;
-    if(System::bootState == BootState::Booting)
+    if(System::screenMode == ScreenMode::TextMode)
     {
         #if LOG_SHOW_MS
         BootConsole::Write("["); BootConsole::Write(Convert::IntToString(GetMSSinceBoot())); BootConsole::Write("] ");
@@ -123,6 +123,6 @@ void CactusOS::system::Log(LogLevel level, const char* __restrict__ format, ...)
 
     print("\n", 1);
 
-    if(System::bootState == Booting)
+    if(System::screenMode == ScreenMode::TextMode)
         BootConsole::ForegroundColor = prevColor;
 }

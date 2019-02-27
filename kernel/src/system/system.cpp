@@ -20,7 +20,7 @@ VFSManager* System::vfs = 0;
 Scheduler* System::scheduler = 0;
 SystemCallHandler* System::syscalls = 0;
 
-BootState System::bootState = BootState::Booting;
+ScreenMode System::screenMode = ScreenMode::TextMode;
 
 void System::Start()
 {
@@ -66,6 +66,9 @@ void System::Start()
     BootConsole::WriteLine("Starting Disk Manager");
     System::diskManager = new DiskManager();
 
+    BootConsole::WriteLine("Setting up random...");
+    Random::SetSeed(pit->Ticks());
+
     BootConsole::WriteLine("Assigning PCI Drivers");
     PCIDrivers::AssignDriversFromPCI(System::pci, System::driverManager);
 
@@ -90,6 +93,5 @@ void System::Start()
     BootConsole::WriteLine("Starting Systemcalls");
     System::syscalls = new SystemCallHandler();
 
-    BootConsole::WriteLine("System Initialized, changed bootstate to Booted");
-    System::bootState = BootState::Booted;
+    Log(Info, "System Initialized");
 }

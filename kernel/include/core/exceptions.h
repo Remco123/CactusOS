@@ -5,7 +5,7 @@
 #include <system/bootconsole.h>
 #include <common/convert.h>
 #include <core/idt.h>
-#include <common/printf.h>
+#include <common/print.h>
 
 namespace CactusOS
 {

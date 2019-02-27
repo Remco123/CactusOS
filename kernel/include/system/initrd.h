@@ -4,7 +4,7 @@
 #include <common/types.h>
 #include <multiboot/multiboot.h>
 #include <system/bootconsole.h>
-#include <common/printf.h>
+#include <common/print.h>
 #include <common/string.h>
 
 namespace CactusOS
