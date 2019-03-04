@@ -72,14 +72,14 @@ bool VESA::SelectBestVideoMode()
 
 		while(*modeArray != 0xFFFF) {
 			VESAModeInfo* modeInfo = GetModeInfo(*modeArray);
-
+#if 0
 			BootConsole::Write("0x"); Print::printfHex16(*modeArray);
 			BootConsole::Write(" X: "); BootConsole::Write(Convert::IntToString(modeInfo->XResolution));
 			BootConsole::SetX(18);
 			BootConsole::Write(" Y: "); BootConsole::Write(Convert::IntToString(modeInfo->YResolution));
 			BootConsole::SetX(30);
 			BootConsole::Write(" BPP: "); BootConsole::WriteLine(Convert::IntToString(modeInfo->BitsPerPixel));
-
+#endif
 			//TODO: Add algoritm for this or ask the user
 			if(modeInfo->XResolution == 1024 && modeInfo->YResolution == 768 && modeInfo->BitsPerPixel == 32)
 				selectedModeNumber = *modeArray;

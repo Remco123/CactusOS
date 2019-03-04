@@ -44,6 +44,8 @@ $(KRNLOBJDIR)/%.o: $(KRNLSRCDIR)/%.asm
 
 CactusOS.bin: kernel/linker.ld $(KRNLOBJS)
 	i686-elf-ld $(LDPARAMS) -T $< -o $@ $(KRNLOBJS)
+	cd lib/ && $(MAKE)
+	cd apps/ && $(MAKE)
 
 CactusOS.iso: CactusOS.bin
 	cp -r isofiles/. iso
@@ -61,6 +63,8 @@ install: CactusOS.iso
 .PHONY: clean qemu kdbg run filelist serialDBG qemuDBG
 clean:
 	rm -rf $(KRNLOBJDIR) CactusOS.bin CactusOS.iso
+	cd lib/ && $(MAKE) clean
+	cd apps/ && $(MAKE) clean
 
 qemu: CactusOS.iso
 	qemu-system-i386 -cdrom CactusOS.iso -serial stdio

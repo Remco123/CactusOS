@@ -166,7 +166,7 @@ void* VirtualMemoryManager::virtualToPhysical(void* virtAddress)
 
 void VirtualMemoryManager::mapVirtualToPhysical(void* physAddress, void* virtAddress, bool kernel, bool writeable)
 {
-    PageTableEntry* page = GetPageForAddress((uint32_t)virtAddress, true);
+    PageTableEntry* page = GetPageForAddress((uint32_t)virtAddress, true, writeable, !kernel);
 
     page->frame = (uint32_t)physAddress / PAGE_SIZE;
     page->isUser = kernel ? 0 : 1;

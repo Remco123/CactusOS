@@ -111,6 +111,24 @@ void CactusOS::system::Log(LogLevel level, const char* __restrict__ format, ...)
             } while (temp);
 
             print(Convert::IntToString(n), numChars);
+        } else if(*format == 'b') {
+            format++;
+            uint8_t n = va_arg(parameters, int);
+            char* str = Convert::IntToHexString(n);
+            print("0x", 2); print(str, sizeof(uint8_t)<<1);
+            delete str;
+        } else if(*format == 'w') {
+            format++;
+            uint16_t n = va_arg(parameters, int);
+            char* str = Convert::IntToHexString(n);
+            print("0x", 2); print(str, sizeof(uint16_t)<<1);
+            delete str;
+        } else if(*format == 'x') {
+            format++;
+            uint32_t n = va_arg(parameters, int);
+            char* str = Convert::IntToHexString(n);
+            print("0x", 2); print(str, sizeof(uint32_t)<<1);
+            delete str;
         } else {
 			format = format_begun_at;
 			uint32_t len = String::strlen(format);
