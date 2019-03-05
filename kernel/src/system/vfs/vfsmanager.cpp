@@ -92,13 +92,13 @@ int VFSManager::GetFileSize(char* path)
         return -1;
 }
 
-int VFSManager::ReadFile(char* path, uint8_t* buffer, uint32_t offset, int size)
+int VFSManager::ReadFile(char* path, uint8_t* buffer)
 {
     uint8_t idSize = 0;
     int disk = ExtractDiskNumber(path, &idSize);
 
     if(disk != -1 && Filesystems->size() > disk)
-        return Filesystems->GetAt(disk)->ReadFile(path + idSize + 2, buffer, offset, size);
+        return Filesystems->GetAt(disk)->ReadFile(path + idSize + 2, buffer);
     else
         return -1;
 }

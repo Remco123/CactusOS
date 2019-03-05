@@ -122,7 +122,7 @@ namespace CactusOS
             //////////////
             List<char*>* DirectoryList(char* path);
             int GetFileSize(char* path);
-            int ReadFile(char* path, common::uint8_t* buffer, common::uint32_t offset = 0, int size = -1);
+            int ReadFile(char* path, common::uint8_t* buffer);
             bool FileExists(char* path);
             bool DirectoryExists(char* path);
         };

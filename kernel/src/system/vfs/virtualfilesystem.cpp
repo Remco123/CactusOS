@@ -27,7 +27,7 @@ int VirtualFileSystem::GetFileSize(char* path)
     return -1;
 }
 
-int VirtualFileSystem::ReadFile(char* path, uint8_t* buffer, uint32_t offset, int size)
+int VirtualFileSystem::ReadFile(char* path, uint8_t* buffer)
 {
     return -1;
 }

@@ -227,7 +227,7 @@ int ISO9660::GetFileSize(char* path)
 
     return entry->data_length;
 }
-int ISO9660::ReadFile(char* path, uint8_t* buffer, uint32_t offset, int size)
+int ISO9660::ReadFile(char* path, uint8_t* buffer)
 {
     DirectoryRecord* entry = GetEntry(path);
 
