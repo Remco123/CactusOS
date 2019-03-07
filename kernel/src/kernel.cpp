@@ -33,7 +33,7 @@ extern "C" void callConstructors()
 void IdleThread()
 {
     while(1){
-        asm volatile("sti;hlt");
+        asm volatile("pause");
     }
 }
 

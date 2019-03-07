@@ -134,3 +134,11 @@ void InterruptDescriptorTable::DisableInterrupts()
 {
     asm volatile ("cli");
 }
+bool InterruptDescriptorTable::AreEnabled()
+{
+    unsigned long flags;
+    asm volatile ( "pushf\n\t"
+                   "pop %0"
+                   : "=g"(flags) );
+    return flags & (1 << 9);
+}

@@ -16,6 +16,9 @@ SystemCallHandler::SystemCallHandler()
 
 uint32_t SystemCallHandler::HandleInterrupt(uint32_t esp)
 {
+    //Interrupts need to be enabled for io system calls
+    InterruptDescriptorTable::EnableInterrupts();
+
     int ID = System::scheduler->CurrentProcess()->syscallID;
 
     switch (ID)
@@ -30,6 +33,9 @@ uint32_t SystemCallHandler::HandleInterrupt(uint32_t esp)
             Log(Error, "Process %d has unkown syscallID %d", System::scheduler->CurrentProcess()->syscallID, ID);
             break;
     }
+
+    //Restore previous state
+    InterruptDescriptorTable::DisableInterrupts();
 
     return esp;
 }

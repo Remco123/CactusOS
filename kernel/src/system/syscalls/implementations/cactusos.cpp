@@ -19,17 +19,32 @@ CPUState* CactusOSSyscalls::HandleSyscall(CPUState* state)
         case SYSCALL_EXIT:
             Log(Info, "Process %d (%s) exited with code %d", proc->id, proc->fileName, (int)state->EBX);
             ProcessHelper::RemoveProcess(proc);
+            state->EAX = SYSCALL_RET_SUCCES;
             break;
         case SYSCALL_LOG:
             Log((LogLevel)state->EBX, (const char* __restrict__)state->ECX);
+            state->EAX = SYSCALL_RET_SUCCES;
             break;
         case SYSCALL_GUI_GETLFB:
             VirtualMemoryManager::mapVirtualToPhysical((void*)System::vesa->currentVideoMode.PhysBasePtr, (void*)state->EBX, System::vesa->GetBufferSize(), false, true);
             state->EAX = SYSCALL_RET_SUCCES;
             Log(Info, "Mapped LFB for process %d to virtual address %x", proc->id, state->EBX);
             break;
+        case SYSCALL_FILE_EXISTS:
+            state->EAX = System::vfs->FileExists((char*)state->EBX);
+            break;
+        case SYSCALL_DIR_EXISTS:
+            state->EAX = System::vfs->DirectoryExists((char*)state->EBX);
+            break;
+        case SYSCALL_GET_FILESIZE:
+            state->EAX = System::vfs->GetFileSize((char*)state->EBX);
+            break;
+        case SYSCALL_READ_FILE:
+            state->EAX = System::vfs->ReadFile((char*)state->EBX, (uint8_t*)state->ECX);
+            break;
         default:
             Log(Warning, "Got not supported syscall %d from process %d", sysCall, proc->id);
+            state->EAX = SYSCALL_RET_ERROR;
             break;
     }
 

@@ -88,6 +88,7 @@ namespace CactusOS
 
             static void EnableInterrupts();
             static void DisableInterrupts();
+            static bool AreEnabled();
         };
     }
 }

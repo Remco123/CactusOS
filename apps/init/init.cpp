@@ -1,6 +1,7 @@
 #include <log.h>
 #include <api.h>
 #include <types.h>
+#include <vfs.h>
 #include <syscall.h>
 #include <gui/directgui.h>
 
@@ -10,7 +11,10 @@ int main()
 {
     API::Initialize();
 
-    Log(LogLevel::Info, "Init process started!");
+    Log(Info, "Init process started!");
+
+    if(FileExists("B:\\boot\\CactusOS.bin"))
+        Log(Info, "File Exists");
 
     if (DirectGUI::RequestFramebuffer() == SYSCALL_RET_SUCCES)
     {
