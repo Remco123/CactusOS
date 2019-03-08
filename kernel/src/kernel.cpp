@@ -10,6 +10,7 @@
 #include <system/system.h>
 #include <common/list.h>
 #include <common/convert.h>
+#include <core/cpu.h>
 
 using namespace CactusOS;
 using namespace CactusOS::common;
@@ -77,6 +78,10 @@ extern "C" void kernelMain(const multiboot_info_t* mbi, unsigned int multiboot_m
 
     PhysicalMemoryManager::Initialize(mbi->mem_upper * 1024, kernel_end);
     BootConsole::WriteLine("Physical Memory Loaded");
+
+    BootConsole::WriteLine("Reading CPU Info");
+    CPU::PrintVendor();
+    CPU::EnableFeatures();
 
     //Parse the memory map handled by grub
     PhysicalMemoryManager::ParseMemoryMap(mbi);

@@ -2,7 +2,7 @@ LIBINCLUDE := ../lib/include
 LIBDIR := ../lib
 LIBFILE := ../lib/libcactusos.a
 
-GCCPARAMS := -m32 -g -I $(LIBINCLUDE) -fno-use-cxa-atexit -nostdlib -fno-builtin -fno-exceptions -fno-rtti -fno-leading-underscore -Wno-write-strings -fpermissive -Wall
+GCCPARAMS := -m32 -g -I $(LIBINCLUDE) -O3 -msse2 -fno-use-cxa-atexit -nostdlib -fno-builtin -fno-exceptions -fno-rtti -fno-leading-underscore -Wno-write-strings -fpermissive -Wall
 LDPARAMS := -m elf_i386
 
 APPS := init

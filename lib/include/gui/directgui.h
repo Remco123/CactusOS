@@ -1,14 +1,35 @@
 #ifndef __CACTUSOSLIB__GUI__DIRECTGUI_H
 #define __CACTUSOSLIB__GUI__DIRECTGUI_H
 
+#include <types.h>
+
 namespace LIBCactusOS
 {
-    #define DIRECT_GUI_ADDR 0xC0000000 - (0x8000 + 0x4000 * 0x400) //Just below the userstack minus the maximum size of the framebuffer (16384 Kb)
+    #define DIRECT_GUI_ADDR (0xC0000000 - (0x8000 + 0x4000 * 0x400)) //Just below the userstack minus the maximum size of the framebuffer (16384 Kb)
+
+    #define WIDTH 1024
+    #define HEIGHT 768
+    #define BPP 32
 
     class DirectGUI
     {
     public:
         static bool RequestFramebuffer();
+
+        static void SetPixel(uint32_t x, uint32_t y, uint32_t color);
+        static uint32_t GetPixel(uint32_t x, uint32_t y);
+
+        static void Clear();
+        static void Clear(uint32_t color);
+        static void DrawHorizontalLine(uint32_t color, int dx, int x1, int y1);
+        static void DrawVerticalLine(uint32_t color, int dx, int x1, int y1);
+        static void DrawLine(uint32_t color, int x1, int y1, int x2, int y2);
+        static void DrawDiagonalLine(uint32_t color, int dx, int dy, int x1, int y1);
+        static void DrawRect(uint32_t color, int x, int y, int width, int height);
+        static void DrawFillRect(uint32_t color, int x_start, int y_start, int width, int height);
+        static void DrawCircle(uint32_t color, int x_center, int y_center, int radius);
+        static void DrawFillCircle(uint32_t color, int x_center, int y_center, int radius);
+        static void DrawEllipse(uint32_t color, int x_center, int y_center, int x_radius, int y_radius);
     };
 }
 
