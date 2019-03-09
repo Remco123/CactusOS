@@ -28,7 +28,7 @@ uint32_t GetMSSinceBoot()
 }
 #endif
 
-static void print(const char* data, uint32_t length) {
+void CactusOS::system::Print(const char* data, uint32_t length) {
     if(System::screenMode == ScreenMode::TextMode)
     {
         for (uint32_t i = 0; i < length; i++)
@@ -81,7 +81,7 @@ void CactusOS::system::Log(LogLevel level, const char* __restrict__ format, ...)
 			uint32_t amount = 1;
 			while (format[amount] && format[amount] != '%')
 				amount++;
-			print(format, amount);
+			Print(format, amount);
 			format += amount;
 			continue;
 		}
@@ -91,17 +91,17 @@ void CactusOS::system::Log(LogLevel level, const char* __restrict__ format, ...)
 		if (*format == 'c') {
 			format++;
 			char c = (char) va_arg(parameters, int /* char promotes to int */);
-			print(&c, sizeof(c));
+			Print(&c, sizeof(c));
 		} else if (*format == 's') {
 			format++;
 			const char* str = va_arg(parameters, const char*);
 			uint32_t len = String::strlen(str);
-			print(str, len);
+			Print(str, len);
          } else if(*format == 'd') {
             format++;
             int n = va_arg(parameters, int);
             int numChars = 0;
-            if (n < 0) { n = -n; numChars++; print("-", 1); }
+            if (n < 0) { n = -n; numChars++; Print("-", 1); }
 
             int temp = n;
             do
@@ -110,36 +110,36 @@ void CactusOS::system::Log(LogLevel level, const char* __restrict__ format, ...)
                 temp /= 10;
             } while (temp);
 
-            print(Convert::IntToString(n), numChars);
+            Print(Convert::IntToString(n), numChars);
         } else if(*format == 'b') {
             format++;
             uint8_t n = va_arg(parameters, int);
             char* str = Convert::IntToHexString(n);
-            print("0x", 2); print(str, sizeof(uint8_t)<<1);
+            Print("0x", 2); Print(str, sizeof(uint8_t)<<1);
             delete str;
         } else if(*format == 'w') {
             format++;
             uint16_t n = va_arg(parameters, int);
             char* str = Convert::IntToHexString(n);
-            print("0x", 2); print(str, sizeof(uint16_t)<<1);
+            Print("0x", 2); Print(str, sizeof(uint16_t)<<1);
             delete str;
         } else if(*format == 'x') {
             format++;
             uint32_t n = va_arg(parameters, int);
             char* str = Convert::IntToHexString(n);
-            print("0x", 2); print(str, sizeof(uint32_t)<<1);
+            Print("0x", 2); Print(str, sizeof(uint32_t)<<1);
             delete str;
         } else {
 			format = format_begun_at;
 			uint32_t len = String::strlen(format);
-			print(format, len);
+			Print(format, len);
 			format += len;
 		}
 	}
  
 	va_end(parameters);
 
-    print("\n", 1);
+    Print("\n", 1);
 
     if(System::screenMode == ScreenMode::TextMode)
         BootConsole::ForegroundColor = prevColor;

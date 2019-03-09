@@ -19,6 +19,7 @@ CPUState* LinuxSyscalls::HandleSyscall(CPUState* state)
             break;
     
         default:
+            state->EAX = 0;
             break;
     }
 

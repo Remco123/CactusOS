@@ -34,12 +34,12 @@ void DirectGUI::Clear(uint32_t color)
 }
 void DirectGUI::DrawHorizontalLine(uint32_t color, int dx, int x1, int y1)
 {
-    for (uint32_t i = 0; i < dx; i++)
+    for (int i = 0; i < dx; i++)
         SetPixel(x1 + i, y1, color);
 }
 void DirectGUI::DrawVerticalLine(uint32_t color, int dx, int x1, int y1)
 {
-    for(uint32_t i = 0; i < dx; i++)
+    for(int i = 0; i < dx; i++)
         SetPixel(x1, y1 + i, color);
 }
 void DirectGUI::DrawDiagonalLine(uint32_t color, int dx, int dy, int x1, int y1)

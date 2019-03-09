@@ -71,14 +71,31 @@ Process* ProcessHelper::Create(char* fileName, bool isKernel)
     VirtualMemoryManager::SwitchPageDirectory(pageDirPhys);
 
     /*////////////////////
+    Create PCB
+    */////////////////////
+    Process* proc = new Process();
+    MemoryOperations::memset(proc, 0, sizeof(Process));
+
+    /*////////////////////
     Load process into memory
     */////////////////////
     ElfProgramHeader* prgmHeader = (ElfProgramHeader*)(fileBuffer + header->e_phoff);
 
     for(int i = 0; i < header->e_phnum; i++, prgmHeader++)
         if(prgmHeader->p_type == 1)
+        {
+            //Allocate pages for section
             for(uint32_t x = 0; x < prgmHeader->p_memsz; x+=PAGE_SIZE)
                 VirtualMemoryManager::AllocatePage(VirtualMemoryManager::GetPageForAddress(prgmHeader->p_vaddr + x, true, true, !isKernel), isKernel, true);
+
+            //Store memory information about excecutable
+			if (prgmHeader->p_vaddr < proc->excecutable.memBase || proc->excecutable.memBase == 0) {
+				proc->excecutable.memBase = prgmHeader->p_vaddr;
+			}
+			if (prgmHeader->p_vaddr + prgmHeader->p_memsz - proc->excecutable.memBase > proc->excecutable.memSize) {
+				proc->excecutable.memSize = prgmHeader->p_vaddr + prgmHeader->p_memsz - proc->excecutable.memBase;
+            }
+        }
     
     VirtualMemoryManager::ReloadCR3();
 
@@ -89,12 +106,7 @@ Process* ProcessHelper::Create(char* fileName, bool isKernel)
         if(prgmHeader->p_type == 1) 
             MemoryOperations::memcpy((void*)prgmHeader->p_vaddr, fileBuffer + prgmHeader->p_offset, prgmHeader->p_memsz);
 
-    /*////////////////////
-    Create PCB
-    */////////////////////
-    Process* proc = new Process();
-    MemoryOperations::memset(proc, 0, sizeof(Process));
-
+    //Put information in PCB
     MemoryOperations::memcpy(proc->fileName, fileName, String::strlen(fileName));
     proc->id = currentPID++;
     proc->pageDirPhys = pageDirPhys;
@@ -108,13 +120,19 @@ Process* ProcessHelper::Create(char* fileName, bool isKernel)
     for(uint32_t i = (uint32_t)mainThread->userStack; i < ((uint32_t)mainThread->userStack + mainThread->userStackSize); i+=PAGE_SIZE)
         VirtualMemoryManager::AllocatePage(VirtualMemoryManager::GetPageForAddress(i, true, true, !isKernel), isKernel, true);
 
-    /*
     //Create heap for user process
-    for(uint32_t i = 0; i < 50; i++)
-        VirtualMemoryManager::AllocatePage(VirtualMemoryManager::GetPageForAddress(0x800000 + i*PAGE_SIZE, true, true, !isKernel), isKernel, true);
-    */
+    for(uint32_t i = 0; i < PROC_USER_HEAP_SIZE; i+=PAGE_SIZE)
+    {
+        uint32_t addr = pageRoundUp(proc->excecutable.memBase + proc->excecutable.memSize) + i;
+        VirtualMemoryManager::AllocatePage(VirtualMemoryManager::GetPageForAddress(addr, true, true, !isKernel), isKernel, true);
+    }
+
+    proc->heap.heapStart = pageRoundUp(proc->excecutable.memBase + proc->excecutable.memSize);
+    proc->heap.heapEnd = proc->heap.heapStart + PROC_USER_HEAP_SIZE;
    
     mainThread->parent = proc;
+
+    delete fileBuffer;
 
     VirtualMemoryManager::SwitchPageDirectory(oldCR3);
 

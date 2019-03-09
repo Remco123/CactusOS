@@ -42,6 +42,15 @@ CPUState* CactusOSSyscalls::HandleSyscall(CPUState* state)
         case SYSCALL_READ_FILE:
             state->EAX = System::vfs->ReadFile((char*)state->EBX, (uint8_t*)state->ECX);
             break;
+        case SYSCALL_GET_HEAP_START:
+            state->EAX = proc->heap.heapStart;
+            break;
+        case SYSCALL_GET_HEAP_END:
+            state->EAX = proc->heap.heapEnd;
+            break;
+        case SYSCALL_PRINT:
+            Print((const char*)state->EBX, state->ECX);
+            break;
         default:
             Log(Warning, "Got not supported syscall %d from process %d", sysCall, proc->id);
             state->EAX = SYSCALL_RET_ERROR;

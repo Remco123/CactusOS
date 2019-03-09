@@ -11,6 +11,7 @@ namespace LIBCactusOS
     };
 
     void Log(LogLevel level, char* msg);
+    void Print(const char* __restrict__ format, ...);
 }
 
 #endif

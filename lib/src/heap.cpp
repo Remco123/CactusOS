@@ -1,0 +1,112 @@
+#include <heap.h>
+#include <syscall.h>
+#include <log.h>
+
+using namespace LIBCactusOS;
+
+uint32_t UserHeap::startAddress = 0;
+uint32_t UserHeap::endAddress = 0;
+uint32_t UserHeap::maxAddress = 0xC0000000 - 0x100000; //1 MB Below the kernel, TODO: Is this safe?
+MemoryHeader* UserHeap::firstHeader = 0;
+
+void* UserHeap::Malloc(uint32_t size)
+{
+    MemoryHeader* freeBlock = 0;
+
+    for(MemoryHeader* hdr = firstHeader; hdr != 0 && freeBlock == 0; hdr = hdr->next)
+        if(hdr->size > size && !hdr->allocated)
+            freeBlock = hdr;
+    
+    if(freeBlock == 0)
+    {
+        //We need to expand the heap
+        Log(Warning, "Expanding heap");
+        //TODO: Implement this
+    }
+
+    if(freeBlock->size >= size + sizeof(MemoryHeader))
+    {
+        MemoryHeader* temp = (MemoryHeader*)((uint32_t)freeBlock + sizeof(MemoryHeader) + size);
+
+        temp->allocated = false;
+        temp->size = freeBlock->size - size - sizeof(MemoryHeader);
+        temp->prev = freeBlock;
+        temp->next = freeBlock->next;
+        if(temp->next != 0)
+            temp->next->prev = temp;
+
+        freeBlock->size = size;
+        freeBlock->next = temp;
+    }
+
+    freeBlock->allocated = true;
+    return (void*)(((uint32_t)freeBlock) + sizeof(MemoryHeader));
+}
+void UserHeap::Free(void* ptr)
+{
+    MemoryHeader* chunk = (MemoryHeader*)((uint32_t)ptr - sizeof(MemoryHeader));
+    
+    chunk -> allocated = false;
+    
+    if(chunk->prev != 0 && !chunk->prev->allocated)
+    {
+        chunk->prev->next = chunk->next;
+        chunk->prev->size += chunk->size + sizeof(MemoryHeader);
+        if(chunk->next != 0)
+            chunk->next->prev = chunk->prev;
+        
+        chunk = chunk->prev;
+    }
+    
+    if(chunk->next != 0 && !chunk->next->allocated)
+    {
+        chunk->size += chunk->next->size + sizeof(MemoryHeader);
+        chunk->next = chunk->next->next;
+        if(chunk->next != 0)
+            chunk->next->prev = chunk;
+    }
+}
+void UserHeap::Initialize()
+{
+    startAddress = DoSyscall(SYSCALL_GET_HEAP_START);
+    endAddress = DoSyscall(SYSCALL_GET_HEAP_END);
+
+    firstHeader = (MemoryHeader*)startAddress;
+    firstHeader->allocated = false;
+    firstHeader->prev = 0;
+    firstHeader->next = 0;
+    firstHeader->size = endAddress - startAddress - sizeof(MemoryHeader);
+}
+void* UserHeap::allignedMalloc(uint32_t size, uint32_t align)
+{
+    void* ptr = 0;
+
+    if(!(align & (align - 1)) == 0)
+        return 0;
+
+    if(align && size)
+    {
+        uint32_t hdr_size = sizeof(uint16_t) + (align - 1);
+
+        void* p = Malloc(size + hdr_size);
+
+        if(p)
+        {
+            ptr = (void *) align_up(((uintptr_t)p + sizeof(uint16_t)), align);
+
+            *((uint16_t*)ptr - 1) = (uint16_t)((uintptr_t)ptr - (uintptr_t)p);
+        }
+    }
+    return ptr;
+}
+void UserHeap::allignedFree(void* ptr)
+{
+    if(ptr == 0)
+        return;
+
+    uint16_t offset = *((uint16_t*)ptr - 1);
+
+    void* p = (void*)((uint8_t*)ptr - offset);
+
+    Free(p);
+}
