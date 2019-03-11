@@ -10,6 +10,8 @@ namespace LIBCactusOS
         (((num) + ((align) - 1)) & ~((align) - 1))
     #endif
 
+    #define HEAP_INCREASE_SIZE 0x100000
+
     struct MemoryHeader
     {
         MemoryHeader* next;
@@ -29,6 +31,7 @@ namespace LIBCactusOS
 
     public:
         static void Initialize();
+        static void PrintMemoryLayout();
 
         static void* Malloc(uint32_t size);
         static void Free(void* ptr);

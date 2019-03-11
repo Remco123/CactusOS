@@ -166,8 +166,33 @@ void ProcessHelper::RemoveProcess(Process* proc)
     for(int i = 0; i < proc->Threads.size(); i++)
         ThreadHelper::RemoveThread(proc->Threads[i]);
 
+    //Free pages used by excecutable code
+    for(uint32_t p = proc->excecutable.memBase; p < proc->excecutable.memBase + proc->excecutable.memSize; p+=PAGE_SIZE)
+        VirtualMemoryManager::FreePage(VirtualMemoryManager::GetPageForAddress(p, false));
+
+    //Free pages used by the heap
+    for(uint32_t p = proc->heap.heapStart; p < proc->heap.heapEnd; p+=PAGE_SIZE)
+        VirtualMemoryManager::FreePage(VirtualMemoryManager::GetPageForAddress(p, false));
+
     delete proc;
 
     //Finally force a contex switch so that we never return to this process again.
     System::scheduler->ForceSwitch();
+}
+
+void ProcessHelper::UpdateHeap(Process* proc, uint32_t newEndAddr)
+{
+    if(proc->heap.heapEnd < newEndAddr) //Expand
+    {
+        Log(Info, "Expanding heap (PID: %d) from %x to %x", proc->id, proc->heap.heapEnd, newEndAddr);
+        
+        for(uint32_t i = proc->heap.heapEnd; i < pageRoundUp(newEndAddr); i+=PAGE_SIZE)
+            VirtualMemoryManager::AllocatePage(VirtualMemoryManager::GetPageForAddress(i, true, true, proc->isUserspace), !proc->isUserspace, true);
+        
+        proc->heap.heapEnd = pageRoundUp(newEndAddr);
+    }
+    else if(proc->heap.heapEnd > newEndAddr) //Contract
+    {
+
+    }
 }

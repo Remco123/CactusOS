@@ -51,6 +51,10 @@ CPUState* CactusOSSyscalls::HandleSyscall(CPUState* state)
         case SYSCALL_PRINT:
             Print((const char*)state->EBX, state->ECX);
             break;
+        case SYSCALL_SET_HEAP_SIZE:
+            ProcessHelper::UpdateHeap(proc, state->EBX);
+            state->EAX = SYSCALL_RET_SUCCES;
+            break;
         default:
             Log(Warning, "Got not supported syscall %d from process %d", sysCall, proc->id);
             state->EAX = SYSCALL_RET_ERROR;

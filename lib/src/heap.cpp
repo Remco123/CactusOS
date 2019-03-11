@@ -20,8 +20,25 @@ void* UserHeap::Malloc(uint32_t size)
     if(freeBlock == 0)
     {
         //We need to expand the heap
-        Log(Warning, "Expanding heap");
-        //TODO: Implement this
+        Log(Warning, "Heap needs to be expanded for this process");
+        
+        //Call Kernel
+        if(DoSyscall(SYSCALL_SET_HEAP_SIZE, endAddress + size + HEAP_INCREASE_SIZE) == SYSCALL_RET_SUCCES) {
+            MemoryHeader* lastHeader = 0;
+            
+            //Find last block
+            for(MemoryHeader* hdr = firstHeader; hdr != 0 && freeBlock == 0; hdr = hdr->next)
+                if(hdr->allocated == false)
+                    lastHeader = hdr;
+            
+            lastHeader->size += size + HEAP_INCREASE_SIZE;
+
+            endAddress = DoSyscall(SYSCALL_GET_HEAP_END);
+            
+            return Malloc(size);
+        }
+        else
+            Log(Error, "Could not expand heap");
     }
 
     if(freeBlock->size >= size + sizeof(MemoryHeader))
@@ -76,6 +93,15 @@ void UserHeap::Initialize()
     firstHeader->prev = 0;
     firstHeader->next = 0;
     firstHeader->size = endAddress - startAddress - sizeof(MemoryHeader);
+}
+void UserHeap::PrintMemoryLayout()
+{
+    int i = 0;
+    for(MemoryHeader* hdr = firstHeader; hdr != 0; hdr = hdr->next)
+    {
+        Print("## (%d) ##### (%x) #########\n", i++, (uint32_t)hdr);
+        Print("## Size: %d Allocated: %s\n", hdr->size, hdr->allocated ? "True" : "False");
+    }
 }
 void* UserHeap::allignedMalloc(uint32_t size, uint32_t align)
 {
