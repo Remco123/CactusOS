@@ -130,7 +130,7 @@ void DirectGUI::DrawRect(uint32_t color, int x, int y, int width, int height)
     DrawLine(color, xa, ya, xc, yc);
 
     /* Draw a line between B and D */
-    DrawLine(color, xb, yb, xd, yd);
+    DrawLine(color, xb, yb, xd, yd + 1);
 
     /* Draw a line between C and D */
     DrawLine(color, xc, yc, xd, yd);

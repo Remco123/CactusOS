@@ -5,7 +5,7 @@
 
 namespace LIBCactusOS
 {
-    #define DIRECT_GUI_ADDR (0xC0000000 - (0x8000 + 0x4000 * 0x400)) //Just below the userstack minus the maximum size of the framebuffer (16384 Kb)
+    #define DIRECT_GUI_ADDR 0xB0000000 //TODO: Change to a better address
 
     #define WIDTH 1024
     #define HEIGHT 768

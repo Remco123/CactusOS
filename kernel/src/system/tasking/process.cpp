@@ -191,8 +191,13 @@ void ProcessHelper::UpdateHeap(Process* proc, uint32_t newEndAddr)
         
         proc->heap.heapEnd = pageRoundUp(newEndAddr);
     }
-    else if(proc->heap.heapEnd > newEndAddr) //Contract
+    else if(proc->heap.heapEnd > newEndAddr) //shrink
     {
+        Log(Info, "shrinking heap (PID: %d) from %x to %x", proc->id, proc->heap.heapEnd, newEndAddr);
 
+        for(uint32_t i = pageRoundUp(newEndAddr); i < proc->heap.heapEnd; i+=PAGE_SIZE)
+            VirtualMemoryManager::FreePage(VirtualMemoryManager::GetPageForAddress(i, false, true, proc->isUserspace));
+        
+        proc->heap.heapEnd = pageRoundUp(newEndAddr);
     }
 }

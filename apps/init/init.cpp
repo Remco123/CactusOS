@@ -7,6 +7,7 @@
 #include <string.h>
 #include <new.h>
 #include "bmp.h"
+#include "progress.h"
 
 using namespace LIBCactusOS;
 
@@ -19,6 +20,12 @@ int main()
     if (DirectGUI::RequestFramebuffer() == SYSCALL_RET_SUCCES)
     {
         DirectGUI::Clear(0xFFFFFFFF);
+
+        int x_p = WIDTH/2 - 100;
+        int y_p = HEIGHT/2 - 200;
+
+        ProgressBar* bar = new ProgressBar(x_p, y_p + 250, 200, 10);
+        bar->SetValue(0);
 
         Log(Info, "Loading Background");
         if(FileExists(path))
@@ -67,9 +74,19 @@ int main()
                                         g << 8  |
                                         b;
 
-                        DirectGUI::SetPixel(x, y, argb);
+                        DirectGUI::SetPixel(x + x_p, y + y_p, argb);
                     }
                 }
+            }
+        }
+        
+        while(1) {
+            for(int i = 0; i <= 100; i++)
+            {
+                bar->SetValue(i);
+
+                for(int x = 0; x < 200000; x++)
+                    asm volatile("pause");
             }
         }
     }

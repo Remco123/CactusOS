@@ -11,6 +11,7 @@
 #include <common/list.h>
 #include <common/convert.h>
 #include <core/cpu.h>
+#include <core/fpu.h>
 
 using namespace CactusOS;
 using namespace CactusOS::common;
@@ -82,6 +83,9 @@ extern "C" void kernelMain(const multiboot_info_t* mbi, unsigned int multiboot_m
     BootConsole::WriteLine("Reading CPU Info");
     CPU::PrintVendor();
     CPU::EnableFeatures();
+
+    BootConsole::WriteLine("Enabling FPU");
+    FPU::Enable();
 
     //Parse the memory map handled by grub
     PhysicalMemoryManager::ParseMemoryMap(mbi);
