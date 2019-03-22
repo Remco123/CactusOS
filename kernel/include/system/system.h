@@ -23,6 +23,8 @@
 
 #include <system/log.h>
 
+#define ENABLE_GDB
+
 namespace CactusOS
 {
     namespace system

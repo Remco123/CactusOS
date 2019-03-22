@@ -32,6 +32,8 @@ extern "C" void callConstructors()
         (*i)();
 }
 
+extern "C" void _set_debug_traps();
+
 void IdleThread()
 {
     while(1){
@@ -46,7 +48,13 @@ extern "C" void kernelMain(const multiboot_info_t* mbi, unsigned int multiboot_m
     uint32_t kernel_end = (uint32_t) &_kernel_end;
     uint32_t kernel_size = kernel_end - kernel_base;
 
+    #ifdef ENABLE_GDB //We use the serial port for debugging
+    Serialport::Init(COM1);
+    BootConsole::Init(false);
+    #else
     BootConsole::Init(String::strncmp((char*)phys2virt(mbi->cmdline), "serial", 7));
+    #endif
+
     BootConsole::ForegroundColor = VGA_COLOR_BLUE;
     BootConsole::BackgroundColor = VGA_COLOR_LIGHT_GREY;
     BootConsole::Clear();
@@ -76,6 +84,16 @@ extern "C" void kernelMain(const multiboot_info_t* mbi, unsigned int multiboot_m
 
     InterruptDescriptorTable::Install();
     BootConsole::WriteLine("IDT Loaded");
+
+    #ifdef ENABLE_GDB
+    BootConsole::WriteLine("Starting GDB Interrupts");
+    _set_debug_traps();
+
+    InterruptDescriptorTable::EnableInterrupts();
+    
+    BootConsole::WriteLine("Waiting for GDB connection");
+    __asm__("int3");
+    #endif
 
     PhysicalMemoryManager::Initialize(mbi->mem_upper * 1024, kernel_end);
     BootConsole::WriteLine("Physical Memory Loaded");

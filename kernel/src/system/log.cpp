@@ -36,8 +36,10 @@ void CactusOS::system::Print(const char* data, uint32_t length) {
     }
     else if(Serialport::Initialized)
     {
+        #ifndef ENABLE_GDB //We use the serial port for debugging
         for (uint32_t i = 0; i < length; i++)
             Serialport::Write(data[i]);
+        #endif
     }
 }
 
@@ -65,10 +67,12 @@ void CactusOS::system::Log(LogLevel level, const char* __restrict__ format, ...)
     }
     else if(Serialport::Initialized)
     {
+        #ifndef ENABLE_GDB //We use the serial port for debugging
         #if LOG_SHOW_MS
         Serialport::WriteStr("["); Serialport::WriteStr(Convert::IntToString(GetMSSinceBoot())); Serialport::WriteStr("] ");
         #endif
         Serialport::WriteStr(logLevelMessage[level]); Serialport::WriteStr(": ");
+        #endif
     }
 
     va_list parameters;

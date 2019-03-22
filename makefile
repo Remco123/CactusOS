@@ -7,15 +7,16 @@
 
 INCLUDEDIRS := kernel/include
 
-GCCPARAMS := -m32 -g -I $(INCLUDEDIRS) -fno-use-cxa-atexit -nostdlib -fno-builtin -fno-exceptions -fno-rtti -fno-leading-underscore -Wno-write-strings -fpermissive -Wall
+G++PARAMS := -m32 -g -I $(INCLUDEDIRS) -fno-use-cxa-atexit -nostdlib -fno-builtin -fno-exceptions -fno-rtti -fno-leading-underscore -Wno-write-strings -fpermissive -Wall
+GCCPARAMS := -m32 -g -I $(INCLUDEDIRS) -nostdlib -fno-builtin -Wall -fleading-underscore
 ASPARAMS := --32
 LDPARAMS := -m elf_i386
 
 KRNLSRCDIR := kernel/src
 KRNLOBJDIR := kernel/obj
 
-KRNLFILES := $(shell find $(KRNLSRCDIR) -type f \( -name \*.cpp -o -name \*.s -o -name \*.asm \)) #Find all the files that end with .cpp/.s/.asm
-KRNLOBJS := $(patsubst %.cpp,%.o,$(patsubst %.s,%.o,$(patsubst %.asm,%.o,$(KRNLFILES)))) #Replace the .cpp/.s/.asm extension with .o
+KRNLFILES := $(shell find $(KRNLSRCDIR) -type f \( -name \*.cpp -o -name \*.s -o -name \*.asm -o -name \*.c \)) #Find all the files that end with .cpp/.s/.asm/.c
+KRNLOBJS := $(patsubst %.cpp,%.o,$(patsubst %.s,%.o,$(patsubst %.asm,%.o,$(patsubst %.c,%.o,$(KRNLFILES))))) #Replace the .cpp/.s/.asm/.c extension with .o
 KRNLOBJS := $(subst $(KRNLSRCDIR),$(KRNLOBJDIR),$(KRNLOBJS)) #Replace the kernel/src part with kernel/obj
 
 
@@ -24,7 +25,14 @@ KRNLOBJS := $(subst $(KRNLSRCDIR),$(KRNLOBJDIR),$(KRNLOBJS)) #Replace the kernel
 ####################################
 $(KRNLOBJDIR)/%.o: $(KRNLSRCDIR)/%.cpp
 	mkdir -p $(@D)
-	i686-elf-g++ $(GCCPARAMS) -c -o $@ $<
+	i686-elf-g++ $(G++PARAMS) -c -o $@ $<
+
+####################################
+#C source files
+####################################
+$(KRNLOBJDIR)/%.o: $(KRNLSRCDIR)/%.c
+	mkdir -p $(@D)
+	i686-elf-gcc $(GCCPARAMS) -c -o $@ $<
 
 ####################################
 #GAS assembly files
@@ -71,6 +79,10 @@ qemu: CactusOS.iso
 
 qemuDBG: CactusOS.iso
 	qemu-system-i386 -cdrom CactusOS.iso -serial stdio -s -S &
+
+qemuGDB: CactusOS.iso
+	qemu-system-i386 -cdrom CactusOS.iso -serial pty &
+	gdb -ex 'file CactusOS.bin' -ex 'target remote /dev/pts/1' -q
 
 run: CactusOS.iso
 	(killall VirtualBox && sleep 1) || true
