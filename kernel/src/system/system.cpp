@@ -21,6 +21,7 @@ Scheduler* System::scheduler = 0;
 SystemCallHandler* System::syscalls = 0;
 
 ScreenMode System::screenMode = ScreenMode::TextMode;
+bool System::gdbEnabled = false;
 
 void System::Start()
 {

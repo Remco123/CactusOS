@@ -23,7 +23,7 @@
 
 #include <system/log.h>
 
-#define ENABLE_GDB
+#define GDB_BREAK() asm("int $3");
 
 namespace CactusOS
 {
@@ -53,6 +53,7 @@ namespace CactusOS
             static SystemCallHandler* syscalls;
 
             static ScreenMode screenMode;
+            static bool gdbEnabled; //Is the gdb stub enabled?
 
             static void Start();
         };

@@ -86,8 +86,7 @@
  ****************************************************************************/
 
 const int stderr = -1;
-void fprintf(int stream, const char * format, ...)
-{ }
+extern void fprintf(int stream, const char * format, ...);
 
 char* strcpy(char *dst, const char *src)
 {
@@ -106,39 +105,10 @@ char* strcpy(char *dst, const char *src)
 /************************************************************************
  *
  * external low-level support routines
- */
-inline static unsigned char inportb (unsigned short _port)
-{
-    unsigned char rv;
-    __asm__ __volatile__ ("inb %1, %0" : "=a" (rv) : "dN" (_port));
-    return rv;
-}
-inline static void outportb (unsigned short _port, unsigned char _data)
-{
-    __asm__ __volatile__ ("outb %1, %0" : : "dN" (_port), "a" (_data));
-}
+*/
 
-int SerialReceiveReady()
-{
-    return inportb(0x3F8 + 5) & 1;
-}
-int SerialSendReady()
-{
-    return inportb(0x3F8 + 5) & 0x20;
-}
-
-void putDebugChar(char a)	/* write a single character */
-{
-    while (SerialSendReady() == 0);
-
-    outportb(0x3F8, a);
-}
-int getDebugChar()	/* read and return a single char */
-{
-    while (SerialReceiveReady() == 0);
-
-    return inportb(0x3F8);
-}
+extern void putDebugChar(char a);	/* write a single character */
+extern int getDebugChar();	/* read and return a single char */
 
 //IDT Functions
 struct idt_entry {
@@ -177,7 +147,7 @@ void exceptionHandler(int exception_number, void *exception_address)	/* assign a
 
 static char initialized;  /* boolean flag. != 0 means we've been initialized */
 
-int     remote_debug;
+int remote_debug = 1;
 /*  debug >  0 prints ill-formed commands in valid packets & checksum errors */
 
 static const char hexchars[]="0123456789abcdef";
@@ -819,11 +789,13 @@ handle_exception (int exceptionVector)
 
   gdb_i386vector = exceptionVector;
 
+  /*
   if (remote_debug)
     {
       fprintf (stderr, "vector=%d, sr=0x%x, pc=0x%x\n",
 	      exceptionVector, registers[PS], registers[PC]);
     }
+  */
 
   /* reply to host that an exception has occurred */
   sigval = computeSignal (exceptionVector);

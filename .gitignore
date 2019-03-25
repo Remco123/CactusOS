@@ -35,5 +35,6 @@
 *.pcap
 *.bin
 *.iso
+*.ipch
 
 virtualbox_log.txt
