@@ -24,9 +24,6 @@ void KernelHeap::Initialize(uint32_t start, uint32_t end, uint32_t max)
     KernelHeap::endAddress = end;
     KernelHeap::maxAddress = max;
 
-    //TODO: Is this required?
-    MemoryOperations::memset((void*)start, 0x0, end - start);
-
     firstHeader = (MemoryHeader*)start;
     firstHeader->allocated = false;
     firstHeader->prev = 0;
