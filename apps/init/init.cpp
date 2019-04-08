@@ -6,6 +6,7 @@
 #include <gui/directgui.h>
 #include <string.h>
 #include <new.h>
+#include <proc.h>
 #include "bmp.h"
 #include "progress.h"
 
@@ -80,15 +81,9 @@ int main()
             }
         }
         
-        while(1) {
-            for(int i = 0; i <= 100; i++)
-            {
-                bar->SetValue(i);
+        Print("Launched test processes with status %d\n", Process::Run("B:\\apps\\test.bin"));
 
-                for(int x = 0; x < 200000; x++)
-                    asm volatile("pause");
-            }
-        }
+        bar->SetValue(80);
     }
 
     return 0;

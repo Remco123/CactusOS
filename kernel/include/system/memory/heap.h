@@ -26,6 +26,8 @@ namespace CactusOS
         {
             #if USE_HEAP_MAGIC
             common::uint32_t magic;
+            #else
+            common::uint32_t reserved;
             #endif
 
             MemoryHeader* next;

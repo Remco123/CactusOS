@@ -5,7 +5,7 @@ LIBFILE := ../lib/libcactusos.a
 GCCPARAMS := -m32 -g -I $(LIBINCLUDE) -O3 -msse2 -fno-use-cxa-atexit -nostdlib -fno-builtin -fno-exceptions -fno-rtti -fno-leading-underscore -Wno-write-strings -fpermissive -Wall
 LDPARAMS := -m elf_i386
 
-APPS := init
+APPS := init test
 APPOUT := ../isofiles/apps
 
 SRCFILES := $(shell find $(APPS) -type f \( -name \*.cpp -o -name \*.s -o -name \*.asm \))

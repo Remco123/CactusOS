@@ -55,8 +55,20 @@ CPUState* CactusOSSyscalls::HandleSyscall(CPUState* state)
             ProcessHelper::UpdateHeap(proc, state->EBX);
             state->EAX = SYSCALL_RET_SUCCES;
             break;
+        case SYSCALL_RUN_PROC:
+            {
+                char* applicationPath = (char*)state->EBX;
+                Process* proc = ProcessHelper::Create(applicationPath, false);
+                if(proc != 0) {
+                    System::scheduler->AddThread(proc->Threads[0], true);
+                    state->EAX = SYSCALL_RET_SUCCES;
+                }
+                else
+                    state->EAX = SYSCALL_RET_ERROR;
+            }
+            break;
         default:
-            Log(Warning, "Got not supported syscall %d from process %d", sysCall, proc->id);
+            Log(Warning, "Got unkown syscall %d from process %d", sysCall, proc->id);
             state->EAX = SYSCALL_RET_ERROR;
             break;
     }
