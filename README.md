@@ -1,6 +1,6 @@
 # CactusOS
 CactusOS is a simple operating system that is aimed to not be anything like linux. I am just trying to build my own OS and definitely not the best one. It should run on every 32 bit emulator and pc but if it doesn't please let me know.
-
+<img src="images/Logo.png" width="200" height="200">
 # Current Features
 - Remake Core of CactusOS [Done]
 - Higher Half Kernel [Done]
@@ -33,3 +33,7 @@ A i686-elf cross compiler is also required, see [Osdev wiki](https://wiki.osdev.
 - ```make CactusOS.iso``` To build the cdrom image
 - ```make clean``` To remove all the compiled files
 - ```make qemu``` Build the CactusOS.iso file if necessary and then run the kernel using qemu
+
+# Screenshots
+<img src="images/Screenshot Bootscreen.png" alt="Bootscreen" width="700">
+<img src="images/Screenshot Debugging.png" alt="Debugging with vscode debugger" width="700">
