@@ -2,6 +2,7 @@
 
 //Drivers
 #include <system/drivers/disk/ide.h>
+#include <system/drivers/video/vmwaresvga.h>
 
 using namespace CactusOS;
 using namespace CactusOS::common;
@@ -12,7 +13,7 @@ using namespace CactusOS::system::drivers;
 
 PCIAttachedDriverEntry pciDriverList[] = 
 {
-    //Empty for now
+    {VMWARESVGAII_VENDORID, VMWARESVGAII_DEVICEID, "VMWare SVGAII"}
 };
 
 const int pciDriverListCount = sizeof(pciDriverList) / sizeof(PCIAttachedDriverEntry);
@@ -26,10 +27,11 @@ void PCIDrivers::AssignDriversFromPCI(PCIController* pci, DriverManager* driverM
         //First loop through the known drivers per pci device
         for(int x = 0; x < pciDriverListCount; x++)
         {
-            if(pciDriverList[x].vendorID == pciDevice->vendorID && pciDriverList[x].deviceID == pciDevice->vendorID && pciDriverList[x].driverString != 0)
+            if(pciDriverList[x].vendorID == pciDevice->vendorID && pciDriverList[x].deviceID == pciDevice->deviceID && pciDriverList[x].driverString != 0)
             {
                 //Found a driver for that specific device
-                //TODO: Actualy add some drivers here
+                if(String::strcmp(pciDriverList[x].driverString, "VMWare SVGAII"))
+                    driverManager->AddDriver(new VMWARESVGAII(pciDevice));
 
                 goto FoundDriver;
             }

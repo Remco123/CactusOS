@@ -1,7 +1,7 @@
 #ifndef __CACTUSOS__SYSTEM__SYSTEM_H
 #define __CACTUSOS__SYSTEM__SYSTEM_H
 
-#define BOCHS_GFX_HACK 1 //Enable or disable the bochs hack
+#define BOCHS_GFX_HACK 0 //Enable or disable the bochs hack
 
 #include <system/bootconsole.h>
 #include <system/components/systemcomponent.h>
