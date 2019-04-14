@@ -22,6 +22,9 @@ SystemCallHandler* System::syscalls = 0;
 
 ScreenMode System::screenMode = ScreenMode::TextMode;
 bool System::gdbEnabled = false;
+#if BOCHS_GFX_HACK
+bool System::isBochs = false; //are we running inside bochs
+#endif
 
 void System::Start()
 {

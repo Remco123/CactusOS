@@ -1,6 +1,8 @@
 #ifndef __CACTUSOS__SYSTEM__SYSTEM_H
 #define __CACTUSOS__SYSTEM__SYSTEM_H
 
+#define BOCHS_GFX_HACK 1 //Enable or disable the bochs hack
+
 #include <system/bootconsole.h>
 #include <system/components/systemcomponent.h>
 #include <system/components/pit.h>
@@ -55,6 +57,9 @@ namespace CactusOS
 
             static ScreenMode screenMode;
             static bool gdbEnabled; //Is the gdb stub enabled?
+            #if BOCHS_GFX_HACK
+            static bool isBochs; //are we running inside bochs
+            #endif
 
             static void Start();
         };

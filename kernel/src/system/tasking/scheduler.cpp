@@ -33,6 +33,7 @@ uint32_t Scheduler::HandleInterrupt(uint32_t esp)
             Thread* currentThread = threadsList[currentThreadIndex];
             Thread* nextThread = GetNextReadyThread();
 
+            //Log(Info, "Switching from %d to %d", currentThread->parent->id, nextThread->parent->id);
             if(currentThread->state == Stopped)
             {
                 threadsList.Remove(currentThread);

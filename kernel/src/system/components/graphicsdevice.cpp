@@ -27,11 +27,13 @@ uint32_t GraphicsDevice::GetBufferSize()
 //Select the best graphics device for the situation
 GraphicsDevice* GraphicsDevice::GetBestDevice()
 {
-    if(BochsVBE::IsAvailable())
+    #if BOCHS_GFX_HACK
+    if(BochsVBE::IsAvailable() && System::isBochs)
     {
         BootConsole::Write(" BochsVBE");
         return new BochsVBE();
     }
+    #endif
     
     BootConsole::Write(" VESA");
     return new VESA(System::vm86Manager);

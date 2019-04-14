@@ -1,4 +1,5 @@
 #include <system/components/smbios.h>
+#include <system/system.h>
 
 using namespace CactusOS;
 using namespace CactusOS::common;
@@ -33,6 +34,33 @@ SMBIOS::SMBIOS(bool searchForTable)
         {
             BootConsole::Write("Found at: 0x"); Print::printfHex32((uint32_t)memAddress); BootConsole::WriteLine();
             this->TableAddress = memAddress;
+
+#if BOCHS_GFX_HACK //Massive hack to detect bochs so that we can use the right video device, TODO: Improve
+            SMBIOSEntryPoint* entryPoint = (SMBIOSEntryPoint*)this->TableAddress;
+            int i = 0;
+            uint32_t tableAddress = entryPoint->TableAddress;
+            while(i < entryPoint->NumberOfStructures)
+            {
+                i++;
+
+                SMBIOSTag* tag = (SMBIOSTag*)tableAddress;
+                if(tag->type == SMBIOSTableType::BIOSInformation)
+                {
+                    List<char*>* stringList = ExtractStrings(tag);
+                    SMBIOSBiosInfo* info = (SMBIOSBiosInfo*)tag;
+                    System::isBochs = String::strcmp(stringList->GetAt(info->vendor), "The Bochs Project");
+                    if(System::isBochs)
+                        BootConsole::WriteLine("(Warning) Using Bochs GFX Hack");
+                    delete stringList;
+                }
+
+                tableAddress += ((SMBIOSTag*)tableAddress)->length;
+
+                while(0 != (*((uint8_t*)tableAddress) | *((uint8_t*)tableAddress + 1))) tableAddress++;
+
+                tableAddress += 2;
+            }
+#endif
         }
     }
 }
