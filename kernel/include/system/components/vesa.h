@@ -3,15 +3,13 @@
 
 #include <common/types.h>
 #include <system/virtual8086/VM86Manager.h>
-#include <system/components/systemcomponent.h>
+#include <system/components/graphicsdevice.h>
 #include <core/virtualmemory.h>
 
 namespace CactusOS
 {
     namespace system
     {
-        #define VESA_FRAMEBUFFER_VIRT 0xE0000000
-
         typedef uint16_t Real_Pointer[2];
 
         struct VESAControllerInfo
@@ -65,7 +63,7 @@ namespace CactusOS
             common::uint8_t     Reserved[206];
         } __attribute__ ((packed));
 
-        class VESA : public SystemComponent
+        class VESA : public GraphicsDevice, public SystemComponent
         {
         private:
             Virtual8086Manager* virtual8086Manager;
@@ -76,7 +74,6 @@ namespace CactusOS
             VESAModeInfo* GetModeInfo(common::uint16_t mode);
             void SetVideoMode(common::uint16_t mode);
             bool SelectBestVideoMode();
-            common::uint32_t GetBufferSize();
         };
     }
 }

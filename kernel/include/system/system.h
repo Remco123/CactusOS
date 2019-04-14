@@ -6,6 +6,7 @@
 #include <system/components/pit.h>
 #include <system/components/rtc.h>
 #include <system/components/smbios.h>
+#include <system/components/graphicsdevice.h>
 #include <system/components/vesa.h>
 #include <system/components/pci.h>
 #include <system/virtual8086/VM86Manager.h>
@@ -44,7 +45,7 @@ namespace CactusOS
             static SMBIOS* smbios;
             static Virtual8086Manager* vm86Manager;
             static Virtual8086Monitor* vm86Monitor;
-            static VESA* vesa;
+            static GraphicsDevice* gfxDevice;
             static PCIController* pci;
             static drivers::DriverManager* driverManager;
             static DiskManager* diskManager;

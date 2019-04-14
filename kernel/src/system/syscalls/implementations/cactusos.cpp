@@ -26,7 +26,7 @@ CPUState* CactusOSSyscalls::HandleSyscall(CPUState* state)
             state->EAX = SYSCALL_RET_SUCCES;
             break;
         case SYSCALL_GUI_GETLFB:
-            VirtualMemoryManager::mapVirtualToPhysical((void*)System::vesa->currentVideoMode.PhysBasePtr, (void*)state->EBX, System::vesa->GetBufferSize(), false, true);
+            VirtualMemoryManager::mapVirtualToPhysical((void*)System::gfxDevice->framebufferPhys, (void*)state->EBX, System::gfxDevice->GetBufferSize(), false, true);
             state->EAX = SYSCALL_RET_SUCCES;
             Log(Info, "Mapped LFB for process %d to virtual address %x", proc->id, state->EBX);
             break;

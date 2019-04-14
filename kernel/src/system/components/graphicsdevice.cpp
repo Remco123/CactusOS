@@ -1,0 +1,38 @@
+#include <system/components/graphicsdevice.h>
+#include <system/components/bochsvbe.h>
+#include <system/components/vesa.h>
+#include <system/system.h>
+
+using namespace CactusOS;
+using namespace CactusOS::common;
+using namespace CactusOS::system;
+
+GraphicsDevice::GraphicsDevice()
+{
+    this->width = 0;
+    this->height = 0;
+    this->bpp = 0;
+}
+
+bool GraphicsDevice::SelectBestVideoMode()
+{
+    return false;
+}
+
+uint32_t GraphicsDevice::GetBufferSize()
+{
+	return this->width * this->height * (this->bpp/8);
+}
+
+//Select the best graphics device for the situation
+GraphicsDevice* GraphicsDevice::GetBestDevice()
+{
+    if(BochsVBE::IsAvailable())
+    {
+        BootConsole::Write(" BochsVBE");
+        return new BochsVBE();
+    }
+    
+    BootConsole::Write(" VESA");
+    return new VESA(System::vm86Manager);
+}

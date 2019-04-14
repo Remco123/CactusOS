@@ -12,7 +12,7 @@ RTC* System::rtc = 0;
 SMBIOS* System::smbios = 0;
 Virtual8086Manager* System::vm86Manager = 0;
 Virtual8086Monitor* System::vm86Monitor = 0;
-VESA* System::vesa = 0;
+GraphicsDevice* System::gfxDevice = 0;
 PCIController* System::pci = 0;
 DriverManager* System::driverManager = 0;
 DiskManager* System::diskManager = 0;
@@ -47,9 +47,9 @@ void System::Start()
     System::vm86Manager = new Virtual8086Manager();
     System::vm86Monitor = new Virtual8086Monitor();
 
-    //The vesa component is added here but not used right away, we don't need to be in video mode so early.
-    BootConsole::Write("VESA VBE");
-    System::vesa = new VESA(System::vm86Manager);
+    //The graphics component is added here but not used right away, we don't need to be in video mode so early.
+    BootConsole::Write("Graphics Device");
+    System::gfxDevice = GraphicsDevice::GetBestDevice();
     BootConsole::WriteLine(" [Done]");
 
     BootConsole::WriteLine("Loading Initial Ramdisk");

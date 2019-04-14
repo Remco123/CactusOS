@@ -150,8 +150,10 @@ extern "C" void kernelMain(const multiboot_info_t* mbi, unsigned int multiboot_m
     Process* proc = ProcessHelper::Create("B:\\apps\\init.bin", false);
     if(proc != 0)
     {
-        System::vesa->SelectBestVideoMode();
-        Log(Info, "Switched to graphics mode, phys=%x virt=%x", System::vesa->currentVideoMode.PhysBasePtr, VESA_FRAMEBUFFER_VIRT);
+        if(System::gfxDevice->SelectBestVideoMode() == false)
+            Log(Error, "Could not set a video mode");
+
+        Log(Info, "Switched to graphics mode, phys=%x", System::gfxDevice->framebufferPhys);
         System::screenMode = ScreenMode::GraphicsMode;
 
         System::scheduler->AddThread(proc->Threads[0], true);
