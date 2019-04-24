@@ -13,11 +13,12 @@ CPUState* CactusOSSyscalls::HandleSyscall(CPUState* state)
 {
     uint32_t sysCall = state->EAX;
     Process* proc = System::scheduler->CurrentProcess();
+    //System::scheduler->Enabled = false;
 
     switch (sysCall)
     {
         case SYSCALL_EXIT:
-            Log(Info, "Process %d (%s) exited with code %d", proc->id, proc->fileName, (int)state->EBX);
+            Log(Info, "Process %d exited with code %d", proc->id, (int)state->EBX);
             ProcessHelper::RemoveProcess(proc);
             state->EAX = SYSCALL_RET_SUCCES;
             break;
@@ -72,6 +73,8 @@ CPUState* CactusOSSyscalls::HandleSyscall(CPUState* state)
             state->EAX = SYSCALL_RET_ERROR;
             break;
     }
+
+    //System::scheduler->Enabled = true;
 
     return state;
 }

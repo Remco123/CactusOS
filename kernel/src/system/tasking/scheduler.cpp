@@ -7,6 +7,8 @@ using namespace CactusOS::common;
 using namespace CactusOS::system;
 using namespace CactusOS::core;
 
+extern "C" void enter_usermode(uint32_t location, uint32_t stackAddress);
+
 Scheduler::Scheduler()
 : InterruptHandler(0x20)
 {
@@ -15,6 +17,19 @@ Scheduler::Scheduler()
     this->currentThreadIndex = 0;
     this->threadsList.Clear();
     this->Enabled = false;
+}
+
+void printRegs(CPUState* regs)
+{
+    BootConsole::Write("eax: 0x"); Print::printfHex32(regs->EAX); BootConsole::Write("   ");
+    BootConsole::Write("ebx: 0x"); Print::printfHex32(regs->EBX); BootConsole::Write("   ");
+    BootConsole::Write("ecx: 0x"); Print::printfHex32(regs->ECX); BootConsole::WriteLine();
+    BootConsole::Write("edx: 0x"); Print::printfHex32(regs->EDX); BootConsole::Write("   ");
+    BootConsole::Write("esi: 0x"); Print::printfHex32(regs->ESI); BootConsole::Write("   ");
+    BootConsole::Write("edi: 0x"); Print::printfHex32(regs->EDI); BootConsole::WriteLine();
+    BootConsole::Write("ebp: 0x"); Print::printfHex32(regs->EBP); BootConsole::Write("   ");
+    BootConsole::Write("esp: 0x"); Print::printfHex32(regs->ESP); BootConsole::Write("   ");
+    BootConsole::Write("eip: 0x"); Print::printfHex32(regs->EIP); BootConsole::WriteLine();
 }
 
 uint32_t Scheduler::HandleInterrupt(uint32_t esp)
@@ -33,7 +48,16 @@ uint32_t Scheduler::HandleInterrupt(uint32_t esp)
             Thread* currentThread = threadsList[currentThreadIndex];
             Thread* nextThread = GetNextReadyThread();
 
-            //Log(Info, "Switching from %d to %d", currentThread->parent->id, nextThread->parent->id);
+#if 1
+            Log(Info, "Switching from %x %d to %x %d", (uint32_t)currentThread, currentThread->parent->isUserspace, (uint32_t)nextThread, nextThread->parent->isUserspace);
+            BootConsole::WriteLine("-- Current Registers --");
+            printRegs((CPUState*)esp);
+            BootConsole::Write("cr3: 0x"); Print::printfHex32(currentThread->parent->pageDirPhys); BootConsole::WriteLine();
+            BootConsole::WriteLine("-- Next Registers --");
+            printRegs(nextThread->regsPtr);
+            BootConsole::Write("cr3: 0x"); Print::printfHex32(nextThread->parent->pageDirPhys); BootConsole::WriteLine();
+#endif       
+            
             if(currentThread->state == Stopped)
             {
                 threadsList.Remove(currentThread);
@@ -74,8 +98,6 @@ Thread* Scheduler::GetNextReadyThread()
 
     return threadsList[currentThreadIndex]; 
 }
-
-extern "C" void enter_usermode(uint32_t location, uint32_t stackAddress);
 
 void Scheduler::AddThread(Thread* thread, bool forceSwitch)
 {

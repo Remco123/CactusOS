@@ -19,5 +19,12 @@ int main()
         DirectGUI::DrawFillRect(0xFF000000, 700, 0, 300, 300);
     }    
 
+    for(int i = 0; i < 30000; i++)
+    {
+        DirectGUI::DrawCircle(0xFFFF0000 ^ i, 100, 100, 50);
+    }
+
+    Print("Drawing is done!\n");
+
     return 0;
 }

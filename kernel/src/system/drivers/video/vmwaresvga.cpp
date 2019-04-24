@@ -9,7 +9,7 @@ using namespace CactusOS::system::drivers;
 using namespace CactusOS::core;
 
 VMWARESVGAII::VMWARESVGAII(PCIDevice* pciDev)
-: Driver("VMWare SVGAII", "VMWare Graphics Addapter"),
+: Driver("VMWare SVGAII", "VMWare Graphics Adapter"),
   GraphicsDevice()
 {
     this->width = 0;
