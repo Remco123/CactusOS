@@ -21,7 +21,8 @@ namespace CactusOS
         {
             Blocked,
             Ready,
-            Stopped
+            Stopped,
+            Started
         };
 
         struct Process;

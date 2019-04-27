@@ -41,6 +41,8 @@ namespace CactusOS
 
             Thread* CurrentThread();
             Process* CurrentProcess();
+
+            void InitialThreadUserJump(Thread* thread);
         };
     }   
 }

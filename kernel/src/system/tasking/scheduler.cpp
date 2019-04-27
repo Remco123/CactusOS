@@ -48,7 +48,7 @@ uint32_t Scheduler::HandleInterrupt(uint32_t esp)
             Thread* currentThread = threadsList[currentThreadIndex];
             Thread* nextThread = GetNextReadyThread();
 
-#if 1
+#if 0
             Log(Info, "Switching from %x %d to %x %d", (uint32_t)currentThread, currentThread->parent->isUserspace, (uint32_t)nextThread, nextThread->parent->isUserspace);
             BootConsole::WriteLine("-- Current Registers --");
             printRegs((CPUState*)esp);
@@ -72,6 +72,15 @@ uint32_t Scheduler::HandleInterrupt(uint32_t esp)
             {
                 //Save old registers
                 currentThread->regsPtr = (CPUState*)esp;
+            }
+
+            //Check if the next thread has not been called before
+            if(nextThread->state == Started && nextThread->parent && nextThread->parent->isUserspace)
+            {
+                nextThread->state = ThreadState::Ready;
+
+                Log(Info, "Jumping to new created thread");
+                InitialThreadUserJump(nextThread);
             }
 
             //Load new registers
@@ -105,25 +114,27 @@ void Scheduler::AddThread(Thread* thread, bool forceSwitch)
 
     if(forceSwitch)
     {
-        if(thread->parent) {
-            if(thread->parent->isUserspace)
-            {
-                InterruptDescriptorTable::DisableInterrupts();
+        if(thread->parent && thread->parent->isUserspace)
+            InitialThreadUserJump(thread);
 
-                TSS::SetStack(0x10, (uint32_t)thread->stack + THREAD_STACK_SIZE);
-
-                //Dont forget to load the page directory
-                VirtualMemoryManager::SwitchPageDirectory(thread->parent->pageDirPhys);
-
-                currentThreadIndex = threadsList.size() - 1;
-
-                this->Enabled = true;
-
-                enter_usermode(thread->regsPtr->EIP, (uint32_t)thread->userStack + thread->userStackSize);
-            }
-        }
         this->ForceSwitch();
     }
+}
+
+void Scheduler::InitialThreadUserJump(Thread* thread)
+{
+    InterruptDescriptorTable::DisableInterrupts();
+
+    TSS::SetStack(0x10, (uint32_t)thread->stack + THREAD_STACK_SIZE);
+
+    //Dont forget to load the page directory
+    VirtualMemoryManager::SwitchPageDirectory(thread->parent->pageDirPhys);
+
+    currentThreadIndex = threadsList.size() - 1;
+
+    this->Enabled = true;
+
+    enter_usermode(thread->regsPtr->EIP, (uint32_t)thread->userStack + thread->userStackSize);
 }
 
 void Scheduler::ForceSwitch()

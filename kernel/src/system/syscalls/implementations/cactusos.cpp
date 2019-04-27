@@ -13,7 +13,7 @@ CPUState* CactusOSSyscalls::HandleSyscall(CPUState* state)
 {
     uint32_t sysCall = state->EAX;
     Process* proc = System::scheduler->CurrentProcess();
-    //System::scheduler->Enabled = false;
+    System::scheduler->Enabled = false;
 
     switch (sysCall)
     {
@@ -60,8 +60,9 @@ CPUState* CactusOSSyscalls::HandleSyscall(CPUState* state)
             {
                 char* applicationPath = (char*)state->EBX;
                 Process* proc = ProcessHelper::Create(applicationPath, false);
+                proc->Threads[0]->state = Started;
                 if(proc != 0) {
-                    System::scheduler->AddThread(proc->Threads[0], true);
+                    System::scheduler->AddThread(proc->Threads[0], false);
                     state->EAX = SYSCALL_RET_SUCCES;
                 }
                 else
@@ -74,7 +75,7 @@ CPUState* CactusOSSyscalls::HandleSyscall(CPUState* state)
             break;
     }
 
-    //System::scheduler->Enabled = true;
+    System::scheduler->Enabled = true;
 
     return state;
 }
