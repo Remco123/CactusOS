@@ -42,5 +42,14 @@ void CPU::EnableFeatures()
 
         while(1);
     }
-    
+
+    if(edx & EDX_FXSR) {
+        BootConsole::WriteLine("CPU Has FXSR");
+    }
+    else
+    {
+        BootConsole::WriteLine("Error: CPU has no FXSR. This is needed");
+
+        while(1);
+    } 
 }

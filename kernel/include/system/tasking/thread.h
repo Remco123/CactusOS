@@ -37,6 +37,7 @@ namespace CactusOS
             core::CPUState* regsPtr;
 
             common::uint32_t timeDelta;
+            common::uint8_t* FPUBuffer;
         };
 
         class ThreadHelper

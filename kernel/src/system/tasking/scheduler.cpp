@@ -72,6 +72,9 @@ uint32_t Scheduler::HandleInterrupt(uint32_t esp)
             {
                 //Save old registers
                 currentThread->regsPtr = (CPUState*)esp;
+
+                //Save current fpu status
+                asm volatile ("fxsave (%%eax)" : : "a" (currentThread->FPUBuffer));
             }
 
             //Check if the next thread has not been called before
@@ -85,6 +88,9 @@ uint32_t Scheduler::HandleInterrupt(uint32_t esp)
 
             //Load new registers
             esp = (uint32_t)nextThread->regsPtr;
+
+            //Load fpu status
+            asm volatile ("fxrstor (%%eax)" : : "a" (nextThread->FPUBuffer));
 
             //Load page directory
             if(nextThread->parent && nextThread->parent->pageDirPhys != 0)

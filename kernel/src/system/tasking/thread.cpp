@@ -49,6 +49,10 @@ Thread* ThreadHelper::CreateFromFunction(void (*entryPoint)(), bool isKernel, ui
     //The thread does not have a parent by default
     result->parent = 0;
 
+    //Create a buffer for the fpu
+    result->FPUBuffer = (uint8_t*)KernelHeap::allignedMalloc(512, 16);
+    MemoryOperations::memset(result->FPUBuffer, 0, 512);
+
     //Return the result
     return result;
 }
@@ -56,6 +60,7 @@ Thread* ThreadHelper::CreateFromFunction(void (*entryPoint)(), bool isKernel, ui
 void ThreadHelper::RemoveThread(Thread* thread)
 {
     KernelHeap::allignedFree(thread->stack);
+    KernelHeap::allignedFree(thread->FPUBuffer);
     for(uint32_t i = (uint32_t)thread->userStack; i < (uint32_t)thread->userStack + thread->userStackSize; i+=PAGE_SIZE)
         VirtualMemoryManager::FreePage(VirtualMemoryManager::GetPageForAddress(i, false));
 
