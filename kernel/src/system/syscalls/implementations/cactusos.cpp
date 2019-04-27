@@ -13,7 +13,7 @@ CPUState* CactusOSSyscalls::HandleSyscall(CPUState* state)
 {
     uint32_t sysCall = state->EAX;
     Process* proc = System::scheduler->CurrentProcess();
-    System::scheduler->Enabled = false;
+    //System::scheduler->Enabled = false;
 
     switch (sysCall)
     {
@@ -75,7 +75,7 @@ CPUState* CactusOSSyscalls::HandleSyscall(CPUState* state)
             break;
     }
 
-    System::scheduler->Enabled = true;
+    //System::scheduler->Enabled = true;
 
     return state;
 }
