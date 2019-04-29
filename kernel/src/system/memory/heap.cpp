@@ -24,6 +24,8 @@ void KernelHeap::Initialize(uint32_t start, uint32_t end, uint32_t max)
     KernelHeap::endAddress = end;
     KernelHeap::maxAddress = max;
 
+    MemoryOperations::memset((void*)start, 0x0, end - start);
+
     firstHeader = (MemoryHeader*)start;
     firstHeader->allocated = false;
     firstHeader->prev = 0;
@@ -153,3 +155,14 @@ void KernelHeap::allignedFree(void* ptr)
 
     free(p);
 }
+
+#if USE_HEAP_MAGIC
+bool KernelHeap::CheckForErrors()
+{
+    for(MemoryHeader* hdr = firstHeader; hdr != 0; hdr = hdr->next)
+        if(hdr->magic != MEMORY_HEADER_MAGIC)
+            return true;
+    
+    return false;
+}
+#endif

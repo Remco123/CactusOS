@@ -107,7 +107,6 @@ Process* ProcessHelper::Create(char* fileName, bool isKernel)
             MemoryOperations::memcpy((void*)prgmHeader->p_vaddr, fileBuffer + prgmHeader->p_offset, prgmHeader->p_memsz);
 
     //Put information in PCB
-    MemoryOperations::memcpy(proc->fileName, fileName, String::strlen(fileName));
     proc->id = currentPID++;
     proc->pageDirPhys = pageDirPhys;
     proc->state = ProcessState::Active;
@@ -135,6 +134,10 @@ Process* ProcessHelper::Create(char* fileName, bool isKernel)
     delete fileBuffer;
 
     VirtualMemoryManager::SwitchPageDirectory(oldCR3);
+
+    //We can only copy the filename when we are in the same virtual space as the application that requested the exec
+    int fileNameLen = String::strlen(fileName);
+    MemoryOperations::memcpy(proc->fileName, fileName, fileNameLen <= 32 ? fileNameLen : 32);
 
     InterruptDescriptorTable::EnableInterrupts();
 

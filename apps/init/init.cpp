@@ -80,10 +80,12 @@ int main()
                 }
             }
         }
-        
-        Print("Launched test process with status %d\n", Process::Run("B:\\apps\\test.bin"));
 
-        bar->SetValue(80);
+        Print("Starting test.bin\n");
+        int s = Process::Run("B:\\apps\\test.bin");
+        Print("Launched test process with status %d\n", s);
+
+        bar->SetValue(100);
     }    
 
     return 0;

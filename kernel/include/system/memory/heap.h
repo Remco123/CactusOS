@@ -11,7 +11,7 @@ namespace CactusOS
         #define KERNEL_HEAP_START_SIZE 0x100000
         #define KERNEL_HEAP_END 0xCFFFF000
 
-        #define USE_HEAP_MAGIC 0
+        #define USE_HEAP_MAGIC 1
         
         #if USE_HEAP_MAGIC
         #define MEMORY_HEADER_MAGIC 0xF00D
@@ -56,6 +56,10 @@ namespace CactusOS
 
             static void* allignedMalloc(common::uint32_t size, common::uint32_t align, common::uint32_t* physReturn = 0);
             static void allignedFree(void* ptr);
+
+            #if USE_HEAP_MAGIC
+            static bool CheckForErrors();
+            #endif
         };
     }
 }
