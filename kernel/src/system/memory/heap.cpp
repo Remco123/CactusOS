@@ -24,7 +24,8 @@ void KernelHeap::Initialize(uint32_t start, uint32_t end, uint32_t max)
     KernelHeap::endAddress = end;
     KernelHeap::maxAddress = max;
 
-    MemoryOperations::memset((void*)start, 0x0, end - start);
+    //Heap should start after initrd, need to look into that in the future. But it works for now.
+    //MemoryOperations::memset((void*)start, 0x0, end - start);
 
     firstHeader = (MemoryHeader*)start;
     firstHeader->allocated = false;
