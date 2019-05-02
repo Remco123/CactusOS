@@ -92,3 +92,61 @@ List<char*> String::Split(const char* str, char d)
 
     return *Result;
 }
+
+char* String::Uppercase(char* str)
+{ 
+    int len = strlen(str);
+    int i = 0;
+	while (i < len)
+	{
+		if ((short)str[i] >= 97 && (short)str[i] <= 122)
+			str[i] -= 32;
+		i++;
+	}
+    return str;
+}
+char* String::Lowercase(char* str)
+{
+    int len = strlen(str);
+    int i = 0;
+	while (i < len)
+	{
+		if ((short)str[i] >= 65 && (short)str[i] <= 90)
+			str[i] += 32;
+		i++;
+	}
+    return str;
+}
+
+char* String::strcpy(char *s1, const char *s2)
+{
+	strncpy(s1, s2, strlen(s2) + 1);
+	s1[strlen(s2)] = '\0'; //tack on the null terminating character if it wasn't already done
+	return s1;
+}
+
+char* String::strncpy(char *s1, const char *s2, int n)
+{
+	unsigned int extern_iter = 0;
+
+	unsigned int iterator = 0;
+	for (iterator = 0; iterator < n; iterator++) //iterate through s2 up to char n, copying them to s1
+	{
+		if (s2[iterator] != '\0')
+			s1[iterator] = s2[iterator];
+		else //the end of s2 was found prematurely - copy the null character, update external iterator and quit for loop
+		{
+			s1[iterator] = s2[iterator];
+			extern_iter = iterator + 1;
+			break;
+		}
+	}
+
+	while (extern_iter < n) //while there are still spaces that need to be filled with null characters, fill them
+	{
+		s1[extern_iter] = '\0';
+		extern_iter++;
+	}
+
+	return s1;
+}

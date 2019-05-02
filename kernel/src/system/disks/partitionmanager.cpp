@@ -1,6 +1,7 @@
 #include <system/disks/partitionmanager.h>
 
 #include <system/vfs/iso9660.h>
+#include <system/vfs/fat32.h>
 
 using namespace CactusOS;
 using namespace CactusOS::common;
@@ -61,6 +62,15 @@ void PartitionManager::AssignVFS(PartitionTableEntry partition, Disk* disk, VFSM
     {
         BootConsole::Write(" [ISO9660]");
         ISO9660* isoVFS = new ISO9660(disk, partition.start_lba, partition.length);
+        if(isoVFS->Initialize())
+            vfs->Mount(isoVFS); //Mount the filesystem
+        else
+            delete isoVFS;
+    }
+    else if(partition.partition_id == 0x0B || partition.partition_id == 0x0C)
+    {
+        BootConsole::Write(" [FAT32]");
+        FAT32* isoVFS = new FAT32(disk, partition.start_lba, partition.length);
         if(isoVFS->Initialize())
             vfs->Mount(isoVFS); //Mount the filesystem
         else
