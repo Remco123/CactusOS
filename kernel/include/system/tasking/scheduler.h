@@ -29,6 +29,7 @@ namespace CactusOS
             int currentThreadIndex = 0;
 
             Thread* GetNextReadyThread();
+            void ProcessSleepingThreads();
         public:
             bool Enabled = true;
             Scheduler();
@@ -43,6 +44,10 @@ namespace CactusOS
             Process* CurrentProcess();
 
             void InitialThreadUserJump(Thread* thread);
+
+            //Blocking and unblocking
+            void Block(Thread* thread);
+            void Unblock(Thread* thread, bool forceSwitch = false);
         };
     }   
 }

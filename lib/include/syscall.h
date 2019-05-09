@@ -18,6 +18,7 @@ namespace LIBCactusOS
     #define SYSCALL_PRINT 9
     #define SYSCALL_SET_HEAP_SIZE 10
     #define SYSCALL_RUN_PROC 11
+    #define SYSCALL_SLEEP_MS 12
     #define SYSCALL_SET_CACTUSOS_LIB 0xFFFF
 
     int DoSyscall(unsigned int intNum, unsigned int arg1 = 0, unsigned int arg2 = 0);

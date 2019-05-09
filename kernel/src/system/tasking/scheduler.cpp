@@ -35,6 +35,7 @@ void printRegs(CPUState* regs)
 uint32_t Scheduler::HandleInterrupt(uint32_t esp)
 {
     tickCount++;
+    ProcessSleepingThreads();
 
     if(tickCount == frequency)
     {
@@ -106,10 +107,15 @@ uint32_t Scheduler::HandleInterrupt(uint32_t esp)
 
 Thread* Scheduler::GetNextReadyThread()
 {
-    currentThreadIndex++;
-    
+    currentThreadIndex += 1;
     if(currentThreadIndex >= threadsList.size())
         currentThreadIndex = 0;
+
+    while(threadsList[currentThreadIndex]->state == Blocked){
+        currentThreadIndex += 1;
+        if(currentThreadIndex >= threadsList.size())
+            currentThreadIndex = 0;
+    }
 
     return threadsList[currentThreadIndex]; 
 }
@@ -157,4 +163,33 @@ Thread* Scheduler::CurrentThread()
 Process* Scheduler::CurrentProcess()
 {
     return threadsList[currentThreadIndex]->parent;
+}
+
+void Scheduler::Block(Thread* thread)
+{
+    Log(Info, "Blocking thread %x", (uint32_t)thread);
+    thread->state = ThreadState::Blocked;
+
+    ForceSwitch();
+}
+void Scheduler::Unblock(Thread* thread, bool forceSwitch)
+{
+    Log(Info, "Unblocking thread %x", (uint32_t)thread);
+    thread->state = ThreadState::Ready;
+
+    if(forceSwitch)
+        ForceSwitch();
+}
+void Scheduler::ProcessSleepingThreads()
+{
+    for(int i = 0; i < threadsList.size(); i++)
+    {
+        Thread* thread = threadsList[i];
+        if(thread->state == Blocked && thread->timeDelta > 0)
+        {
+            thread->timeDelta--;
+            if(thread->timeDelta <= 0)
+                Unblock(thread); //Perhaps call thread directly when time has passed, this will be more acurate but harder to implement
+        }
+    }
 }

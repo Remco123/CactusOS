@@ -69,6 +69,13 @@ CPUState* CactusOSSyscalls::HandleSyscall(CPUState* state)
                     state->EAX = SYSCALL_RET_ERROR;
             }
             break;
+        case SYSCALL_SLEEP_MS:
+            {
+                Thread* currentThread = System::scheduler->CurrentThread();
+                currentThread->timeDelta = state->EBX;
+                System::scheduler->Block(currentThread);
+            }
+            break;
         default:
             Log(Warning, "Got unkown syscall %d from process %d", sysCall, proc->id);
             state->EAX = SYSCALL_RET_ERROR;

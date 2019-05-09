@@ -6,6 +6,7 @@
 #include <gui/directgui.h>
 #include <string.h>
 #include <new.h>
+#include <time.h>
 
 using namespace LIBCactusOS;
 
@@ -36,9 +37,17 @@ int main()
         for(int x = 0; x < 5; x++)
             for(int y = 0; y < 4; y++) {
                 Draw3DCube(200 * x + 50, 160 * y + 50, 0xFF00CC44 * (x+1) * (y+1));
-                for(int i = 0; i < 1200000; i++) asm volatile("pause");
+                Time::Sleep(500);
             }
     }    
+
+    while(true)
+    {
+        DirectGUI::Clear(0xFFFFFFFF);
+        Time::Sleep(1000);
+        DirectGUI::Clear(0xFF333333);
+        Time::Sleep(1000);
+    }
 
     return 0;
 }
