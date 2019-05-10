@@ -9,6 +9,7 @@ using namespace CactusOS::core;
 using namespace CactusOS::system;
 
 static int currentPID = 1;
+List<Process*> ProcessHelper::Processes;
 
 ProcessHelper::ProcessHelper()
 {   }
@@ -141,6 +142,8 @@ Process* ProcessHelper::Create(char* fileName, bool isKernel)
 
     InterruptDescriptorTable::EnableInterrupts();
 
+    Processes.push_back(proc); //Finally add it to all known processes
+
     return proc;
 }   
 
@@ -158,6 +161,8 @@ Process* ProcessHelper::CreateKernelProcess()
     proc->state = ProcessState::Active;
     proc->syscallID = 1;
 
+    Processes.push_back(proc); //Finally add it to all known processes
+
     return proc;
 }
 
@@ -165,6 +170,7 @@ void ProcessHelper::RemoveProcess(Process* proc)
 {
     Log(Info, "Removing process %d from system", proc->id);
     System::scheduler->Enabled = false; //We do not want to be interrupted during the switch
+    Processes.Remove(proc); //Remove the process from the list
 
     for(int i = 0; i < proc->Threads.size(); i++)
         ThreadHelper::RemoveThread(proc->Threads[i]);
@@ -203,4 +209,13 @@ void ProcessHelper::UpdateHeap(Process* proc, uint32_t newEndAddr)
         
         proc->heap.heapEnd = pageRoundUp(newEndAddr);
     }
+}
+
+Process* ProcessHelper::ProcessById(int id)
+{
+    for(Process* p : Processes)
+        if(p->id == id)
+            return p;
+            
+    return 0;
 }

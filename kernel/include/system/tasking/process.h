@@ -50,10 +50,13 @@ namespace CactusOS
         private:
             ProcessHelper();
         public:
+            static List<Process*> Processes;
+            
             static Process* Create(char* fileName, bool isKernel = false);
             static Process* CreateKernelProcess();
             static void RemoveProcess(Process* proc);
             static void UpdateHeap(Process* proc, common::uint32_t newEndAddr);
+            static Process* ProcessById(int id);
         };
     }
 }

@@ -19,9 +19,10 @@ namespace LIBCactusOS
     #define SYSCALL_SET_HEAP_SIZE 10
     #define SYSCALL_RUN_PROC 11
     #define SYSCALL_SLEEP_MS 12
+    #define SYSCALL_CREATE_SHARED_MEM 13
     #define SYSCALL_SET_CACTUSOS_LIB 0xFFFF
 
-    int DoSyscall(unsigned int intNum, unsigned int arg1 = 0, unsigned int arg2 = 0);
+    int DoSyscall(unsigned int intNum, unsigned int arg1 = 0, unsigned int arg2 = 0, unsigned int arg3 = 0);
 }
 
 #endif

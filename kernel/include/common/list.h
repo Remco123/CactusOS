@@ -44,6 +44,42 @@ namespace CactusOS
 
             ListNode<T>* insertInternal(const T &e, ListNode<T>* pos);
             void removeInternal(ListNode<T> *pos);
+
+        //Iterators
+        public:
+            class iterator
+            {
+            public:
+                iterator(ListNode<T> *p=0) : pos_(p) { }
+                
+                T &operator*()
+                { return pos_->data; }
+    
+                T *operator->()
+                { return &(pos_->data); }
+    
+                bool operator!=(const iterator &rhs)
+                { return this->pos_ != rhs.pos_; }
+    
+                iterator operator++()
+                { pos_ = pos_->next; return *this; }
+    
+                iterator operator--()
+                { pos_ = pos_->prev; return *this; }
+    
+            private:
+                ListNode<T> *pos_;
+            };
+
+            iterator begin()
+            {
+                return iterator(head_);
+            }
+
+            iterator end()
+            {
+                return iterator(0);
+            }
         };
     }
 }

@@ -38,5 +38,6 @@
         "system_error": "cpp",
         "tuple": "cpp",
         "cstring": "cpp"
-    }
+    },
+    "C_Cpp.clang_format_fallbackStyle": "{ BasedOnStyle: WebKit, PointerAlignment: Left}"
 }

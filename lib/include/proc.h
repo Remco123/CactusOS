@@ -10,6 +10,7 @@ namespace LIBCactusOS
     {
     public:
         static int Run(const char* path);
+        static bool CreateSharedMemory(int proc2ID, uint32_t virtStart, uint32_t len);
     };
 }
 

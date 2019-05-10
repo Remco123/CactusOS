@@ -76,6 +76,12 @@ CPUState* CactusOSSyscalls::HandleSyscall(CPUState* state)
                 System::scheduler->Block(currentThread);
             }
             break;
+        case SYSCALL_CREATE_SHARED_MEM:
+            {
+                Process* proc2 = ProcessHelper::ProcessById(state->EBX);
+                state->EAX = SharedMemory::CreateSharedRegion(proc, proc2, state->ECX, state->EDX);
+            }
+            break;
         default:
             Log(Warning, "Got unkown syscall %d from process %d", sysCall, proc->id);
             state->EAX = SYSCALL_RET_ERROR;
