@@ -79,7 +79,7 @@ CPUState* CactusOSSyscalls::HandleSyscall(CPUState* state)
         case SYSCALL_CREATE_SHARED_MEM:
             {
                 Process* proc2 = ProcessHelper::ProcessById(state->EBX);
-                state->EAX = SharedMemory::CreateSharedRegion(proc, proc2, state->ECX, state->EDX);
+                state->EAX = SharedMemory::CreateSharedRegion(proc, proc2, state->ECX, state->EDX, state->ESI);
             }
             break;
         default:

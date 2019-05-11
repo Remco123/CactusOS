@@ -22,7 +22,7 @@ namespace LIBCactusOS
     #define SYSCALL_CREATE_SHARED_MEM 13
     #define SYSCALL_SET_CACTUSOS_LIB 0xFFFF
 
-    int DoSyscall(unsigned int intNum, unsigned int arg1 = 0, unsigned int arg2 = 0, unsigned int arg3 = 0);
+    int DoSyscall(unsigned int intNum, unsigned int arg1 = 0, unsigned int arg2 = 0, unsigned int arg3 = 0, unsigned int arg4 = 0, unsigned int arg5 = 0);
 }
 
 #endif
