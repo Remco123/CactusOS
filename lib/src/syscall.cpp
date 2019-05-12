@@ -12,6 +12,7 @@
 | D |   %edi, %di        |
 +---+--------------------+
 */
+
 int LIBCactusOS::DoSyscall(unsigned int intNum, unsigned int arg1, unsigned int arg2, unsigned int arg3, unsigned int arg4, unsigned int arg5)
 {
     int a;

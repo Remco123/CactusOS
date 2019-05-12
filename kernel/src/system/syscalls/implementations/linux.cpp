@@ -15,7 +15,7 @@ CPUState* LinuxSyscalls::HandleSyscall(CPUState* state)
             //From now on this uses CactusOS Systemcalls
             System::scheduler->CurrentProcess()->syscallID = 1;
             //Return a succes
-            state->EAX = 0;
+            state->EAX = System::scheduler->CurrentProcess()->id; //Return the pid
             break;
     
         default:

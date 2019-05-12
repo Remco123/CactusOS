@@ -7,6 +7,8 @@
 #include <string.h>
 #include <new.h>
 #include <time.h>
+#include <proc.h>
+#include <ipc.h>
 
 using namespace LIBCactusOS;
 
@@ -30,7 +32,10 @@ void Draw3DCube(int x, int y, uint32_t color)
 
 int main()
 {
-    Print("Test application started!\n");
+    Print("Test application started! PID=%d\n", Process::ID);
+
+    IPCMessage message = ICPReceive();
+    Print("Message: source=%d dest=%d type=%d args=%d,%d,%d,%d,%d\n", message.source, message.dest, message.type, message.arg1, message.arg2, message.arg3, message.arg4, message.arg5);
 
     if(DirectGUI::RequestFramebuffer())
     {

@@ -8,6 +8,9 @@ namespace LIBCactusOS
     class API
     {
     public:
+        /**
+         * Initialize the CactusOS Api for this process
+        */
         static void Initialize();
     };
 }

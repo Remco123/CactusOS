@@ -183,6 +183,9 @@ void ProcessHelper::RemoveProcess(Process* proc)
     for(uint32_t p = proc->heap.heapStart; p < proc->heap.heapEnd; p+=PAGE_SIZE)
         VirtualMemoryManager::FreePage(VirtualMemoryManager::GetPageForAddress(p, false));
 
+    //Delete ipc messages
+    proc->ipcMessages.Clear();
+
     delete proc;
 
     //Finally force a contex switch so that we never return to this process again.

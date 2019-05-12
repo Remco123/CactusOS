@@ -3,6 +3,7 @@
 #include <../../lib/include/syscall.h>
 
 #include <system/system.h>
+#include <system/tasking/ipcmanager.h>
 
 using namespace CactusOS;
 using namespace CactusOS::common;
@@ -73,13 +74,28 @@ CPUState* CactusOSSyscalls::HandleSyscall(CPUState* state)
             {
                 Thread* currentThread = System::scheduler->CurrentThread();
                 currentThread->timeDelta = state->EBX;
-                System::scheduler->Block(currentThread);
+                System::scheduler->Block(currentThread, BlockedState::SleepMS);
             }
             break;
         case SYSCALL_CREATE_SHARED_MEM:
             {
                 Process* proc2 = ProcessHelper::ProcessById(state->EBX);
                 state->EAX = SharedMemory::CreateSharedRegion(proc, proc2, state->ECX, state->EDX, state->ESI);
+            }
+            break;
+        case SYSCALL_IPC_SEND:
+            {
+                IPCManager::HandleSend(state, proc);
+            }
+            break;
+        case SYSCALL_IPC_RECEIVE:
+            {
+                IPCManager::HandleReceive(state, proc);
+            }
+            break;
+        case SYSCALL_IPC_AVAILABLE:
+            {
+                state->EAX = proc->ipcMessages.size();
             }
             break;
         default:

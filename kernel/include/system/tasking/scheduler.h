@@ -46,7 +46,7 @@ namespace CactusOS
             void InitialThreadUserJump(Thread* thread);
 
             //Blocking and unblocking
-            void Block(Thread* thread);
+            void Block(Thread* thread, BlockedState reason = BlockedState::Unkown);
             void Unblock(Thread* thread, bool forceSwitch = false);
         };
     }   

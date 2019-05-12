@@ -165,9 +165,10 @@ Process* Scheduler::CurrentProcess()
     return threadsList[currentThreadIndex]->parent;
 }
 
-void Scheduler::Block(Thread* thread)
+void Scheduler::Block(Thread* thread, BlockedState reason)
 {
     Log(Info, "Blocking thread %x", (uint32_t)thread);
+    thread->blockedState = reason;
     thread->state = ThreadState::Blocked;
 
     ForceSwitch();

@@ -7,6 +7,8 @@
 #include <string.h>
 #include <new.h>
 #include <proc.h>
+#include <ipc.h>
+#include <time.h>
 #include "bmp.h"
 #include "progress.h"
 
@@ -87,6 +89,13 @@ int main()
     Print("Launched test process with status %d\n", s);
 
     bar->SetValue(100);
+
+    Time::Sleep(1000);
+    Print("Sending IPC to pid 3\n");
+    IPCSend(3, 0xFF, 10, 100, 1000, 10000, 100000);
+
+    Time::Sleep(1000);
+    Print("Quiting Init task\n");
 
     return 0;
 }

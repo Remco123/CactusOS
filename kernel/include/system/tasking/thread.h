@@ -25,6 +25,13 @@ namespace CactusOS
             Started
         };
 
+        enum BlockedState
+        {
+            Unkown,
+            SleepMS,
+            ReceiveIPC
+        };
+
         struct Process;
 
         struct Thread
@@ -34,8 +41,9 @@ namespace CactusOS
             common::uint8_t* userStack;
             common::uint32_t userStackSize;
             ThreadState state;
+            BlockedState blockedState;
             core::CPUState* regsPtr;
-
+            
             common::uint32_t timeDelta;
             common::uint8_t* FPUBuffer;
         };

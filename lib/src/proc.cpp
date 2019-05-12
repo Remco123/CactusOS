@@ -2,6 +2,8 @@
 
 using namespace LIBCactusOS;
 
+int Process::ID = -1;
+
 int Process::Run(const char* path)
 {
     return DoSyscall(SYSCALL_RUN_PROC, (uint32_t)path);

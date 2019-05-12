@@ -4,6 +4,7 @@
 #include <system/tasking/thread.h>
 #include <common/list.h>
 #include <common/types.h>
+#include <../../lib/include/ipc.h>
 
 namespace CactusOS
 {
@@ -11,7 +12,6 @@ namespace CactusOS
     {
         enum ProcessState
         {
-            Sleep,
             Active
         };
 
@@ -38,8 +38,7 @@ namespace CactusOS
                 common::uint32_t heapStart;
                 common::uint32_t heapEnd;
             } heap;
-            
-            
+            List<LIBCactusOS::IPCMessage> ipcMessages;
 
             //For Debuging
             char fileName[32];
