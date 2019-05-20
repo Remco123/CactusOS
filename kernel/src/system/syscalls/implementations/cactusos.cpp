@@ -19,7 +19,7 @@ CPUState* CactusOSSyscalls::HandleSyscall(CPUState* state)
     switch (sysCall)
     {
         case SYSCALL_EXIT:
-            Log(Info, "Process %d exited with code %d", proc->id, (int)state->EBX);
+            Log(Info, "Process %d %s exited with code %d", proc->id, proc->fileName, (int)state->EBX);
             ProcessHelper::RemoveProcess(proc);
             state->EAX = SYSCALL_RET_SUCCES;
             break;
@@ -60,10 +60,15 @@ CPUState* CactusOSSyscalls::HandleSyscall(CPUState* state)
         case SYSCALL_RUN_PROC:
             {
                 char* applicationPath = (char*)state->EBX;
-                Process* proc = ProcessHelper::Create(applicationPath, false);
-                proc->Threads[0]->state = Started;
-                if(proc != 0) {
-                    System::scheduler->AddThread(proc->Threads[0], false);
+                if(System::vfs->FileExists(applicationPath) == false) {
+                    state->EAX = SYSCALL_RET_ERROR;
+                    break;
+                }
+
+                Process* newProc = ProcessHelper::Create(applicationPath, false);
+                newProc->Threads[0]->state = Started;
+                if(newProc != 0) {
+                    System::scheduler->AddThread(newProc->Threads[0], false);
                     state->EAX = SYSCALL_RET_SUCCES;
                 }
                 else
@@ -96,6 +101,18 @@ CPUState* CactusOSSyscalls::HandleSyscall(CPUState* state)
         case SYSCALL_IPC_AVAILABLE:
             {
                 state->EAX = proc->ipcMessages.size();
+            }
+            break;
+        case SYSCALL_START_THREAD:
+            {
+                Log(Info, "Creating new thread for proc %d, jumps to %x", proc->id, state->EBX);
+                Thread* newThread = ThreadHelper::CreateFromFunction((void (*)())state->EBX);
+                newThread->parent = proc;
+                newThread->state = Started;
+                proc->Threads.push_back(newThread);
+                System::scheduler->AddThread(newThread);
+                if((bool)state->ECX)
+                    System::scheduler->ForceSwitch();
             }
             break;
         default:

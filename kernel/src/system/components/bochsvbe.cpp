@@ -11,8 +11,9 @@ using namespace CactusOS::system;
 using namespace CactusOS::core;
 
 BochsVBE::BochsVBE()
-: SystemComponent("BOCHS VBE", "Bochs VBE Extensions"),
-GraphicsDevice() { }
+: GraphicsDevice(),
+SystemComponent("BOCHS VBE", "Bochs VBE Extensions")
+{ }
 
 void WriteRegister(uint16_t IndexValue, uint16_t DataValue)
 {

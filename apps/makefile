@@ -2,14 +2,15 @@ LIBINCLUDE := ../lib/include
 LIBDIR := ../lib
 LIBFILE := ../lib/libcactusos.a
 
-GCCPARAMS := -m32 -g -I $(LIBINCLUDE) -O3 -msse2 -fno-use-cxa-atexit -nostdlib -fno-builtin -fno-exceptions -fno-rtti -fno-leading-underscore -Wno-write-strings -fpermissive -Wall
+G++PARAMS := -m32 -g -I $(LIBINCLUDE) -O3 -msse2 -fno-use-cxa-atexit -nostdlib -fno-builtin -fno-exceptions -fno-rtti -fno-leading-underscore -Wno-write-strings -fpermissive -Wall
+GCCPARAMS := -m32 -g -I $(LIBINCLUDE) -O3 -msse2 -nostdlib -fno-builtin -Wall -fleading-underscore
 LDPARAMS := -m elf_i386
 
-APPS := init test
+APPS := init test winsvr guitest
 APPOUT := ../isofiles/apps
 
-SRCFILES := $(shell find $(APPS) -type f \( -name \*.cpp -o -name \*.s -o -name \*.asm \))
-OBJFILES := $(patsubst %.cpp,%.o,$(patsubst %.s,%.o,$(patsubst %.asm,%.o,$(SRCFILES)))) #Replace the .cpp/.s/.asm extension with .o
+SRCFILES := $(shell find $(APPS) -type f \( -name \*.cpp -o -name \*.s -o -name \*.asm -o -name \*.c \)) #Find all the files that end with .cpp/.s/.asm/.c
+OBJFILES := $(patsubst %.cpp,%.o,$(patsubst %.s,%.o,$(patsubst %.asm,%.o,$(patsubst %.c,%.o,$(SRCFILES))))) #Replace the .cpp/.s/.asm/.c extension with .o
 
 .PHONY: all clean
 
@@ -28,4 +29,8 @@ $(LIBFILE):
 
 %.o: %.cpp
 	mkdir -p $(@D)
-	i686-elf-g++ $(GCCPARAMS) -c -o $@ $<
+	i686-elf-g++ $(G++PARAMS) -c -o $@ $<
+
+%.o: %.c
+	mkdir -p $(@D)
+	i686-elf-gcc $(GCCPARAMS) -c -o $@ $<

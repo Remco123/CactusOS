@@ -9,6 +9,20 @@ uint32_t UserHeap::endAddress = 0;
 uint32_t UserHeap::maxAddress = 0xC0000000 - 0x100000; //1 MB Below the kernel, TODO: Is this safe?
 MemoryHeader* UserHeap::firstHeader = 0;
 
+uint32_t LIBCactusOS::pageRoundUp(uint32_t address)
+{
+    if((address & 0xFFFFF000) != address)
+    {
+        address &= 0xFFFFF000;
+        address += 0x1000;
+    }
+    return address;
+}
+uint32_t LIBCactusOS::pageRoundDown(uint32_t address)
+{
+    return address & 0xFFFFF000;
+}
+
 void* UserHeap::Malloc(uint32_t size)
 {
     MemoryHeader* freeBlock = 0;

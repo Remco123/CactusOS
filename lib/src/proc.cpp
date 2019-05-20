@@ -16,3 +16,7 @@ bool Process::CreateSharedMemory(int proc2ID, uint32_t virtStart, uint32_t len)
 {
     return CreateSharedMemory(proc2ID, virtStart, virtStart, len);
 }
+void Process::CreateThread(void (*entryPoint)(), bool switchTo)
+{
+    DoSyscall(SYSCALL_START_THREAD, (uint32_t)entryPoint, switchTo);
+}

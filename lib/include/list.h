@@ -1,91 +1,76 @@
 #ifndef __CACTUSOS__COMMON__LIST_H
 #define __CACTUSOS__COMMON__LIST_H
 
-namespace CactusOS
+namespace LIBCactusOS
 {
-    namespace common
+    template <typename T>
+    struct ListNode
     {
-        template <typename T>
-        struct ListNode
-        {
-            ListNode(const T &e) : data(e), next(0), prev(0)
-            {}
-
-            T data;
-            ListNode<T>* next;
-            ListNode<T>* prev;
-        };
-
-
-        template <typename T>
-        class List
+        ListNode(const T &e) : data(e), next(0), prev(0)
+        {}
+        T data;
+        ListNode<T>* next;
+        ListNode<T>* prev;
+    };
+    template <typename T>
+    class List
+    {
+    public:
+        List() : head_(0), tail_(0), size_(0)
+        {   }
+        ~List()
+        { this->Clear(); /*Remove all the items from the list*/ }
+        int size() { return size_; }
+        void push_back(const T &e);
+        void push_front(const T &e);
+        void Clear();
+        T GetAt(int index);
+        T operator[](int index);
+        void Remove(int index);
+        void Remove(const T &e);
+    private:
+        ListNode<T>* head_;
+        ListNode<T>* tail_;
+        int size_;
+        ListNode<T>* insertInternal(const T &e, ListNode<T>* pos);
+        void removeInternal(ListNode<T> *pos);
+    //Iterators
+    public:
+        class iterator
         {
         public:
-            List() : head_(0), tail_(0), size_(0)
-            {   }
-            ~List()
-            { this->Clear(); /*Remove all the items from the list*/ }
+            iterator(ListNode<T> *p=0) : pos_(p) { }
+            
+            T &operator*()
+            { return pos_->data; }
 
-            int size() { return size_; }
-            void push_back(const T &e);
-            void push_front(const T &e);
-            void Clear();
+            T *operator->()
+            { return &(pos_->data); }
 
-            T GetAt(int index);
-            T operator[](int index);
-            int IndexOf(const T &e);
+            bool operator!=(const iterator &rhs)
+            { return this->pos_ != rhs.pos_; }
 
-            void Remove(int index);
-            void Remove(const T &e);
+            iterator operator++()
+            { pos_ = pos_->next; return *this; }
+
+            iterator operator--()
+            { pos_ = pos_->prev; return *this; }
+
         private:
-            ListNode<T>* head_;
-            ListNode<T>* tail_;
-
-            int size_;
-
-            ListNode<T>* insertInternal(const T &e, ListNode<T>* pos);
-            void removeInternal(ListNode<T> *pos);
-
-        //Iterators
-        public:
-            class iterator
-            {
-            public:
-                iterator(ListNode<T> *p=0) : pos_(p) { }
-                
-                T &operator*()
-                { return pos_->data; }
-    
-                T *operator->()
-                { return &(pos_->data); }
-    
-                bool operator!=(const iterator &rhs)
-                { return this->pos_ != rhs.pos_; }
-    
-                iterator operator++()
-                { pos_ = pos_->next; return *this; }
-    
-                iterator operator--()
-                { pos_ = pos_->prev; return *this; }
-    
-            private:
-                ListNode<T> *pos_;
-            };
-
-            iterator begin()
-            {
-                return iterator(head_);
-            }
-
-            iterator end()
-            {
-                return iterator(0);
-            }
+            ListNode<T> *pos_;
         };
-    }
+        iterator begin()
+        {
+            return iterator(head_);
+        }
+        iterator end()
+        {
+            return iterator(0);
+        }
+    };
 }
 
-using namespace CactusOS::common;
+using namespace LIBCactusOS;
 
 /////////////
 // Implementations
@@ -204,12 +189,4 @@ T List<T>::operator[](int index)
     return GetAt(index);
 }
 
-template <typename T>
-int List<T>::IndexOf(const T &e)
-{
-    for(int i = 0; i < size_; i++)
-        if(GetAt(i) == e)
-            return i;
-    return -1;
-}
 #endif

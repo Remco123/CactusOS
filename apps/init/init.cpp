@@ -84,18 +84,15 @@ int main()
         }
     }
 
-    Print("Starting test.bin\n");
-    int s = Process::Run("B:\\apps\\test.bin");
-    Print("Launched test process with status %d\n", s);
-
     bar->SetValue(100);
 
-    Time::Sleep(1000);
-    Print("Sending IPC to pid 3\n");
-    IPCSend(3, 0xFF, 10, 100, 1000, 10000, 100000);
+    int s = Process::Run("B:\\apps\\winsvr.bin");
+    Print("Launched Window Manager with status %d\n", s);
 
-    Time::Sleep(1000);
-    Print("Quiting Init task\n");
+    Time::Sleep(500);
+
+    int s2 = Process::Run("B:\\apps\\guitest.bin");
+    Print("Launched GUI Test app with status %d\n", s2);    
 
     return 0;
 }

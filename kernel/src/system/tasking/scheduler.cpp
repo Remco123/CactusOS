@@ -30,6 +30,11 @@ void printRegs(CPUState* regs)
     BootConsole::Write("ebp: 0x"); Print::printfHex32(regs->EBP); BootConsole::Write("   ");
     BootConsole::Write("esp: 0x"); Print::printfHex32(regs->ESP); BootConsole::Write("   ");
     BootConsole::Write("eip: 0x"); Print::printfHex32(regs->EIP); BootConsole::WriteLine();
+    BootConsole::Write("CS: 0x"); Print::printfHex16(regs->CS);   BootConsole::Write("   ");   
+    BootConsole::Write("DS: 0x"); Print::printfHex16(regs->DS);   BootConsole::Write("   ");
+    BootConsole::Write("ES: 0x"); Print::printfHex16(regs->ES);   BootConsole::WriteLine();
+    BootConsole::Write("FS: 0x"); Print::printfHex16(regs->FS);   BootConsole::Write("   ");
+    BootConsole::Write("GS: 0x"); Print::printfHex16(regs->GS);   BootConsole::WriteLine();
 }
 
 uint32_t Scheduler::HandleInterrupt(uint32_t esp)
@@ -50,7 +55,7 @@ uint32_t Scheduler::HandleInterrupt(uint32_t esp)
             Thread* nextThread = GetNextReadyThread();
 
 #if 0
-            Log(Info, "Switching from %x %d to %x %d", (uint32_t)currentThread, currentThread->parent->isUserspace, (uint32_t)nextThread, nextThread->parent->isUserspace);
+            Log(Info, "Switching from %s %x to %s %x", currentThread->parent->fileName, (uint32_t)currentThread, nextThread->parent->fileName, (uint32_t)nextThread);
             BootConsole::WriteLine("-- Current Registers --");
             printRegs((CPUState*)esp);
             BootConsole::Write("cr3: 0x"); Print::printfHex32(currentThread->parent->pageDirPhys); BootConsole::WriteLine();
@@ -167,15 +172,16 @@ Process* Scheduler::CurrentProcess()
 
 void Scheduler::Block(Thread* thread, BlockedState reason)
 {
-    Log(Info, "Blocking thread %x", (uint32_t)thread);
+    //Log(Info, "Blocking thread %x", (uint32_t)thread);
     thread->blockedState = reason;
     thread->state = ThreadState::Blocked;
 
-    ForceSwitch();
+    if(thread == CurrentThread())
+        ForceSwitch();
 }
 void Scheduler::Unblock(Thread* thread, bool forceSwitch)
 {
-    Log(Info, "Unblocking thread %x", (uint32_t)thread);
+    //Log(Info, "Unblocking thread %x", (uint32_t)thread);
     thread->state = ThreadState::Ready;
 
     if(forceSwitch)

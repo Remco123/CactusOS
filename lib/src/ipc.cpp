@@ -4,7 +4,7 @@
 
 using namespace LIBCactusOS;
 
-int LIBCactusOS::IPCSend(int dest, int type, unsigned int arg1, unsigned int arg2, unsigned int arg3, unsigned int arg4, unsigned int arg5)
+int LIBCactusOS::IPCSend(int dest, int type, unsigned int arg1, unsigned int arg2, unsigned int arg3, unsigned int arg4, unsigned int arg5, unsigned int arg6)
 {
     //Create IPCMessage
     IPCMessage message;
@@ -18,6 +18,7 @@ int LIBCactusOS::IPCSend(int dest, int type, unsigned int arg1, unsigned int arg
     message.arg3 = arg3;
     message.arg4 = arg4;
     message.arg5 = arg5;
+    message.arg6 = arg6;
     
     return IPCSend(message);
 }

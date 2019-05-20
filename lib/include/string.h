@@ -5,11 +5,11 @@
 
 extern "C"
 {
-    int memcmp(const void*, const void*, size_t);
-    void* memcpy(void* __restrict, const void* __restrict, size_t);
-    void* memmove(void*, const void*, size_t);
-    void* memset(void*, int, size_t);
-    size_t strlen(const char*);
+    int memcmp(const void* aptr, const void* bptr, size_t size);
+    void* memcpy(void* __restrict__ dstptr, const void* __restrict__ srcptr, size_t size);
+    void* memmove(void* dstptr, const void* srcptr, size_t size);
+    void* memset(void* bufptr, int value, size_t size);
+    size_t strlen(const char* str);
 }
 
 #endif
