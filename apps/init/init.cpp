@@ -89,7 +89,7 @@ int main()
     int s = Process::Run("B:\\apps\\winsvr.bin");
     Print("Launched Window Manager with status %d\n", s);
 
-    Time::Sleep(500);
+    Time::Sleep(100);
 
     int s2 = Process::Run("B:\\apps\\guitest.bin");
     Print("Launched GUI Test app with status %d\n", s2);    

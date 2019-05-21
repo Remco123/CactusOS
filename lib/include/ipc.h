@@ -11,7 +11,6 @@ namespace LIBCactusOS
     {
         int source; //Who has sended this message?
         int dest; //Who is it for
-        unsigned int targetThread; //Wich thread sended the message, this is needed for blocking
         
         int type; //What type of message is it?
 
