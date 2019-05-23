@@ -3,7 +3,7 @@
 #include <log.h>
 #include <time.h>
 #include <string.h>
-#include <gui/canvas.h>
+#include <gui/control.h>
 
 using namespace LIBCactusOS;
 
@@ -14,14 +14,20 @@ int main()
     GUICommunication::RequestContext(0xAB000000, 200, 200, 100, 100);
 
     Canvas gui((void*)0xAB000000, 200, 200);
+    gui.Clear(0xFF77bb50);
 
-    gui.Clear(0xFFAAAAAA);
+    Control* cntrl = new Control(200, 200, 100, 100);
+    Control* cntrl2 = new Control(150, 70, 20, 15);
 
-    gui.DrawRect(0xFF000000, 0, 0, 199, 199);
+    cntrl->childs.push_back(cntrl2);
+    cntrl->DrawTo(&gui, 0, 0);
 
-    gui.DrawFillRect(0xFF0c69ff, 1, 1, 199, 30);
+    Time::Sleep(1000);
 
-    gui.DrawLine(0xFF000000, 1, 30, 199, 30);
+    cntrl2->backColor = 0xFF679901;
+    cntrl->DrawTo(&gui, 0, 0);
+
+    delete cntrl,cntrl2;
 
     return 0;
 }
