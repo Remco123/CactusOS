@@ -26,7 +26,7 @@ namespace CactusOS
             common::uint32_t tickCount = 0;
 
             List<Thread*> threadsList;
-            int currentThreadIndex = 0;
+            Thread* currentThread = 0;
 
             Thread* GetNextReadyThread();
             void ProcessSleepingThreads();

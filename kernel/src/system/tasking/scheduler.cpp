@@ -14,7 +14,7 @@ Scheduler::Scheduler()
 {
     this->tickCount = 0;
     this->frequency = SCHEDULER_FREQUENCY;
-    this->currentThreadIndex = 0;
+    this->currentThread = 0;
     this->threadsList.Clear();
     this->Enabled = false;
 }
@@ -51,9 +51,7 @@ uint32_t Scheduler::HandleInterrupt(uint32_t esp)
 
         if(threadsList.size() > 0 && this->Enabled)
         {
-            Thread* currentThread = threadsList[currentThreadIndex];
             Thread* nextThread = GetNextReadyThread();
-
 #if 0
             Log(Info, "Switching from %s %x to %s %x", currentThread->parent->fileName, (uint32_t)currentThread, nextThread->parent->fileName, (uint32_t)nextThread);
             BootConsole::WriteLine("-- Current Registers --");
@@ -62,9 +60,8 @@ uint32_t Scheduler::HandleInterrupt(uint32_t esp)
             BootConsole::WriteLine("-- Next Registers --");
             printRegs(nextThread->regsPtr);
             BootConsole::Write("cr3: 0x"); Print::printfHex32(nextThread->parent->pageDirPhys); BootConsole::WriteLine();
-#endif       
-            
-            if(currentThread->state == Stopped)
+#endif         
+            if(currentThread != 0 && currentThread->state == Stopped)
             {
                 threadsList.Remove(currentThread);
                 delete currentThread;
@@ -82,6 +79,9 @@ uint32_t Scheduler::HandleInterrupt(uint32_t esp)
                 //Save current fpu status
                 asm volatile ("fxsave (%%eax)" : : "a" (currentThread->FPUBuffer));
             }
+            
+            //Since we are switching now
+            currentThread = nextThread;
 
             //Check if the next thread has not been called before
             if(nextThread->state == Started && nextThread->parent && nextThread->parent->isUserspace)
@@ -112,6 +112,7 @@ uint32_t Scheduler::HandleInterrupt(uint32_t esp)
 
 Thread* Scheduler::GetNextReadyThread()
 {
+    int currentThreadIndex = (currentThread != 0 ? threadsList.IndexOf(currentThread) : 0);
     currentThreadIndex += 1;
     if(currentThreadIndex >= threadsList.size())
         currentThreadIndex = 0;
@@ -147,7 +148,7 @@ void Scheduler::InitialThreadUserJump(Thread* thread)
     //Dont forget to load the page directory
     VirtualMemoryManager::SwitchPageDirectory(thread->parent->pageDirPhys);
 
-    currentThreadIndex = threadsList.size() - 1;
+    currentThread = thread;
 
     this->Enabled = true;
 
@@ -163,11 +164,11 @@ void Scheduler::ForceSwitch()
 
 Thread* Scheduler::CurrentThread()
 {
-    return threadsList[currentThreadIndex]; 
+    return currentThread; 
 }
 Process* Scheduler::CurrentProcess()
 {
-    return threadsList[currentThreadIndex]->parent;
+    return currentThread->parent;
 }
 
 void Scheduler::Block(Thread* thread, BlockedState reason)
