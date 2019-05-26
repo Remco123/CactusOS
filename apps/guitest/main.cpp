@@ -3,7 +3,8 @@
 #include <log.h>
 #include <time.h>
 #include <string.h>
-#include <gui/control.h>
+#include <gui/window.h>
+#include <convert.h>
 
 using namespace LIBCactusOS;
 
@@ -11,23 +12,16 @@ int main()
 {
     Print("GUITest: Requesting context\n");
 
-    GUICommunication::RequestContext(0xAB000000, 200, 200, 100, 100);
+    uint32_t fb = GUICommunication::RequestContext(300, 200, 100, 100);
+    if(fb == 0)
+        return -1;
 
-    Canvas gui((void*)0xAB000000, 200, 200);
+    Canvas gui((void*)fb, 300, 200);
     gui.Clear(0xFF77bb50);
 
-    Control* cntrl = new Control(200, 200, 100, 100);
-    Control* cntrl2 = new Control(150, 70, 20, 15);
-
-    cntrl->childs.push_back(cntrl2);
-    cntrl->DrawTo(&gui, 0, 0);
-
-    Time::Sleep(1000);
-
-    cntrl2->backColor = 0xFF679901;
-    cntrl->DrawTo(&gui, 0, 0);
-
-    delete cntrl,cntrl2;
+    Window* window1 = new Window(300, 200, 0, 0);
+    window1->titleString = "Window 1";
+    window1->DrawTo(&gui, 0, 0);
 
     return 0;
 }

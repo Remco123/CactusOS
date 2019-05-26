@@ -30,6 +30,9 @@ namespace LIBCactusOS
         static void DrawCircle(uint32_t color, int x_center, int y_center, int radius);
         static void DrawFillCircle(uint32_t color, int x_center, int y_center, int radius);
         static void DrawEllipse(uint32_t color, int x_center, int y_center, int x_radius, int y_radius);
+
+        static void DrawChar(char character, int x, int y, uint32_t color);
+        static void DrawString(char* string, int x, int y, uint32_t color);
     };
 }
 

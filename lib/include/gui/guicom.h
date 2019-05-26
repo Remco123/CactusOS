@@ -15,15 +15,16 @@ namespace LIBCactusOS
     {
     private:
         static int windowServerID;
+        static uint32_t virtualFramebufferAddress;
     public:
         /**
          * Request a context buffer for the application to draw to, this buffer is shared between the process and the window server
          * 
-         * @param virtAddr The virtual addres to which the buffer is mapped to
+         * returns the virtual address of the framebuffer
          * @param width The width of the context
          * @param height The height of the context
         */
-        static bool RequestContext(uint32_t virtAddr, int width, int height, int x, int y);
+        static uint32_t RequestContext(int width, int height, int x, int y);
     };
 }
 

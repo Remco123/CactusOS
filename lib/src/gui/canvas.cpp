@@ -1,6 +1,7 @@
 #include <gui/canvas.h>
 #include <string.h>
 #include <math.h>
+#include <gui/font.h>
 
 using namespace LIBCactusOS;
 
@@ -208,4 +209,29 @@ void Canvas::DrawEllipse(uint32_t color, int x_center, int y_center, int x_radiu
         if (e2 <= dy) { y++; err += dy += a; }
         if (e2 >= dx || 2 * err > dy) { x--; err += dx += b1; }
     }
+}
+
+void Canvas::DrawChar(char character, int x, int y, uint32_t color)
+{
+    int font_x, font_y;
+    int count_x = 8;
+    int count_y = 12; 
+    uint8_t shift_line;
+
+    character &= 0x7F;
+
+    for(font_y = 0; font_y < count_y; font_y++) {
+        shift_line = font_array[font_y * 128 + character];
+        for(font_x = 0; font_x < count_x; font_x++) {
+            if(shift_line & 0x80)
+                SetPixel(font_x + x, font_y + y, color);
+ 
+            shift_line <<= 1; 
+        }
+    }
+}
+void Canvas::DrawString(char* string, int x, int y, uint32_t color)
+{
+    for( ; *string; x += 8)
+        DrawChar(*(string++), x, y, color);
 }

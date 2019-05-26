@@ -73,3 +73,11 @@ void DirectGUI::DrawEllipse(uint32_t color, int x_center, int y_center, int x_ra
 {
     base->DrawEllipse(color, x_center, y_center, x_radius, y_radius);
 }
+void DirectGUI::DrawChar(char character, int x, int y, uint32_t color)
+{
+    base->DrawChar(character, x, y, color);
+}
+void DirectGUI::DrawString(char* string, int x, int y, uint32_t color)
+{
+    base->DrawString(string, x, y, color);
+}
