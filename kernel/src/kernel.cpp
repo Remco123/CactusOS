@@ -156,6 +156,9 @@ extern "C" void kernelMain(const multiboot_info_t* mbi, unsigned int multiboot_m
         Log(Info, "Switched to graphics mode, phys=%x", System::gfxDevice->framebufferPhys);
         System::screenMode = ScreenMode::GraphicsMode;
 
+        System::systemInfo->MouseX = System::gfxDevice->width/2;
+        System::systemInfo->MouseY = System::gfxDevice->height/2;
+
         System::scheduler->AddThread(proc->Threads[0], true);
     }
     

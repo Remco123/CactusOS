@@ -19,6 +19,7 @@ DiskManager* System::diskManager = 0;
 VFSManager* System::vfs = 0;
 Scheduler* System::scheduler = 0;
 SystemCallHandler* System::syscalls = 0;
+SharedSystemInfo* System::systemInfo = 0;
 
 ScreenMode System::screenMode = ScreenMode::TextMode;
 bool System::gdbEnabled = false;
@@ -76,6 +77,9 @@ void System::Start()
     BootConsole::WriteLine("Assigning PCI Drivers");
     PCIDrivers::AssignDriversFromPCI(System::pci, System::driverManager);
 
+    BootConsole::WriteLine("Added drivers for integrated devices");
+    System::driverManager->AddDriver(new MouseDriver());
+
     BootConsole::WriteLine("Activating Drivers");
     System::driverManager->ActivateAll();
 
@@ -96,6 +100,10 @@ void System::Start()
 
     BootConsole::WriteLine("Starting Systemcalls");
     System::syscalls = new SystemCallHandler();
+
+    BootConsole::WriteLine("Creating shared region for system info");
+    System::systemInfo = (SharedSystemInfo*)KernelHeap::allignedMalloc(PAGE_SIZE, PAGE_SIZE);
+    MemoryOperations::memset(System::systemInfo, 0, PAGE_SIZE);
 
     Log(Info, "System Initialized");
 }

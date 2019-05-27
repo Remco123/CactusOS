@@ -121,8 +121,23 @@ void HandleMessage(IPCMessage msg)
     }
 }
 
-void DrawContextList()
+/**
+ * This struct can be shared between the kernel and userspace processes
+*/
+struct SharedSystemInfo
 {
+    uint32_t MouseX;
+    uint32_t MouseY;
+    signed char MouseZ;
+
+    bool MouseLeftButton;
+    bool MouseRightButton;
+    bool MouseMiddleButton;
+} __attribute__((packed));
+
+void DrawCursor();
+void DrawContextList()
+{    
     for(ContextInfo info : *contextList)
     {
         //Print("Drawing context w=%d h=%d x=%d y=%d addr=%x\n", info.width, info.height, info.x, info.y, info.virtAddrServer);
@@ -132,4 +147,47 @@ void DrawContextList()
             memcpy((void*)(DIRECT_GUI_ADDR + ((info.y + y)*WIDTH*4) + info.x*4), (void*)(info.virtAddrServer + y*byteWidth), byteWidth);
         }
     }
+    DrawCursor();
+}
+
+#define ALPHA 0
+#define BLACK 1
+#define WHITE 2
+
+uint8_t cursorBitmap[19 * 12] = 
+{
+    BLACK,ALPHA,ALPHA,ALPHA,ALPHA,ALPHA,ALPHA,ALPHA,ALPHA,ALPHA,ALPHA,ALPHA,
+    BLACK,BLACK,ALPHA,ALPHA,ALPHA,ALPHA,ALPHA,ALPHA,ALPHA,ALPHA,ALPHA,ALPHA,
+    BLACK,WHITE,BLACK,ALPHA,ALPHA,ALPHA,ALPHA,ALPHA,ALPHA,ALPHA,ALPHA,ALPHA,
+    BLACK,WHITE,WHITE,BLACK,ALPHA,ALPHA,ALPHA,ALPHA,ALPHA,ALPHA,ALPHA,ALPHA,
+    BLACK,WHITE,WHITE,WHITE,BLACK,ALPHA,ALPHA,ALPHA,ALPHA,ALPHA,ALPHA,ALPHA,
+    BLACK,WHITE,WHITE,WHITE,WHITE,BLACK,ALPHA,ALPHA,ALPHA,ALPHA,ALPHA,ALPHA,
+    BLACK,WHITE,WHITE,WHITE,WHITE,WHITE,BLACK,ALPHA,ALPHA,ALPHA,ALPHA,ALPHA,
+    BLACK,WHITE,WHITE,WHITE,WHITE,WHITE,WHITE,BLACK,ALPHA,ALPHA,ALPHA,ALPHA,
+    BLACK,WHITE,WHITE,WHITE,WHITE,WHITE,WHITE,WHITE,BLACK,ALPHA,ALPHA,ALPHA,
+    BLACK,WHITE,WHITE,WHITE,WHITE,WHITE,WHITE,WHITE,WHITE,BLACK,ALPHA,ALPHA,
+    BLACK,WHITE,WHITE,WHITE,WHITE,WHITE,WHITE,WHITE,WHITE,WHITE,BLACK,ALPHA,
+    BLACK,WHITE,WHITE,WHITE,WHITE,WHITE,WHITE,WHITE,WHITE,WHITE,WHITE,BLACK,
+    BLACK,WHITE,WHITE,WHITE,WHITE,WHITE,WHITE,BLACK,BLACK,BLACK,BLACK,BLACK,
+    BLACK,WHITE,WHITE,WHITE,BLACK,WHITE,WHITE,BLACK,ALPHA,ALPHA,ALPHA,ALPHA,
+    BLACK,WHITE,WHITE,BLACK,ALPHA,BLACK,WHITE,WHITE,BLACK,ALPHA,ALPHA,ALPHA,
+    BLACK,WHITE,BLACK,ALPHA,ALPHA,BLACK,WHITE,WHITE,BLACK,ALPHA,ALPHA,ALPHA,
+    BLACK,BLACK,ALPHA,ALPHA,ALPHA,ALPHA,BLACK,WHITE,WHITE,BLACK,ALPHA,ALPHA,
+    ALPHA,ALPHA,ALPHA,ALPHA,ALPHA,ALPHA,BLACK,WHITE,WHITE,BLACK,ALPHA,ALPHA,
+    ALPHA,ALPHA,ALPHA,ALPHA,ALPHA,ALPHA,ALPHA,BLACK,BLACK,ALPHA,ALPHA,ALPHA
+};
+
+void DrawCursor()
+{
+    SharedSystemInfo* info = (SharedSystemInfo*)0xBA000000;
+
+    uint8_t x_d = info->MouseX + 12 < WIDTH ? 12 : WIDTH - info->MouseX;
+    uint8_t y_d = info->MouseY + 19 < HEIGHT ? 19 : HEIGHT - info->MouseY;
+
+    for(uint8_t x = 0; x < x_d; x++)
+        for(uint8_t y = 0; y < y_d; y++) {
+            uint8_t cd = cursorBitmap[y*12+x];
+            if(cd != ALPHA)
+                DirectGUI::SetPixel(info->MouseX + x, info->MouseY + y, cd==WHITE ? 0xFFFFFFFF : 0xFF000000);
+        }
 }

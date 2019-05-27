@@ -17,6 +17,7 @@
 #include <system/initrd.h>
 #include <system/drivers/drivermanager.h>
 #include <system/drivers/pcidrivers.h>
+#include <system/drivers/integrated/mouse.h>
 #include <system/disks/diskmanager.h>
 #include <system/disks/partitionmanager.h>
 #include <system/vfs/vfsmanager.h>
@@ -39,6 +40,21 @@ namespace CactusOS
             GraphicsMode
         };
 
+        /**
+         * This struct can be shared between the kernel and userspace processes
+        */
+        struct SharedSystemInfo
+        {
+            common::uint32_t MouseX;
+            common::uint32_t MouseY;
+            signed char MouseZ;
+
+            bool MouseLeftButton;
+            bool MouseRightButton;
+            bool MouseMiddleButton;
+        } __attribute__((packed));
+        
+
         class System
         {
         public:
@@ -55,6 +71,7 @@ namespace CactusOS
             static VFSManager* vfs;
             static Scheduler* scheduler;
             static SystemCallHandler* syscalls;
+            static SharedSystemInfo* systemInfo;
 
             static ScreenMode screenMode;
             static bool gdbEnabled; //Is the gdb stub enabled?
