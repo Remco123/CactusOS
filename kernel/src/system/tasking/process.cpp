@@ -132,14 +132,6 @@ Process* ProcessHelper::Create(char* fileName, bool isKernel)
    
     mainThread->parent = proc;
 
-    //Put systeminfo into address space
-    uint32_t sysInfoPhys = (uint32_t)VirtualMemoryManager::virtualToPhysical((void*)System::systemInfo);
-    PageTableEntry* sysInfoPage = VirtualMemoryManager::GetPageForAddress(0xBA000000, true, true, !isKernel);
-    sysInfoPage->readWrite = 1;
-    sysInfoPage->isUser = !isKernel;
-    sysInfoPage->frame = sysInfoPhys / PAGE_SIZE;
-    sysInfoPage->present = 1;
-
     delete fileBuffer;
 
     VirtualMemoryManager::SwitchPageDirectory(oldCR3);

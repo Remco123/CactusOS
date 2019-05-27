@@ -24,6 +24,7 @@ namespace LIBCactusOS
     #define SYSCALL_IPC_RECEIVE 15
     #define SYSCALL_IPC_AVAILABLE 16
     #define SYSCALL_START_THREAD 17
+    #define SYSCALL_MAP_SYSINFO 18
     #define SYSCALL_SET_CACTUSOS_LIB 0xFFFF
 
     int DoSyscall(unsigned int intNum, unsigned int arg1 = 0, unsigned int arg2 = 0, unsigned int arg3 = 0, unsigned int arg4 = 0, unsigned int arg5 = 0);

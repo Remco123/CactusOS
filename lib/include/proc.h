@@ -3,6 +3,7 @@
 
 #include <syscall.h>
 #include <types.h>
+#include <systeminfo.h>
 
 namespace LIBCactusOS
 {
@@ -10,6 +11,7 @@ namespace LIBCactusOS
     {
     public:
         static int ID;
+        static SharedSystemInfo* systemInfo;
         static int Run(const char* path);
         static bool CreateSharedMemory(int proc2ID, uint32_t virtStart, uint32_t len);
         static bool CreateSharedMemory(int proc2ID, uint32_t virtStart1, uint32_t virtStart2, uint32_t len);

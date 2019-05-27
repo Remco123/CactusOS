@@ -115,6 +115,19 @@ CPUState* CactusOSSyscalls::HandleSyscall(CPUState* state)
                     System::scheduler->ForceSwitch();
             }
             break;
+        case SYSCALL_MAP_SYSINFO:
+            {
+                //Put systeminfo into address space
+                uint32_t sysInfoPhys = (uint32_t)VirtualMemoryManager::virtualToPhysical((void*)System::systemInfo);
+                PageTableEntry* sysInfoPage = VirtualMemoryManager::GetPageForAddress(state->EBX, true, true, proc->isUserspace);
+                sysInfoPage->readWrite = 1;
+                sysInfoPage->isUser = proc->isUserspace;
+                sysInfoPage->frame = sysInfoPhys / PAGE_SIZE;
+                sysInfoPage->present = 1;
+
+                state->EAX = SYSCALL_RET_SUCCES;
+            }
+            break;
         default:
             Log(Warning, "Got unkown syscall %d from process %d", sysCall, proc->id);
             state->EAX = SYSCALL_RET_ERROR;

@@ -27,6 +27,7 @@
 #include <system/memory/sharedmem.h>
 
 #include <system/log.h>
+#include <../../lib/include/systeminfo.h>
 
 #define GDB_BREAK() asm("int $3");
 
@@ -38,22 +39,7 @@ namespace CactusOS
         {
             TextMode,
             GraphicsMode
-        };
-
-        /**
-         * This struct can be shared between the kernel and userspace processes
-        */
-        struct SharedSystemInfo
-        {
-            common::uint32_t MouseX;
-            common::uint32_t MouseY;
-            signed char MouseZ;
-
-            bool MouseLeftButton;
-            bool MouseRightButton;
-            bool MouseMiddleButton;
-        } __attribute__((packed));
-        
+        };        
 
         class System
         {
@@ -71,7 +57,7 @@ namespace CactusOS
             static VFSManager* vfs;
             static Scheduler* scheduler;
             static SystemCallHandler* syscalls;
-            static SharedSystemInfo* systemInfo;
+            static LIBCactusOS::SharedSystemInfo* systemInfo;
 
             static ScreenMode screenMode;
             static bool gdbEnabled; //Is the gdb stub enabled?

@@ -31,7 +31,7 @@ int main()
     ProgressBar* bar = new ProgressBar(x_p, y_p + 250, 200, 10);
     bar->SetValue(0);
 
-    Log(Info, "Loading Background");
+    Log(Info, "Loading Boot Logo");
     if(FileExists(path))
     {
         int fileSize = GetFileSize(path);
@@ -84,7 +84,7 @@ int main()
         }
     }
 
-    bar->SetValue(100);
+    bar->SetValue(70);
 
     int s = Process::Run("B:\\apps\\winsvr.bin");
     Print("Launched Window Manager with status %d\n", s);
@@ -92,7 +92,9 @@ int main()
     Time::Sleep(100);
 
     int s2 = Process::Run("B:\\apps\\guitest.bin");
-    Print("Launched GUI Test app with status %d\n", s2);    
+    Print("Launched GUI Test app with status %d\n", s2);
+
+    bar->SetValue(100); 
 
     return 0;
 }

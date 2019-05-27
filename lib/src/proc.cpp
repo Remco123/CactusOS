@@ -3,6 +3,7 @@
 using namespace LIBCactusOS;
 
 int Process::ID = -1;
+SharedSystemInfo* Process::systemInfo = 0;
 
 int Process::Run(const char* path)
 {

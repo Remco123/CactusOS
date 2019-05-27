@@ -8,22 +8,15 @@
 #include <time.h>
 #include <proc.h>
 #include <string.h>
+#include <systeminfo.h>
+#include "contextinfo.h"
+#include "cursor.h"
 
 using namespace LIBCactusOS;
 
 void HandleMessage(IPCMessage msg);
 void DrawContextList();
-
-struct ContextInfo
-{
-    uint32_t virtAddrServer;
-    uint32_t virtAddrClient;
-    uint32_t bytes;
-    uint32_t width;
-    uint32_t height;
-    uint32_t x;
-    uint32_t y;
-};
+void DrawCursor();
 
 List<ContextInfo>* contextList;
 uint32_t newContextAddress = 0xA0000000;
@@ -44,11 +37,11 @@ int main()
     }
     Print("Framebuffer Initialized\n");
 
+    Print("Requesting Systeminfo\n");
+    if(!RequestSystemInfo())
+        return -1;
+
     contextList = new List<ContextInfo>();
-
-    //Clear Screen
-    //DirectGUI::Clear(0xFF96BEFF);
-
     Print("Listening for requests\n");
     
     bool receivedMessage = false;
@@ -121,26 +114,10 @@ void HandleMessage(IPCMessage msg)
     }
 }
 
-/**
- * This struct can be shared between the kernel and userspace processes
-*/
-struct SharedSystemInfo
-{
-    uint32_t MouseX;
-    uint32_t MouseY;
-    signed char MouseZ;
-
-    bool MouseLeftButton;
-    bool MouseRightButton;
-    bool MouseMiddleButton;
-} __attribute__((packed));
-
-void DrawCursor();
 void DrawContextList()
 {    
     for(ContextInfo info : *contextList)
     {
-        //Print("Drawing context w=%d h=%d x=%d y=%d addr=%x\n", info.width, info.height, info.x, info.y, info.virtAddrServer);
         uint32_t byteWidth = info.width*4;
         for(uint32_t y = 0; y < info.height; y++)
         {
@@ -150,44 +127,15 @@ void DrawContextList()
     DrawCursor();
 }
 
-#define ALPHA 0
-#define BLACK 1
-#define WHITE 2
-
-uint8_t cursorBitmap[19 * 12] = 
-{
-    BLACK,ALPHA,ALPHA,ALPHA,ALPHA,ALPHA,ALPHA,ALPHA,ALPHA,ALPHA,ALPHA,ALPHA,
-    BLACK,BLACK,ALPHA,ALPHA,ALPHA,ALPHA,ALPHA,ALPHA,ALPHA,ALPHA,ALPHA,ALPHA,
-    BLACK,WHITE,BLACK,ALPHA,ALPHA,ALPHA,ALPHA,ALPHA,ALPHA,ALPHA,ALPHA,ALPHA,
-    BLACK,WHITE,WHITE,BLACK,ALPHA,ALPHA,ALPHA,ALPHA,ALPHA,ALPHA,ALPHA,ALPHA,
-    BLACK,WHITE,WHITE,WHITE,BLACK,ALPHA,ALPHA,ALPHA,ALPHA,ALPHA,ALPHA,ALPHA,
-    BLACK,WHITE,WHITE,WHITE,WHITE,BLACK,ALPHA,ALPHA,ALPHA,ALPHA,ALPHA,ALPHA,
-    BLACK,WHITE,WHITE,WHITE,WHITE,WHITE,BLACK,ALPHA,ALPHA,ALPHA,ALPHA,ALPHA,
-    BLACK,WHITE,WHITE,WHITE,WHITE,WHITE,WHITE,BLACK,ALPHA,ALPHA,ALPHA,ALPHA,
-    BLACK,WHITE,WHITE,WHITE,WHITE,WHITE,WHITE,WHITE,BLACK,ALPHA,ALPHA,ALPHA,
-    BLACK,WHITE,WHITE,WHITE,WHITE,WHITE,WHITE,WHITE,WHITE,BLACK,ALPHA,ALPHA,
-    BLACK,WHITE,WHITE,WHITE,WHITE,WHITE,WHITE,WHITE,WHITE,WHITE,BLACK,ALPHA,
-    BLACK,WHITE,WHITE,WHITE,WHITE,WHITE,WHITE,WHITE,WHITE,WHITE,WHITE,BLACK,
-    BLACK,WHITE,WHITE,WHITE,WHITE,WHITE,WHITE,BLACK,BLACK,BLACK,BLACK,BLACK,
-    BLACK,WHITE,WHITE,WHITE,BLACK,WHITE,WHITE,BLACK,ALPHA,ALPHA,ALPHA,ALPHA,
-    BLACK,WHITE,WHITE,BLACK,ALPHA,BLACK,WHITE,WHITE,BLACK,ALPHA,ALPHA,ALPHA,
-    BLACK,WHITE,BLACK,ALPHA,ALPHA,BLACK,WHITE,WHITE,BLACK,ALPHA,ALPHA,ALPHA,
-    BLACK,BLACK,ALPHA,ALPHA,ALPHA,ALPHA,BLACK,WHITE,WHITE,BLACK,ALPHA,ALPHA,
-    ALPHA,ALPHA,ALPHA,ALPHA,ALPHA,ALPHA,BLACK,WHITE,WHITE,BLACK,ALPHA,ALPHA,
-    ALPHA,ALPHA,ALPHA,ALPHA,ALPHA,ALPHA,ALPHA,BLACK,BLACK,ALPHA,ALPHA,ALPHA
-};
-
 void DrawCursor()
 {
-    SharedSystemInfo* info = (SharedSystemInfo*)0xBA000000;
-
-    uint8_t x_d = info->MouseX + 12 < WIDTH ? 12 : WIDTH - info->MouseX;
-    uint8_t y_d = info->MouseY + 19 < HEIGHT ? 19 : HEIGHT - info->MouseY;
+    uint8_t x_d = Process::systemInfo->MouseX + 12 < WIDTH ? 12 : WIDTH - Process::systemInfo->MouseX;
+    uint8_t y_d = Process::systemInfo->MouseY + 19 < HEIGHT ? 19 : HEIGHT - Process::systemInfo->MouseY;
 
     for(uint8_t x = 0; x < x_d; x++)
         for(uint8_t y = 0; y < y_d; y++) {
             uint8_t cd = cursorBitmap[y*12+x];
             if(cd != ALPHA)
-                DirectGUI::SetPixel(info->MouseX + x, info->MouseY + y, cd==WHITE ? 0xFFFFFFFF : 0xFF000000);
+                DirectGUI::SetPixel(Process::systemInfo->MouseX + x, Process::systemInfo->MouseY + y, cd==WHITE ? 0xFFFFFFFF : 0xFF000000);
         }
 }
