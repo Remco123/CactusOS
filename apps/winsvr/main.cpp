@@ -4,6 +4,7 @@
 #include <ipc.h>
 #include <syscall.h>
 #include <gui/guicom.h>
+#include <gui/canvas.h>
 #include <list.h>
 #include <time.h>
 #include <proc.h>
@@ -15,17 +16,22 @@
 using namespace LIBCactusOS;
 
 void HandleMessage(IPCMessage msg);
-void DrawContextList();
+void UpdateDesktop();
 void DrawCursor();
+void ProcessEvents();
 
 List<ContextInfo>* contextList;
 uint32_t newContextAddress = 0xA0000000;
+uint8_t* backBuffer = 0;
+Canvas* backBufferCanvas;
 
-void DrawLoop()
+void GUILoop()
 {
-    Print("Draw loop started\n");
-    while(true)
-        DrawContextList();
+    Print("GUI loop started\n");
+    while(true) {
+        UpdateDesktop();
+        ProcessEvents();
+    }
 }
 
 int main()
@@ -36,6 +42,10 @@ int main()
         return -1;
     }
     Print("Framebuffer Initialized\n");
+
+    Print("Allocating Backbuffer\n");
+    backBuffer = new uint8_t[WIDTH*HEIGHT*4];
+    backBufferCanvas = new Canvas(backBuffer, WIDTH, HEIGHT);
 
     Print("Requesting Systeminfo\n");
     if(!RequestSystemInfo())
@@ -62,7 +72,7 @@ int main()
         {
             receivedMessage = true;
             Print("Creating draw thread\n");
-            Process::CreateThread(DrawLoop, false);
+            Process::CreateThread(GUILoop, false);
         }
     }
 
@@ -97,6 +107,7 @@ void HandleMessage(IPCMessage msg)
             info.height = height;
             info.x = x;
             info.y = y;
+            info.clientID = msg.source;
 
             newContextAddress += pageRoundUp(bytes);
             contextList->push_back(info);
@@ -114,17 +125,19 @@ void HandleMessage(IPCMessage msg)
     }
 }
 
-void DrawContextList()
+void UpdateDesktop()
 {    
+    backBufferCanvas->Clear(0xFFA0FFC9);
     for(ContextInfo info : *contextList)
     {
         uint32_t byteWidth = info.width*4;
         for(uint32_t y = 0; y < info.height; y++)
-        {
-            memcpy((void*)(DIRECT_GUI_ADDR + ((info.y + y)*WIDTH*4) + info.x*4), (void*)(info.virtAddrServer + y*byteWidth), byteWidth);
-        }
+            memcpy((void*)(backBuffer + ((info.y + y)*WIDTH*4) + info.x*4), (void*)(info.virtAddrServer + y*byteWidth), byteWidth);
     }
     DrawCursor();
+
+    //Swap buffers
+    memcpy((void*)DIRECT_GUI_ADDR, (void*)backBuffer, WIDTH*HEIGHT*4);
 }
 
 void DrawCursor()
@@ -136,6 +149,37 @@ void DrawCursor()
         for(uint8_t y = 0; y < y_d; y++) {
             uint8_t cd = cursorBitmap[y*12+x];
             if(cd != ALPHA)
-                DirectGUI::SetPixel(Process::systemInfo->MouseX + x, Process::systemInfo->MouseY + y, cd==WHITE ? 0xFFFFFFFF : 0xFF000000);
+                backBufferCanvas->SetPixel(Process::systemInfo->MouseX + x, Process::systemInfo->MouseY + y, cd==WHITE ? 0xFFFFFFFF : 0xFF000000);
         }
+}
+
+void ProcessEvents()
+{
+    static bool prevMouseLeft = false;
+    static bool prevMouseRight = false;
+    static bool prevMouseMiddle = false;
+
+    uint32_t mouseX = Process::systemInfo->MouseX;
+    uint32_t mouseY = Process::systemInfo->MouseY;
+
+    bool mouseLeft = Process::systemInfo->MouseLeftButton;
+    bool mouseRight = Process::systemInfo->MouseRightButton;
+    bool mouseMiddle = Process::systemInfo->MouseMiddleButton;
+
+    if(mouseLeft!=prevMouseLeft || mouseRight!=prevMouseRight || mouseMiddle!=prevMouseMiddle)
+    {
+        for(ContextInfo info : *contextList)
+        {
+            if(mouseX >= info.x && mouseX <= info.x + info.width)
+                if(mouseY >= info.y && mouseY <= info.y + info.height)
+                {
+                    Log(Info, "Mouse click inside context, sending message.");
+                    break;
+                }
+        }
+    }
+
+    prevMouseLeft = mouseLeft;
+    prevMouseMiddle = mouseMiddle;
+    prevMouseRight = mouseRight;
 }
