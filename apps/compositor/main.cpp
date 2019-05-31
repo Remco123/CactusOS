@@ -3,7 +3,6 @@
 #include <gui/directgui.h>
 #include <ipc.h>
 #include <syscall.h>
-#include <gui/guicom.h>
 #include <gui/canvas.h>
 #include <gui/gui.h>
 #include <list.h>
@@ -30,14 +29,14 @@ void GUILoop()
 {
     Print("GUI loop started\n");
     while(true) {
-        UpdateDesktop();
         ProcessEvents();
+        UpdateDesktop();
     }
 }
 
 int main()
 {
-    Print("Starting Window Manager\n");
+    Print("Starting Compositor\n");
     if(!DirectGUI::RequestFramebuffer()) {
         Log(Error, "Error initializing framebuffer");
         return -1;
@@ -69,10 +68,10 @@ int main()
         Print("Got Request from %d\n", msg.source);
         HandleMessage(msg);
 
-        if(!receivedMessage) //First time we receive something start the draw thread
+        if(!receivedMessage) //First time we receive something start the GUI thread
         {
             receivedMessage = true;
-            Print("Creating draw thread\n");
+            Print("Creating GUI Loop\n");
             Process::CreateThread(GUILoop, false);
         }
     }
@@ -85,7 +84,7 @@ void HandleMessage(IPCMessage msg)
     int msgType = msg.arg1;
     switch (msgType)
     {
-        case GUICOM_REQUESTCONTEXT:
+        case COMPOSITOR_REQUESTCONTEXT:
         {
             uint32_t width = msg.arg3;
             uint32_t height = msg.arg4;
@@ -185,7 +184,7 @@ void ProcessEvents()
 
                     //Check if the mouse has been held down or up
                     bool mouseDown = changedButton == 0 ? mouseLeft : (changedButton == 1 ? mouseMiddle : (changedButton == 2 ? mouseRight : 0));
-                    IPCSend(info.clientID, IPC_TYPE_GUI_EVENT, mouseDown ? EVENTTYPE_MOUSEDOWN : EVENTTYPE_MOUSEUP, mouseX - info.x, mouseY - info.y, changedButton);
+                    IPCSend(info.clientID, IPC_TYPE_GUI_EVENT, mouseDown ? EVENT_TYPE_MOUSEDOWN : EVENT_TYPE_MOUSEUP, mouseX - info.x, mouseY - info.y, changedButton);
                     break;
                 }
         }

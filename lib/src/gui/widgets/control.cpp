@@ -1,4 +1,4 @@
-#include <gui/control.h>
+#include <gui/widgets/control.h>
 
 using namespace LIBCactusOS;
 

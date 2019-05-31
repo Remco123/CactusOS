@@ -1,5 +1,4 @@
-#include <gui/window.h>
-#include <gui/guicom.h>
+#include <gui/widgets/window.h>
 #include <gui/gui.h>
 #include <log.h>
 

@@ -86,8 +86,8 @@ int main()
 
     bar->SetValue(70);
 
-    int s = Process::Run("B:\\apps\\winsvr.bin");
-    Print("Launched Window Manager with status %d\n", s);
+    int s = Process::Run("B:\\apps\\composit.bin");
+    Print("Launched compositor with status %d\n", s);
 
     Time::Sleep(100);
 

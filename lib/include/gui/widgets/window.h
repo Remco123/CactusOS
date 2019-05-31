@@ -1,7 +1,7 @@
 #ifndef __LIBCACTUSOS__WINDOW_H
 #define __LIBCACTUSOS__WINDOW_H
 
-#include <gui/control.h>
+#include <gui/widgets/control.h>
 
 namespace LIBCactusOS
 {
