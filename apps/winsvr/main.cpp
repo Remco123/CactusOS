@@ -5,6 +5,7 @@
 #include <syscall.h>
 #include <gui/guicom.h>
 #include <gui/canvas.h>
+#include <gui/gui.h>
 #include <list.h>
 #include <time.h>
 #include <proc.h>
@@ -58,7 +59,7 @@ int main()
     while (1)
     {
         int msgError = 0;
-        IPCMessage msg = ICPReceive(-1, &msgError);
+        IPCMessage msg = ICPReceive(-1, &msgError, IPC_TYPE_GUI);
 
         if(msgError == SYSCALL_RET_ERROR || msg.type != IPC_TYPE_GUI) {
             Print("Something wrong with message, ignoring\n");
@@ -173,7 +174,18 @@ void ProcessEvents()
             if(mouseX >= info.x && mouseX <= info.x + info.width)
                 if(mouseY >= info.y && mouseY <= info.y + info.height)
                 {
-                    Log(Info, "Mouse click inside context, sending message.");
+                    //Log(Info, "Mouse click inside context, sending message.");
+                    uint8_t changedButton;
+                    if(mouseLeft!=prevMouseLeft)
+                        changedButton = 0;
+                    else if(mouseMiddle!=prevMouseMiddle)
+                        changedButton = 1;
+                    else
+                        changedButton = 2;
+
+                    //Check if the mouse has been held down or up
+                    bool mouseDown = changedButton == 0 ? mouseLeft : (changedButton == 1 ? mouseMiddle : (changedButton == 2 ? mouseRight : 0));
+                    IPCSend(info.clientID, IPC_TYPE_GUI_EVENT, mouseDown ? EVENTTYPE_MOUSEDOWN : EVENTTYPE_MOUSEUP, mouseX - info.x, mouseY - info.y, changedButton);
                     break;
                 }
         }

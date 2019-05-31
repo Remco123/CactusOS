@@ -33,9 +33,9 @@ int LIBCactusOS::IPCAvailible()
     return DoSyscall(SYSCALL_IPC_AVAILABLE);
 }
 
-IPCMessage LIBCactusOS::ICPReceive(int fromID, int* errOut)
+IPCMessage LIBCactusOS::ICPReceive(int fromID, int* errOut, int type)
 {
     IPCMessage result;
-    DoSyscall(SYSCALL_IPC_RECEIVE, (uint32_t)&result, fromID, (uint32_t)errOut);
+    DoSyscall(SYSCALL_IPC_RECEIVE, (uint32_t)&result, fromID, (uint32_t)errOut, type);
     return result;
 }

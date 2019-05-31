@@ -27,6 +27,15 @@ namespace LIBCactusOS
          * x_abs/y_abs: the coördinate of this window in absolute related to the canvas
         */
         void DrawTo(Canvas* context, uint32_t x_abs, uint32_t y_abs);
+
+        /**
+         * Called when mouse is down on window
+        */
+        void OnMouseDown(uint32_t x_abs, uint32_t y_abs, uint8_t button);
+        /**
+         * Called when mouse is up on window
+        */
+        void OnMouseUp(uint32_t x_abs, uint32_t y_abs, uint8_t button);
     };
 }
 

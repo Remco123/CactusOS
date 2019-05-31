@@ -6,6 +6,7 @@ namespace LIBCactusOS
     #define IPC_MAX_ARGS 5
 
     #define IPC_TYPE_GUI 1
+    #define IPC_TYPE_GUI_EVENT 2
 
     struct IPCMessage
     {
@@ -41,7 +42,7 @@ namespace LIBCactusOS
      * Receive a single IPCMessage, blocks if none availible
      * FromID: Only receive a message from specified process
     */
-    IPCMessage ICPReceive(int fromID = -1, int* errOut = 0);
+    IPCMessage ICPReceive(int fromID = -1, int* errOut = 0, int type = -1);
 }
 
 #endif

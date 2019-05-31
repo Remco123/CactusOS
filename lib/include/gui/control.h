@@ -27,13 +27,9 @@ namespace LIBCactusOS
         uint32_t borderColor = 0xFF333333;
 
         /**
-         * Create new control with a given width and height
-        */
-        Control(uint32_t w, uint32_t h);
-        /**
          * Create new control with a given width, height, x and y position
         */
-        Control(uint32_t w, uint32_t h, uint32_t x, uint32_t y);
+        Control(uint32_t w, uint32_t h, uint32_t x = 0, uint32_t y = 0);
         /**
          * Destructor
         */
@@ -45,6 +41,19 @@ namespace LIBCactusOS
          * x_abs/y_abs: the coördinate of this control in absolute related to the canvas
         */
         virtual void DrawTo(Canvas* context, uint32_t x_abs, uint32_t y_abs);
+
+        /*/////////
+        // Events
+        *//////////
+
+        /**
+         * Called when mouse is down on control
+        */
+        virtual void OnMouseDown(uint32_t x_abs, uint32_t y_abs, uint8_t button);
+        /**
+         * Called when mouse is up on control
+        */
+        virtual void OnMouseUp(uint32_t x_abs, uint32_t y_abs, uint8_t button);
     };
 }
 

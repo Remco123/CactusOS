@@ -14,9 +14,9 @@ namespace LIBCactusOS
     class GUICommunication
     {
     private:
-        static int windowServerID;
         static uint32_t virtualFramebufferAddress;
     public:
+        static int windowServerID;
         /**
          * Request a context buffer for the application to draw to, this buffer is shared between the process and the window server
          * 

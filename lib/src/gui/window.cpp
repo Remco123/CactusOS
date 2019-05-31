@@ -1,5 +1,7 @@
 #include <gui/window.h>
 #include <gui/guicom.h>
+#include <gui/gui.h>
+#include <log.h>
 
 using namespace LIBCactusOS;
 
@@ -10,7 +12,7 @@ Window::Window(uint32_t w, uint32_t h)
 Window::Window(uint32_t w, uint32_t h, uint32_t x, uint32_t y)
 : Control(w, h, x, y)
 {
-    
+    GUI::Windows->push_back(this);
 }
 
 void Window::DrawTo(Canvas* context, uint32_t x_abs, uint32_t y_abs)
@@ -27,4 +29,29 @@ void Window::DrawTo(Canvas* context, uint32_t x_abs, uint32_t y_abs)
 
     for(Control* c : this->childs)
         c->DrawTo(context, x_abs + c->x, y_abs + c->y + titleBarHeight);
+}
+
+void Window::OnMouseDown(uint32_t x_abs, uint32_t y_abs, uint8_t button)
+{
+    Print("Window %s has mouseDown\n", this->titleString);
+
+    //Send event to children
+    for(Control* c : this->childs)
+    {
+        if(x_abs >= c->x && x_abs <= c->x + c->width)
+            if(y_abs >= c->y + this->titleBarHeight && y_abs <= c->y + c->height + this->titleBarHeight)
+                c->OnMouseDown(x_abs - c->x, y_abs - c->y - this->titleBarHeight, button);
+    }
+}
+void Window::OnMouseUp(uint32_t x_abs, uint32_t y_abs, uint8_t button)
+{
+    Print("Window %s has mouseUp\n", this->titleString);
+
+    //Send event to children
+    for(Control* c : this->childs)
+    {
+        if(x_abs >= c->x && x_abs <= c->x + c->width)
+            if(y_abs >= c->y + this->titleBarHeight && y_abs <= c->y + c->height + this->titleBarHeight)
+                c->OnMouseUp(x_abs - c->x, y_abs - c->y - this->titleBarHeight, button);
+    }
 }

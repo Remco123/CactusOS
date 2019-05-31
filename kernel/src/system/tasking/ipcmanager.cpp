@@ -54,7 +54,7 @@ void IPCManager::HandleSend(core::CPUState* state, Process* proc)
 | ebx   |   Message pointer  |
 | ecx   |   From PID         |
 | edx   |   Error out        |
-| esi   |   Null             |
+| esi   |   type             |
 | edi   |   Null             |
 +-------+--------------------+
 */
@@ -63,13 +63,14 @@ void IPCManager::HandleReceive(core::CPUState* state, Process* proc)
 {
     int* errRet = (int*)state->EDX;
     int recvFrom = state->ECX;
+    int type = state->ESI;
 
     if (proc->ipcMessages.size() <= 0) { //We need to block ourself if there are no messages at the moment
         System::scheduler->Block(System::scheduler->CurrentThread(), BlockedState::ReceiveIPC);
     }
 
     LIBCactusOS::IPCMessage message = proc->ipcMessages.GetAt(0);
-    if (message.dest != proc->id || (recvFrom == -1 ? false : recvFrom != message.source)) { //Is the message not for us or not from the correct source
+    if (message.dest != proc->id || (recvFrom == -1 ? false : recvFrom != message.source) || (type == -1 ? false : type != message.type)) { //Is the message not for us or not from the correct source
         if (errRet != 0)
             *errRet = SYSCALL_RET_ERROR;
         return;
