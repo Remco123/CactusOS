@@ -19,11 +19,14 @@ void HandleMessage(IPCMessage msg);
 void UpdateDesktop();
 void DrawCursor();
 void ProcessEvents();
+extern uint8_t* LoadBackground(char*); //In background.cpp
 
 List<ContextInfo>* contextList;
 uint32_t newContextAddress = 0xA0000000;
 uint8_t* backBuffer = 0;
 Canvas* backBufferCanvas;
+
+uint8_t* wallPaperBuffer = 0;
 
 void GUILoop()
 {
@@ -46,6 +49,10 @@ int main()
     Print("Allocating Backbuffer\n");
     backBuffer = new uint8_t[WIDTH*HEIGHT*4];
     backBufferCanvas = new Canvas(backBuffer, WIDTH, HEIGHT);
+
+    DirectGUI::DrawString("Loading Background...", 3, 3, 0xFF000000);
+    Print("Loading Background\n");
+    wallPaperBuffer = LoadBackground("B:\\wallpap.bmp");
 
     Print("Requesting Systeminfo\n");
     if(!RequestSystemInfo())
@@ -127,7 +134,9 @@ void HandleMessage(IPCMessage msg)
 
 void UpdateDesktop()
 {    
-    backBufferCanvas->Clear(0xFFA0FFC9);
+    if(wallPaperBuffer != 0)
+        memcpy((void*)backBuffer, (void*)wallPaperBuffer, WIDTH*HEIGHT*4);
+    
     for(ContextInfo info : *contextList)
     {
         uint32_t byteWidth = info.width*4;

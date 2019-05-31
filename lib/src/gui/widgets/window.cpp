@@ -4,10 +4,6 @@
 
 using namespace LIBCactusOS;
 
-Window::Window(uint32_t w, uint32_t h)
-: Window(w, h, 0, 0)
-{ }
-
 Window::Window(uint32_t w, uint32_t h, uint32_t x, uint32_t y)
 : Control(w, h, x, y)
 {
@@ -33,6 +29,8 @@ void Window::DrawTo(Canvas* context, uint32_t x_abs, uint32_t y_abs)
 void Window::OnMouseDown(uint32_t x_abs, uint32_t y_abs, uint8_t button)
 {
     Print("Window %s has mouseDown\n", this->titleString);
+    if(y_abs < this->titleBarHeight)
+        this->titleBarColor = 0xFF1A7868;
 
     //Send event to children
     for(Control* c : this->childs)
@@ -45,6 +43,8 @@ void Window::OnMouseDown(uint32_t x_abs, uint32_t y_abs, uint8_t button)
 void Window::OnMouseUp(uint32_t x_abs, uint32_t y_abs, uint8_t button)
 {
     Print("Window %s has mouseUp\n", this->titleString);
+    if(y_abs < this->titleBarHeight)
+        this->titleBarColor = 0xFF4CB272;
 
     //Send event to children
     for(Control* c : this->childs)

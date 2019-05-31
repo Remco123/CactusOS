@@ -6,7 +6,6 @@ Control::Control(uint32_t w, uint32_t h, uint32_t x, uint32_t y)
 : Rectangle(w, h, x, y)
 {
     this->childs.Clear();
-    this->parent = 0;
 }
 
 Control::~Control()

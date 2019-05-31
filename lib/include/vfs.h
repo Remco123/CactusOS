@@ -5,7 +5,7 @@
 
 namespace LIBCactusOS
 {
-    int GetFileSize(char* path);
+    uint32_t GetFileSize(char* path);
     int ReadFile(char* path, uint8_t* buffer);
     bool FileExists(char* path);
     bool DirectoryExists(char* path);

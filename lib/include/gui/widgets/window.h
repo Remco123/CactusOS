@@ -12,14 +12,11 @@ namespace LIBCactusOS
         uint16_t titleBarHeight = 30;
     public:
         char* titleString = 0;
-        /**
-         * Create a new window with width and height
-        */
-        Window(uint32_t w, uint32_t h);
+
         /**
          * Create a new window with width, height, x and y
         */
-        Window(uint32_t w, uint32_t h, uint32_t x, uint32_t y);
+        Window(uint32_t w, uint32_t h, uint32_t x = 0, uint32_t y = 0);
 
         /**
          * Draw this window to a canvas

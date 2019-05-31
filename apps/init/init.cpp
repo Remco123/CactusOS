@@ -34,7 +34,7 @@ int main()
     Log(Info, "Loading Boot Logo");
     if(FileExists(path))
     {
-        int fileSize = GetFileSize(path);
+        uint32_t fileSize = GetFileSize(path);
         if(fileSize != -1)
         {
             uint8_t* fileBuf = new uint8_t[fileSize];

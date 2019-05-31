@@ -15,10 +15,6 @@ namespace LIBCactusOS
     {
     public:
         /**
-         * Are we a child of some control? This points to our parent
-        */
-        Control* parent;
-        /**
          * Our list of childs
         */
         List<Control*> childs;

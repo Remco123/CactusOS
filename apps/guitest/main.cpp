@@ -16,9 +16,7 @@ int main()
     if(canv == 0)
         return -1;
 
-    Time::Sleep(1000);
-
-    Window* window1 = new Window(300, 200, 0, 0);
+    Window* window1 = new Window(300, 200);
     window1->titleString = "Window 1";    
     window1->DrawTo(canv, 0, 0);
 
