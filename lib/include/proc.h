@@ -10,12 +10,34 @@ namespace LIBCactusOS
     class Process
     {
     public:
+        /**
+         * The PID of this process
+        */
         static int ID;
+        /**
+         * A pointer to a buffer shared with the kernel that contains some systeminfo
+        */
         static SharedSystemInfo* systemInfo;
+        /**
+         * Start a new process
+        */
         static int Run(const char* path);
+        /**
+         * Create a block of shared memory
+        */
         static bool CreateSharedMemory(int proc2ID, uint32_t virtStart, uint32_t len);
+        /**
+         * Create a block of shared memory
+        */
         static bool CreateSharedMemory(int proc2ID, uint32_t virtStart1, uint32_t virtStart2, uint32_t len);
+        /**
+         * Create a new thread for this application
+        */
         static void CreateThread(void (*entryPoint)(), bool switchTo = false);
+        /**
+         * Force a task switch
+        */
+        static void Yield();
     };
 }
 

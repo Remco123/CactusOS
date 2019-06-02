@@ -193,7 +193,7 @@ void ProcessEvents()
 
                     //Check if the mouse has been held down or up
                     bool mouseDown = changedButton == 0 ? mouseLeft : (changedButton == 1 ? mouseMiddle : (changedButton == 2 ? mouseRight : 0));
-                    IPCSend(info.clientID, IPC_TYPE_GUI_EVENT, mouseDown ? EVENT_TYPE_MOUSEDOWN : EVENT_TYPE_MOUSEUP, mouseX - info.x, mouseY - info.y, changedButton);
+                    IPCSend(info.clientID, IPC_TYPE_GUI_EVENT, mouseDown ? EVENT_TYPE_MOUSEDOWN : EVENT_TYPE_MOUSEUP, mouseX, mouseY, changedButton);
                     break;
                 }
         }

@@ -35,6 +35,7 @@ void printRegs(CPUState* regs)
     BootConsole::Write("ES: 0x"); Print::printfHex16(regs->ES);   BootConsole::WriteLine();
     BootConsole::Write("FS: 0x"); Print::printfHex16(regs->FS);   BootConsole::Write("   ");
     BootConsole::Write("GS: 0x"); Print::printfHex16(regs->GS);   BootConsole::WriteLine();
+    BootConsole::Write("EFLAGS: 0b"); Print::printbits((uint16_t)regs->EFLAGS); BootConsole::WriteLine();
 }
 
 uint32_t Scheduler::HandleInterrupt(uint32_t esp)
@@ -79,6 +80,9 @@ uint32_t Scheduler::HandleInterrupt(uint32_t esp)
                 //Save current fpu status
                 asm volatile ("fxsave (%%eax)" : : "a" (currentThread->FPUBuffer));
             }
+
+            //Load fpu status
+            asm volatile ("fxrstor (%%eax)" : : "a" (nextThread->FPUBuffer));
             
             //Since we are switching now
             currentThread = nextThread;
@@ -94,9 +98,6 @@ uint32_t Scheduler::HandleInterrupt(uint32_t esp)
 
             //Load new registers
             esp = (uint32_t)nextThread->regsPtr;
-
-            //Load fpu status
-            asm volatile ("fxrstor (%%eax)" : : "a" (nextThread->FPUBuffer));
 
             //Load page directory
             if(nextThread->parent && nextThread->parent->pageDirPhys != 0)
@@ -148,9 +149,14 @@ void Scheduler::InitialThreadUserJump(Thread* thread)
     //Dont forget to load the page directory
     VirtualMemoryManager::SwitchPageDirectory(thread->parent->pageDirPhys);
 
+    //We are becoming the current thread
     currentThread = thread;
 
+    //We need to be enabled on the next timer interrupt
     this->Enabled = true;
+
+    //Ack Timer interrupt
+    outportb(0x20, 0x20);
 
     enter_usermode(thread->regsPtr->EIP, (uint32_t)thread->userStack + thread->userStackSize);
 }

@@ -25,7 +25,7 @@ namespace LIBCactusOS
         /**
          * Create new control with a given width, height, x and y position
         */
-        Control(uint32_t w, uint32_t h, uint32_t x = 0, uint32_t y = 0);
+        Control(int w, int h, int x = 0, int y = 0);
         /**
          * Destructor
         */
@@ -36,7 +36,7 @@ namespace LIBCactusOS
          * 
          * x_abs/y_abs: the coördinate of this control in absolute related to the canvas
         */
-        virtual void DrawTo(Canvas* context, uint32_t x_abs, uint32_t y_abs);
+        virtual void DrawTo(Canvas* context, int x_abs, int y_abs);
 
         /*/////////
         // Events
@@ -45,11 +45,11 @@ namespace LIBCactusOS
         /**
          * Called when mouse is down on control
         */
-        virtual void OnMouseDown(uint32_t x_abs, uint32_t y_abs, uint8_t button);
+        virtual void OnMouseDown(int x_abs, int y_abs, uint8_t button);
         /**
          * Called when mouse is up on control
         */
-        virtual void OnMouseUp(uint32_t x_abs, uint32_t y_abs, uint8_t button);
+        virtual void OnMouseUp(int x_abs, int y_abs, uint8_t button);
     };
 }
 

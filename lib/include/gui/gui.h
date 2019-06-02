@@ -2,7 +2,7 @@
 #define __LIBCACTUSOS__GUI__GUI_H
 
 #include <gui/widgets/control.h>
-#include <gui/canvas.h>
+#include <gui/context.h>
 
 namespace LIBCactusOS
 {
@@ -15,17 +15,18 @@ namespace LIBCactusOS
 
     class GUI
     {
-    friend class Control;
-    friend class Window;
-    protected:
-        static List<Control*>* Windows; //All the windows associated with this program
     private:
-        static Control* FindTargetControl(int m_x, int m_y);
+        static Context* FindTargetContext(int m_x, int m_y);
         
         /**
          * The address whera a new context will be mapped to
         */
         static uint32_t curVirtualFramebufferAddress;
+
+        /**
+         * The main line of excecution of the gui.
+        */
+        static void MainGUILoop();
     public:
         /**
          * The PID used by the compositor process
@@ -33,24 +34,31 @@ namespace LIBCactusOS
         static int compositorPID;
 
         /**
-         * Initialize the gui for this process
+         * The list of all contexts in this application
+        */
+        static List<Context*>* contextList;
+
+        /**
+         * Initalize the gui for this process
         */
         static void Initialize();
+        
         /**
          * Process all the possible gui events
-         * Returns if the application should continue running
         */
-        static bool ProcessEvents();
+        static void ProcessEvents();
 
         /**
          * Request a context buffer for the application to draw to, this buffer is shared between the process and the compositor
          * This buffer can be used for a gui but also for raw drawing to the screen
          * 
-         * returns a pointer to the framebuffer canvas
+         * returns a pointer to the context struct
          * @param width The width of the context
          * @param height The height of the context
+         * @param x The position on horizontal axis
+         * @param y The position on vertical axis
         */
-        static Canvas* RequestContext(int width, int height, int x, int y);
+        static Context* RequestContext(int width, int height, int x, int y);
     };
 }
 

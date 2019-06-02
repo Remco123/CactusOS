@@ -16,8 +16,8 @@ namespace LIBCactusOS
     public:
         static bool RequestFramebuffer();
 
-        static void SetPixel(uint32_t x, uint32_t y, uint32_t color);
-        static uint32_t GetPixel(uint32_t x, uint32_t y);
+        static void SetPixel(int x, int y, uint32_t color);
+        static uint32_t GetPixel(int x, int y);
 
         static void Clear();
         static void Clear(uint32_t color);

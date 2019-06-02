@@ -128,6 +128,12 @@ CPUState* CactusOSSyscalls::HandleSyscall(CPUState* state)
                 state->EAX = SYSCALL_RET_SUCCES;
             }
             break;
+        case SYSCALL_YIELD:
+            {
+                System::scheduler->ForceSwitch();
+                state->EAX = SYSCALL_RET_SUCCES;
+            }
+            break;
         default:
             Log(Warning, "Got unkown syscall %d from process %d", sysCall, proc->id);
             state->EAX = SYSCALL_RET_ERROR;

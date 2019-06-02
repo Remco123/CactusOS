@@ -20,11 +20,11 @@ bool DirectGUI::RequestFramebuffer()
     return ret;
 }
 
-void DirectGUI::SetPixel(uint32_t x, uint32_t y, uint32_t color)
+void DirectGUI::SetPixel(int x, int y, uint32_t color)
 {
     base->SetPixel(x, y, color);
 }
-uint32_t DirectGUI::GetPixel(uint32_t x, uint32_t y)
+uint32_t DirectGUI::GetPixel(int x, int y)
 {
     return base->GetPixel(x, y);
 }

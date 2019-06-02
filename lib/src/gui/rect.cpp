@@ -2,7 +2,7 @@
 
 using namespace LIBCactusOS;
 
-Rectangle::Rectangle(uint32_t w, uint32_t h, uint32_t x_p, uint32_t y_p)
+Rectangle::Rectangle(int w, int h, int x_p, int y_p)
 {
     this->width = w;
     this->height = h;

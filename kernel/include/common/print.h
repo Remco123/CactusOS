@@ -16,6 +16,9 @@ namespace CactusOS
             static void printfHex16(uint16_t key);
             static void printfHex32(uint32_t key);
             static void printbits(uint8_t key);
+            static void printbits(uint16_t key);
+            static void printbits(uint32_t key);
+            static void printbits(uint64_t key);
         };
     }
 }

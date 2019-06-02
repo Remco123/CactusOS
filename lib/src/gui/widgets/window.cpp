@@ -4,13 +4,13 @@
 
 using namespace LIBCactusOS;
 
-Window::Window(uint32_t w, uint32_t h, uint32_t x, uint32_t y)
+Window::Window(Context* parent, int w, int h, int x, int y)
 : Control(w, h, x, y)
 {
-    GUI::Windows->push_back(this);
+    parent->Windows.push_back(this);
 }
 
-void Window::DrawTo(Canvas* context, uint32_t x_abs, uint32_t y_abs)
+void Window::DrawTo(Canvas* context, int x_abs, int y_abs)
 {
     context->DrawFillRect(this->backColor, x_abs, y_abs + titleBarHeight, this->width, this->height - titleBarHeight - 1);
     context->DrawRect(this->borderColor, x_abs, y_abs, this->width - 1, this->height - 1);
@@ -26,7 +26,7 @@ void Window::DrawTo(Canvas* context, uint32_t x_abs, uint32_t y_abs)
         c->DrawTo(context, x_abs + c->x, y_abs + c->y + titleBarHeight);
 }
 
-void Window::OnMouseDown(uint32_t x_abs, uint32_t y_abs, uint8_t button)
+void Window::OnMouseDown(int x_abs, int y_abs, uint8_t button)
 {
     Print("Window %s has mouseDown\n", this->titleString);
     if(y_abs < this->titleBarHeight)
@@ -40,7 +40,7 @@ void Window::OnMouseDown(uint32_t x_abs, uint32_t y_abs, uint8_t button)
                 c->OnMouseDown(x_abs - c->x, y_abs - c->y - this->titleBarHeight, button);
     }
 }
-void Window::OnMouseUp(uint32_t x_abs, uint32_t y_abs, uint8_t button)
+void Window::OnMouseUp(int x_abs, int y_abs, uint8_t button)
 {
     Print("Window %s has mouseUp\n", this->titleString);
     if(y_abs < this->titleBarHeight)

@@ -37,7 +37,7 @@ extern "C" void _set_debug_traps();
 void IdleThread()
 {
     while(1){
-        asm volatile("hlt");
+        System::scheduler->ForceSwitch();
     }
 }
 

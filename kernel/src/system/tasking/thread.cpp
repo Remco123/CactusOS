@@ -41,7 +41,7 @@ Thread* ThreadHelper::CreateFromFunction(void (*entryPoint)(), bool isKernel, ui
 	result->regsPtr->GS = isKernel ? SEG_KERNEL_DATA : SEG_USER_DATA;
 
     //Set the flags for this thread
-	result->regsPtr->EFLAGS = 0x202;
+	result->regsPtr->EFLAGS = flags;
 
     //Default state is wait here
     result->state = ThreadState::Ready;

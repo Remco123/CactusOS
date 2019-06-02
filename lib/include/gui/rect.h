@@ -14,24 +14,24 @@ namespace LIBCactusOS
         /**
          * The width of this rectangle
         */
-        uint32_t width;
+        int width;
         /**
          * The height of this rectangle
         */
-        uint32_t height;
+        int height;
         /**
          * The x coördinate of this rectangle
         */
-        uint32_t x;
+        int x;
         /**
          * The y coördinate of this rectangle
         */
-        uint32_t y;
+        int y;
 
         /**
          * Create a new instance of the Rectangle Class
         */
-        Rectangle(uint32_t w, uint32_t h, uint32_t x = 0, uint32_t y = 0);
+        Rectangle(int w, int h, int x = 0, int y = 0);
     };
 }
 

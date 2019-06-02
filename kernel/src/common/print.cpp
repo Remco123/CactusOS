@@ -27,7 +27,31 @@ void Print::printfHex32(uint32_t key)
 }
 void Print::printbits(uint8_t key)
 {
-    for (int bit = 0; bit < 8; bit++)
+    for (int bit = 0; bit < (sizeof(key)*8); bit++)
+    {
+        BootConsole::Write(Convert::IntToString(key & 0x01));
+        key = key >> 1;
+    }
+}
+void Print::printbits(uint16_t key)
+{
+    for (int bit = 0; bit < (sizeof(key)*8); bit++)
+    {
+        BootConsole::Write(Convert::IntToString(key & 0x01));
+        key = key >> 1;
+    }
+}
+void Print::printbits(uint32_t key)
+{
+    for (int bit = 0; bit < (sizeof(key)*8); bit++)
+    {
+        BootConsole::Write(Convert::IntToString(key & 0x01));
+        key = key >> 1;
+    }
+}
+void Print::printbits(uint64_t key)
+{
+    for (int bit = 0; bit < (sizeof(key)*8); bit++)
     {
         BootConsole::Write(Convert::IntToString(key & 0x01));
         key = key >> 1;

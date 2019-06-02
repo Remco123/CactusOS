@@ -21,3 +21,7 @@ void Process::CreateThread(void (*entryPoint)(), bool switchTo)
 {
     DoSyscall(SYSCALL_START_THREAD, (uint32_t)entryPoint, switchTo);
 }
+void Process::Yield()
+{
+    DoSyscall(SYSCALL_YIELD);
+}

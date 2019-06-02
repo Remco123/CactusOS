@@ -9,13 +9,13 @@ namespace LIBCactusOS
     {
     public:
         void* bufferPointer;
-        uint32_t Width;
-        uint32_t Height;
+        int Width;
+        int Height;
 
-        Canvas(void* buffer, uint32_t w, uint32_t h);
+        Canvas(void* buffer, int w, int h);
 
-        void SetPixel(uint32_t x, uint32_t y, uint32_t color);
-        uint32_t GetPixel(uint32_t x, uint32_t y);
+        void SetPixel(int x, int y, uint32_t color);
+        uint32_t GetPixel(int x, int y);
 
         void Clear();
         void Clear(uint32_t color);

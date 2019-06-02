@@ -5,18 +5,18 @@
 
 using namespace LIBCactusOS;
 
-Canvas::Canvas(void* buffer, uint32_t w, uint32_t h)
+Canvas::Canvas(void* buffer, int w, int h)
 {
     this->Width = w;
     this->Height = h;
     this->bufferPointer = buffer;
 }
 
-void Canvas::SetPixel(uint32_t x, uint32_t y, uint32_t color)
+void Canvas::SetPixel(int x, int y, uint32_t color)
 {
     *(uint32_t*)(bufferPointer + (y * Width * 4 + x * 4)) = color;
 }
-uint32_t Canvas::GetPixel(uint32_t x, uint32_t y)
+uint32_t Canvas::GetPixel(int x, int y)
 {
     return *(uint32_t*)(bufferPointer + (y * Width * 4 + x * 4));
 }
