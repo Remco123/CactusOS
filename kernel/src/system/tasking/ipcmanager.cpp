@@ -22,6 +22,7 @@ using namespace CactusOS::system;
 //Called from systemcalls when process tries to send a ipc message
 void IPCManager::HandleSend(core::CPUState* state, Process* proc)
 {
+    //Log(Info, "IPC Send from process %s", proc->fileName);
     LIBCactusOS::IPCMessage* msg = (LIBCactusOS::IPCMessage*)state->EBX;
     if (msg->source != proc->id || msg->dest == proc->id) {
         state->EAX = SYSCALL_RET_ERROR;
@@ -38,9 +39,11 @@ void IPCManager::HandleSend(core::CPUState* state, Process* proc)
     target->ipcMessages.push_back(*msg);
 
     //Check if the target process is blocked and waiting for messages
-    if(target->Threads[0]->state == ThreadState::Blocked && target->Threads[0]->blockedState == BlockedState::ReceiveIPC) //Change when process get multithreading
-    {
-        System::scheduler->Unblock(target->Threads[0]);
+    //This is not working as it should but works for now
+    //TODO: Really improve this!!!
+    for(Thread* thread : target->Threads) {
+        if(thread->state == ThreadState::Blocked && thread->blockedState == BlockedState::ReceiveIPC)
+            System::scheduler->Unblock(thread);
     }
 
     state->EAX = SYSCALL_RET_SUCCES;
@@ -61,6 +64,7 @@ void IPCManager::HandleSend(core::CPUState* state, Process* proc)
 //Called from systemcalls when process tries to receive a ipc message
 void IPCManager::HandleReceive(core::CPUState* state, Process* proc)
 {
+    //Log(Info, "IPC Receive from process %s", proc->fileName);
     int* errRet = (int*)state->EDX;
     int recvFrom = state->ECX;
     int type = state->ESI;

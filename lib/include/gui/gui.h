@@ -13,6 +13,8 @@ namespace LIBCactusOS
     //Communication to the compositor definitions
     #define COMPOSITOR_REQUESTCONTEXT 1
 
+    typedef void (*GUI_MouseCall) (Control* sender, uint8_t button); 
+
     class GUI
     {
     private:
@@ -22,11 +24,6 @@ namespace LIBCactusOS
          * The address whera a new context will be mapped to
         */
         static uint32_t curVirtualFramebufferAddress;
-
-        /**
-         * The main line of excecution of the gui.
-        */
-        static void MainGUILoop();
     public:
         /**
          * The PID used by the compositor process
@@ -47,6 +44,11 @@ namespace LIBCactusOS
          * Process all the possible gui events
         */
         static void ProcessEvents();
+
+        /**
+         * Draw all the contexts to the screen
+        */
+        static void DrawGUI();
 
         /**
          * Request a context buffer for the application to draw to, this buffer is shared between the process and the compositor

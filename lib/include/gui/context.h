@@ -34,6 +34,11 @@ namespace LIBCactusOS
         */
         ~Context();
 
+        /**
+         * Draw all the gui components to this context
+        */
+        void DrawGUI();
+
         /*///////////////
         // Events
         *////////////////

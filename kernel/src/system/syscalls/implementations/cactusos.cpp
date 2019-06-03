@@ -105,7 +105,7 @@ CPUState* CactusOSSyscalls::HandleSyscall(CPUState* state)
             break;
         case SYSCALL_START_THREAD:
             {
-                Log(Info, "Creating new thread for proc %d, jumps to %x", proc->id, state->EBX);
+                Log(Info, "Creating new thread for proc %d %s, jumps to %x", proc->id, proc->fileName, state->EBX);
                 Thread* newThread = ThreadHelper::CreateFromFunction((void (*)())state->EBX);
                 newThread->parent = proc;
                 newThread->state = Started;

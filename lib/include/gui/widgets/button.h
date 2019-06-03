@@ -1,0 +1,47 @@
+#ifndef __LIBCACTUSOS__GUI__BUTTON_H
+#define __LIBCACTUSOS__GUI__BUTTON_H
+
+#include <gui/widgets/control.h>
+#include <gui/gui.h>
+
+namespace LIBCactusOS
+{
+    /**
+     * A GUI button
+    */
+    class Button : public Control
+    {
+    private:
+        char* label = 0;
+    public:
+        /**
+         * What function do we need to call when the button is pressed
+        */
+        GUI_MouseCall mouseClickHandler = 0;
+
+        /**
+         * Create a new button with a peice of text
+        */
+        Button(char* text = 0);
+
+        /**
+         * Draw this button
+        */
+        void DrawTo(Canvas* context, int x_abs, int y_abs);
+
+        /*/////////
+        // Events
+        *//////////
+        /**
+         * Called when mouse is down on control
+        */
+        void OnMouseDown(int x_abs, int y_abs, uint8_t button);
+        /**
+         * Called when mouse is up on control
+        */
+        void OnMouseUp(int x_abs, int y_abs, uint8_t button);
+
+    };
+}
+
+#endif

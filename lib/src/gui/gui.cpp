@@ -55,16 +55,21 @@ void GUI::ProcessEvents()
     }
 }
 
+void GUI::DrawGUI()
+{
+    for(Context* c : *contextList)
+        c->DrawGUI();
+}
+
 Context* GUI::FindTargetContext(int mouseX, int mouseY)
 {
     if(contextList == 0)
         return 0;
     
-    //Print("FindTargetContext x=%d y=%d\n", mouseX, mouseY);
     for(int i = 0; i < contextList->size(); i++)
     {
         Context* c = contextList->GetAt(i);
-        //Print("%x x=%d y=%d w=%d h=%d\n", (uint32_t)c, c->x, c->y, c->width, c->height);
+
         if(mouseX >= c->x && mouseX <= c->x + c->width)
             if(mouseY >= c->y && mouseY <= c->y + c->height)
                 return c;
@@ -87,9 +92,7 @@ Context* GUI::RequestContext(int width, int height, int x, int y)
 
         //Create context struct
         Context* ret = new Context(oldFB, width, height, x, y);
-        //Print("Created new context %x %d %d %d %d\n", oldFB, width, height, x, y);
-        
-        //Print("contextList %x\n", (uint32_t)contextList);
+
         //Add it to our list
         contextList->push_back(ret);
 
@@ -97,11 +100,4 @@ Context* GUI::RequestContext(int width, int height, int x, int y)
     }
     
     return 0;
-}
-
-void GUI::MainGUILoop()
-{
-    while(1) {
-        Process::Yield();
-    }
 }

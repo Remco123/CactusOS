@@ -16,6 +16,12 @@ Context::~Context()
         delete this->canvas;
 }
 
+void Context::DrawGUI()
+{
+    for(Control* c : Windows)
+        c->DrawTo(this->canvas, c->x, c->y);
+}
+
 void Context::OnMouseDown(int x_abs, int y_abs, uint8_t button)
 {
     for(Control* c : Windows)
