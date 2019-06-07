@@ -46,3 +46,53 @@ void* memcpy(void* __restrict__ dstptr, const void* __restrict__ srcptr, size_t 
 		dst[i] = src[i];
 	return dstptr;
 }
+
+int str_IndexOf(const char* str, char c, int skip)
+{
+    int hits = 0;
+    int i = 0;
+    while(str[i])
+    {
+        if(str[i] == c && hits++ == skip)
+            return i;
+        i++;
+    }
+    return -1;
+}
+
+bool str_Contains(const char* str, char c)
+{
+    int i = 0;
+	while (str[i])
+    {
+        if(str[i] == c)
+            return true;
+		i++;
+    }
+    return false;
+}
+
+char* str_Uppercase(char* str)
+{ 
+    int len = strlen(str);
+    int i = 0;
+	while (i < len)
+	{
+		if ((short)str[i] >= 97 && (short)str[i] <= 122)
+			str[i] -= 32;
+		i++;
+	}
+    return str;
+}
+char* str_Lowercase(char* str)
+{
+    int len = strlen(str);
+    int i = 0;
+	while (i < len)
+	{
+		if ((short)str[i] >= 65 && (short)str[i] <= 90)
+			str[i] += 32;
+		i++;
+	}
+    return str;
+}

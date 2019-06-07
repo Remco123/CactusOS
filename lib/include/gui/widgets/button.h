@@ -11,9 +11,12 @@ namespace LIBCactusOS
     */
     class Button : public Control
     {
-    private:
-        char* label = 0;
     public:
+        /**
+         * The text of this label
+        */
+        char* label = 0;
+        
         /**
          * What function do we need to call when the button is pressed
         */

@@ -91,7 +91,7 @@ int main()
 
     Time::Sleep(100);
 
-    int s2 = Process::Run("B:\\apps\\guitest.bin");
+    int s2 = Process::Run("B:\\apps\\calc.bin");
     Print("Launched GUI Test app with status %d\n", s2);
 
     bar->SetValue(100); 

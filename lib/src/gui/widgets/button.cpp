@@ -21,7 +21,7 @@ void Button::DrawTo(Canvas* context, int x_abs, int y_abs)
 }
 void Button::OnMouseDown(int x_abs, int y_abs, uint8_t button)
 {
-    Print("Button %d Mouse Down\n", button);
+    //Print("Button %d Mouse Down\n", button);
 
     this->backColor = 0xFF606060 + 0xFFFFF*button;
 
@@ -29,8 +29,8 @@ void Button::OnMouseDown(int x_abs, int y_abs, uint8_t button)
 }
 void Button::OnMouseUp(int x_abs, int y_abs, uint8_t button)
 {
-    Print("Button %d Mouse Up\n", button);
-    this->backColor = 0xFF898998;
+    //Print("Button %d Mouse Up\n", button);
+    this->backColor = 0xFF898989;
 
     if(this->mouseClickHandler != 0)
         this->mouseClickHandler(this, button);

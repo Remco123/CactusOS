@@ -28,7 +28,7 @@ void Window::DrawTo(Canvas* context, int x_abs, int y_abs)
 
 void Window::OnMouseDown(int x_abs, int y_abs, uint8_t button)
 {
-    Print("Window %s has mouseDown\n", this->titleString);
+    //Print("Window %s has mouseDown\n", this->titleString);
     if(y_abs < this->titleBarHeight)
         this->titleBarColor = 0xFF1A7868;
 
@@ -42,7 +42,7 @@ void Window::OnMouseDown(int x_abs, int y_abs, uint8_t button)
 }
 void Window::OnMouseUp(int x_abs, int y_abs, uint8_t button)
 {
-    Print("Window %s has mouseUp\n", this->titleString);
+    //Print("Window %s has mouseUp\n", this->titleString);
     if(y_abs < this->titleBarHeight)
         this->titleBarColor = 0xFF4CB272;
 
