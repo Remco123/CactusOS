@@ -30,6 +30,8 @@ namespace CactusOS
 
             Thread* GetNextReadyThread();
             void ProcessSleepingThreads();
+
+            bool switchForced = false; //Is the current switch forced by a forceSwitch() call?
         public:
             bool Enabled = true;
             Scheduler();
@@ -37,7 +39,6 @@ namespace CactusOS
             common::uint32_t HandleInterrupt(common::uint32_t esp);
 
             void AddThread(Thread* thread, bool forceSwitch = false);
-            void DeleteThread(Thread* thread);
             void ForceSwitch();
 
             Thread* CurrentThread();

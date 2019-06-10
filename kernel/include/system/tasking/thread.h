@@ -53,7 +53,7 @@ namespace CactusOS
         private:
             ThreadHelper();
         public:
-            static Thread* CreateFromFunction(void (*entryPoint)(), bool isKernel = false, common::uint32_t flags = 0x202);
+            static Thread* CreateFromFunction(void (*entryPoint)(), bool isKernel = false, common::uint32_t flags = 0x202, Process* parent = 0);
             static void RemoveThread(Thread* thread);
         };
     }

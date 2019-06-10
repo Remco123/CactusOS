@@ -11,7 +11,7 @@ using namespace CactusOS::system;
 ThreadHelper::ThreadHelper()
 {   }
 
-Thread* ThreadHelper::CreateFromFunction(void (*entryPoint)(), bool isKernel, uint32_t flags)
+Thread* ThreadHelper::CreateFromFunction(void (*entryPoint)(), bool isKernel, uint32_t flags, Process* parent)
 {
     //Create new thread instance
     Thread* result = new Thread();
@@ -21,7 +21,9 @@ Thread* ThreadHelper::CreateFromFunction(void (*entryPoint)(), bool isKernel, ui
     MemoryOperations::memset(result->stack, 0, THREAD_STACK_SIZE);
 
     //Assign user stack, needs to be mapped into address space by elf loader if we are loading a .bin
-    result->userStack = (uint8_t*)USER_STACK;
+    //When a process requests a new thread the stack for the new thread needs to be moved down, otherwise the stacks will be equal.
+    //The memory required is mapped by the elfloader or by the syscall handler.
+    result->userStack = (parent == 0 ? (uint8_t*)USER_STACK : (uint8_t*)(USER_STACK - USER_STACK_SIZE*parent->Threads.size()));
     result->userStackSize = USER_STACK_SIZE;
 
     //Create cpu registers for thread

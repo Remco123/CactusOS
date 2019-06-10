@@ -13,6 +13,10 @@ using namespace LIBCactusOS;
 
 void ButtonClickHandler(Button* sender, uint8_t button);
 void CalculateButtonHandler(Button* sender, uint8_t button);
+void NewClickHandler(Button* sender, uint8_t button)
+{
+    Process::Run("B:\\apps\\calc.bin");
+}
 
 Label* textLabel = 0;
 bool calculated = true;
@@ -21,7 +25,7 @@ int main()
     Print("Starting Calculator\n");
     GUI::Initialize();
 
-    Context* screen1 = GUI::RequestContext(140, 260, 20 + 50*Process::ID, 25 + 50*Process::ID);
+    Context* screen1 = GUI::RequestContext(140, 260, 160*Process::ID - 450, 40*Process::ID);
     if(screen1 == 0)
         return -1;
 
@@ -65,12 +69,19 @@ int main()
     window1->childs.push_back(minButton);
 
     Button* calcButton = new Button("Calculate");
-    calcButton->width = 130;
+    calcButton->width = 90;
     calcButton->height = 30;
     calcButton->x = 5;
     calcButton->y = 190;
     calcButton->mouseClickHandler = GUI_MouseCall(CalculateButtonHandler);
     window1->childs.push_back(calcButton);
+
+    Button* newButton = new Button("New");
+    newButton->width = newButton->height = 30;
+    newButton->x = 105;
+    newButton->y = 190;
+    newButton->mouseClickHandler = GUI_MouseCall(NewClickHandler);
+    window1->childs.push_back(newButton);
 
     while(1) {
         GUI::DrawGUI();

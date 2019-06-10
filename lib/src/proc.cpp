@@ -3,6 +3,7 @@
 using namespace LIBCactusOS;
 
 int Process::ID = -1;
+int Process::numThreads = 1;
 SharedSystemInfo* Process::systemInfo = 0;
 
 int Process::Run(const char* path)
@@ -20,6 +21,7 @@ bool Process::CreateSharedMemory(int proc2ID, uint32_t virtStart, uint32_t len)
 void Process::CreateThread(void (*entryPoint)(), bool switchTo)
 {
     DoSyscall(SYSCALL_START_THREAD, (uint32_t)entryPoint, switchTo);
+    Process::numThreads++;
 }
 void Process::Yield()
 {

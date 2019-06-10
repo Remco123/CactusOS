@@ -12,6 +12,8 @@
 
 using namespace LIBCactusOS;
 
+bool shouldExit;
+
 void Draw3DCube(int x, int y, uint32_t color)
 {
     const int w = 40;
@@ -30,29 +32,56 @@ void Draw3DCube(int x, int y, uint32_t color)
     DirectGUI::DrawLine(b, x + w, y + 100 + w, x + w + 100,y + 100 + w);
 }
 
+void TestThread()
+{
+    int i = 0;
+    while (1) {
+        Print("Test Loop\n");
+        Time::Sleep(100);
+        i++;
+        if(i == 12) {
+            shouldExit = true;
+        }
+    }
+}
+
+int threads = 0;
+
+void TestThread2()
+{
+    while(1) {
+        Print("Eat\n");
+        Time::Sleep(100);
+        if(threads++ < 5)
+            Process::CreateThread(TestThread2, false);
+    }
+}
+
 int main()
 {
+    shouldExit = false;
+    threads = 0;
     Print("Test application started! PID=%d\n", Process::ID);
-
-    IPCMessage message = ICPReceive();
-    Print("Message: source=%d dest=%d type=%d args=%d,%d,%d,%d,%d\n", message.source, message.dest, message.type, message.arg1, message.arg2, message.arg3, message.arg4, message.arg5);
 
     if(DirectGUI::RequestFramebuffer())
     {
         for(int x = 0; x < 5; x++)
             for(int y = 0; y < 4; y++) {
                 Draw3DCube(200 * x + 50, 160 * y + 50, 0xFF00CC44 * (x+1) * (y+1));
-                Time::Sleep(500);
             }
-    }    
+    }
 
-    while(true)
-    {
-        DirectGUI::Clear(0xFFFFFFFF);
-        Time::Sleep(1000);
-        DirectGUI::Clear(0xFF333333);
+    Print("Requesting new thread should_exit=%d\n", shouldExit);
+    Process::CreateThread(TestThread, false);
+    Process::CreateThread(TestThread2, true);
+
+    while(!shouldExit) {
+        Print("Yield\n");
         Time::Sleep(1000);
     }
+
+    Print("Exit\n");
+    DoSyscall(SYSCALL_EXIT);
 
     return 0;
 }

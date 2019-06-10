@@ -17,6 +17,7 @@ Scheduler::Scheduler()
     this->currentThread = 0;
     this->threadsList.Clear();
     this->Enabled = false;
+    this->switchForced = false;
 }
 
 void printRegs(CPUState* regs)
@@ -41,7 +42,10 @@ void printRegs(CPUState* regs)
 uint32_t Scheduler::HandleInterrupt(uint32_t esp)
 {
     tickCount++;
-    ProcessSleepingThreads();
+    if(this->switchForced == false)
+        ProcessSleepingThreads();
+    else
+        this->switchForced = false; //Reset it back
 
     if(tickCount == frequency)
     {
@@ -52,9 +56,21 @@ uint32_t Scheduler::HandleInterrupt(uint32_t esp)
 
         if(threadsList.size() > 0 && this->Enabled)
         {
+            //Get a new thread to switch to
             Thread* nextThread = GetNextReadyThread();
+
+            //Remove all the threads that are stopped from the system
+            while(nextThread->state == Stopped)
+            {
+                Log(Info, "Removing thread %x from system", (uint32_t)nextThread);
+                threadsList.Remove(nextThread);
+                delete nextThread;
+
+                //Ask for a new thread
+                nextThread = GetNextReadyThread();
+            }
 #if 0
-            Log(Info, "Switching from %s %x to %s %x", currentThread->parent->fileName, (uint32_t)currentThread, nextThread->parent->fileName, (uint32_t)nextThread);
+            Log(Info, "Switching from %s %d to %s %d", currentThread->parent->fileName, currentThread->parent->Threads.IndexOf(currentThread), nextThread->parent->fileName, nextThread->parent->Threads.IndexOf(nextThread));
             BootConsole::WriteLine("-- Current Registers --");
             printRegs((CPUState*)esp);
             BootConsole::Write("cr3: 0x"); Print::printfHex32(currentThread->parent->pageDirPhys); BootConsole::WriteLine();
@@ -62,8 +78,10 @@ uint32_t Scheduler::HandleInterrupt(uint32_t esp)
             printRegs(nextThread->regsPtr);
             BootConsole::Write("cr3: 0x"); Print::printfHex32(nextThread->parent->pageDirPhys); BootConsole::WriteLine();
 #endif         
+            //Check if the current thread is stopped
             if(currentThread != 0 && currentThread->state == Stopped)
             {
+                Log(Info, "Removing thread %x from system", (uint32_t)currentThread);
                 threadsList.Remove(currentThread);
                 delete currentThread;
             }
@@ -163,6 +181,7 @@ void Scheduler::InitialThreadUserJump(Thread* thread)
 
 void Scheduler::ForceSwitch()
 {
+    this->switchForced = true;
     this->Enabled = true;
     this->tickCount = frequency - 1;
     asm volatile ("int $0x20"); //Call timer interrupt

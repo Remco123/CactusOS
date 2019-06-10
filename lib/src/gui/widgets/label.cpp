@@ -2,7 +2,7 @@
 
 using namespace LIBCactusOS;
 
-Label::Label(char* text = 0)
+Label::Label(char* text)
 : Control(80, 20)
 {
     this->text = text;

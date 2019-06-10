@@ -106,11 +106,22 @@ CPUState* CactusOSSyscalls::HandleSyscall(CPUState* state)
         case SYSCALL_START_THREAD:
             {
                 Log(Info, "Creating new thread for proc %d %s, jumps to %x", proc->id, proc->fileName, state->EBX);
-                Thread* newThread = ThreadHelper::CreateFromFunction((void (*)())state->EBX);
+                //Create new thread
+                Thread* newThread = ThreadHelper::CreateFromFunction((void (*)())state->EBX, false, 514, proc);
+                
+                //Create memory for stack
+                for(uint32_t i = (uint32_t)newThread->userStack; i < ((uint32_t)newThread->userStack + newThread->userStackSize); i+=PAGE_SIZE)
+                    VirtualMemoryManager::AllocatePage(VirtualMemoryManager::GetPageForAddress(i, true, true, true), false, true);
+
+                //Assign parent
                 newThread->parent = proc;
+                //Set it as started
                 newThread->state = Started;
+                //Add it to the parent process
                 proc->Threads.push_back(newThread);
+                //Add it to the scheduler
                 System::scheduler->AddThread(newThread);
+                //Force a task switch if the application requested it
                 if((bool)state->ECX)
                     System::scheduler->ForceSwitch();
             }

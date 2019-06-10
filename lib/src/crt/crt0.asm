@@ -1,10 +1,12 @@
 BITS 32
 
+extern libMain
+
 global _start
 _start:
 	fninit
-	extern libMain
-	call   libMain 	; Defined in lib/src/main.cpp
+
+	call libMain 	; Defined in lib/src/main.cpp
 _wait: 					; enter infinite loop in the case we don't exit for some reason
 	hlt
 	jmp    _wait

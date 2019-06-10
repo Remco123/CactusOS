@@ -1,4 +1,5 @@
 #include <core/exceptions.h>
+#include <system/system.h>
 
 using namespace CactusOS;
 using namespace CactusOS::common;
@@ -69,7 +70,13 @@ uint32_t Exceptions::PageFault(uint32_t esp)
     while(1);
 }
 
+uint32_t Exceptions::TrapException(uint32_t esp)
+{
+    BootConsole::WriteLine("Got Trap Exception");
+    BootConsole::Write("Next Instruction at: 0x"); Print::printfHex32(((CPUState*)esp)->EIP); BootConsole::WriteLine();
 
+    return esp;
+}
 
 uint32_t Exceptions::HandleException(uint32_t number, uint32_t esp)
 {
@@ -81,6 +88,8 @@ uint32_t Exceptions::HandleException(uint32_t number, uint32_t esp)
             return GeneralProtectionFault(esp);
         case 0xE:
             return PageFault(esp);
+        case 0x1:
+            return TrapException(esp);
         default:
             {
                 BootConsole::ForegroundColor = VGA_COLOR_RED;

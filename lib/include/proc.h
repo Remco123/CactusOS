@@ -9,6 +9,11 @@ namespace LIBCactusOS
 {
     class Process
     {
+    private:
+        /**
+         * How many threads does this application have?
+        */
+        static int numThreads;
     public:
         /**
          * The PID of this process

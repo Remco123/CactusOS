@@ -34,3 +34,11 @@ $(LIBFILE):
 %.o: %.c
 	mkdir -p $(@D)
 	i686-elf-gcc $(GCCPARAMS) -c -o $@ $<
+
+%.o: %.asm
+	mkdir -p $(@D)
+	nasm -f elf32 -O0 $< -o $@
+
+%.o: %.s
+	mkdir -p $(@D)
+	i686-elf-as --32 -o $@ $<
