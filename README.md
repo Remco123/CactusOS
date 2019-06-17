@@ -34,6 +34,9 @@ A i686-elf cross compiler is also required, see [Osdev wiki](https://wiki.osdev.
 - ```make clean``` To remove all the compiled files
 - ```make qemu``` Build the CactusOS.iso file if necessary and then run the kernel using qemu
 
+## Bochs
+By default the os does not have graphics when running on bochs, to bypass this set the value BOCHS_GFX_HACK to 1 in kernel/include/system/system.h.
+
 # Screenshots
 <img src="images/Screenshot Bootscreen.png" alt="Bootscreen" width="700">
 <img src="images/Screenshot Debugging.png" alt="Debugging with vscode debugger" width="700">
