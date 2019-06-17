@@ -119,6 +119,7 @@ extern "C" void kernelMain(const multiboot_info_t* mbi, unsigned int multiboot_m
     //We also add the size of the bitmap so that it does not have to be staticly allocated, this makes the kernel way smaller. 
     //Also round it to page bounds.
     PhysicalMemoryManager::SetRegionUsed(0x0, pageRoundUp(0x100000 + kernel_size + PhysicalMemoryManager::GetBitmapSize()));
+    PhysicalMemoryManager::SetRegionUsed(*(uint32_t*)phys2virt(mbi->mods_addr), *(uint32_t*)phys2virt(mbi->mods_addr + 4) - *(uint32_t*)phys2virt(mbi->mods_addr));
 
     InterruptDescriptorTable::EnableInterrupts();
     BootConsole::WriteLine("Interrupts Enabled");

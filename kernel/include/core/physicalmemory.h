@@ -32,15 +32,15 @@ namespace CactusOS
             static common::uint32_t maximumBlocks;
             static common::uint32_t* memoryArray;
 
-            static inline void SetBit (int bit)
+            static inline void SetBit (common::uint32_t bit)
             {
                 memoryArray[bit / 32] |= (1 << (bit % 32));
             }
-            static inline void UnsetBit (int bit)
+            static inline void UnsetBit (common::uint32_t bit)
             {
                 memoryArray[bit / 32] &= ~ (1 << (bit % 32));
             }
-            static inline bool TestBit (int bit)
+            static inline bool TestBit (common::uint32_t bit)
             {
                 return memoryArray[bit / 32] &  (1 << (bit % 32));
             }

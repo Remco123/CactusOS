@@ -42,7 +42,7 @@ int PhysicalMemoryManager::FirstFreeSize(uint32_t size)
                 {
 
                     int startingBit = i * 32;
-                    startingBit += bit; //get the free bit in the dword at index i
+                    startingBit += j; //get the free bit in the dword at index i
 
                     uint32_t free = 0; //loop through each bit to see if its enough space
                     for (uint32_t count = 0; count <= size; count++)
@@ -77,6 +77,7 @@ void PhysicalMemoryManager::Initialize(uint32_t size, uint32_t bitmap)
     BootConsole::Write("Bitmap size: ");
     BootConsole::Write(Convert::IntToString(GetBitmapSize() / 1024));
     BootConsole::WriteLine(" Kb");
+    BootConsole::Write("Bitmap End: 0x"); Print::printfHex32(bitmap + GetBitmapSize()); BootConsole::WriteLine();
 }
 void PhysicalMemoryManager::SetRegionFree(uint32_t base, uint32_t size)
 {

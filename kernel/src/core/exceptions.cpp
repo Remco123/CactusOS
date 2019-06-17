@@ -65,6 +65,8 @@ uint32_t Exceptions::PageFault(uint32_t esp)
 
     BootConsole::Write(") at 0x");
     Print::printfHex32(errorAddress);
+    BootConsole::Write(" EIP: 0x");
+    Print::printfHex32(regs->EIP);
     BootConsole::WriteLine();
 
     while(1);

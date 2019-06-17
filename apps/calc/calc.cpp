@@ -83,9 +83,10 @@ int main()
     newButton->mouseClickHandler = GUI_MouseCall(NewClickHandler);
     window1->childs.push_back(newButton);
 
+    GUI::MakeAsync();
+
     while(1) {
-        GUI::DrawGUI();
-        GUI::ProcessEvents();
+        Process::Yield();
     }
 
     return 0;

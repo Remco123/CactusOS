@@ -101,3 +101,18 @@ Context* GUI::RequestContext(int width, int height, int x, int y)
     
     return 0;
 }
+
+void AsyncGUILoop()
+{
+    while (true)
+    {
+        GUI::DrawGUI();
+        GUI::ProcessEvents();
+    }
+}
+
+void GUI::MakeAsync()
+{
+    Print("Creating GUI thread\n");
+    Process::CreateThread(AsyncGUILoop, false);
+}

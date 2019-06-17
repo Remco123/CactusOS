@@ -51,6 +51,11 @@ namespace LIBCactusOS
         static void DrawGUI();
 
         /**
+         * Create a thread for the gui
+        */
+        static void MakeAsync();
+
+        /**
          * Request a context buffer for the application to draw to, this buffer is shared between the process and the compositor
          * This buffer can be used for a gui but also for raw drawing to the screen
          * 
