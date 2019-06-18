@@ -139,9 +139,9 @@ void UpdateDesktop()
     
     for(ContextInfo info : *contextList)
     {
-        uint32_t byteWidth = info.width*4;
+        uint32_t byteWidth = (info.width + info.x <= WIDTH ? info.width : info.width-(info.x + info.width - WIDTH))*4;
         for(uint32_t y = 0; y < info.height; y++)
-            memcpy((void*)(backBuffer + ((info.y + y)*WIDTH*4) + info.x*4), (void*)(info.virtAddrServer + y*byteWidth), byteWidth);
+            memcpy((void*)(backBuffer + ((info.y + y)*WIDTH*4) + info.x*4), (void*)(info.virtAddrServer + y*info.width*4), byteWidth);
     }
     DrawCursor();
 

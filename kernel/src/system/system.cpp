@@ -78,8 +78,13 @@ void System::Start()
     BootConsole::WriteLine("Assigning PCI Drivers");
     PCIDrivers::AssignDriversFromPCI(System::pci, System::driverManager);
 
+    BootConsole::WriteLine("Creating shared region for system info");
+    System::systemInfo = (SharedSystemInfo*)KernelHeap::allignedMalloc(PAGE_SIZE, PAGE_SIZE);
+    MemoryOperations::memset(System::systemInfo, 0, PAGE_SIZE);
+
     BootConsole::WriteLine("Added drivers for integrated devices");
     System::driverManager->AddDriver(new MouseDriver());
+    System::driverManager->AddDriver(new KeyboardDriver());
 
     BootConsole::WriteLine("Activating Drivers");
     System::driverManager->ActivateAll();
@@ -101,10 +106,6 @@ void System::Start()
 
     BootConsole::WriteLine("Starting Systemcalls");
     System::syscalls = new SystemCallHandler();
-
-    BootConsole::WriteLine("Creating shared region for system info");
-    System::systemInfo = (SharedSystemInfo*)KernelHeap::allignedMalloc(PAGE_SIZE, PAGE_SIZE);
-    MemoryOperations::memset(System::systemInfo, 0, PAGE_SIZE);
 
     Log(Info, "System Initialized");
 }

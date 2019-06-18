@@ -18,6 +18,7 @@
 #include <system/drivers/drivermanager.h>
 #include <system/drivers/pcidrivers.h>
 #include <system/drivers/integrated/mouse.h>
+#include <system/drivers/integrated/keyboard.h>
 #include <system/disks/diskmanager.h>
 #include <system/disks/partitionmanager.h>
 #include <system/vfs/vfsmanager.h>
