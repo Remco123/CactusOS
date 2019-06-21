@@ -16,12 +16,13 @@ CactusOS is a simple operating system that is aimed to not be anything like linu
 - Multitasking [Basic]
 - Usermode [Basic]
 - Boot Screen [Done]
+- Graphics Desktop [Basic]
+- Applications
+  - Calculator [Basic]
 
 # Planned Features
 - More complete custom build api for apps
-- Window Manager
 - Some basic applications
-  - Calculator
   - File Manager
   - Clock
   
