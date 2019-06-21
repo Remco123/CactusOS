@@ -15,24 +15,90 @@
 
 using namespace LIBCactusOS;
 
+//////////////
+// Functions
+//////////////
 void HandleMessage(IPCMessage msg);
 void UpdateDesktop();
+void RemovePreviousCursor();
 void DrawCursor();
 void ProcessEvents();
 extern uint8_t* LoadBackground(char*); //In background.cpp
 
-List<ContextInfo>* contextList;
-uint32_t newContextAddress = 0xA0000000;
-uint8_t* backBuffer = 0;
-Canvas* backBufferCanvas;
+//////////
+// Holds current mouse positions
+/////////
+int32_t curMouseX = -1;
+int32_t curMouseY = -1;
 
+/**
+ * All the known contexts
+*/
+List<ContextInfo>* contextList;
+/**
+ * To wich address are context mapped in virtual memory?
+*/
+uint32_t newContextAddress = 0xA0000000;
+/**
+ * The double buffer
+*/
+uint8_t* backBuffer = 0;
+/**
+ * A canvas that can be used to manipulate the backbuffer
+*/
+Canvas* backBufferCanvas;
+/**
+ * A buffer that stores the current wallpaper
+*/
 uint8_t* wallPaperBuffer = 0;
+/**
+ * A canvas that can be used to manipulate the wallpaper buffer
+*/
+Canvas* wallPaperCanvas = 0;
+/**
+ * The previous x position of the mouse
+*/
+int prevMouseX = -1;
+/**
+ * The previous y position of the mouse
+*/
+int prevMouseY = -1;
+/**
+ * Holds if the left mouse button was previously pressed
+*/
+bool prevMouseLeft = false;
+/**
+ * Holds if the right mouse button was previously pressed
+*/
+bool prevMouseRight = false;
+/**
+ * Holds if the middle mouse button was previously pressed
+*/
+bool prevMouseMiddle = false;
 
 void GUILoop()
 {
     Print("GUI loop started\n");
+
+    //Copy background to backbuffer
+    if(wallPaperBuffer != 0)
+        memcpy((void*)backBuffer, (void*)wallPaperBuffer, WIDTH*HEIGHT*4);
+    
     while(true) {
+        ////////
+        // Update mouse positions
+        ////////
+        curMouseX = Process::systemInfo->MouseX;
+        curMouseY = Process::systemInfo->MouseY;
+
+        ////////
+        // Process GUI Events
+        ////////
         ProcessEvents();
+
+        ////////
+        // Draw a new version of the desktop
+        ////////
         UpdateDesktop();
     }
 }
@@ -53,6 +119,7 @@ int main()
     DirectGUI::DrawString("Loading Background...", 3, 3, 0xFF000000);
     Print("Loading Background\n");
     wallPaperBuffer = LoadBackground("B:\\wallpap.bmp");
+    wallPaperCanvas = new Canvas(wallPaperBuffer, WIDTH, HEIGHT);
 
     Print("Requesting Systeminfo\n");
     if(!RequestSystemInfo())
@@ -134,11 +201,16 @@ void HandleMessage(IPCMessage msg)
 
 void UpdateDesktop()
 {    
-    if(wallPaperBuffer != 0)
-        memcpy((void*)backBuffer, (void*)wallPaperBuffer, WIDTH*HEIGHT*4);
-    
+    if(prevMouseX != -1 && prevMouseY != -1 && (prevMouseX != curMouseX || prevMouseY != curMouseY)) //Check if we have valid values for prevMouseX/Y and check if the mouse has moved
+        RemovePreviousCursor();
+
     for(ContextInfo info : *contextList)
     {
+        if(info.x >= WIDTH || info.y >= HEIGHT) {
+            Log(Warning, "Context is out of desktop bounds");
+            continue;
+        }
+        
         uint32_t byteWidth = (info.width + info.x <= WIDTH ? info.width : info.width-(info.x + info.width - WIDTH))*4;
         for(uint32_t y = 0; y < info.height; y++)
             memcpy((void*)(backBuffer + ((info.y + y)*WIDTH*4) + info.x*4), (void*)(info.virtAddrServer + y*info.width*4), byteWidth);
@@ -149,28 +221,42 @@ void UpdateDesktop()
     memcpy((void*)DIRECT_GUI_ADDR, (void*)backBuffer, WIDTH*HEIGHT*4);
 }
 
+void RemovePreviousCursor()
+{
+    //How much of the previous cursor should be removed?
+    //These values will be smaller than the cursor width when the mouse is partialy in the corner
+    uint8_t x_d = prevMouseX + CURSOR_W < WIDTH ? CURSOR_W : WIDTH - prevMouseX;
+    uint8_t y_d = prevMouseY + CURSOR_H < HEIGHT ? CURSOR_H : HEIGHT - prevMouseY;
+
+    for(uint8_t x = 0; x < x_d; x++)
+        for(uint8_t y = 0; y < y_d; y++)
+            backBufferCanvas->SetPixel(prevMouseX + x, prevMouseY + y, wallPaperCanvas->GetPixel(prevMouseX + x, prevMouseY + y));
+}
+
 void DrawCursor()
 {
-    uint8_t x_d = Process::systemInfo->MouseX + 12 < WIDTH ? 12 : WIDTH - Process::systemInfo->MouseX;
-    uint8_t y_d = Process::systemInfo->MouseY + 19 < HEIGHT ? 19 : HEIGHT - Process::systemInfo->MouseY;
+    //////////////
+    // Draw new Cursor at position
+    //////////////
+    uint8_t x_d = curMouseX + CURSOR_W < WIDTH ? CURSOR_W : WIDTH - curMouseX;
+    uint8_t y_d = curMouseY + CURSOR_H < HEIGHT ? CURSOR_H : HEIGHT - curMouseY;
 
     for(uint8_t x = 0; x < x_d; x++)
         for(uint8_t y = 0; y < y_d; y++) {
-            uint8_t cd = cursorBitmap[y*12+x];
+            uint8_t cd = cursorBitmap[y*CURSOR_W+x];
             if(cd != ALPHA)
-                backBufferCanvas->SetPixel(Process::systemInfo->MouseX + x, Process::systemInfo->MouseY + y, cd==WHITE ? 0xFFFFFFFF : 0xFF000000);
+                backBufferCanvas->SetPixel(curMouseX + x, curMouseY + y, cd==WHITE ? 0xFFFFFFFF : 0xFF000000);
         }
+
+    ///////////////
+    // Update old mouse positions
+    ///////////////
+    prevMouseX = curMouseX;
+    prevMouseY = curMouseY;
 }
 
 void ProcessEvents()
 {
-    static bool prevMouseLeft = false;
-    static bool prevMouseRight = false;
-    static bool prevMouseMiddle = false;
-
-    uint32_t mouseX = Process::systemInfo->MouseX;
-    uint32_t mouseY = Process::systemInfo->MouseY;
-
     bool mouseLeft = Process::systemInfo->MouseLeftButton;
     bool mouseRight = Process::systemInfo->MouseRightButton;
     bool mouseMiddle = Process::systemInfo->MouseMiddleButton;
@@ -179,8 +265,8 @@ void ProcessEvents()
     {
         for(ContextInfo info : *contextList)
         {
-            if(mouseX >= info.x && mouseX <= info.x + info.width)
-                if(mouseY >= info.y && mouseY <= info.y + info.height)
+            if(curMouseX >= info.x && curMouseX <= info.x + info.width)
+                if(curMouseY >= info.y && curMouseY <= info.y + info.height)
                 {
                     //Log(Info, "Mouse click inside context, sending message.");
                     uint8_t changedButton;
@@ -193,7 +279,7 @@ void ProcessEvents()
 
                     //Check if the mouse has been held down or up
                     bool mouseDown = changedButton == 0 ? mouseLeft : (changedButton == 1 ? mouseMiddle : (changedButton == 2 ? mouseRight : 0));
-                    IPCSend(info.clientID, IPC_TYPE_GUI_EVENT, mouseDown ? EVENT_TYPE_MOUSEDOWN : EVENT_TYPE_MOUSEUP, mouseX, mouseY, changedButton);
+                    IPCSend(info.clientID, IPC_TYPE_GUI_EVENT, mouseDown ? EVENT_TYPE_MOUSEDOWN : EVENT_TYPE_MOUSEUP, curMouseX, curMouseY, changedButton);
                     break;
                 }
         }

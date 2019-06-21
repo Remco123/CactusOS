@@ -203,10 +203,10 @@ void MouseDriver::ProcessPacket()
     System::systemInfo->MouseZ = (this->MouseID == 3 ? packet->ZMovement : 0);
 
     int newX = (System::systemInfo->MouseX + realX);
-    if(newX >= 0 && newX <= System::gfxDevice->width)
+    if(newX >= 0 && newX < System::gfxDevice->width)
         System::systemInfo->MouseX = newX;
     
     int newY = (System::systemInfo->MouseY - realY);
-    if(newY >= 0 && newY <= System::gfxDevice->height)
+    if(newY >= 0 && newY < System::gfxDevice->height)
         System::systemInfo->MouseY = newY;
 }
