@@ -92,7 +92,12 @@ int main()
     Time::Sleep(100);
 
     int s2 = Process::Run("B:\\apps\\calc.bin");
-    Print("Launched GUI Test app with status %d\n", s2);
+    Print("Launched Calculator with status %d\n", s2);
+
+    Time::Sleep(100);
+
+    int s3 = Process::Run("B:\\apps\\clock.bin");
+    Print("Launched Clock with status %d\n", s3);
 
     bar->SetValue(100); 
 

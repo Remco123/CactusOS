@@ -6,7 +6,7 @@ G++PARAMS := -m32 -g -I $(LIBINCLUDE) -O3 -msse2 -fno-use-cxa-atexit -nostdlib -
 GCCPARAMS := -m32 -g -I $(LIBINCLUDE) -O3 -msse2 -nostdlib -fno-builtin -Wall -fleading-underscore
 LDPARAMS := -m elf_i386
 
-APPS := init test compositor guitest calc
+APPS := init test compositor clock calc
 APPOUT := ../isofiles/apps
 
 SRCFILES := $(shell find $(APPS) -type f \( -name \*.cpp -o -name \*.s -o -name \*.asm -o -name \*.c \)) #Find all the files that end with .cpp/.s/.asm/.c

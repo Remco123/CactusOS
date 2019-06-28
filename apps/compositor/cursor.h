@@ -1,5 +1,5 @@
-#ifndef CURSOR_H
-#define CURSOR_H
+#ifndef _CURSOR_H
+#define _CURSOR_H
 
 #include <types.h>
 

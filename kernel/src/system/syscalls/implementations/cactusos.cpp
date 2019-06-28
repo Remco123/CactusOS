@@ -1,6 +1,7 @@
 #include <system/syscalls/implementations/cactusos.h>
 
 #include <../../lib/include/syscall.h>
+#include <../../lib/include/datetime.h>
 
 #include <system/system.h>
 #include <system/tasking/ipcmanager.h>
@@ -142,6 +143,25 @@ CPUState* CactusOSSyscalls::HandleSyscall(CPUState* state)
         case SYSCALL_YIELD:
             {
                 System::scheduler->ForceSwitch();
+                state->EAX = SYSCALL_RET_SUCCES;
+            }
+            break;
+        case SYSCALL_GET_TICKS:
+            {
+                uint64_t* resultPtr = (uint64_t*)state->EBX;
+                *resultPtr = System::pit->Ticks();
+                state->EAX = SYSCALL_RET_SUCCES;
+            }
+            break;
+        case SYSCALL_GET_DATETIME:
+            {
+                LIBCactusOS::DateTime* resultPtr = (LIBCactusOS::DateTime*)state->EBX;
+                resultPtr->Day = System::rtc->GetDay();
+                resultPtr->Hours = System::rtc->GetHour();
+                resultPtr->Minutes = System::rtc->GetMinute();
+                resultPtr->Month = System::rtc->GetMonth();
+                resultPtr->Seconds = System::rtc->GetSecond();
+                resultPtr->Year = System::rtc->GetYear();
                 state->EAX = SYSCALL_RET_SUCCES;
             }
             break;
