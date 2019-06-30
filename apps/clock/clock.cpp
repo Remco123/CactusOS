@@ -16,7 +16,7 @@ int main()
     Context* mainScreen = GUI::RequestContext(160, 160, WIDTH-160, 0);
     if(mainScreen == 0)
         return -1;
-    
+
     while(1) {
         DateTime currentTime = DateTime::Current();
 

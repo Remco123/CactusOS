@@ -4,8 +4,6 @@ extern libMain
 
 global _start
 _start:
-	fninit
-
 	call libMain 	; Defined in lib/src/main.cpp
 _wait: 					; enter infinite loop in the case we don't exit for some reason
 	hlt

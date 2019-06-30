@@ -3,6 +3,7 @@
 #include <heap.h>
 #include <gui/gui.h>
 #include <log.h>
+#include <math.h>
 
 using namespace LIBCactusOS;
 
@@ -31,6 +32,8 @@ extern "C" void callDestructors()
 extern "C" void libMain()
 {
     API::Initialize();
+
+    Math::EnableFPU();
 
     UserHeap::Initialize();
 

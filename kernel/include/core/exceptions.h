@@ -26,6 +26,7 @@ namespace CactusOS
             static common::uint32_t GeneralProtectionFault(common::uint32_t esp);
             static common::uint32_t PageFault(common::uint32_t esp);
             static common::uint32_t TrapException(common::uint32_t esp);
+            static common::uint32_t FloatingPointException(common::uint32_t esp);
         public:
             static common::uint32_t HandleException(common::uint32_t number, common::uint32_t esp);
         };

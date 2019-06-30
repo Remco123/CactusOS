@@ -77,6 +77,47 @@ void LIBCactusOS::Print(const char* __restrict__ format, ...)
             char* str = Convert::IntToHexString(n);
             printLen("0x", 2); printLen(str, sizeof(uint32_t)<<1);
             delete str;
+        } else if(*format == 'f') {
+            format++;
+            double n = va_arg(parameters, double);
+            if(n < 0.0)
+            {
+                printLen("-", 1);
+                n = -n;
+            }
+            if(n != n) {//Not a number
+                printLen("NaN", 3);
+                return;   
+            }
+
+            //Print integer part
+            Print("%d", (int)n);
+        
+            // remove the integer part
+            n -= (double)((int)n);
+
+            if(n != 0.0)
+                // now on to the decimal potion
+                printLen(".", 1);
+
+            /* on every iteration, make sure there are still decimal places left that are non-zero,
+            and make sure we're still within the user-defined precision range. */
+            int cur_prec = 1;
+            while(n > (double)((int)n) && cur_prec++ < 8)
+            {
+                // move the next decimal into the integer portion and print it
+                n *= 10;
+                Print("%d", (int)n);
+            
+                /* if the nue is == the floored nue (integer portion),
+                then there are no more decimal places that are non-zero. */
+                if(n == (double)((int)n))
+                    return;
+            
+                // subtract the integer portion
+                n -= (double)((int)n);
+            }
+
         } else {
 			format = format_begun_at;
 			uint32_t len = strlen(format);

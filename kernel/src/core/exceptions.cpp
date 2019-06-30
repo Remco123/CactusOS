@@ -80,6 +80,18 @@ uint32_t Exceptions::TrapException(uint32_t esp)
     return esp;
 }
 
+uint32_t Exceptions::FloatingPointException(uint32_t esp)
+{
+    BootConsole::WriteLine("Got SIMD Floating-Point Exception");
+    uint32_t mxcsr;
+    asm volatile ("stmxcsr %0":"=m" (mxcsr));
+    BootConsole::Write("mxcsr: 0b"); Print::printbits(mxcsr); BootConsole::WriteLine();
+    BootConsole::Write("Instruction Pointer: 0x"); Print::printfHex32(((CPUState*)esp)->EIP); BootConsole::WriteLine();
+
+    InterruptDescriptorTable::DisableInterrupts();
+    while(1);
+}
+
 uint32_t Exceptions::HandleException(uint32_t number, uint32_t esp)
 {
     switch(number)
@@ -92,11 +104,14 @@ uint32_t Exceptions::HandleException(uint32_t number, uint32_t esp)
             return PageFault(esp);
         case 0x1:
             return TrapException(esp);
+        case 0x13:
+            return FloatingPointException(esp);
         default:
             {
                 BootConsole::ForegroundColor = VGA_COLOR_RED;
                 BootConsole::Write("Unhandled exception: "); BootConsole::WriteLine(Convert::IntToString(number));
                 BootConsole::WriteLine("Halting System");
+                BootConsole::Write("Instruction Pointer: 0x"); Print::printfHex32(((CPUState*)esp)->EIP); BootConsole::WriteLine();
 
                 asm ("cli");
                 while(1);
