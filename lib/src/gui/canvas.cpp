@@ -92,13 +92,21 @@ void Canvas::DrawLine(uint32_t color, int x1, int y1, int x2, int y2)
 
     if (dy == 0) /* The line is horizontal */
     {
-        DrawHorizontalLine(color, dx, x1, y1);
+        if(dx < 0)
+            DrawHorizontalLine(color, Math::Abs(dx), x2, y1);
+        else
+            DrawHorizontalLine(color, dx, x1, y1);
+
         return;
     }
 
     if (dx == 0) /* the line is vertical */
     {
-        DrawVerticalLine(color, dy, x1, y1);
+        if(dy < 0)
+            DrawVerticalLine(color, Math::Abs(dy), x1, y2);
+        else
+            DrawVerticalLine(color, dy, x1, y1);
+        
         return;
     }
 

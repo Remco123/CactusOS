@@ -40,10 +40,20 @@ int main()
         mainScreen->canvas->DrawLine(0xFF00FF00, 160/2, 160/2 - 15, x, y);
 
         // Hours
-        angleInDegrees = 360.0 * ((double)currentTime.Hours/24.0);
+        angleInDegrees = 360.0 * ((double)(currentTime.Hours%12)/12.0) - 90.0;
         x = (double)(30 * Math::cos(angleInDegrees * MATH_PI / 180.0)) + 160/2;
         y = (double)(30 * Math::sin(angleInDegrees * MATH_PI / 180.0)) + 160/2 - 15;
         mainScreen->canvas->DrawLine(0xFFFF0000, 160/2, 160/2 - 15, x, y);
+
+        // Numbers
+        for(int i = 1; i <= 12; i++)
+        {
+            angleInDegrees = 360.0 * ((double)i/12.0) - 90.0;
+            x = (double)(50 * Math::cos(angleInDegrees * MATH_PI / 180.0)) + 160/2;
+            y = (double)(50 * Math::sin(angleInDegrees * MATH_PI / 180.0)) + 160/2 - 15;
+
+            mainScreen->canvas->DrawString(Convert::IntToString(i), i < 10 ? x - 3 : x - 7, y - 5, 0xFF0000FF);
+        }
 
         Time::Sleep(500);
     }
