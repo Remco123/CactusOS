@@ -53,6 +53,22 @@ void GUI::ProcessEvents()
         Print("Sending Mouseup to context %x\n", (uint32_t)targetControl);
         targetControl->OnMouseUp(guiEvent.arg2 - targetControl->x, guiEvent.arg3 - targetControl->y, guiEvent.arg4);
     }
+    else if(guiEventType == EVENT_TYPE_MOUSEMOVE)
+    {
+        int prevX = guiEvent.arg2;
+        int prevY = guiEvent.arg3;
+        int curX = guiEvent.arg4;
+        int curY = guiEvent.arg5;
+
+        Context* prevTargetControl = FindTargetContext(prevX, prevY);
+        Context* newTargetControl = FindTargetContext(prevX, prevY);
+        
+        if(prevTargetControl != 0)
+            prevTargetControl->OnMouseMove(prevX - prevTargetControl->x, prevY - prevTargetControl->y, curX - prevTargetControl->x, curY - prevTargetControl->y);
+    
+        if(newTargetControl != 0 && newTargetControl != prevTargetControl)
+            newTargetControl->OnMouseMove(prevX - newTargetControl->x, prevY - newTargetControl->y, curX - newTargetControl->x, curY - newTargetControl->y);
+    }
 }
 
 void GUI::DrawGUI()

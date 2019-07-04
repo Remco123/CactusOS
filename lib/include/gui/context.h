@@ -14,10 +14,9 @@ namespace LIBCactusOS
     { 
     public:
         /**
-         * Which controls are inside this context?
-         * Most of the time this contains one entry
+         * Which control is contained in this context.
         */
-        List<Control*> Windows;
+        Control* Window;
 
         /**
          * With this canvas you can directly draw to this context
@@ -51,6 +50,10 @@ namespace LIBCactusOS
          * Called when mouse is up on context
         */
         void OnMouseUp(int x_abs, int y_abs, uint8_t button);
+        /**
+         * Called when mouse moves above context or enters/leaves context
+        */
+        void OnMouseMove(int prevX_abs, int prevY_abs, int newX_abs, int newY_abs);
     };
 }
 

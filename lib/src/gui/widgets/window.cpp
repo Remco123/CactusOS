@@ -4,10 +4,23 @@
 
 using namespace LIBCactusOS;
 
-Window::Window(Context* parent, int w, int h, int x, int y)
-: Control(w, h, x, y)
+Window::Window(Context* base)
+: Control(base->width, base->height, base->x, base->y)
 {
-    parent->Windows.push_back(this);
+    base->Window = this;
+}
+
+Window::Window(int width, int height, int x, int y)
+: Control(width, height, x, y)
+{
+    Context* screen = GUI::RequestContext(width, height, x, y);
+    if(screen == 0) {
+        Log(Error, "Could not create a context for this window");
+        return;
+    }
+
+    this->contextBase = screen;
+    screen->Window = this;
 }
 
 void Window::DrawTo(Canvas* context, int x_abs, int y_abs)

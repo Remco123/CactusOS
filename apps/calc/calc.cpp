@@ -25,18 +25,16 @@ int main()
     Print("Starting Calculator\n");
     GUI::Initialize();
 
-    Context* screen1 = GUI::RequestContext(140, 260, 160*Process::ID - 450, 40*Process::ID);
-    if(screen1 == 0)
-        return -1;
-
-    Window* window1 = new Window(screen1, 140, 260);
+    Window* window1 = new Window(140, 260, 160*Process::ID - 450, 40*Process::ID);
     window1->titleString = "Calculator";
 
     Control* labelBox = new Control(130, 30, 5, 5);
     labelBox->backColor = 0xFFDDDDDD;
     window1->childs.push_back(labelBox);
 
-    textLabel = new Label("0");
+    char* label = new char[2];
+    label[0] = '0'; label[1] = '\0';
+    textLabel = new Label(label);
     labelBox->childs.push_back(textLabel);
 
     int i = 0;
@@ -95,6 +93,7 @@ int main()
 void ButtonClickHandler(Button* sender, uint8_t button)
 {
     if(calculated) { //Reset text
+        delete textLabel->text; //Free previous text buffer
         textLabel->text = "";
         calculated = false;
     }
@@ -133,6 +132,13 @@ void CalculateButtonHandler(Button* sender, uint8_t button)
     Print("Int1 %d %s Int2 %d\n", int1, plus ? "+" : "-", int2);
     
     int result = plus ? (int1 + int2) : (int1 - int2);
-    textLabel->text = Convert::IntToString(result);
+    
+    char* resultStr = Convert::IntToString(result);
+    int resultLen = strlen(resultStr);
+    char* realStr = new char[resultLen];
+    memcpy(realStr, resultStr, resultLen);
+    realStr[resultLen] = '\0';
+
+    textLabel->text = realStr;
     calculated = true;
 }

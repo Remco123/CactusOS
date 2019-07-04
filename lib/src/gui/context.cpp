@@ -4,9 +4,9 @@
 using namespace LIBCactusOS;
 
 Context::Context(uint32_t framebufferAddr, int width, int height, int x, int y)
-: Rectangle(width, height, x, y), Windows()
+: Rectangle(width, height, x, y)
 {
-    this->Windows.Clear();
+    this->Window = 0;
     this->canvas = new Canvas((void*)framebufferAddr, width, height);
 }
 
@@ -18,25 +18,26 @@ Context::~Context()
 
 void Context::DrawGUI()
 {
-    for(Control* c : Windows)
-        c->DrawTo(this->canvas, c->x, c->y);
+    if(this->Window)
+        this->Window->DrawTo(this->canvas, 0, 0);
 }
 
 void Context::OnMouseDown(int x_abs, int y_abs, uint8_t button)
 {
-    for(Control* c : Windows)
-    {
-        if(x_abs >= c->x && x_abs <= c->x + c->width)
-            if(y_abs >= c->y && y_abs <= c->y + c->height)
-                c->OnMouseDown(x_abs - c->x, y_abs - c->y, button);
-    }
+    Print("Context::OnMouseDown(%d, %d)\n", x_abs, y_abs);
+    if(this->Window == 0)
+        return;
+
+    Window->OnMouseDown(x_abs, y_abs, button);
 }
 void Context::OnMouseUp(int x_abs, int y_abs, uint8_t button)
 {
-    for(Control* c : Windows)
-    {
-        if(x_abs >= c->x && x_abs <= c->x + c->width)
-            if(y_abs >= c->y && y_abs <= c->y + c->height)
-                c->OnMouseUp(x_abs - c->x, y_abs - c->y, button);       
-    }
+    if(this->Window == 0)
+        return;
+    
+    Window->OnMouseUp(x_abs, y_abs, button);
+}
+void Context::OnMouseMove(int prevX_abs, int prevY_abs, int newX_abs, int newY_abs)
+{
+    Print("Context::OnMouseMove(%d,%d)\n", newX_abs, newY_abs);
 }

@@ -34,7 +34,7 @@ int32_t curMouseY = -1;
 /**
  * All the known contexts
 */
-List<ContextInfo>* contextList;
+List<ContextInfo*>* contextList;
 /**
  * To wich address are context mapped in virtual memory?
 */
@@ -103,6 +103,22 @@ void GUILoop()
     }
 }
 
+ContextInfo* FindTargetContext(int x, int y)
+{
+    if(contextList == 0)
+        return 0;
+    
+    for(int i = 0; i < contextList->size(); i++)
+    {
+        ContextInfo* c = contextList->GetAt(i);
+
+        if(x >= c->x && x <= c->x + c->width)
+            if(y >= c->y && y <= c->y + c->height)
+                return c;
+    }
+    return 0;
+}
+
 int main()
 {
     Print("Starting Compositor\n");
@@ -125,7 +141,7 @@ int main()
     if(!RequestSystemInfo())
         return -1;
 
-    contextList = new List<ContextInfo>();
+    contextList = new List<ContextInfo*>();
     Print("Listening for requests\n");
     
     bool receivedMessage = false;
@@ -173,15 +189,15 @@ void HandleMessage(IPCMessage msg)
                 break;
             }
 
-            ContextInfo info;
-            info.bytes = bytes;
-            info.virtAddrClient = virtAddrC;
-            info.virtAddrServer = newContextAddress;
-            info.width = width;
-            info.height = height;
-            info.x = x;
-            info.y = y;
-            info.clientID = msg.source;
+            ContextInfo* info = new ContextInfo();
+            info->bytes = bytes;
+            info->virtAddrClient = virtAddrC;
+            info->virtAddrServer = newContextAddress;
+            info->width = width;
+            info->height = height;
+            info->x = x;
+            info->y = y;
+            info->clientID = msg.source;
 
             newContextAddress += pageRoundUp(bytes);
             contextList->push_back(info);
@@ -204,16 +220,16 @@ void UpdateDesktop()
     if(prevMouseX != -1 && prevMouseY != -1 && (prevMouseX != curMouseX || prevMouseY != curMouseY)) //Check if we have valid values for prevMouseX/Y and check if the mouse has moved
         RemovePreviousCursor();
 
-    for(ContextInfo info : *contextList)
+    for(ContextInfo* info : *contextList)
     {
-        if(info.x >= WIDTH || info.y >= HEIGHT) {
+        if(info->x >= WIDTH || info->y >= HEIGHT) {
             Log(Warning, "Context is out of desktop bounds");
             continue;
         }
         
-        uint32_t byteWidth = (info.width + info.x <= WIDTH ? info.width : info.width-(info.x + info.width - WIDTH))*4;
-        for(uint32_t y = 0; y < info.height; y++)
-            memcpy((void*)(backBuffer + ((info.y + y)*WIDTH*4) + info.x*4), (void*)(info.virtAddrServer + y*info.width*4), byteWidth);
+        uint32_t byteWidth = (info->width + info->x <= WIDTH ? info->width : info->width-(info->x + info->width - WIDTH))*4;
+        for(uint32_t y = 0; y < info->height; y++)
+            memcpy((void*)(backBuffer + ((info->y + y)*WIDTH*4) + info->x*4), (void*)(info->virtAddrServer + y*info->width*4), byteWidth);
     }
     DrawCursor();
 
@@ -261,28 +277,43 @@ void ProcessEvents()
     bool mouseRight = Process::systemInfo->MouseRightButton;
     bool mouseMiddle = Process::systemInfo->MouseMiddleButton;
 
+    ////////////
+    // MouseButton state changed
+    ////////////
     if(mouseLeft!=prevMouseLeft || mouseRight!=prevMouseRight || mouseMiddle!=prevMouseMiddle)
     {
-        for(ContextInfo info : *contextList)
-        {
-            if(curMouseX >= info.x && curMouseX <= info.x + info.width)
-                if(curMouseY >= info.y && curMouseY <= info.y + info.height)
-                {
-                    //Log(Info, "Mouse click inside context, sending message.");
-                    uint8_t changedButton;
-                    if(mouseLeft!=prevMouseLeft)
-                        changedButton = 0;
-                    else if(mouseMiddle!=prevMouseMiddle)
-                        changedButton = 1;
-                    else
-                        changedButton = 2;
+        ContextInfo* info = FindTargetContext(curMouseX, curMouseY);
+        if(info != 0) {
+            uint8_t changedButton;
+            if(mouseLeft!=prevMouseLeft)
+                changedButton = 0;
+            else if(mouseMiddle!=prevMouseMiddle)
+                changedButton = 1;
+            else
+                changedButton = 2;
 
-                    //Check if the mouse has been held down or up
-                    bool mouseDown = changedButton == 0 ? mouseLeft : (changedButton == 1 ? mouseMiddle : (changedButton == 2 ? mouseRight : 0));
-                    IPCSend(info.clientID, IPC_TYPE_GUI_EVENT, mouseDown ? EVENT_TYPE_MOUSEDOWN : EVENT_TYPE_MOUSEUP, curMouseX, curMouseY, changedButton);
-                    break;
-                }
+            //Check if the mouse has been held down or up
+            bool mouseDown = changedButton == 0 ? mouseLeft : (changedButton == 1 ? mouseMiddle : (changedButton == 2 ? mouseRight : 0));
+            IPCSend(info->clientID, IPC_TYPE_GUI_EVENT, mouseDown ? EVENT_TYPE_MOUSEDOWN : EVENT_TYPE_MOUSEUP, curMouseX, curMouseY, changedButton);
         }
+    }
+
+    ////////////
+    // Mouse has moved
+    ////////////
+    if(curMouseX != prevMouseX || curMouseY != prevMouseY)
+    {
+        //Which context was under the previous mouse
+        ContextInfo* prevMouseInfo = FindTargetContext(prevMouseX, prevMouseY);
+        //Which context is under the current mouse
+        ContextInfo* curMouseInfo = FindTargetContext(curMouseX, curMouseY);
+        
+        if(prevMouseInfo != 0)
+            IPCSend(prevMouseInfo->clientID, IPC_TYPE_GUI_EVENT, EVENT_TYPE_MOUSEMOVE, prevMouseX, prevMouseY, curMouseX, curMouseY);
+        
+        if(curMouseInfo != 0 && curMouseInfo != prevMouseInfo)
+            IPCSend(curMouseInfo->clientID, IPC_TYPE_GUI_EVENT, EVENT_TYPE_MOUSEMOVE, prevMouseX, prevMouseY, curMouseX, curMouseY);
+    
     }
 
     prevMouseLeft = mouseLeft;

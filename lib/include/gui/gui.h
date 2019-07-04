@@ -9,6 +9,7 @@ namespace LIBCactusOS
     //Event definitions
     #define EVENT_TYPE_MOUSEDOWN 0
     #define EVENT_TYPE_MOUSEUP 1
+    #define EVENT_TYPE_MOUSEMOVE 2
     
     //Communication to the compositor definitions
     #define COMPOSITOR_REQUESTCONTEXT 1

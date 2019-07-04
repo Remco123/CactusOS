@@ -12,14 +12,22 @@ namespace LIBCactusOS
         uint32_t titleBarColor = 0xFF4CB272;
         uint16_t titleBarHeight = 30;
 
-        Context* contextParent = 0;
+        /**
+         * In which context are we located?
+        */
+        Context* contextBase = 0;
     public:
         char* titleString = 0;
 
         /**
-         * Create a new window with width, height, x and y
+         * Create a new window with a context as base
         */
-        Window(Context* parent, int w, int h, int x = 0, int y = 0);
+        Window(Context* base);
+
+        /**
+         * Create a new window that request a context for itself to use
+        */
+        Window(int width, int height, int x, int y);
 
         /**
          * Draw this window to a canvas
