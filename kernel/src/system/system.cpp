@@ -102,7 +102,9 @@ void System::Start()
         BootConsole::WriteLine(" [Not found]");
 
     BootConsole::WriteLine("Starting Scheduler");
+    InterruptDescriptorTable::DisableInterrupts();
     System::scheduler = new Scheduler();
+    InterruptDescriptorTable::EnableInterrupts();
 
     BootConsole::WriteLine("Starting Systemcalls");
     System::syscalls = new SystemCallHandler();

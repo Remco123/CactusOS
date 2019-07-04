@@ -41,3 +41,4 @@ By default the os does not have graphics when running on bochs, to bypass this s
 # Screenshots
 <img src="images/Screenshot Bootscreen.png" alt="Bootscreen" width="700">
 <img src="images/Screenshot Debugging.png" alt="Debugging with vscode debugger" width="700">
+<img src="images/Screenshot Desktop.png" alt="Graphical Desktop" width="700">
