@@ -109,5 +109,8 @@ void System::Start()
     BootConsole::WriteLine("Starting Systemcalls");
     System::syscalls = new SystemCallHandler();
 
+    BootConsole::WriteLine("Preparing IPC");
+    IPCManager::Initialize();
+
     Log(Info, "System Initialized");
 }

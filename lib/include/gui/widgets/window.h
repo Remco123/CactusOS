@@ -13,11 +13,20 @@ namespace LIBCactusOS
         uint16_t titleBarHeight = 30;
 
         /**
+         * Is the mouse down on the title bar?
+        */
+        bool titleBarMouseDown = false;
+
+        //Remember where the mouse was held down for a smooth window drag
+        int mouseDownX = 0;
+        int mouseDownY = 0;
+    public:
+        char* titleString = 0;
+
+        /**
          * In which context are we located?
         */
         Context* contextBase = 0;
-    public:
-        char* titleString = 0;
 
         /**
          * Create a new window with a context as base
@@ -44,6 +53,10 @@ namespace LIBCactusOS
          * Called when mouse is up on window
         */
         void OnMouseUp(int x_abs, int y_abs, uint8_t button);
+        /**
+         * Called when mouse is moved on window
+        */
+        void OnMouseMove(int prevX_abs, int prevY_abs, int newX_abs, int newY_abs);
     };
 }
 

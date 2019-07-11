@@ -10,7 +10,7 @@
 #include <proc.h>
 #include <string.h>
 #include <systeminfo.h>
-#include "contextinfo.h"
+#include <gui/contextinfo.h>
 #include "cursor.h"
 
 using namespace LIBCactusOS;
@@ -35,6 +35,10 @@ int32_t curMouseY = -1;
  * All the known contexts
 */
 List<ContextInfo*>* contextList;
+/**
+ * All the rectangles that need to be redrawn on the next iteration
+*/
+List<Rectangle*>* dirtyRectList;
 /**
  * To wich address are context mapped in virtual memory?
 */
@@ -119,6 +123,24 @@ ContextInfo* FindTargetContext(int x, int y)
     return 0;
 }
 
+ContextInfo* FindTargetContextByIndex(int sourcePID, int index)
+{
+    if(contextList == 0)
+        return 0;
+    
+    int curIndex = 0;
+    for(int i = 0; i < contextList->size(); i++)
+    {
+        ContextInfo* c = contextList->GetAt(i);
+
+        if(c->clientID == sourcePID && curIndex == index)
+            return c;
+        else
+            curIndex++;
+    }
+    return 0;
+}
+
 int main()
 {
     Print("Starting Compositor\n");
@@ -142,11 +164,12 @@ int main()
         return -1;
 
     contextList = new List<ContextInfo*>();
+    dirtyRectList = new List<Rectangle*>();
     Print("Listening for requests\n");
     
     bool receivedMessage = false;
     while (1)
-    {
+    {        
         int msgError = 0;
         IPCMessage msg = ICPReceive(-1, &msgError, IPC_TYPE_GUI);
 
@@ -155,7 +178,7 @@ int main()
             continue;
         }
 
-        Print("Got Request from %d\n", msg.source);
+        //Print("Got Request from %d\n", msg.source);
         HandleMessage(msg);
 
         if(!receivedMessage) //First time we receive something start the GUI thread
@@ -174,6 +197,7 @@ void HandleMessage(IPCMessage msg)
     int msgType = msg.arg1;
     switch (msgType)
     {
+        // A process is requesting a new context to draw to
         case COMPOSITOR_REQUESTCONTEXT:
         {
             uint32_t width = msg.arg3;
@@ -181,7 +205,7 @@ void HandleMessage(IPCMessage msg)
             uint32_t x = msg.arg5;
             uint32_t y = msg.arg6;
 
-            uint32_t bytes = width * height * 4;
+            uint32_t bytes = width * height * 4 + sizeof(ContextInfo);
             uint32_t virtAddrC = msg.arg2;
             Print("Process %d requested a gui context of %d bytes at %x (w=%d,h=%d,x=%d,y=%d)\n", msg.source, bytes, virtAddrC, width, height, x, y);
             if(Process::CreateSharedMemory(msg.source, newContextAddress, virtAddrC, pageRoundUp(bytes)) == false) {
@@ -189,10 +213,10 @@ void HandleMessage(IPCMessage msg)
                 break;
             }
 
-            ContextInfo* info = new ContextInfo();
+            ContextInfo* info = (ContextInfo*)newContextAddress;
             info->bytes = bytes;
-            info->virtAddrClient = virtAddrC;
-            info->virtAddrServer = newContextAddress;
+            info->virtAddrClient = virtAddrC + sizeof(ContextInfo);
+            info->virtAddrServer = newContextAddress + sizeof(ContextInfo);
             info->width = width;
             info->height = height;
             info->x = x;
@@ -206,7 +230,14 @@ void HandleMessage(IPCMessage msg)
             IPCSend(msg.source, IPC_TYPE_GUI, 1);
             break;
         }
-        
+        // A process is sending us a message that one of its contexts has moved
+        case COMPOSITOR_CONTEXTMOVED:
+        {
+            //Rectangle* dirtyRect = new Rectangle(msg.arg4, msg.arg5, msg.arg2, msg.arg3);
+            //dirtyRectList->push_back(dirtyRect);
+            break;
+        }
+
         default:
         {
             Log(Warning, "Got unkown GUICom message\n");
@@ -220,8 +251,25 @@ void UpdateDesktop()
     if(prevMouseX != -1 && prevMouseY != -1 && (prevMouseX != curMouseX || prevMouseY != curMouseY)) //Check if we have valid values for prevMouseX/Y and check if the mouse has moved
         RemovePreviousCursor();
 
-    for(ContextInfo* info : *contextList)
+    /*
+    //Update dirty rectangles
+    for(Rectangle* rect : *dirtyRectList)
     {
+        Print("Rect: %d,%d,%d,%d\n", rect->width, rect->height, rect->x, rect->y);
+        uint32_t byteWidth = (rect->width + rect->x <= WIDTH ? rect->width : rect->width-(rect->x + rect->width - WIDTH))*4;
+        
+        for(uint32_t y = 0; y < rect->height; y++)
+            memcpy((void*)(backBuffer + ((rect->y + y)*WIDTH*4) + rect->x*4), (void*)((uint32_t)wallPaperBuffer + (rect->y + y)*WIDTH*4 + rect->x*4), byteWidth);
+    }
+
+    //Clear after drawing
+    dirtyRectList->Clear();
+    */
+
+    //Draw every context from top to bottom
+    for(int i = (contextList->size()-1); i >= 0 ; i--)
+    {
+        ContextInfo* info = contextList->GetAt(i);
         if(info->x >= WIDTH || info->y >= HEIGHT) {
             Log(Warning, "Context is out of desktop bounds");
             continue;
@@ -230,6 +278,10 @@ void UpdateDesktop()
         uint32_t byteWidth = (info->width + info->x <= WIDTH ? info->width : info->width-(info->x + info->width - WIDTH))*4;
         for(uint32_t y = 0; y < info->height; y++)
             memcpy((void*)(backBuffer + ((info->y + y)*WIDTH*4) + info->x*4), (void*)(info->virtAddrServer + y*info->width*4), byteWidth);
+
+        //Check if context is filling entire screen
+        if(info->x == 0 && info->y == 0 && info->width == WIDTH && info->height == HEIGHT)
+            break; //Stop drawing underlaying windows
     }
     DrawCursor();
 
@@ -295,6 +347,13 @@ void ProcessEvents()
             //Check if the mouse has been held down or up
             bool mouseDown = changedButton == 0 ? mouseLeft : (changedButton == 1 ? mouseMiddle : (changedButton == 2 ? mouseRight : 0));
             IPCSend(info->clientID, IPC_TYPE_GUI_EVENT, mouseDown ? EVENT_TYPE_MOUSEDOWN : EVENT_TYPE_MOUSEUP, curMouseX, curMouseY, changedButton);
+
+            if(mouseDown)
+            {
+                //Move window to the front
+                contextList->Remove(info);
+                contextList->push_front(info);
+            }
         }
     }
 

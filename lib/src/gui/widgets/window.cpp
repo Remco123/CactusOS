@@ -5,9 +5,10 @@
 using namespace LIBCactusOS;
 
 Window::Window(Context* base)
-: Control(base->width, base->height, base->x, base->y)
+: Control(base->sharedContextInfo->width, base->sharedContextInfo->height, base->sharedContextInfo->x, base->sharedContextInfo->y)
 {
     base->Window = this;
+    this->contextBase = base;
 }
 
 Window::Window(int width, int height, int x, int y)
@@ -42,8 +43,12 @@ void Window::DrawTo(Canvas* context, int x_abs, int y_abs)
 void Window::OnMouseDown(int x_abs, int y_abs, uint8_t button)
 {
     //Print("Window %s has mouseDown\n", this->titleString);
-    if(y_abs < this->titleBarHeight)
+    if(y_abs < this->titleBarHeight) {
+        titleBarMouseDown = true;
+        mouseDownX = x_abs;
+        mouseDownY = y_abs;
         this->titleBarColor = 0xFF1A7868;
+    }
 
     //Send event to children
     for(Control* c : this->childs)
@@ -56,8 +61,10 @@ void Window::OnMouseDown(int x_abs, int y_abs, uint8_t button)
 void Window::OnMouseUp(int x_abs, int y_abs, uint8_t button)
 {
     //Print("Window %s has mouseUp\n", this->titleString);
-    if(y_abs < this->titleBarHeight)
+    if(y_abs < this->titleBarHeight) {
+        titleBarMouseDown = false;
         this->titleBarColor = 0xFF4CB272;
+    }
 
     //Send event to children
     for(Control* c : this->childs)
@@ -65,5 +72,12 @@ void Window::OnMouseUp(int x_abs, int y_abs, uint8_t button)
         if(x_abs >= c->x && x_abs <= c->x + c->width)
             if(y_abs >= c->y + this->titleBarHeight && y_abs <= c->y + c->height + this->titleBarHeight)
                 c->OnMouseUp(x_abs - c->x, y_abs - c->y - this->titleBarHeight, button);
+    }
+}
+void Window::OnMouseMove(int prevX_abs, int prevY_abs, int newX_abs, int newY_abs)
+{
+    if(this->titleBarMouseDown) {
+        //Print("Window Drag!\n");
+        this->contextBase->MoveToPosition(this->x + newX_abs - mouseDownX, this->y + newY_abs - mouseDownY);
     }
 }

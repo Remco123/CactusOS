@@ -13,6 +13,7 @@ namespace LIBCactusOS
     
     //Communication to the compositor definitions
     #define COMPOSITOR_REQUESTCONTEXT 1
+    #define COMPOSITOR_CONTEXTMOVED 2
 
     typedef void (*GUI_MouseCall) (Control* sender, uint8_t button); 
 

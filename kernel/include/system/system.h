@@ -25,6 +25,7 @@
 #include <system/tasking/scheduler.h>
 #include <system/syscalls/syscalls.h>
 #include <common/random.h>
+#include <system/tasking/ipcmanager.h>
 #include <system/memory/sharedmem.h>
 
 #include <system/log.h>

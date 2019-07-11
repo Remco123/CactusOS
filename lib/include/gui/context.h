@@ -4,13 +4,14 @@
 #include <types.h>
 #include <gui/rect.h>
 #include <gui/widgets/control.h>
+#include <gui/contextinfo.h>
 
 namespace LIBCactusOS
 {    
     /**
      * Represents a region of framebuffer shared between client and server
     */
-    class Context : public Rectangle
+    class Context
     { 
     public:
         /**
@@ -24,9 +25,14 @@ namespace LIBCactusOS
         Canvas* canvas;
 
         /**
+         * A struct that is shared with the compositor that describes the physical dimensions of this context
+        */
+        ContextInfo* sharedContextInfo;
+
+        /**
          * Create a new context by a framebuffer and dimensions
         */
-        Context(uint32_t framebufferAddr, int width = 0, int height = 0, int x = 0, int y = 0);
+        Context(uint32_t framebufferAddr, int width = 0, int height = 0);
         
         /**
          * Destructor, warning: does also delete canvas
@@ -37,6 +43,11 @@ namespace LIBCactusOS
          * Draw all the gui components to this context
         */
         void DrawGUI();
+
+        /**
+         * Move this context to a new position.
+        */
+        void MoveToPosition(int newX, int newY);
 
         /*///////////////
         // Events

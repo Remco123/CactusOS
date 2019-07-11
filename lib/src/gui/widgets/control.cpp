@@ -45,3 +45,8 @@ void Control::OnMouseUp(int x_abs, int y_abs, uint8_t button)
                 c->OnMouseUp(x_abs - c->x, y_abs - c->y, button);
     }
 }
+
+void Control::OnMouseMove(int prevX_abs, int prevY_abs, int newX_abs, int newY_abs)
+{
+    //TODO: Implement mouseEnter and mouseLeave here
+}

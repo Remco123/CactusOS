@@ -4,6 +4,7 @@
 #include <gui/widgets/control.h>
 #include <gui/widgets/window.h>
 #include <gui/widgets/label.h>
+#include <gui/directgui.h>
 #include <convert.h>
 #include <string.h>
 #include <log.h>
@@ -25,7 +26,7 @@ int main()
     Print("Starting Calculator\n");
     GUI::Initialize();
 
-    Window* window1 = new Window(140, 260, 160*Process::ID - 450, 40*Process::ID);
+    Window* window1 = new Window(140, 260, WIDTH/2 - 140/2, HEIGHT/2 - 260/2);
     window1->titleString = "Calculator";
 
     Control* labelBox = new Control(130, 30, 5, 5);

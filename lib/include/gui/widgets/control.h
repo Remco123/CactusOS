@@ -50,6 +50,10 @@ namespace LIBCactusOS
          * Called when mouse is up on control
         */
         virtual void OnMouseUp(int x_abs, int y_abs, uint8_t button);
+        /**
+         * Called when mouse is moved on control
+        */
+        virtual void OnMouseMove(int prevX_abs, int prevY_abs, int newX_abs, int newY_abs);
     };
 }
 

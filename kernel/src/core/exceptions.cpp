@@ -67,7 +67,10 @@ uint32_t Exceptions::PageFault(uint32_t esp)
     Print::printfHex32(errorAddress);
     BootConsole::Write(" EIP: 0x");
     Print::printfHex32(regs->EIP);
-    BootConsole::WriteLine();
+    if(System::scheduler->CurrentProcess() != 0) {
+        BootConsole::Write(" Process: ");
+        BootConsole::WriteLine(System::scheduler->CurrentProcess()->fileName);
+    }
 
     while(1);
 }
