@@ -233,10 +233,8 @@ void HandleMessage(IPCMessage msg)
         // A process is sending us a message that one of its contexts has moved
         case COMPOSITOR_CONTEXTMOVED:
         {
-            /*
             Rectangle dirtyRect(msg.arg4, msg.arg5, msg.arg2, msg.arg3);
             dirtyRectList->push_back(dirtyRect);
-            */
             break;
         }
 
@@ -253,21 +251,16 @@ void UpdateDesktop()
     if(prevMouseX != -1 && prevMouseY != -1 && (prevMouseX != curMouseX || prevMouseY != curMouseY)) //Check if we have valid values for prevMouseX/Y and check if the mouse has moved
         RemovePreviousCursor();
     
-    /*
     //Update dirty rectangles
-    for(int i = 0; i < dirtyRectList->size(); i++)
+    while(dirtyRectList->size() > 0)
     {
-        Rectangle rect = dirtyRectList->GetAt(i);
-        Print("Rect: %d,%d,%d,%d\n", rect.width, rect.height, rect.x, rect.y);
+        Rectangle rect = dirtyRectList->GetAt(0);
         uint32_t byteWidth = (rect.width + rect.x <= WIDTH ? rect.width : rect.width-(rect.x + rect.width - WIDTH))*4;
-        
         for(uint32_t y = 0; y < rect.height; y++)
             memcpy((void*)(backBuffer + ((rect.y + y)*WIDTH*4) + rect.x*4), (void*)((uint32_t)wallPaperBuffer + (rect.y + y)*WIDTH*4 + rect.x*4), byteWidth);
-    }
 
-    //Clear after drawing
-    dirtyRectList->Clear();
-    */
+        dirtyRectList->Remove(0);
+    }
 
     //Draw every context from top to bottom
     for(int i = (contextList->size()-1); i >= 0 ; i--)
