@@ -38,7 +38,7 @@ List<ContextInfo*>* contextList;
 /**
  * All the rectangles that need to be redrawn on the next iteration
 */
-List<Rectangle*>* dirtyRectList;
+List<Rectangle>* dirtyRectList;
 /**
  * To wich address are context mapped in virtual memory?
 */
@@ -163,8 +163,8 @@ int main()
     if(!RequestSystemInfo())
         return -1;
 
-    contextList = new List<ContextInfo*>();
-    dirtyRectList = new List<Rectangle*>();
+    contextList = new List<ContextInfo*>(); contextList->Clear();
+    dirtyRectList = new List<Rectangle>(); dirtyRectList->Clear();
     Print("Listening for requests\n");
     
     bool receivedMessage = false;
@@ -224,7 +224,7 @@ void HandleMessage(IPCMessage msg)
             info->clientID = msg.source;
 
             newContextAddress += pageRoundUp(bytes);
-            contextList->push_back(info);
+            contextList->push_front(info);
 
             //Send response to client
             IPCSend(msg.source, IPC_TYPE_GUI, 1);
@@ -233,8 +233,10 @@ void HandleMessage(IPCMessage msg)
         // A process is sending us a message that one of its contexts has moved
         case COMPOSITOR_CONTEXTMOVED:
         {
-            //Rectangle* dirtyRect = new Rectangle(msg.arg4, msg.arg5, msg.arg2, msg.arg3);
-            //dirtyRectList->push_back(dirtyRect);
+            /*
+            Rectangle dirtyRect(msg.arg4, msg.arg5, msg.arg2, msg.arg3);
+            dirtyRectList->push_back(dirtyRect);
+            */
             break;
         }
 
@@ -250,16 +252,17 @@ void UpdateDesktop()
 {    
     if(prevMouseX != -1 && prevMouseY != -1 && (prevMouseX != curMouseX || prevMouseY != curMouseY)) //Check if we have valid values for prevMouseX/Y and check if the mouse has moved
         RemovePreviousCursor();
-
+    
     /*
     //Update dirty rectangles
-    for(Rectangle* rect : *dirtyRectList)
+    for(int i = 0; i < dirtyRectList->size(); i++)
     {
-        Print("Rect: %d,%d,%d,%d\n", rect->width, rect->height, rect->x, rect->y);
-        uint32_t byteWidth = (rect->width + rect->x <= WIDTH ? rect->width : rect->width-(rect->x + rect->width - WIDTH))*4;
+        Rectangle rect = dirtyRectList->GetAt(i);
+        Print("Rect: %d,%d,%d,%d\n", rect.width, rect.height, rect.x, rect.y);
+        uint32_t byteWidth = (rect.width + rect.x <= WIDTH ? rect.width : rect.width-(rect.x + rect.width - WIDTH))*4;
         
-        for(uint32_t y = 0; y < rect->height; y++)
-            memcpy((void*)(backBuffer + ((rect->y + y)*WIDTH*4) + rect->x*4), (void*)((uint32_t)wallPaperBuffer + (rect->y + y)*WIDTH*4 + rect->x*4), byteWidth);
+        for(uint32_t y = 0; y < rect.height; y++)
+            memcpy((void*)(backBuffer + ((rect.y + y)*WIDTH*4) + rect.x*4), (void*)((uint32_t)wallPaperBuffer + (rect.y + y)*WIDTH*4 + rect.x*4), byteWidth);
     }
 
     //Clear after drawing
@@ -276,7 +279,7 @@ void UpdateDesktop()
         }
         
         uint32_t byteWidth = (info->width + info->x <= WIDTH ? info->width : info->width-(info->x + info->width - WIDTH))*4;
-        for(uint32_t y = 0; y < info->height; y++)
+        for(uint32_t y = (info->y < 0 ? -info->y : 0); y < info->height; y++)
             memcpy((void*)(backBuffer + ((info->y + y)*WIDTH*4) + info->x*4), (void*)(info->virtAddrServer + y*info->width*4), byteWidth);
 
         //Check if context is filling entire screen

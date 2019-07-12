@@ -452,7 +452,7 @@ uint8_t IDEController::AtaReadSector(uint16_t drive, uint32_t lba, uint8_t* buf)
     else
     {
         // PIO Read.
-        if (err = Polling(channel, 1))
+        if ((err = Polling(channel, 1)))
             return err; // Polling, set error and exit if there is.
         inportsm(bus, buf, words);
 
@@ -552,7 +552,7 @@ uint8_t IDEController::AtaWriteSector(uint16_t drive, uint32_t lba, uint8_t* buf
     else
     {
         // PIO Write.
-        if (err = Polling(channel, 0))
+        if ((err = Polling(channel, 0)))
             return err; // Polling, set error and exit if there is.
         outportsm(bus, buf, words);
 
@@ -609,15 +609,15 @@ uint8_t IDEController::ATAPIReadSector(uint16_t drive, uint32_t lba, uint8_t* bu
     WriteRegister(channel, ATA_REG_COMMAND, ATA_CMD_PACKET);      // Send the Command.
     
     //Waiting for the driver to finish or return an error code:
-    if (err = Polling(channel, 1)) return err;         // Polling and return if error.
+    if ((err = Polling(channel, 1))) return err;         // Polling and return if error.
     
     //Sending the packet data:
     asm("rep   outsw" : : "c"(6), "d"(bus), "S"(atapi_packet));   // Send Packet Data
 
     //Receiving Data:
-    for (int i = 0; i < numsects; i++) {
+    for (unsigned int i = 0; i < numsects; i++) {
         WaitForIRQ();                  // Wait for an IRQ.
-        if (err = Polling(channel, 1))
+        if ((err = Polling(channel, 1)))
             return err;      // Polling and return if error.
 
         uint32_t readSize = ((uint32_t)ReadRegister(channel, ATA_REG_LBA2) << 8 | (uint32_t)ReadRegister(channel, ATA_REG_LBA1));

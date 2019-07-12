@@ -125,7 +125,7 @@ char* String::strcpy(char *s1, const char *s2)
 	return s1;
 }
 
-char* String::strncpy(char *s1, const char *s2, int n)
+char* String::strncpy(char *s1, const char *s2, unsigned int n)
 {
 	unsigned int extern_iter = 0;
 

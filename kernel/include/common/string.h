@@ -23,7 +23,7 @@ namespace CactusOS
             static char* Uppercase(char* str);
             static char* Lowercase(char* str);
             static char* strcpy(char *s1, const char *s2);
-            static char* strncpy(char *s1, const char *s2, int n);
+            static char* strncpy(char *s1, const char *s2, unsigned int n);
         };
     }
 }

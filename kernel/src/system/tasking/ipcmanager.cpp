@@ -86,7 +86,7 @@ void IPCManager::HandleReceive(core::CPUState* state, Process* proc)
     LIBCactusOS::IPCMessage message = proc->ipcMessages.GetAt(messageIndex);
     
     //Loop throug all the messages until we find a correct one.
-    while (message.dest != proc->id || (recvFrom == -1 ? false : recvFrom != message.source) || (type == -1 ? false : type != message.type) && (messageIndex < proc->ipcMessages.size())) { //Is the message not for us or not from the correct source
+    while ((message.dest != proc->id || (recvFrom == -1 ? false : recvFrom != message.source) || (type == -1 ? false : type != message.type)) && (messageIndex < proc->ipcMessages.size())) { //Is the message not for us or not from the correct source
         proc->ipcMessages.GetAt(++messageIndex);
     }
 

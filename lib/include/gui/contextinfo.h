@@ -10,8 +10,8 @@ struct ContextInfo
     LIBCactusOS::uint32_t bytes;
     LIBCactusOS::uint32_t width;
     LIBCactusOS::uint32_t height;
-    LIBCactusOS::uint32_t x;
-    LIBCactusOS::uint32_t y;
+    LIBCactusOS::int32_t x;
+    LIBCactusOS::int32_t y;
     int clientID;
 };
 

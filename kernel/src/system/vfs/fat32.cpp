@@ -98,7 +98,7 @@ List<DirectoryEntry>* FAT32::ReadDir(uint32_t cluster)
 	{
         uint32_t cluster = clusters->GetAt(i);
 		
-		for(int s = 0; s < this->sectorsPerCluster; s++)
+		for(uint32_t s = 0; s < this->sectorsPerCluster; s++)
         {
             uint32_t sectorToRead = ClusterToSector(cluster) + s;
             if(this->disk->ReadSector(this->StartLBA + sectorToRead, buf) != 0) {
@@ -114,7 +114,7 @@ List<DirectoryEntry>* FAT32::ReadDir(uint32_t cluster)
 	uint64_t numDirEntries = (numclus * this->sectorsPerCluster * 512) / sizeof(DirectoryEntry);
     List<DirectoryEntry>* Result = new List<DirectoryEntry>();
 
-    for(int i = 1; i < numDirEntries; i++)
+    for(uint64_t i = 1; i < numDirEntries; i++)
     {
         DirectoryEntry* dirEntry = (DirectoryEntry*)(buf + i*sizeof(DirectoryEntry));
 
@@ -350,7 +350,7 @@ int FAT32::ReadFile(char* path, uint8_t* buffer)
 	{
         uint32_t cluster = clusters->GetAt(i);
 		
-		for(int s = 0; s < this->sectorsPerCluster && (i*sectorsPerCluster*bytesPerSector + s*bytesPerSector) < fileSize; s++)
+		for(uint32_t s = 0; s < this->sectorsPerCluster && (i*sectorsPerCluster*bytesPerSector + s*bytesPerSector) < fileSize; s++)
         {
             uint8_t sectorBuf[512];
             uint32_t sectorToRead = ClusterToSector(cluster) + s;
