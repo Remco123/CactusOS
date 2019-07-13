@@ -5,6 +5,7 @@
 #include <syscall.h>
 #include <gui/canvas.h>
 #include <gui/gui.h>
+#include <gui/colors.h>
 #include <list.h>
 #include <time.h>
 #include <proc.h>
@@ -222,6 +223,8 @@ void HandleMessage(IPCMessage msg)
             info->x = x;
             info->y = y;
             info->clientID = msg.source;
+            info->supportsTransparency = false;
+            info->background = false;
 
             newContextAddress += pageRoundUp(bytes);
             contextList->push_front(info);
@@ -262,8 +265,8 @@ void UpdateDesktop()
         dirtyRectList->Remove(0);
     }
 
-    //Draw every context from top to bottom
-    for(int i = (contextList->size()-1); i >= 0 ; i--)
+    //Draw every context bottom to top
+    for(int i = (contextList->size()-1); i >= 0; i--)
     {
         ContextInfo* info = contextList->GetAt(i);
         if(info->x >= WIDTH || info->y >= HEIGHT) {
@@ -271,9 +274,26 @@ void UpdateDesktop()
             continue;
         }
         
-        uint32_t byteWidth = (info->width + info->x <= WIDTH ? info->width : info->width-(info->x + info->width - WIDTH))*4;
-        for(uint32_t y = (info->y < 0 ? -info->y : 0); y < info->height; y++)
-            memcpy((void*)(backBuffer + ((info->y + y)*WIDTH*4) + info->x*4), (void*)(info->virtAddrServer + y*info->width*4), byteWidth);
+        if(info->supportsTransparency)
+        {
+            //Draw context using transparency
+            Canvas tempCanvas((void*)info->virtAddrServer, info->width, info->height);
+            for(int x = 0; x < info->width; x++)
+                for(int y = 0; y < info->height; y++)
+                {
+                    uint32_t pix = tempCanvas.GetPixel(x, y);
+                    uint32_t oldPix = wallPaperCanvas->GetPixel(info->x + x, info->y + y);
+                    //Print("Blending %x with %x to get %x\n", oldPix, pix, Colors::AlphaBlend(oldPix, pix));
+                    backBufferCanvas->SetPixel(info->x + x, info->y + y, Colors::AlphaBlend(oldPix, pix));
+                }
+        }
+        else
+        {
+            //Draw context the normal way by copying the framebuffer onto the backbuffer line by line
+            uint32_t byteWidth = (info->width + info->x <= WIDTH ? info->width : info->width-(info->x + info->width - WIDTH))*4;
+            for(uint32_t y = (info->y < 0 ? -info->y : 0); y < info->height; y++)
+                memcpy((void*)(backBuffer + ((info->y + y)*WIDTH*4) + info->x*4), (void*)(info->virtAddrServer + y*info->width*4), byteWidth);
+        }
 
         //Check if context is filling entire screen
         if(info->x == 0 && info->y == 0 && info->width == WIDTH && info->height == HEIGHT)
@@ -344,7 +364,7 @@ void ProcessEvents()
             bool mouseDown = changedButton == 0 ? mouseLeft : (changedButton == 1 ? mouseMiddle : (changedButton == 2 ? mouseRight : 0));
             IPCSend(info->clientID, IPC_TYPE_GUI_EVENT, mouseDown ? EVENT_TYPE_MOUSEDOWN : EVENT_TYPE_MOUSEUP, curMouseX, curMouseY, changedButton);
 
-            if(mouseDown)
+            if(mouseDown && !info->background)
             {
                 //Move window to the front
                 contextList->Remove(info);

@@ -17,13 +17,15 @@ int main()
     if(mainScreen == 0)
         return -1;
 
+    mainScreen->sharedContextInfo->supportsTransparency = true;
+    mainScreen->sharedContextInfo->background = true;
     while(1) {
         DateTime currentTime = DateTime::Current();
 
-        mainScreen->canvas->Clear(0xFF395772);
+        mainScreen->canvas->Clear(0x00395772);
         mainScreen->canvas->DrawFillCircle(0xFFDDDDDD, 160/2, 160/2 - 15, 60);
         mainScreen->canvas->DrawCircle(0xFF000000, 160/2, 160/2 - 15, 61);
-        mainScreen->canvas->DrawString(currentTime.ToString(), 4, 140, 0xFFFFFFFF);
+        mainScreen->canvas->DrawString(currentTime.ToString(), 4, 140, 0xFF5200FF);
 
         double angleInDegrees, x, y = 0;
 
