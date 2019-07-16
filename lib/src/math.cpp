@@ -79,3 +79,9 @@ double Math::sin(double x)
 double Math::cos(double x) {
     return sin(x + MATH_PI / 2.0);
 }
+int Math::Max (int a, int b) {
+  return (a < b) ? b : a;
+}
+int Math::Min(int a, int b) {
+  return !(b < a) ? a : b;
+}

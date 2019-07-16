@@ -37,6 +37,9 @@ namespace LIBCactusOS
         static int Sign(int v);
         static double sin(double x);
         static double cos(double x);
+
+        static int Max (int a, int b);
+        static int Min (int a, int b);
     };
 }
 #endif
