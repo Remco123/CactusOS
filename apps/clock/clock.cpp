@@ -19,8 +19,11 @@ int main()
 
     mainScreen->sharedContextInfo->supportsTransparency = true;
     mainScreen->sharedContextInfo->background = true;
+    int prevSec = -1;
     while(1) {
         DateTime currentTime = DateTime::Current();
+        if(currentTime.Seconds == prevSec)
+            Process::Yield();
 
         mainScreen->canvas->Clear(0x00395772);
         mainScreen->canvas->DrawFillCircle(0xFFDDDDDD, 160/2, 160/2 - 15, 60);
@@ -57,7 +60,7 @@ int main()
             mainScreen->canvas->DrawString(Convert::IntToString(i), i < 10 ? x - 3 : x - 7, y - 5, 0xFF0000FF);
         }
 
-        Time::Sleep(500);
+        prevSec = currentTime.Seconds;
     }
 
     return 0;
