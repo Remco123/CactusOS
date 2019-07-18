@@ -3,11 +3,13 @@
 
 #include <types.h>
 #include <gui/rect.h>
-#include <gui/widgets/control.h>
 #include <gui/contextinfo.h>
+#include <gui/widgets/control.h>
 
 namespace LIBCactusOS
-{    
+{   
+    typedef void (*GUI_MouseCall) (Control* sender, uint8_t button);  
+
     /**
      * Represents a region of framebuffer shared between client and server
     */
@@ -28,6 +30,11 @@ namespace LIBCactusOS
          * A struct that is shared with the compositor that describes the physical dimensions of this context
         */
         ContextInfo* sharedContextInfo;
+
+        /**
+         * A pointer to a function that gets called when the mouse is clicked inside this context
+        */
+        GUI_MouseCall mouseClickHandler = 0;
 
         /**
          * Create a new context by a framebuffer and dimensions

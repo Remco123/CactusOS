@@ -9,6 +9,7 @@
 #include <proc.h>
 #include <ipc.h>
 #include <time.h>
+#include <math.h>
 #include "bmp.h"
 #include "progress.h"
 
@@ -86,18 +87,9 @@ int main()
 
     bar->SetValue(70);
 
-    int s = Process::Run("B:\\apps\\composit.bin");
-    Print("Launched compositor with status %d\n", s);
-
-    Time::Sleep(100);
-
-    int s2 = Process::Run("B:\\apps\\calc.bin");
-    Print("Launched Calculator with status %d\n", s2);
-
-    Time::Sleep(100);
-
-    int s3 = Process::Run("B:\\apps\\clock.bin");
-    Print("Launched Clock with status %d\n", s3);
+    Print("Launched Compositor with status %d\n", Process::Run("B:\\apps\\composit.bin"));
+    Print("Launched Desktop with status %d\n", Process::Run("B:\\apps\\desktop.bin"));
+    Print("Launched Clock with status %d\n", Process::Run("B:\\apps\\clock.bin"));
 
     bar->SetValue(100); 
 

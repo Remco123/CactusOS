@@ -40,6 +40,12 @@ namespace LIBCactusOS
 
         static int Max (int a, int b);
         static int Min (int a, int b);
+
+        static float fMod(float a, float b);
+        static double floor(double x);
+        static double sqrt(double n);
+
+        static double Round(double n, uint32_t digits);
     };
 }
 #endif

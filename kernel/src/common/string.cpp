@@ -58,14 +58,14 @@ bool String::Contains(const char* str, char c)
 
 List<char*> String::Split(const char* str, char d)
 {
-    List<char*>* Result = new List<char*>();
+    List<char*> Result;
 
     int amountOfDelims = 0;
     while(String::IndexOf(str, d, amountOfDelims) != -1)
         amountOfDelims++;
     
     if(amountOfDelims == 0)
-        return *Result;
+        return Result;
     
     int* delimOffsets = new int[amountOfDelims];
     for(int i = 0; i < amountOfDelims; i++)
@@ -79,7 +79,7 @@ List<char*> String::Split(const char* str, char d)
         MemoryOperations::memcpy(partStr, str + (i >= 1 ? delimOffsets[i - 1] + 1 : 0), len);
         partStr[len] = '\0';
 
-        Result->push_back(partStr);
+        Result.push_back(partStr);
     }
 
     //Don't forget to add the remaining part of the string
@@ -88,9 +88,9 @@ List<char*> String::Split(const char* str, char d)
     MemoryOperations::memcpy(lastStr, str + delimOffsets[amountOfDelims - 1] + 1, stringRemainder);
     lastStr[stringRemainder] = '\0';
 
-    Result->push_back(lastStr);
+    Result.push_back(lastStr);
 
-    return *Result;
+    return Result;
 }
 
 char* String::Uppercase(char* str)

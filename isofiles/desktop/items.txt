@@ -1,0 +1,6 @@
+//////////////////
+This file contains the items that are present on the desktop
+This file is parsed by the desktop application on startup
+//////////////////
+
+"Calculator" file="B:\apps\calc.bin" icon="B:\desktop\calc.bmp"

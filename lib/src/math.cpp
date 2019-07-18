@@ -85,3 +85,39 @@ int Math::Max (int a, int b) {
 int Math::Min(int a, int b) {
   return !(b < a) ? a : b;
 }
+float Math::fMod(float a, float b)
+{
+    return (a - b * floor(a / b));
+}
+double Math::floor(double x) {
+    if (x >= __LONG_LONG_MAX__ || x <= (-__LONG_LONG_MAX__-1) || x != x) {
+        /* handle large values, infinities and nan */
+        return x;
+    }
+    long long n = (long long)x;
+    double d = (double)n;
+    if (d == x || x >= 0)
+        return d;
+    else
+        return d - 1;
+}
+double Math::sqrt(double n)
+{
+    double lo = 0, hi = n, mid;
+    for(int i = 0 ; i < 1000 ; i++){
+        mid = (lo+hi)/2;
+        if(mid*mid == n) return mid;
+        if(mid*mid > n) hi = mid;
+        else lo = mid;
+    }
+    return mid;
+}
+double Math::Round(double x, uint32_t digits)
+{
+    if (digits > 0) {
+        return Round(x*10.0, digits-1)/10.0;
+    }
+    else {
+        return (double)(int)(x);
+    }
+}
