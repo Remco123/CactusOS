@@ -6,6 +6,9 @@ using namespace CactusOS::common;
 using namespace CactusOS::core;
 using namespace CactusOS::system;
 
+//Should we try to automaticly fix pagefaults?
+bool autoFixPagefaults = false;
+
 uint32_t Exceptions::DivideByZero(uint32_t esp)
 {
     BootConsole::ForegroundColor = VGA_COLOR_RED;
@@ -67,9 +70,19 @@ uint32_t Exceptions::PageFault(uint32_t esp)
     Print::printfHex32(errorAddress);
     BootConsole::Write(" EIP: 0x");
     Print::printfHex32(regs->EIP);
-    if(System::scheduler->CurrentProcess() != 0) {
+    
+    if(System::scheduler != 0 && System::scheduler->CurrentProcess() != 0) {
         BootConsole::Write(" Process: ");
         BootConsole::WriteLine(System::scheduler->CurrentProcess()->fileName);
+    }
+
+    if(autoFixPagefaults && present) //Identity map error address
+    {
+        void* ptr = (void*)errorAddress;
+        VirtualMemoryManager::mapVirtualToPhysical(ptr, ptr, true, true); //Readonly is probably a good idea        
+        
+        BootConsole::WriteLine(" Fixed pagefault");
+        return esp;
     }
 
     while(1);
@@ -121,4 +134,13 @@ uint32_t Exceptions::HandleException(uint32_t number, uint32_t esp)
             }
     }
     return esp;
+}
+
+void Exceptions::EnablePagefaultAutoFix()
+{
+    autoFixPagefaults = true;
+}
+void Exceptions::DisablePagefaultAutoFix()
+{
+    autoFixPagefaults = false;
 }

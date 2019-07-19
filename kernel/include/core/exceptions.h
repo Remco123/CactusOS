@@ -29,6 +29,16 @@ namespace CactusOS
             static common::uint32_t FloatingPointException(common::uint32_t esp);
         public:
             static common::uint32_t HandleException(common::uint32_t number, common::uint32_t esp);
+            
+            /*
+             * Enables the automatic pagefault fix procedure
+             * Warning: Only use when trying to access physical memory with no way to map it.
+            */
+            static void EnablePagefaultAutoFix();
+            /*
+             * Disables the automatic pagefault fix procedure
+            */
+            static void DisablePagefaultAutoFix();
         };
     }
 }

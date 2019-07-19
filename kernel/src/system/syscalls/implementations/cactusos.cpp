@@ -5,6 +5,7 @@
 
 #include <system/system.h>
 #include <system/tasking/ipcmanager.h>
+#include <core/power.h>
 
 using namespace CactusOS;
 using namespace CactusOS::common;
@@ -163,6 +164,24 @@ CPUState* CactusOSSyscalls::HandleSyscall(CPUState* state)
                 resultPtr->Seconds = System::rtc->GetSecond();
                 resultPtr->Year = System::rtc->GetYear();
                 state->EAX = SYSCALL_RET_SUCCES;
+            }
+            break;
+        case SYSCALL_SHUTDOWN:
+            {
+                Log(Info, "Process requested shutdown");
+                Power::Poweroff();
+                
+                //We should not return after shutting down
+                state->EAX = SYSCALL_RET_ERROR;
+            }
+            break;
+        case SYSCALL_REBOOT:
+            {
+                Log(Info, "Process requested reboot");
+                Power::Reboot();
+
+                //We should not return from a reboot :)
+                state->EAX = SYSCALL_RET_ERROR;
             }
             break;
         default:

@@ -12,6 +12,7 @@
 #include <common/convert.h>
 #include <core/cpu.h>
 #include <core/fpu.h>
+#include <core/power.h>
 
 using namespace CactusOS;
 using namespace CactusOS::common;
@@ -129,6 +130,9 @@ extern "C" void kernelMain(const multiboot_info_t* mbi, unsigned int multiboot_m
 
     KernelHeap::Initialize(KERNEL_HEAP_START, KERNEL_HEAP_START + KERNEL_HEAP_START_SIZE, KERNEL_HEAP_END);
     BootConsole::WriteLine("Kernel Heap Initialized");
+
+    Power::Initialize();
+    BootConsole::WriteLine("Power Control Loaded");
 
     BootConsole::WriteLine("Passing mbi to system");
     System::mbi = (multiboot_info_t*)KernelHeap::malloc(sizeof(multiboot_info_t));

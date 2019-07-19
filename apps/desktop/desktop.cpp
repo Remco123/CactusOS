@@ -67,7 +67,7 @@ int main()
 
             DesktopItem* item = new DesktopItem(x, y, 90, 110);
             x += 100;
-            if(x >= 405)
+            if(x >= 205)
             { x = 5; y += 120; }
 
             item->filename = filenameBuffer;
@@ -86,6 +86,9 @@ int main()
                     item->iconBuffer = iconBuf;
                 }
             }
+            else
+                item->drawLabel = true;
+                
             items.push_back(item);
             item->DrawToContext();
 

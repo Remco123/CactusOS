@@ -5,3 +5,4 @@ This file is parsed by the desktop application on startup
 
 "Calculator" file="B:\apps\calc.bin" icon="B:\desktop\calc.bmp"
 "Terminal" file="B:\apps\terminal.bin" icon="B:\desktop\term.bmp"
+"Power Manager" file="B:\apps\powerman.bin" icon="B:\desktop\power.bmp"
