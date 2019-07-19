@@ -240,6 +240,12 @@ void Canvas::DrawChar(char character, int x, int y, uint32_t color)
 }
 void Canvas::DrawString(char* string, int x, int y, uint32_t color)
 {
-    for( ; *string; x += 8)
-        DrawChar(*(string++), x, y, color);
+    int dx = x;
+    for( ; *string; dx += 8) {
+        if(*(string) == '\n') {
+            dx = x-8; y += 14; string++; 
+        }
+        else
+            DrawChar(*(string++), dx, y, color);
+    }
 }

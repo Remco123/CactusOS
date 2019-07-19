@@ -38,7 +38,9 @@ void System::Start()
     BootConsole::WriteLine(" [Done]");
 
     BootConsole::Write("PIT");
+    InterruptDescriptorTable::DisableInterrupts();
     System::pit = new PIT();
+    InterruptDescriptorTable::EnableInterrupts();
     BootConsole::WriteLine(" [Done]");
 
     BootConsole::WriteLine("SMBIOS [Done]");

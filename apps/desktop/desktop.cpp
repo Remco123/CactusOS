@@ -74,6 +74,7 @@ int main()
             item->label = labelBuffer;
             item->iconBuffer = 0;
             item->context->mouseClickHandler = GUI_MouseCall(ButtonHandler);
+            item->drawLabel = false;
 
             if(FileExists(iconpathBuffer))
             {
