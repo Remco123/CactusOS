@@ -124,3 +124,16 @@ bool VFSManager::DirectoryExists(char* path)
     else
         return false;
 }
+
+bool VFSManager::EjectDrive(char* path)
+{
+    uint8_t idSize = 0;
+    int disk = ExtractDiskNumber(path, &idSize);
+
+    if(disk != -1 && Filesystems->size() > disk) {
+        VirtualFileSystem* fs = Filesystems->GetAt(disk);
+        return fs->disk->controller->EjectDrive(fs->disk->controllerIndex);
+    }
+    else
+        return false;
+}

@@ -184,6 +184,11 @@ CPUState* CactusOSSyscalls::HandleSyscall(CPUState* state)
                 state->EAX = SYSCALL_RET_ERROR;
             }
             break;
+        case SYSCALL_EJECT_DISK:
+            {
+                state->EAX = System::vfs->EjectDrive((char*)state->EBX);
+            }
+            break;
         default:
             Log(Warning, "Got unkown syscall %d from process %d", sysCall, proc->id);
             state->EAX = SYSCALL_RET_ERROR;

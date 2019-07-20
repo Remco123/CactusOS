@@ -163,7 +163,7 @@ namespace CactusOS
                 char ReadSector(common::uint16_t drive, common::uint32_t lba, common::uint8_t* buf);
                 char WriteSector(common::uint16_t drive, common::uint32_t lba, common::uint8_t* buf);
 
-                common::uint8_t EjectDrive(common::uint8_t drive);
+                bool EjectDrive(common::uint8_t drive);
             };
         }
     }

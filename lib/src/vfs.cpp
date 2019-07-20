@@ -20,3 +20,7 @@ bool LIBCactusOS::DirectoryExists(char* path)
 {
     return (bool)DoSyscall(SYSCALL_DIR_EXISTS, (uint32_t)path);
 }
+bool LIBCactusOS::EjectDisk(char* path)
+{
+    return (bool)DoSyscall(SYSCALL_EJECT_DISK, (uint32_t)path);
+}

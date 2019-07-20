@@ -9,6 +9,7 @@ namespace LIBCactusOS
     int ReadFile(char* path, uint8_t* buffer);
     bool FileExists(char* path);
     bool DirectoryExists(char* path);
+    bool EjectDisk(char* path);
 }
 
 #endif

@@ -28,6 +28,7 @@ namespace CactusOS
             int ReadFile(char* path, common::uint8_t* buffer);
             bool FileExists(char* path);
             bool DirectoryExists(char* path);
+            bool EjectDrive(char* path);
         };
     }
 }

@@ -638,22 +638,22 @@ uint8_t IDEController::ATAPIReadSector(uint16_t drive, uint32_t lba, uint8_t* bu
     return 0; // Easy, ... Isn't it?
 }
 
-uint8_t IDEController::EjectDrive(uint8_t drive)
+bool IDEController::EjectDrive(uint8_t drive)
 {
    uint32_t channel = ideDevices[drive].Channel;
    uint32_t slavebit = ideDevices[drive].Drive;
    uint32_t bus = channels[channel].base;
    uint8_t err = 0;
-   uint8_t returnCode;
+   bool returnCode;
    IRQTriggered = 0;
  
    //Check if the drive presents:
    if (drive > 3 || ideDevices[drive].Reserved == 0)
-      returnCode = 0x1;      // Drive Not Found!
+      returnCode = false;      // Drive Not Found!
 
    //Check if drive isn't ATAPI:
    else if (ideDevices[drive].Type == IDE_ATA)
-      returnCode = 20;         // Command Aborted.
+      returnCode = false;         // Command Aborted.
 
    //Eject ATAPI Drive:
    else {
@@ -697,6 +697,8 @@ uint8_t IDEController::EjectDrive(uint8_t drive)
         err = 0; // DRQ is not needed here.
       
       returnCode = PrintErrorCode(drive, err);
+      if(err == 0)
+        returnCode = true;
    }
    return returnCode;
 }
