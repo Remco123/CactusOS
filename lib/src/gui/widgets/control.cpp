@@ -29,21 +29,15 @@ void Control::OnMouseDown(int x_abs, int y_abs, uint8_t button)
 {
     //Send event to children
     for(Control* c : this->childs)
-    {
-        if(x_abs >= c->x && x_abs <= c->x + c->width)
-            if(y_abs >= c->y && y_abs <= c->y + c->height)
-                c->OnMouseDown(x_abs - c->x, y_abs - c->y, button);
-    }
+        if(c->Contains(x_abs, y_abs))
+            c->OnMouseDown(x_abs - c->x, y_abs - c->y, button);
 }
 void Control::OnMouseUp(int x_abs, int y_abs, uint8_t button)
 {
     //Send event to children
     for(Control* c : this->childs)
-    {
-        if(x_abs >= c->x && x_abs <= c->x + c->width)
-            if(y_abs >= c->y && y_abs <= c->y + c->height)
-                c->OnMouseUp(x_abs - c->x, y_abs - c->y, button);
-    }
+        if(c->Contains(x_abs, y_abs))
+            c->OnMouseUp(x_abs - c->x, y_abs - c->y, button);
 }
 
 void Control::OnMouseMove(int prevX_abs, int prevY_abs, int newX_abs, int newY_abs)

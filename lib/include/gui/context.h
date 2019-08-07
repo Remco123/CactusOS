@@ -56,6 +56,11 @@ namespace LIBCactusOS
         */
         void MoveToPosition(int newX, int newY);
 
+        /**
+         * Remove this context from the screen and free all the used memory 
+        */
+        void CloseContext();
+
         /*///////////////
         // Events
         *////////////////

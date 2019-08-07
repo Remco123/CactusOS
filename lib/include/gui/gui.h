@@ -14,6 +14,7 @@ namespace LIBCactusOS
     //Communication to the compositor definitions
     #define COMPOSITOR_REQUESTCONTEXT 1
     #define COMPOSITOR_CONTEXTMOVED 2
+    #define COMPOSITOR_CONTEXTCLOSE 3
 
     typedef void (*GUI_MouseCall) (Control* sender, uint8_t button); 
 
@@ -56,6 +57,11 @@ namespace LIBCactusOS
          * Create a thread for the gui
         */
         static void MakeAsync();
+
+        /**
+         * Is the current number of contexts larger than 0? 
+        */
+        static bool HasItems();
 
         /**
          * Request a context buffer for the application to draw to, this buffer is shared between the process and the compositor

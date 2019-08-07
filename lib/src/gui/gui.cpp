@@ -124,7 +124,7 @@ Context* GUI::RequestContext(int width, int height, int x, int y)
 
 void AsyncGUILoop()
 {
-    while (true)
+    while (1)
     {
         GUI::DrawGUI();
         GUI::ProcessEvents();
@@ -135,4 +135,9 @@ void GUI::MakeAsync()
 {
     Print("Creating GUI thread\n");
     Process::CreateThread(AsyncGUILoop, false);
+}
+
+bool GUI::HasItems()
+{
+    return (contextList->size() > 0);
 }

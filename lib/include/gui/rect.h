@@ -48,6 +48,11 @@ namespace LIBCactusOS
         bool Intersect(Rectangle other, Rectangle* result);
 
         /**
+         * Does this rect contain the given point?
+        */
+        bool Contains(int x, int y);
+
+        /**
          * Explode this rect into a list of contiguous rects
         */
         List<Rectangle>* Split(Rectangle cuttingRect);

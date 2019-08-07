@@ -84,7 +84,7 @@ int main()
 
     GUI::MakeAsync();
 
-    while(1) {
+    while(GUI::HasItems()) {
         Process::Yield();
     }
 

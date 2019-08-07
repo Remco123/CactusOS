@@ -31,6 +31,14 @@ bool Rectangle::Intersect(Rectangle other, Rectangle* result)
     return (top < bottom && left < right);
 }
 
+bool Rectangle::Contains(int x, int y)
+{
+    if(x >= this->x && x <= this->x + this->width)
+        if(y >= this->y && y <= this->y + this->height)
+            return true;
+    return false;
+}
+
 // Makes cutting a lot easier
 typedef struct Rect_struct {
     int top;

@@ -41,7 +41,7 @@ int main()
     mainWindow->childs.push_back(rebootButton);
     
     GUI::MakeAsync();
-    while(1)
+    while(GUI::HasItems())
         Process::Yield();
 
     return 0;

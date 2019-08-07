@@ -9,6 +9,7 @@ Window::Window(Context* base)
 {
     base->Window = this;
     this->contextBase = base;
+    this->CreateButtons();
 }
 
 Window::Window(int width, int height, int x, int y)
@@ -22,6 +23,17 @@ Window::Window(int width, int height, int x, int y)
 
     this->contextBase = screen;
     screen->Window = this;
+    this->CreateButtons();
+}
+
+void Window::CreateButtons()
+{
+    Button* b1 = new Button("+");
+    b1->width = b1->height = this->titleBarHeight - 10;
+    b1->y = 5;
+    b1->x = width - this->titleBarHeight + 5;
+    b1->mouseClickHandler = 0; //TODO: GUI_MouseCall(this->Close);
+    this->closeButton = b1;
 }
 
 void Window::DrawTo(Canvas* context, int x_abs, int y_abs)
@@ -38,46 +50,58 @@ void Window::DrawTo(Canvas* context, int x_abs, int y_abs)
 
     for(Control* c : this->childs)
         c->DrawTo(context, x_abs + c->x, y_abs + c->y + titleBarHeight);
+    
+    if(this->closeButton)
+        this->closeButton->DrawTo(context, x_abs + closeButton->x, y_abs + closeButton->y);
 }
 
 void Window::OnMouseDown(int x_abs, int y_abs, uint8_t button)
 {
-    //Print("Window %s has mouseDown\n", this->titleString);
     if(y_abs < this->titleBarHeight) {
-        titleBarMouseDown = true;
-        mouseDownX = x_abs;
-        mouseDownY = y_abs;
-        this->titleBarColor = 0xFF1A7868;
+        
+        if(this->closeButton != 0 && this->closeButton->Contains(x_abs, y_abs))
+            this->closeButton->OnMouseDown(x_abs - closeButton->x, y_abs - closeButton->y, button);
+        
+        else {
+            titleBarMouseDown = true;
+            mouseDownX = x_abs;
+            mouseDownY = y_abs;
+            this->titleBarColor = 0xFF1A7868;
+        }
     }
 
     //Send event to children
     for(Control* c : this->childs)
-    {
-        if(x_abs >= c->x && x_abs <= c->x + c->width)
-            if(y_abs >= c->y + this->titleBarHeight && y_abs <= c->y + c->height + this->titleBarHeight)
-                c->OnMouseDown(x_abs - c->x, y_abs - c->y - this->titleBarHeight, button);
-    }
+        if(c->Contains(x_abs, y_abs - this->titleBarHeight))
+            c->OnMouseDown(x_abs - c->x, y_abs - c->y - this->titleBarHeight, button);
 }
 void Window::OnMouseUp(int x_abs, int y_abs, uint8_t button)
 {
-    //Print("Window %s has mouseUp\n", this->titleString);
     if(y_abs < this->titleBarHeight) {
-        titleBarMouseDown = false;
-        this->titleBarColor = 0xFF4CB272;
+        
+        if(this->closeButton != 0 && this->closeButton->Contains(x_abs, y_abs))
+            this->closeButton->OnMouseUp(x_abs - closeButton->x, y_abs - closeButton->y, button);
+        
+        else {
+            titleBarMouseDown = false;
+            this->titleBarColor = 0xFF4CB272;
+        }
     }
 
     //Send event to children
     for(Control* c : this->childs)
-    {
-        if(x_abs >= c->x && x_abs <= c->x + c->width)
-            if(y_abs >= c->y + this->titleBarHeight && y_abs <= c->y + c->height + this->titleBarHeight)
-                c->OnMouseUp(x_abs - c->x, y_abs - c->y - this->titleBarHeight, button);
-    }
+        if(c->Contains(x_abs, y_abs - this->titleBarHeight))
+            c->OnMouseUp(x_abs - c->x, y_abs - c->y - this->titleBarHeight, button);
 }
 void Window::OnMouseMove(int prevX_abs, int prevY_abs, int newX_abs, int newY_abs)
 {
     if(this->titleBarMouseDown) {
-        //Print("Window Drag!\n");
         this->contextBase->MoveToPosition(this->x + newX_abs - mouseDownX, this->y + newY_abs - mouseDownY);
     }
+}
+void Window::Close(Control* sender, uint8_t button)
+{
+    Print("Closing window %x\n", (uint32_t)this);
+    this->contextBase->CloseContext();
+    this->contextBase->Window = 0;
 }

@@ -42,6 +42,12 @@ void Context::MoveToPosition(int newX, int newY)
     IPCSend(GUI::compositorPID, IPC_TYPE_GUI, COMPOSITOR_CONTEXTMOVED, oldX, oldY, this->sharedContextInfo->width, this->sharedContextInfo->height);
 }
 
+void Context::CloseContext()
+{
+    IPCSend(GUI::compositorPID, IPC_TYPE_GUI, COMPOSITOR_CONTEXTCLOSE);
+    GUI::contextList->Remove(this);
+}
+
 void Context::OnMouseDown(int x_abs, int y_abs, uint8_t button)
 {
     if(this->Window == 0)

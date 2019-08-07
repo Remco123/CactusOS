@@ -12,7 +12,7 @@ int main()
     Window* mainWindow = new Window(300, 200, WIDTH/2 - 150, HEIGHT/2 - 100);
     
     GUI::MakeAsync();
-    while(1)
+    while(GUI::HasItems())
         Process::Yield();
 
     return 0;

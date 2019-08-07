@@ -2,6 +2,7 @@
 #define __LIBCACTUSOS__WINDOW_H
 
 #include <gui/widgets/control.h>
+#include <gui/widgets/button.h>
 #include <gui/context.h>
 
 namespace LIBCactusOS
@@ -20,6 +21,14 @@ namespace LIBCactusOS
         //Remember where the mouse was held down for a smooth window drag
         int mouseDownX = 0;
         int mouseDownY = 0;
+
+        // Window Control Buttons
+        Button* closeButton = 0;
+
+        /*
+         * Create the close button for this window
+        */
+        void CreateButtons();
     public:
         char* titleString = 0;
 
@@ -37,6 +46,11 @@ namespace LIBCactusOS
          * Create a new window that request a context for itself to use
         */
         Window(int width, int height, int x, int y);
+        
+        /**
+         * Close this window, this can cause the application to exit
+        */
+        void Close(Control* sender, uint8_t button);
 
         /**
          * Draw this window to a canvas
