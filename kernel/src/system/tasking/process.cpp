@@ -129,6 +129,11 @@ Process* ProcessHelper::Create(char* fileName, bool isKernel)
 
     proc->heap.heapStart = pageRoundUp(proc->excecutable.memBase + proc->excecutable.memSize);
     proc->heap.heapEnd = proc->heap.heapStart + PROC_USER_HEAP_SIZE;
+
+    //Redirect input to keyboard
+    proc->stdInput = System::keyboardStream;
+    //Redirect output to screen
+    proc->stdOutput = System::ProcStandardOut;
    
     mainThread->parent = proc;
 

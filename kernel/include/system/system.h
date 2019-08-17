@@ -41,7 +41,25 @@ namespace CactusOS
         {
             TextMode,
             GraphicsMode
-        };        
+        };
+
+        /**
+         * The default stream where processes data is send to.
+         * Data is send to the screen/serial output
+        */
+        class StandardOutSteam : public Stream
+        {
+        public:
+            StandardOutSteam() : Stream() {}
+
+            // We only overwrite the write function since reading is not supported
+            void Write(char byte)
+            {
+                char str[1];
+                str[0] = byte;
+                Print(str, 1);
+            }
+        };     
 
         class System
         {
@@ -63,6 +81,8 @@ namespace CactusOS
 
             static ScreenMode screenMode;
             static bool gdbEnabled; //Is the gdb stub enabled?
+            static Stream* keyboardStream;
+            static Stream* ProcStandardOut;
             #if BOCHS_GFX_HACK
             static bool isBochs; //are we running inside bochs
             #endif

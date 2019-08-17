@@ -43,6 +43,18 @@ namespace LIBCactusOS
          * Force a task switch
         */
         static void Yield();
+        /**
+         * Write a byte to this processes standard output stream 
+        */
+        static void WriteStdOut(char byte);
+        /**
+         * Read a byte from this processes standard input stream
+        */
+        static char ReadStdIn();
+        /**
+         * Redirect one process output to another process input 
+        */
+        static void BindSTDIO(int fromID, int toID);
     };
 }
 

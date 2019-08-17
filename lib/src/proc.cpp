@@ -27,3 +27,15 @@ void Process::Yield()
 {
     DoSyscall(SYSCALL_YIELD);
 }
+void Process::WriteStdOut(char byte)
+{
+    DoSyscall(SYSCALL_WRITE_STDIO, byte);
+}
+char Process::ReadStdIn()
+{
+    return DoSyscall(SYSCALL_READ_STDIO);
+}
+void Process::BindSTDIO(int fromID, int toID)
+{
+    DoSyscall(SYSCALL_REDIRECT_STDIO, fromID, toID);
+}

@@ -24,6 +24,8 @@ SharedSystemInfo* System::systemInfo = 0;
 
 ScreenMode System::screenMode = ScreenMode::TextMode;
 bool System::gdbEnabled = false;
+Stream* System::keyboardStream = 0;
+Stream* System::ProcStandardOut = 0;
 #if BOCHS_GFX_HACK
 bool System::isBochs = false; //are we running inside bochs
 #endif
@@ -114,5 +116,6 @@ void System::Start()
     BootConsole::WriteLine("Preparing IPC");
     IPCManager::Initialize();
 
+    System::ProcStandardOut = new StandardOutSteam();
     Log(Info, "System Initialized");
 }

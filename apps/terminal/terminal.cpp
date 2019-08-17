@@ -3,6 +3,7 @@
 #include <gui/widgets/window.h>
 #include <gui/widgets/label.h>
 #include <gui/directgui.h>
+#include <log.h>
 #include <proc.h>
 
 int main()
@@ -10,6 +11,9 @@ int main()
     GUI::Initialize();
 
     Window* mainWindow = new Window(300, 200, WIDTH/2 - 150, HEIGHT/2 - 100);
+
+    Process::WriteStdOut('K');
+    Print("Stdin: %c\n", Process::ReadStdIn());
     
     GUI::MakeAsync();
     while(GUI::HasItems())

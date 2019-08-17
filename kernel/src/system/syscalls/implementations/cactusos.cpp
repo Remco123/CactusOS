@@ -189,6 +189,31 @@ CPUState* CactusOSSyscalls::HandleSyscall(CPUState* state)
                 state->EAX = System::vfs->EjectDrive((char*)state->EBX);
             }
             break;
+        case SYSCALL_READ_STDIO:
+            {
+                if(proc->stdInput != 0)
+                {
+                    while (proc->stdInput->Availible() <= 0) //TODO: Use blocking here
+                        System::scheduler->ForceSwitch();
+                    state->EAX = proc->stdInput->Read();
+                }
+                else
+                    Log(Warning, "StdIn is zero for process %s", proc->fileName);
+            }
+            break;
+        case SYSCALL_WRITE_STDIO:
+            {
+                if(proc->stdOutput != 0)
+                    proc->stdOutput->Write((char)state->EBX);
+                else
+                    Log(Warning, "StdOut is zero for process %s", proc->fileName);
+            }
+            break;
+        case SYSCALL_REDIRECT_STDIO:
+            {
+
+            }
+            break;
         default:
             Log(Warning, "Got unkown syscall %d from process %d", sysCall, proc->id);
             state->EAX = SYSCALL_RET_ERROR;

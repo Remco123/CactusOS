@@ -5,6 +5,7 @@
 #include <common/list.h>
 #include <common/types.h>
 #include <../../lib/include/ipc.h>
+#include <system/memory/stream.h>
 
 namespace CactusOS
 {
@@ -39,6 +40,9 @@ namespace CactusOS
                 common::uint32_t heapEnd;
             } heap;
             List<LIBCactusOS::IPCMessage> ipcMessages;
+
+            Stream* stdInput;
+            Stream* stdOutput;
 
             //For Debuging
             char fileName[32];

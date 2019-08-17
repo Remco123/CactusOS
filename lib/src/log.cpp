@@ -4,6 +4,7 @@
 #include <types.h>
 #include <string.h>
 #include <convert.h>
+#include <proc.h>
 
 using namespace LIBCactusOS;
 
@@ -14,7 +15,10 @@ void LIBCactusOS::Log(LogLevel level, char* msg)
 
 void printLen(const char* data, uint32_t length)
 {
-    DoSyscall(SYSCALL_PRINT, (int)data, length);
+    for(uint32_t i = 0; i < length; i++)
+        Process::WriteStdOut(data[i]);
+    
+    //DoSyscall(SYSCALL_PRINT, (int)data, length);
 }
 
 void LIBCactusOS::Print(const char* __restrict__ format, ...)
