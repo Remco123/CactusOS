@@ -12,7 +12,7 @@ int main()
 
     Window* mainWindow = new Window(300, 200, WIDTH/2 - 150, HEIGHT/2 - 100);
 
-    Process::WriteStdOut('K');
+    Print("This text is send to stdout\n");
     Print("Stdin: %c\n", Process::ReadStdIn());
     
     GUI::MakeAsync();

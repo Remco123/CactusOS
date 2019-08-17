@@ -203,8 +203,14 @@ CPUState* CactusOSSyscalls::HandleSyscall(CPUState* state)
             break;
         case SYSCALL_WRITE_STDIO:
             {
-                if(proc->stdOutput != 0)
-                    proc->stdOutput->Write((char)state->EBX);
+                if(proc->stdOutput != 0) {
+                    char* data = (char*)state->EBX;
+                    if(data == 0 || state->ECX <= 0)
+                        break;
+                    
+                    for(int d = 0; d < state->ECX; d++)
+                        proc->stdOutput->Write(data[d]);
+                }
                 else
                     Log(Warning, "StdOut is zero for process %s", proc->fileName);
             }

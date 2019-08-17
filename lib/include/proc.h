@@ -48,6 +48,10 @@ namespace LIBCactusOS
         */
         static void WriteStdOut(char byte);
         /**
+         * Write bytes to this processes standard output stream 
+        */
+        static void WriteStdOut(char* bytes, int length);
+        /**
          * Read a byte from this processes standard input stream
         */
         static char ReadStdIn();

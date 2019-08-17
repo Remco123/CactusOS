@@ -29,7 +29,13 @@ void Process::Yield()
 }
 void Process::WriteStdOut(char byte)
 {
-    DoSyscall(SYSCALL_WRITE_STDIO, byte);
+    char bytes[1];
+    bytes[0] = byte;
+    DoSyscall(SYSCALL_WRITE_STDIO, (uint32_t)bytes, 1);
+}
+void Process::WriteStdOut(char* bytes, int length)
+{
+    DoSyscall(SYSCALL_WRITE_STDIO, (uint32_t)bytes, length);
 }
 char Process::ReadStdIn()
 {

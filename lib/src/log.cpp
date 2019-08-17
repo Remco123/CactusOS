@@ -15,10 +15,7 @@ void LIBCactusOS::Log(LogLevel level, char* msg)
 
 void printLen(const char* data, uint32_t length)
 {
-    for(uint32_t i = 0; i < length; i++)
-        Process::WriteStdOut(data[i]);
-    
-    //DoSyscall(SYSCALL_PRINT, (int)data, length);
+    Process::WriteStdOut((char*)data, (int)length);
 }
 
 void LIBCactusOS::Print(const char* __restrict__ format, ...)
