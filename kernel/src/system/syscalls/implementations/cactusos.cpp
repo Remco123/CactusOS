@@ -71,7 +71,7 @@ CPUState* CactusOSSyscalls::HandleSyscall(CPUState* state)
                 newProc->Threads[0]->state = Started;
                 if(newProc != 0) {
                     System::scheduler->AddThread(newProc->Threads[0], false);
-                    state->EAX = SYSCALL_RET_SUCCES;
+                    state->EAX = newProc->id;
                 }
                 else
                     state->EAX = SYSCALL_RET_ERROR;
@@ -217,7 +217,37 @@ CPUState* CactusOSSyscalls::HandleSyscall(CPUState* state)
             break;
         case SYSCALL_REDIRECT_STDIO:
             {
+                int fromID = state->EBX;
+                int toID = state->ECX;
 
+                if(fromID == -1) //Redirect to keyboard
+                {
+                    Process* toProc = ProcessHelper::ProcessById(toID);
+                    
+                    Log(Info, "Redirecting keyboard stream to StdIn of %s", toProc->fileName);
+                    toProc->stdInput = System::keyboardStream;
+                    break;
+                }
+
+                Process* fromProc = ProcessHelper::ProcessById(fromID);
+                Process* toProc = ProcessHelper::ProcessById(toID);
+                if(fromProc == 0 || toProc == 0)
+                    break;
+
+                Log(Info, "Redirecting StdOut from %s to StdIn of %s", fromProc->fileName, toProc->fileName);
+
+                if(toProc->stdInput == System::keyboardStream || toProc->stdInput == 0)
+                    toProc->stdInput = new FIFOStream();
+                
+                fromProc->stdOutput = toProc->stdInput;
+            }
+            break;
+        case SYSCALL_STDIO_AVAILABLE:
+            {
+                if(proc->stdInput != 0)
+                    state->EAX = proc->stdInput->Availible();
+                else
+                    state->EAX = 0;
             }
             break;
         default:

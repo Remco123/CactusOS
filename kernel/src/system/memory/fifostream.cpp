@@ -1,4 +1,5 @@
 #include <system/memory/fifostream.h>
+#include <system/system.h>
 
 using namespace CactusOS;
 using namespace CactusOS::common;
@@ -21,8 +22,10 @@ FIFOStream::~FIFOStream()
 
 void FIFOStream::Write(char item)
 {
-    if(this->count == this->capacity)
+    if(this->count == this->capacity) {
+        Log(Error, "Item count has reached capacity for this stream, data will be ignored. Capacity=%d", this->capacity);
         return;
+    }
 
     MemoryOperations::memcpy((void*)this->head, (void*)&item, sizeof(char));
     this->head = (char*)(this->head + sizeof(char));

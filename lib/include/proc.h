@@ -24,7 +24,7 @@ namespace LIBCactusOS
         */
         static SharedSystemInfo* systemInfo;
         /**
-         * Start a new process
+         * Start a new process and return its PID
         */
         static int Run(const char* path);
         /**
@@ -55,6 +55,10 @@ namespace LIBCactusOS
          * Read a byte from this processes standard input stream
         */
         static char ReadStdIn();
+        /**
+         * How many bytes can be read from the stdin stream? 
+        */
+        static int StdInAvailable();
         /**
          * Redirect one process output to another process input 
         */

@@ -70,6 +70,10 @@ void GUI::ProcessEvents()
         if(newTargetControl != 0 && newTargetControl != prevTargetControl)
             newTargetControl->OnMouseMove(prevX - newTargetControl->sharedContextInfo->x, prevY - newTargetControl->sharedContextInfo->y, curX - newTargetControl->sharedContextInfo->x, curY - newTargetControl->sharedContextInfo->y);
     }
+    else if(guiEventType == EVENT_TYPE_KEYPRESS)
+    {
+        Print("KEYPRESS %c\n", (char)guiEvent.arg2);
+    }
 }
 
 void GUI::DrawGUI()
@@ -127,7 +131,10 @@ void AsyncGUILoop()
     while (1)
     {
         GUI::DrawGUI();
-        GUI::ProcessEvents();
+        if(IPCAvailible())
+            GUI::ProcessEvents();
+        else
+            Process::Yield();
     }
 }
 

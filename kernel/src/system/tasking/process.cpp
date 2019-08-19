@@ -130,9 +130,9 @@ Process* ProcessHelper::Create(char* fileName, bool isKernel)
     proc->heap.heapStart = pageRoundUp(proc->excecutable.memBase + proc->excecutable.memSize);
     proc->heap.heapEnd = proc->heap.heapStart + PROC_USER_HEAP_SIZE;
 
-    //Redirect input to keyboard
-    proc->stdInput = System::keyboardStream;
-    //Redirect output to screen
+    //Create stream for input
+    proc->stdInput = new FIFOStream(1000);
+    //Redirect output to system console
     proc->stdOutput = System::ProcStandardOut;
    
     mainThread->parent = proc;
@@ -190,6 +190,15 @@ void ProcessHelper::RemoveProcess(Process* proc)
 
     //Delete ipc messages
     proc->ipcMessages.Clear();
+    
+    //Remove processes output that point to this process input
+    for(int i = 0; i < Processes.size(); i++)
+        if(Processes[i]->stdOutput == proc->stdInput)
+            Processes[i]->stdOutput = 0;
+    
+    //Free memory used by stdinput if possible
+    if(proc->stdInput != 0 && proc->stdInput != System::keyboardStream)
+        delete proc->stdInput;
 
     delete proc;
 

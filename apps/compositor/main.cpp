@@ -164,6 +164,9 @@ int main()
     if(!RequestSystemInfo())
         return -1;
 
+    Print("Requesting direct keyboard input\n");
+    Process::BindSTDIO(-1, Process::ID);
+
     contextList = new List<ContextInfo*>(); contextList->Clear();
     dirtyRectList = new List<Rectangle>(); dirtyRectList->Clear();
     Print("Listening for requests\n");
@@ -441,4 +444,13 @@ void ProcessEvents()
     prevMouseLeft = mouseLeft;
     prevMouseMiddle = mouseMiddle;
     prevMouseRight = mouseRight;
+
+
+    // Process all the pressed keys
+    while(Process::StdInAvailable() > 0)
+    {
+        char key = Process::ReadStdIn();
+        ContextInfo* sendTo = contextList->GetAt(0); //Send key to the context currenly in focus
+        IPCSend(sendTo->clientID, IPC_TYPE_GUI_EVENT, EVENT_TYPE_KEYPRESS, (uint32_t)key);
+    }
 }

@@ -45,3 +45,7 @@ void Process::BindSTDIO(int fromID, int toID)
 {
     DoSyscall(SYSCALL_REDIRECT_STDIO, fromID, toID);
 }
+int Process::StdInAvailable()
+{
+    return DoSyscall(SYSCALL_STDIO_AVAILABLE);
+}

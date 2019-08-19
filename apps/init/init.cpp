@@ -87,9 +87,9 @@ int main()
 
     bar->SetValue(70);
 
-    Print("Launched Compositor with status %d\n", Process::Run("B:\\apps\\composit.bin"));
-    Print("Launched Desktop with status %d\n", Process::Run("B:\\apps\\desktop.bin"));
-    Print("Launched Clock with status %d\n", Process::Run("B:\\apps\\clock.bin"));
+    Print("Launched Compositor pid: %d\n", Process::Run("B:\\apps\\composit.bin"));
+    Print("Launched Desktop pid: %d\n", Process::Run("B:\\apps\\desktop.bin"));
+    Print("Launched Clock pid: %d\n", Process::Run("B:\\apps\\clock.bin"));
 
     bar->SetValue(100); 
 
