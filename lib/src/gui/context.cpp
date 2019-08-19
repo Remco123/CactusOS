@@ -56,10 +56,7 @@ void Context::OnMouseDown(int x_abs, int y_abs, uint8_t button)
     Window->OnMouseDown(x_abs, y_abs, button);
 }
 void Context::OnMouseUp(int x_abs, int y_abs, uint8_t button)
-{
-    if(this->mouseClickHandler != 0)
-        this->mouseClickHandler((Control*)this, button);
-    
+{    
     if(this->Window == 0)
         return;
     

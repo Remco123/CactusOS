@@ -17,8 +17,6 @@ namespace LIBCactusOS
     #define COMPOSITOR_CONTEXTMOVED 2
     #define COMPOSITOR_CONTEXTCLOSE 3
 
-    typedef void (*GUI_MouseCall) (Control* sender, uint8_t button); 
-
     class GUI
     {
     private:

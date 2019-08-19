@@ -3,7 +3,7 @@
 using namespace LIBCactusOS;
 
 Control::Control(int w, int h, int x, int y)
-: Rectangle(w, h, x, y)
+: EventObject(), Rectangle(w, h, x, y)
 {
     this->childs.Clear();
     this->focusedChild = 0;
@@ -28,6 +28,8 @@ void Control::DrawTo(Canvas* context, int x_abs, int y_abs)
 
 void Control::OnMouseDown(int x_abs, int y_abs, uint8_t button)
 {
+    this->MouseDown();
+
     //Send event to children
     for(Control* c : this->childs)
         if(c->Contains(x_abs, y_abs)) {
@@ -37,6 +39,8 @@ void Control::OnMouseDown(int x_abs, int y_abs, uint8_t button)
 }
 void Control::OnMouseUp(int x_abs, int y_abs, uint8_t button)
 {
+    this->MouseUp();
+
     //Send event to children
     for(Control* c : this->childs)
         if(c->Contains(x_abs, y_abs))
@@ -45,11 +49,15 @@ void Control::OnMouseUp(int x_abs, int y_abs, uint8_t button)
 
 void Control::OnMouseMove(int prevX_abs, int prevY_abs, int newX_abs, int newY_abs)
 {
+    this->MouseMove();
+
     //TODO: Implement mouseEnter and mouseLeave here
 }
 
 void Control::OnKeyPress(char key)
 {
+    this->KeyPress();
+
     if(this->focusedChild != 0)
         this->focusedChild->OnKeyPress(key);
 }

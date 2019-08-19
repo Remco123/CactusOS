@@ -1,6 +1,7 @@
 #include <gui/widgets/window.h>
 #include <gui/gui.h>
 #include <log.h>
+#include <delegates.h>
 
 using namespace LIBCactusOS;
 
@@ -32,7 +33,7 @@ void Window::CreateButtons()
     b1->width = b1->height = this->titleBarHeight - 10;
     b1->y = 5;
     b1->x = width - this->titleBarHeight + 5;
-    b1->mouseClickHandler = 0; //TODO: GUI_MouseCall(this->Close);
+    b1->onClick.AddHandler(Delegate<void>(this, &Window::Close));
     this->closeButton = b1;
 }
 
@@ -99,7 +100,7 @@ void Window::OnMouseMove(int prevX_abs, int prevY_abs, int newX_abs, int newY_ab
         this->contextBase->MoveToPosition(this->x + newX_abs - mouseDownX, this->y + newY_abs - mouseDownY);
     }
 }
-void Window::Close(Control* sender, uint8_t button)
+void Window::Close()
 {
     Print("Closing window %x\n", (uint32_t)this);
     this->contextBase->CloseContext();

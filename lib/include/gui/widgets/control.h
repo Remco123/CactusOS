@@ -5,13 +5,14 @@
 #include <gui/rect.h>
 #include <list.h>
 #include <gui/canvas.h>
+#include <gui/events.h>
 
 namespace LIBCactusOS
 {
     /**
      * A class describing a gui object with possible children
     */
-    class Control : public Rectangle
+    class Control : public EventObject, public Rectangle
     {
     public:
         /**
@@ -40,10 +41,12 @@ namespace LIBCactusOS
         */
         virtual void DrawTo(Canvas* context, int x_abs, int y_abs);
 
-        /*/////////
-        // Events
-        *//////////
-
+    /*/////////
+    // Events called by parent or context
+    *//////////
+    friend class Window;
+    friend class Context;
+    protected:
         /**
          * Called when mouse is down on control
         */

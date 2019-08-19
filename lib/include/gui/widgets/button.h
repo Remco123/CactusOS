@@ -20,7 +20,7 @@ namespace LIBCactusOS
         /**
          * What function do we need to call when the button is pressed
         */
-        GUI_MouseCall mouseClickHandler = 0;
+        EventHandlerList onClick;
 
         /**
          * Create a new button with a peice of text
@@ -32,9 +32,12 @@ namespace LIBCactusOS
         */
         void DrawTo(Canvas* context, int x_abs, int y_abs);
 
-        /*/////////
-        // Events
-        *//////////
+    /*/////////
+    // Events
+    *//////////
+    friend class Window;
+    friend class Context;
+    protected:
         /**
          * Called when mouse is down on control
         */

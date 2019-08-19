@@ -8,12 +8,10 @@
 
 namespace LIBCactusOS
 {   
-    typedef void (*GUI_MouseCall) (Control* sender, uint8_t button);  
-
     /**
      * Represents a region of framebuffer shared between client and server
     */
-    class Context
+    class Context : public EventObject
     { 
     public:
         /**
@@ -30,11 +28,6 @@ namespace LIBCactusOS
          * A struct that is shared with the compositor that describes the physical dimensions of this context
         */
         ContextInfo* sharedContextInfo;
-
-        /**
-         * A pointer to a function that gets called when the mouse is clicked inside this context
-        */
-        GUI_MouseCall mouseClickHandler = 0;
 
         /**
          * Create a new context by a framebuffer and dimensions
@@ -61,10 +54,11 @@ namespace LIBCactusOS
         */
         void CloseContext();
 
-        /*///////////////
-        // Events
-        *////////////////
-
+    /*///////////////
+    // Events called by GUI class
+    *////////////////
+    friend class GUI;
+    protected:
         /**
          * Called when mouse is down on context
         */

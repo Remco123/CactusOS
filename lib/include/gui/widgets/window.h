@@ -50,7 +50,7 @@ namespace LIBCactusOS
         /**
          * Close this window, this can cause the application to exit
         */
-        void Close(Control* sender, uint8_t button);
+        void Close();
 
         /**
          * Draw this window to a canvas
@@ -58,7 +58,9 @@ namespace LIBCactusOS
          * x_abs/y_abs: the coördinate of this window in absolute related to the canvas
         */
         void DrawTo(Canvas* context, int x_abs, int y_abs);
-
+    friend class Window;
+    friend class Context;
+    protected:
         /**
          * Called when mouse is down on window
         */
