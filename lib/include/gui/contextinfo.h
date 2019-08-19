@@ -26,6 +26,8 @@ struct ContextInfo
     bool supportsTransparency;
     // Can this context be moved to the front using a mouse click in it? (this will be done automatically when set to false)
     bool background;
+    // Each context gets it own uniqe id, this way the compositor can find the right context for each message. For example when a keypress occurs.
+    int id;
 };
 
 #endif

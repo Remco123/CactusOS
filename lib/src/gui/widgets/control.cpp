@@ -6,6 +6,7 @@ Control::Control(int w, int h, int x, int y)
 : Rectangle(w, h, x, y)
 {
     this->childs.Clear();
+    this->focusedChild = 0;
 }
 
 Control::~Control()
@@ -29,8 +30,10 @@ void Control::OnMouseDown(int x_abs, int y_abs, uint8_t button)
 {
     //Send event to children
     for(Control* c : this->childs)
-        if(c->Contains(x_abs, y_abs))
+        if(c->Contains(x_abs, y_abs)) {
+            this->focusedChild = c;
             c->OnMouseDown(x_abs - c->x, y_abs - c->y, button);
+        }
 }
 void Control::OnMouseUp(int x_abs, int y_abs, uint8_t button)
 {
@@ -43,4 +46,10 @@ void Control::OnMouseUp(int x_abs, int y_abs, uint8_t button)
 void Control::OnMouseMove(int prevX_abs, int prevY_abs, int newX_abs, int newY_abs)
 {
     //TODO: Implement mouseEnter and mouseLeave here
+}
+
+void Control::OnKeyPress(char key)
+{
+    if(this->focusedChild != 0)
+        this->focusedChild->OnKeyPress(key);
 }

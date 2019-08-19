@@ -80,6 +80,10 @@ bool prevMouseRight = false;
  * Holds if the middle mouse button was previously pressed
 */
 bool prevMouseMiddle = false;
+/**
+ * Which ID does the next context get on creation? 
+*/
+int nextContextID = 1;
 
 void GUILoop()
 {
@@ -228,6 +232,7 @@ void HandleMessage(IPCMessage msg)
             info->clientID = msg.source;
             info->supportsTransparency = false;
             info->background = false;
+            info->id = nextContextID++;
 
             newContextAddress += pageRoundUp(bytes);
             contextList->push_front(info);
@@ -451,6 +456,6 @@ void ProcessEvents()
     {
         char key = Process::ReadStdIn();
         ContextInfo* sendTo = contextList->GetAt(0); //Send key to the context currenly in focus
-        IPCSend(sendTo->clientID, IPC_TYPE_GUI_EVENT, EVENT_TYPE_KEYPRESS, (uint32_t)key);
+        IPCSend(sendTo->clientID, IPC_TYPE_GUI_EVENT, EVENT_TYPE_KEYPRESS, (uint32_t)key, (uint32_t)sendTo->id);
     }
 }

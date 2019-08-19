@@ -19,6 +19,8 @@ namespace LIBCactusOS
         */
         List<Control*> childs;
 
+        Control* focusedChild;
+
         uint32_t backColor = 0xFFCACDD1;
         uint32_t borderColor = 0xFF333333;
 
@@ -54,6 +56,10 @@ namespace LIBCactusOS
          * Called when mouse is moved on control
         */
         virtual void OnMouseMove(int prevX_abs, int prevY_abs, int newX_abs, int newY_abs);
+        /**
+         * Called on keypress 
+        */
+        virtual void OnKeyPress(char key);
     };
 }
 

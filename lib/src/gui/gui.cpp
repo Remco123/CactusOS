@@ -72,7 +72,20 @@ void GUI::ProcessEvents()
     }
     else if(guiEventType == EVENT_TYPE_KEYPRESS)
     {
-        Print("KEYPRESS %c\n", (char)guiEvent.arg2);
+        // Find context that is currently focused and where the key should be send to.
+        // TODO: Find a faster way for this, should be possible.
+        for(int i = 0; i < contextList->size(); i++)
+        {
+            Context* c = contextList->GetAt(i);
+            if(c->sharedContextInfo == 0)
+                continue;
+
+            if(c->sharedContextInfo->id == guiEvent.arg3)
+            {
+                c->OnKeyPress((char)guiEvent.arg2);
+                break; // Quit loop
+            }
+        }
     }
 }
 

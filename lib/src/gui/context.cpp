@@ -72,3 +72,7 @@ void Context::OnMouseMove(int prevX_abs, int prevY_abs, int newX_abs, int newY_a
     
     Window->OnMouseMove(prevX_abs, prevY_abs, newX_abs, newY_abs);
 }
+void Context::OnKeyPress(char key)
+{
+    Print("Context %x key press %c\n", (uint32_t)this, key);
+}

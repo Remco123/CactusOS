@@ -77,6 +77,10 @@ namespace LIBCactusOS
          * Called when mouse moves above context or enters/leaves context
         */
         void OnMouseMove(int prevX_abs, int prevY_abs, int newX_abs, int newY_abs);
+        /**
+         * Called when a key is pressed and this is the active context.
+        */
+        void OnKeyPress(char key);
     };
 }
 

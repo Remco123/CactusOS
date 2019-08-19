@@ -12,6 +12,7 @@ int main()
     GUI::Initialize();
 
     Window* mainWindow = new Window(300, 200, WIDTH/2 - 150, HEIGHT/2 - 100);
+    mainWindow->titleString = "CactusOS Terminal";
     Label* outputLabel = new Label("Waiting...\n");
     mainWindow->childs.push_back(outputLabel);
 
