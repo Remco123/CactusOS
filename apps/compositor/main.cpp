@@ -248,6 +248,28 @@ void HandleMessage(IPCMessage msg)
             dirtyRectList->push_back(dirtyRect);
             break;
         }
+        // A process requested a close of context
+        case COMPOSITOR_CONTEXTCLOSE:
+        {
+            int contextID = msg.arg2;
+            for(int i = 0; i < contextList->size(); i++)
+            {
+                ContextInfo* c = contextList->GetAt(i);
+                if(c == 0)
+                    continue;
+
+                if(c->id == contextID)
+                {
+                    Print("[Compositor] Removing context: %x\n", (uint32_t)c);
+                    contextList->Remove(c);
+                    
+                    //Finally add a dirty rect at the old position of the context
+                    Rectangle dirtyRect(c->width, c->height, c->x, c->y);
+                    dirtyRectList->push_back(dirtyRect);
+                }
+            }
+            break;
+        }
 
         default:
         {

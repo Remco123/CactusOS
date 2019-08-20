@@ -13,10 +13,10 @@
 
 List<DesktopItem*> items;
 
-void ButtonHandler(EventArgs arg)
+void ButtonHandler(void* sender, IEventArgs arg)
 {
     Print("Desktop Button Handler\n");
-    Context* source = (Context*)arg.sender;
+    Context* source = (Context*)sender;
     for(DesktopItem* item : items)
         if(item->context == source && item->filename != 0)
             Process::Run(item->filename);
@@ -74,7 +74,7 @@ int main()
             item->filename = filenameBuffer;
             item->label = labelBuffer;
             item->iconBuffer = 0;
-            item->context->MouseClick += Delegate<void, EventArgs>(ButtonHandler);
+            item->context->MouseClick += new StaticFunctionCallback(ButtonHandler);
             item->drawLabel = false;
 
             if(FileExists(iconpathBuffer))

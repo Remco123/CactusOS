@@ -29,7 +29,7 @@ void Control::DrawTo(Canvas* context, int x_abs, int y_abs)
 
 void Control::OnMouseDown(int x_abs, int y_abs, uint8_t button)
 {
-    this->MouseDown(EventArgs(this));
+    this->MouseDown.Invoke(this, MouseButtonArgs(button));
 
     //Send event to children
     for(Control* c : this->childs)
@@ -40,8 +40,8 @@ void Control::OnMouseDown(int x_abs, int y_abs, uint8_t button)
 }
 void Control::OnMouseUp(int x_abs, int y_abs, uint8_t button)
 {
-    this->MouseUp(EventArgs(this));
-    this->MouseClick(EventArgs(this));
+    this->MouseUp.Invoke(this, MouseButtonArgs(button));
+    this->MouseClick.Invoke(this, MouseButtonArgs(button));
 
     //Send event to children
     for(Control* c : this->childs)
@@ -51,14 +51,14 @@ void Control::OnMouseUp(int x_abs, int y_abs, uint8_t button)
 
 void Control::OnMouseMove(int prevX_abs, int prevY_abs, int newX_abs, int newY_abs)
 {
-    this->MouseMove(EventArgs(this));
+    this->MouseMove.Invoke(this, MouseMoveArgs(prevX_abs, prevY_abs, newX_abs, newY_abs));
 
     //TODO: Implement mouseEnter and mouseLeave here
 }
 
 void Control::OnKeyPress(char key)
 {
-    this->KeyPress(EventArgs(this));
+    this->KeyPress.Invoke(this, KeypressArgs(key));
 
     if(this->focusedChild != 0)
         this->focusedChild->OnKeyPress(key);

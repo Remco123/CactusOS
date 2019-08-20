@@ -44,13 +44,13 @@ void Context::MoveToPosition(int newX, int newY)
 
 void Context::CloseContext()
 {
-    IPCSend(GUI::compositorPID, IPC_TYPE_GUI, COMPOSITOR_CONTEXTCLOSE);
+    IPCSend(GUI::compositorPID, IPC_TYPE_GUI, COMPOSITOR_CONTEXTCLOSE, this->sharedContextInfo->id);
     GUI::contextList->Remove(this);
 }
 
 void Context::OnMouseDown(int x_abs, int y_abs, uint8_t button)
 {
-    this->MouseDown(EventArgs((Control*)this));
+    this->MouseDown.Invoke(this, MouseButtonArgs(button));
 
     if(this->Window == 0)
         return;
@@ -59,8 +59,8 @@ void Context::OnMouseDown(int x_abs, int y_abs, uint8_t button)
 }
 void Context::OnMouseUp(int x_abs, int y_abs, uint8_t button)
 {    
-    this->MouseUp(EventArgs((Control*)this));
-    this->MouseClick(EventArgs((Control*)this));
+    this->MouseUp.Invoke(this, MouseButtonArgs(button));
+    this->MouseClick.Invoke(this, MouseButtonArgs(button));
 
     if(this->Window == 0)
         return;
@@ -69,7 +69,7 @@ void Context::OnMouseUp(int x_abs, int y_abs, uint8_t button)
 }
 void Context::OnMouseMove(int prevX_abs, int prevY_abs, int newX_abs, int newY_abs)
 {
-    this->MouseMove(EventArgs((Control*)this));
+    this->MouseMove.Invoke(this, MouseMoveArgs(prevX_abs, prevY_abs, newX_abs, newY_abs));
 
     if(this->Window == 0)
         return;
@@ -78,6 +78,7 @@ void Context::OnMouseMove(int prevX_abs, int prevY_abs, int newX_abs, int newY_a
 }
 void Context::OnKeyPress(char key)
 {
-    this->KeyPress(EventArgs((Control*)this));
+    this->KeyPress.Invoke(this, KeypressArgs(key));
+    
     Print("Context %x key press %c\n", (uint32_t)this, key);
 }
