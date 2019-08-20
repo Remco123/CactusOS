@@ -13,7 +13,7 @@
 
 List<DesktopItem*> items;
 
-void ButtonHandler(void* sender, IEventArgs arg)
+void ButtonHandler(void* sender, MouseButtonArgs arg)
 {
     Print("Desktop Button Handler\n");
     Context* source = (Context*)sender;
@@ -74,7 +74,7 @@ int main()
             item->filename = filenameBuffer;
             item->label = labelBuffer;
             item->iconBuffer = 0;
-            item->context->MouseClick += new StaticFunctionCallback(ButtonHandler);
+            item->context->MouseClick += ButtonHandler;
             item->drawLabel = false;
 
             if(FileExists(iconpathBuffer))

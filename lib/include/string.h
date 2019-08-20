@@ -17,6 +17,7 @@ extern "C"
     List<char*> str_Split(const char* str, char d);
     char* str_Uppercase(char* str);
     char* str_Lowercase(char* str);
+    char* str_Add(char* str, char c);
 }
 
 #endif

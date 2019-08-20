@@ -80,5 +80,8 @@ void Context::OnKeyPress(char key)
 {
     this->KeyPress.Invoke(this, KeypressArgs(key));
     
-    Print("Context %x key press %c\n", (uint32_t)this, key);
+    if(this->Window == 0)
+        return;
+    
+    Window->OnKeyPress(key);
 }

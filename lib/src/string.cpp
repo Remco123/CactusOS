@@ -132,3 +132,14 @@ List<char*> str_Split(const char* str, char d)
 
     return Result;
 }
+char* str_Add(char* str, char c)
+{
+	int oldLen = strlen(str);
+    char* newStr = new char[oldLen + 1];
+    memcpy(newStr, str, oldLen);
+    newStr[oldLen] = c;
+    newStr[oldLen + 1] = '\0';
+	
+	delete str;
+	return newStr;
+}

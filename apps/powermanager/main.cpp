@@ -8,9 +8,9 @@
 #include <vfs.h>
 #include <log.h>
 
-void PoweroffButtonCallback(void* sender, IEventArgs arg);
-void RebootButtonCallback(void* sender, IEventArgs arg);
-void PoweroffAndEjectButtonCallback(void* sender, IEventArgs arg);
+void PoweroffButtonCallback(void* sender, MouseButtonArgs arg);
+void RebootButtonCallback(void* sender, MouseButtonArgs arg);
+void PoweroffAndEjectButtonCallback(void* sender, MouseButtonArgs arg);
 
 int main()
 {
@@ -22,19 +22,19 @@ int main()
     Button* shutdownButton = new Button("Poweroff");
     shutdownButton->width = 75;
     shutdownButton->height = 40;
-    shutdownButton->MouseClick += new StaticFunctionCallback(PoweroffButtonCallback);
+    shutdownButton->MouseClick += PoweroffButtonCallback;
 
     Button* shutdownAndEjectButton = new Button("Eject CD+Shutdown");
     shutdownAndEjectButton->width = 150;
     shutdownAndEjectButton->height = 30;
     shutdownAndEjectButton->y = 40;
-    shutdownAndEjectButton->MouseClick += new StaticFunctionCallback(PoweroffAndEjectButtonCallback);
+    shutdownAndEjectButton->MouseClick += PoweroffAndEjectButtonCallback;
 
     Button* rebootButton = new Button("Reboot");
     rebootButton->width = 75;
     rebootButton->height = 40;
     rebootButton->x = 75;
-    rebootButton->MouseClick += new StaticFunctionCallback(RebootButtonCallback);
+    rebootButton->MouseClick += RebootButtonCallback;
 
     mainWindow->childs.push_back(shutdownButton);
     mainWindow->childs.push_back(shutdownAndEjectButton);
@@ -47,15 +47,15 @@ int main()
     return 0;
 }
  
-void PoweroffButtonCallback(void* sender, IEventArgs arg)
+void PoweroffButtonCallback(void* sender, MouseButtonArgs arg)
 {
     DoSyscall(SYSCALL_SHUTDOWN);
 }
-void RebootButtonCallback(void* sender, IEventArgs arg)
+void RebootButtonCallback(void* sender, MouseButtonArgs arg)
 {
     DoSyscall(SYSCALL_REBOOT);
 }
-void PoweroffAndEjectButtonCallback(void* sender, IEventArgs arg)
+void PoweroffAndEjectButtonCallback(void* sender, MouseButtonArgs arg)
 {
     Print("EjectDisk returned %d\n", (int)EjectDisk("B:\\"));
     DoSyscall(SYSCALL_SHUTDOWN);

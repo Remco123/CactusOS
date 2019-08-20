@@ -13,7 +13,10 @@ int main()
 
     Window* mainWindow = new Window(300, 200, WIDTH/2 - 150, HEIGHT/2 - 100);
     mainWindow->titleString = "CactusOS Terminal";
-    Label* outputLabel = new Label("Waiting...\n");
+
+    Label* outputLabel = new Label();
+    outputLabel->text = new char[1];
+    outputLabel->text[0] = '\0';
     mainWindow->childs.push_back(outputLabel);
 
     int childID = Process::Run("B:\\apps\\echo.bin");
@@ -23,15 +26,7 @@ int main()
     while(GUI::HasItems())
     {
         char c = Process::ReadStdIn();
-        
-        int oldLen = strlen(outputLabel->text);
-        char* newStr = new char[oldLen + 1];
-        memcpy(newStr, outputLabel->text, oldLen);
-        newStr[oldLen] = c;
-        newStr[oldLen + 1] = '\0';
-        //delete outputLabel->text;
-
-        outputLabel->text = newStr;
+        outputLabel->text = str_Add(outputLabel->text, c);
     }
 
     return 0;
