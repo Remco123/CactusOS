@@ -3,13 +3,26 @@
 
 #include <list.h>
 #include <delegates.h>
+#include <gui/widgets/control.h>
 
 namespace LIBCactusOS
 {
+    class Control;
+    class EventArgs
+    {
+    public:
+        Control* sender;
+        
+        EventArgs(Control* source)
+        {
+            this->sender = source;
+        }
+    };
+
     class EventHandlerList
     {
     private:
-        List<Delegate<void>> callbacks;
+        List<Delegate<void, EventArgs>> callbacks;
     public:
         /**
          * Create new EventHandlerList 
@@ -20,21 +33,21 @@ namespace LIBCactusOS
             callbacks.Clear();
         }
 
-        void AddHandler(Delegate<void> handler)
+        void AddHandler(Delegate<void, EventArgs> handler)
         {
             callbacks.push_back(handler);
         }
-        void operator+=(Delegate<void> handler)
+        void operator+=(Delegate<void, EventArgs> handler)
         {
             AddHandler(handler);
         }
         /**
          * Call all handlers for this event
         */
-        void operator()()
+        void operator()(EventArgs arg)
         {
             for(auto c : callbacks)
-                c();
+                c(arg);
         }
     };
 

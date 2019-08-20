@@ -12,9 +12,9 @@
 
 using namespace LIBCactusOS;
 
-void ButtonClickHandler(Button* sender, uint8_t button);
-void CalculateButtonHandler(Button* sender, uint8_t button);
-void NewClickHandler(Button* sender, uint8_t button)
+void ButtonClickHandler(EventArgs arg);
+void CalculateButtonHandler(EventArgs arg);
+void NewClickHandler(EventArgs arg)
 {
     Process::Run("B:\\apps\\calc.bin");
 }
@@ -49,7 +49,7 @@ int main()
             but->width = but->height = 30;
             but->x = 5 + x*(150/3);
             but->y = 37 + y*(120/3);
-            but->mouseClickHandler = GUI_MouseCall(ButtonClickHandler);
+            but->MouseClick += Delegate<void, EventArgs>(ButtonClickHandler);
             window1->childs.push_back(but);
         }
 
@@ -57,14 +57,14 @@ int main()
     plusButton->width = plusButton->height = 30;
     plusButton->x = 55;
     plusButton->y = 157;
-    plusButton->mouseClickHandler = GUI_MouseCall(ButtonClickHandler);
+    plusButton->MouseClick += Delegate<void, EventArgs>(ButtonClickHandler);
     window1->childs.push_back(plusButton);
 
     Button* minButton = new Button("-");
     minButton->width = minButton->height = 30;
     minButton->x = 105;
     minButton->y = 157;
-    minButton->mouseClickHandler = GUI_MouseCall(ButtonClickHandler);
+    minButton->MouseClick += Delegate<void, EventArgs>(ButtonClickHandler);
     window1->childs.push_back(minButton);
 
     Button* calcButton = new Button("Calculate");
@@ -72,14 +72,14 @@ int main()
     calcButton->height = 30;
     calcButton->x = 5;
     calcButton->y = 190;
-    calcButton->mouseClickHandler = GUI_MouseCall(CalculateButtonHandler);
+    calcButton->MouseClick += Delegate<void, EventArgs>(CalculateButtonHandler);
     window1->childs.push_back(calcButton);
 
     Button* newButton = new Button("New");
     newButton->width = newButton->height = 30;
     newButton->x = 105;
     newButton->y = 190;
-    newButton->mouseClickHandler = GUI_MouseCall(NewClickHandler);
+    newButton->MouseClick += Delegate<void, EventArgs>(NewClickHandler);
     window1->childs.push_back(newButton);
 
     GUI::MakeAsync();
@@ -91,7 +91,7 @@ int main()
     return 0;
 }
 
-void ButtonClickHandler(Button* sender, uint8_t button)
+void ButtonClickHandler(EventArgs arg)
 {
     if(calculated) { //Reset text
         delete textLabel->text; //Free previous text buffer
@@ -102,12 +102,11 @@ void ButtonClickHandler(Button* sender, uint8_t button)
     int newStrLen = strlen(textLabel->text) + 1;
     char* newStr = new char[newStrLen];
     memcpy(newStr, textLabel->text, newStrLen-1);
-
-    newStr[newStrLen-1] = sender->label[0];
+    newStr[newStrLen-1] = ((Button*)arg.sender)->label[0];
     textLabel->text = newStr;
 }
 
-void CalculateButtonHandler(Button* sender, uint8_t button)
+void CalculateButtonHandler(EventArgs arg)
 {
     char* str = textLabel->text;
 

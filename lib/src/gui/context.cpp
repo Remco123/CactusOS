@@ -50,6 +50,8 @@ void Context::CloseContext()
 
 void Context::OnMouseDown(int x_abs, int y_abs, uint8_t button)
 {
+    this->MouseDown(EventArgs((Control*)this));
+
     if(this->Window == 0)
         return;
 
@@ -57,6 +59,9 @@ void Context::OnMouseDown(int x_abs, int y_abs, uint8_t button)
 }
 void Context::OnMouseUp(int x_abs, int y_abs, uint8_t button)
 {    
+    this->MouseUp(EventArgs((Control*)this));
+    this->MouseClick(EventArgs((Control*)this));
+
     if(this->Window == 0)
         return;
     
@@ -64,6 +69,8 @@ void Context::OnMouseUp(int x_abs, int y_abs, uint8_t button)
 }
 void Context::OnMouseMove(int prevX_abs, int prevY_abs, int newX_abs, int newY_abs)
 {
+    this->MouseMove(EventArgs((Control*)this));
+
     if(this->Window == 0)
         return;
     
@@ -71,5 +78,6 @@ void Context::OnMouseMove(int prevX_abs, int prevY_abs, int newX_abs, int newY_a
 }
 void Context::OnKeyPress(char key)
 {
+    this->KeyPress(EventArgs((Control*)this));
     Print("Context %x key press %c\n", (uint32_t)this, key);
 }

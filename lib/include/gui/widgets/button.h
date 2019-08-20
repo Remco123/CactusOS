@@ -16,11 +16,6 @@ namespace LIBCactusOS
          * The text of this label
         */
         char* label = 0;
-        
-        /**
-         * What function do we need to call when the button is pressed
-        */
-        EventHandlerList onClick;
 
         /**
          * Create a new button with a peice of text

@@ -1,4 +1,5 @@
 #include <gui/widgets/control.h>
+#include <log.h>
 
 using namespace LIBCactusOS;
 
@@ -28,7 +29,7 @@ void Control::DrawTo(Canvas* context, int x_abs, int y_abs)
 
 void Control::OnMouseDown(int x_abs, int y_abs, uint8_t button)
 {
-    this->MouseDown();
+    this->MouseDown(EventArgs(this));
 
     //Send event to children
     for(Control* c : this->childs)
@@ -39,7 +40,8 @@ void Control::OnMouseDown(int x_abs, int y_abs, uint8_t button)
 }
 void Control::OnMouseUp(int x_abs, int y_abs, uint8_t button)
 {
-    this->MouseUp();
+    this->MouseUp(EventArgs(this));
+    this->MouseClick(EventArgs(this));
 
     //Send event to children
     for(Control* c : this->childs)
@@ -49,14 +51,14 @@ void Control::OnMouseUp(int x_abs, int y_abs, uint8_t button)
 
 void Control::OnMouseMove(int prevX_abs, int prevY_abs, int newX_abs, int newY_abs)
 {
-    this->MouseMove();
+    this->MouseMove(EventArgs(this));
 
     //TODO: Implement mouseEnter and mouseLeave here
 }
 
 void Control::OnKeyPress(char key)
 {
-    this->KeyPress();
+    this->KeyPress(EventArgs(this));
 
     if(this->focusedChild != 0)
         this->focusedChild->OnKeyPress(key);

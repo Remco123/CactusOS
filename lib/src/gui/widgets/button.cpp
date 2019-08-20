@@ -32,7 +32,5 @@ void Button::OnMouseUp(int x_abs, int y_abs, uint8_t button)
     //Print("Button %d Mouse Up\n", button);
     this->backColor = 0xFF898989;
 
-    this->onClick();
-
     Control::OnMouseUp(x_abs, y_abs, button);
 }

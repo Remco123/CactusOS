@@ -8,9 +8,9 @@
 #include <vfs.h>
 #include <log.h>
 
-void PoweroffButtonCallback(Control* sender, uint8_t Button);
-void RebootButtonCallback(Control* sender, uint8_t Button);
-void PoweroffAndEjectButtonCallback(Control* sender, uint8_t Button);
+void PoweroffButtonCallback(EventArgs arg);
+void RebootButtonCallback(EventArgs arg);
+void PoweroffAndEjectButtonCallback(EventArgs arg);
 
 int main()
 {
@@ -22,19 +22,19 @@ int main()
     Button* shutdownButton = new Button("Poweroff");
     shutdownButton->width = 75;
     shutdownButton->height = 40;
-    shutdownButton->mouseClickHandler = GUI_MouseCall(PoweroffButtonCallback);
+    shutdownButton->MouseClick += Delegate<void, EventArgs>(PoweroffButtonCallback);
 
     Button* shutdownAndEjectButton = new Button("Eject CD+Shutdown");
     shutdownAndEjectButton->width = 150;
     shutdownAndEjectButton->height = 30;
     shutdownAndEjectButton->y = 40;
-    shutdownAndEjectButton->mouseClickHandler = GUI_MouseCall(PoweroffAndEjectButtonCallback);
+    shutdownAndEjectButton->MouseClick += Delegate<void, EventArgs>(PoweroffAndEjectButtonCallback);
 
     Button* rebootButton = new Button("Reboot");
     rebootButton->width = 75;
     rebootButton->height = 40;
     rebootButton->x = 75;
-    rebootButton->mouseClickHandler = GUI_MouseCall(RebootButtonCallback);
+    rebootButton->MouseClick += Delegate<void, EventArgs>(RebootButtonCallback);
 
     mainWindow->childs.push_back(shutdownButton);
     mainWindow->childs.push_back(shutdownAndEjectButton);
@@ -47,15 +47,15 @@ int main()
     return 0;
 }
  
-void PoweroffButtonCallback(Control* sender, uint8_t Button)
+void PoweroffButtonCallback(EventArgs arg)
 {
     DoSyscall(SYSCALL_SHUTDOWN);
 }
-void RebootButtonCallback(Control* sender, uint8_t Button)
+void RebootButtonCallback(EventArgs arg)
 {
     DoSyscall(SYSCALL_REBOOT);
 }
-void PoweroffAndEjectButtonCallback(Control* sender, uint8_t Button)
+void PoweroffAndEjectButtonCallback(EventArgs arg)
 {
     Print("EjectDisk returned %d\n", (int)EjectDisk("B:\\"));
     DoSyscall(SYSCALL_SHUTDOWN);

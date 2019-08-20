@@ -50,7 +50,7 @@ namespace LIBCactusOS
         /**
          * Close this window, this can cause the application to exit
         */
-        void Close();
+        void Close(EventArgs arg);
 
         /**
          * Draw this window to a canvas

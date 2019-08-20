@@ -7,31 +7,31 @@
 
 namespace LIBCactusOS
 {
-    template <typename Ret>
+    template <typename Ret, typename Param0>
     class Callback
     {
     public:
-        virtual Ret invoke() = 0;
+        virtual Ret invoke(Param0 param0) = 0;
     };
 
-    template <typename Ret>
-    class StaticFunctionCallback : public Callback<Ret>
+    template <typename Ret, typename Param0>
+    class StaticFunctionCallback : public Callback<Ret, Param0>
     {
     private:
-        Ret (*func_)();
+        Ret (*func_)(Param0);
     
     public:
-        StaticFunctionCallback(Ret (*func)())
+        StaticFunctionCallback(Ret (*func)(Param0))
         : func_(func)
         {}
         
-        virtual Ret invoke()
+        virtual Ret invoke(Param0 param0)
         {
-            return (*func_)();
+            return (*func_)(param0);
         }
     };
-    template <typename Ret, typename T, typename Method>
-    class MethodCallback : public Callback<Ret>
+    template <typename Ret, typename Param0, typename T, typename Method>
+    class MethodCallback : public Callback<Ret, Param0>
     {
     private:
         void *object_;
@@ -43,33 +43,33 @@ namespace LIBCactusOS
         , method_(method)
         {}
         
-        virtual Ret invoke()
+        virtual Ret invoke(Param0 param0)
         {
             T *obj = static_cast<T *>(object_);
-            return (obj->*method_)();
+            return (obj->*method_)(param0);
         }
     };
-    template <typename Ret>
+    template <typename Ret, typename Param0>
     class Delegate
     {
     private:
-        Callback<Ret> *callback_;
+        Callback<Ret, Param0> *callback_;
         
     public:
-        Delegate(Ret (*func)())
-        :callback_(new StaticFunctionCallback<Ret>(func))
+        Delegate(Ret (*func)(Param0))
+        :callback_(new StaticFunctionCallback<Ret, Param0>(func))
         {}
         
         template <typename T, typename Method>
         Delegate(T *object, Method method)
-        :callback_(new MethodCallback<Ret, T, Method>(object, method))
+        :callback_(new MethodCallback<Ret, Param0, T, Method>(object, method))
         {}
         
         ~Delegate(void) { delete callback_; }
         
-        Ret operator()()
+        Ret operator()(Param0 param0)
         {
-            return callback_->invoke();
+            return callback_->invoke(param0);
         }
     };
 }

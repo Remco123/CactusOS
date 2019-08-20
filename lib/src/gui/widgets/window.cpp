@@ -33,7 +33,7 @@ void Window::CreateButtons()
     b1->width = b1->height = this->titleBarHeight - 10;
     b1->y = 5;
     b1->x = width - this->titleBarHeight + 5;
-    b1->onClick.AddHandler(Delegate<void>(this, &Window::Close));
+    b1->MouseClick.AddHandler(Delegate<void, EventArgs>(this, &Window::Close));
     this->closeButton = b1;
 }
 
@@ -100,7 +100,7 @@ void Window::OnMouseMove(int prevX_abs, int prevY_abs, int newX_abs, int newY_ab
         this->contextBase->MoveToPosition(this->x + newX_abs - mouseDownX, this->y + newY_abs - mouseDownY);
     }
 }
-void Window::Close()
+void Window::Close(EventArgs arg)
 {
     Print("Closing window %x\n", (uint32_t)this);
     this->contextBase->CloseContext();
