@@ -143,14 +143,13 @@ namespace LIBCactusOS
     class EventObject
     {
     public:
-        EventHandlerList<MouseMoveArgs> MouseMove;
         EventHandlerList<MouseButtonArgs> MouseDown;
         EventHandlerList<MouseButtonArgs> MouseUp;
         EventHandlerList<MouseButtonArgs> MouseClick;
         EventHandlerList<KeypressArgs> KeyPress;
 
         EventObject()
-        : MouseMove(), MouseDown(), MouseUp(), MouseClick(), KeyPress()
+        : MouseDown(), MouseUp(), MouseClick(), KeyPress()
         {        }
     };
 }

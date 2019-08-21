@@ -87,6 +87,10 @@ CPUState* CactusOSSyscalls::HandleSyscall(CPUState* state)
         case SYSCALL_CREATE_SHARED_MEM:
             {
                 Process* proc2 = ProcessHelper::ProcessById(state->EBX);
+                if(proc2 == 0) {
+                    state->EAX = false;
+                    break;
+                }
                 state->EAX = SharedMemory::CreateSharedRegion(proc, proc2, state->ECX, state->EDX, state->ESI);
             }
             break;
@@ -248,6 +252,16 @@ CPUState* CactusOSSyscalls::HandleSyscall(CPUState* state)
                     state->EAX = proc->stdInput->Availible();
                 else
                     state->EAX = 0;
+            }
+            break;
+        case SYSCALL_REMOVE_SHARED_MEM:
+            {
+                Process* proc2 = ProcessHelper::ProcessById(state->EBX);
+                if(proc2 == 0) {
+                    state->EAX = false;
+                    break;
+                }
+                state->EAX = SharedMemory::RemoveSharedRegion(proc, proc2, state->ECX, state->EDX, state->ESI);
             }
             break;
         default:

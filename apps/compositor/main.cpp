@@ -262,10 +262,14 @@ void HandleMessage(IPCMessage msg)
                 {
                     Print("[Compositor] Removing context: %x\n", (uint32_t)c);
                     contextList->Remove(c);
-                    
-                    //Finally add a dirty rect at the old position of the context
+
+                    //Add a dirty rect at the old position of the context
                     Rectangle dirtyRect(c->width, c->height, c->x, c->y);
                     dirtyRectList->push_back(dirtyRect);
+                    
+                    //Free shared memory
+                    if(!Process::DeleteSharedMemory(c->clientID, c->virtAddrServer, c->virtAddrClient, pageRoundUp(c->bytes)))
+                        Log(Error, "Could not remove shared memory");
                 }
             }
             break;

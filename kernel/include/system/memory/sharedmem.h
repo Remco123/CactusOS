@@ -27,6 +27,14 @@ namespace CactusOS
              * len: The length of the memory region
             */
             static bool CreateSharedRegion(Process* proc1, Process* proc2, common::uint32_t virtStart1, common::uint32_t virtStart2, common::uint32_t len);
+            /**
+             * Remove shared memory between 2 processes 
+            */
+            static bool RemoveSharedRegion(Process* proc1, Process* proc2, common::uint32_t virtStart, common::uint32_t len);
+            /**
+             * Remove shared memory between 2 processes 
+            */
+            static bool RemoveSharedRegion(Process* proc1, Process* proc2, common::uint32_t virtStart1, common::uint32_t virtStart2, common::uint32_t len);
         };
     }
 }

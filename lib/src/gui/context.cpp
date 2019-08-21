@@ -69,8 +69,6 @@ void Context::OnMouseUp(int x_abs, int y_abs, uint8_t button)
 }
 void Context::OnMouseMove(int prevX_abs, int prevY_abs, int newX_abs, int newY_abs)
 {
-    this->MouseMove.Invoke(this, MouseMoveArgs(prevX_abs, prevY_abs, newX_abs, newY_abs));
-
     if(this->Window == 0)
         return;
     

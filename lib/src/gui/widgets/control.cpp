@@ -51,8 +51,6 @@ void Control::OnMouseUp(int x_abs, int y_abs, uint8_t button)
 
 void Control::OnMouseMove(int prevX_abs, int prevY_abs, int newX_abs, int newY_abs)
 {
-    this->MouseMove.Invoke(this, MouseMoveArgs(prevX_abs, prevY_abs, newX_abs, newY_abs));
-
     //TODO: Implement mouseEnter and mouseLeave here
 }
 
