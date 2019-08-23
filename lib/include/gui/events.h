@@ -90,52 +90,78 @@ namespace LIBCactusOS
         }
     };
 
-////////////////////
-// Event implementations for keypress or mouse events, more will be added later
-////////////////////
-    class MouseMoveArgs
-    {
-    public:
-        int prevX;
-        int prevY;
-        int newX;
-        int newY;
+    ////////////////////
+    // Argument macro implementations
+    ////////////////////
+    #define CREATE_ARGUMENT_CLASS0(name) \
+        class name \
+        { \
+        public: \
+            name() {} \
+        }; \
+    
+    #define CREATE_ARGUMENT_CLASS1(name, t1, var1) \
+        class name \
+        { \
+        public: \
+            t1 var1; \
+            name(t1 var1) \
+            { \
+                this->var1 = var1; \
+            } \
+        }; \
+    
+    #define CREATE_ARGUMENT_CLASS2(name, t1, var1, t2, var2) \
+        class name \
+        { \
+        public: \
+            t1 var1; \
+            t2 var2; \
+            name(t1 var1, t2 var2) \
+            { \
+                this->var1 = var1; \
+                this->var2 = var2; \
+            } \
+        }; \
+    
+    #define CREATE_ARGUMENT_CLASS3(name, t1, var1, t2, var2, t3, var3) \
+        class name \
+        { \
+        public: \
+            t1 var1; \
+            t2 var2; \
+            t3 var3; \
+            name(t1 var1, t2 var2, t3 var3) \
+            { \
+                this->var1 = var1; \
+                this->var2 = var2; \
+                this->var3 = var3; \
+            } \
+        }; \
+    
+    #define CREATE_ARGUMENT_CLASS4(name, t1, var1, t2, var2, t3, var3, t4, var4) \
+        class name \
+        { \
+        public: \
+            t1 var1; \
+            t2 var2; \
+            t3 var3; \
+            t4 var4; \
+            name(t1 var1, t2 var2, t3 var3, t4 var4) \
+            { \
+                this->var1 = var1; \
+                this->var2 = var2; \
+                this->var3 = var3; \
+                this->var4 = var4; \
+            } \
+        }; \
 
-        MouseMoveArgs(int prevX, int prevY, int newX, int newY)
-        {
-            this->prevX = prevX;
-            this->prevY = prevY;
-            this->newX = newX;
-            this->newY = newY;
-        }
-    };
-    class MouseButtonArgs
-    {
-    public:
-        int button;
-
-        MouseButtonArgs(int button)
-        {
-            this->button = button;
-        }
-    };
-    class KeypressArgs
-    {
-    public:
-        char key;
-
-        KeypressArgs(char key)
-        {
-            this->key = key;
-        }
-    };
-    
-    
-    
-    
-    
-    
-
+    ///////////
+    // Argument classes for keypress or mouse events, more will be added later
+    ///////////
+    CREATE_ARGUMENT_CLASS4(MouseMoveArgs, int, prevX, int, prevY, int, newX, int, newY)
+    CREATE_ARGUMENT_CLASS3(MouseButtonArgs, int, x, int, y, int, button)
+    CREATE_ARGUMENT_CLASS1(KeypressArgs, char, key)
 
     /**
      * An object that hosts multiple gui events

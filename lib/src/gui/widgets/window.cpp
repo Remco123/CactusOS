@@ -70,10 +70,7 @@ void Window::OnMouseDown(int x_abs, int y_abs, uint8_t button)
         }
     }
 
-    //Send event to children
-    for(Control* c : this->childs)
-        if(c->Contains(x_abs, y_abs - this->titleBarHeight))
-            c->OnMouseDown(x_abs - c->x, y_abs - c->y - this->titleBarHeight, button);
+    Control::OnMouseDown(x_abs, y_abs - this->titleBarHeight, button);
 }
 void Window::OnMouseUp(int x_abs, int y_abs, uint8_t button)
 {
@@ -88,16 +85,14 @@ void Window::OnMouseUp(int x_abs, int y_abs, uint8_t button)
         }
     }
 
-    //Send event to children
-    for(Control* c : this->childs)
-        if(c->Contains(x_abs, y_abs - this->titleBarHeight))
-            c->OnMouseUp(x_abs - c->x, y_abs - c->y - this->titleBarHeight, button);
+    Control::OnMouseUp(x_abs, y_abs - this->titleBarHeight, button);
 }
 void Window::OnMouseMove(int prevX_abs, int prevY_abs, int newX_abs, int newY_abs)
 {
     if(this->titleBarMouseDown) {
         this->contextBase->MoveToPosition(this->x + newX_abs - mouseDownX, this->y + newY_abs - mouseDownY);
     }
+    Control::OnMouseMove(prevX_abs, prevY_abs, newX_abs, newY_abs);
 }
 void Window::Close(void* sender, MouseButtonArgs arg)
 {

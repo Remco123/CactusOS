@@ -29,19 +29,20 @@ void Control::DrawTo(Canvas* context, int x_abs, int y_abs)
 
 void Control::OnMouseDown(int x_abs, int y_abs, uint8_t button)
 {
-    this->MouseDown.Invoke(this, MouseButtonArgs(button));
+    this->MouseDown.Invoke(this, MouseButtonArgs(x_abs, y_abs, button));
 
     //Send event to children
     for(Control* c : this->childs)
         if(c->Contains(x_abs, y_abs)) {
             this->focusedChild = c;
+            Print("Foccused is now -> %x (%d,%d,%d,%d)\n", (uint32_t)c, c->width, c->height, c->x, c->y);
             c->OnMouseDown(x_abs - c->x, y_abs - c->y, button);
         }
 }
 void Control::OnMouseUp(int x_abs, int y_abs, uint8_t button)
 {
-    this->MouseUp.Invoke(this, MouseButtonArgs(button));
-    this->MouseClick.Invoke(this, MouseButtonArgs(button));
+    this->MouseUp.Invoke(this, MouseButtonArgs(x_abs, y_abs, button));
+    this->MouseClick.Invoke(this, MouseButtonArgs(x_abs, y_abs, button));
 
     //Send event to children
     for(Control* c : this->childs)

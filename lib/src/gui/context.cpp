@@ -50,7 +50,7 @@ void Context::CloseContext()
 
 void Context::OnMouseDown(int x_abs, int y_abs, uint8_t button)
 {
-    this->MouseDown.Invoke(this, MouseButtonArgs(button));
+    this->MouseDown.Invoke(this, MouseButtonArgs(x_abs, y_abs, button));
 
     if(this->Window == 0)
         return;
@@ -59,8 +59,8 @@ void Context::OnMouseDown(int x_abs, int y_abs, uint8_t button)
 }
 void Context::OnMouseUp(int x_abs, int y_abs, uint8_t button)
 {    
-    this->MouseUp.Invoke(this, MouseButtonArgs(button));
-    this->MouseClick.Invoke(this, MouseButtonArgs(button));
+    this->MouseUp.Invoke(this, MouseButtonArgs(x_abs, y_abs, button));
+    this->MouseClick.Invoke(this, MouseButtonArgs(x_abs, y_abs, button));
 
     if(this->Window == 0)
         return;

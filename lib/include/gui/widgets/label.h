@@ -1,5 +1,5 @@
-#ifndef __LIBCACTUSOS__GUI__TEXTBOX_H
-#define __LIBCACTUSOS__GUI__TEXTBOX_H
+#ifndef __LIBCACTUSOS__GUI__LABEL_H
+#define __LIBCACTUSOS__GUI__LABEL_H
 
 #include <gui/widgets/control.h>
 

@@ -12,6 +12,8 @@ using namespace CactusOS::common;
 using namespace CactusOS::core;
 using namespace CactusOS::system;
 
+DECLARE_LOCK(stdOutStream);
+
 CPUState* CactusOSSyscalls::HandleSyscall(CPUState* state)
 {
     uint32_t sysCall = state->EAX;
@@ -212,8 +214,16 @@ CPUState* CactusOSSyscalls::HandleSyscall(CPUState* state)
                     if(data == 0 || state->ECX <= 0)
                         break;
                     
+                    //This makes sure output text does not get mixed up when interrupted during writing.
+                    if(proc->stdOutput == System::ProcStandardOut)
+                        LOCK(stdOutStream);
+
                     for(int d = 0; d < state->ECX; d++)
                         proc->stdOutput->Write(data[d]);
+
+                    //Don't forget to unlock
+                    if(proc->stdOutput == System::ProcStandardOut)
+                        UNLOCK(stdOutStream);
                 }
                 else
                     Log(Warning, "StdOut is zero for process %s", proc->fileName);

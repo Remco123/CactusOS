@@ -2,10 +2,19 @@
 #include <gui/gui.h>
 #include <gui/widgets/window.h>
 #include <gui/widgets/label.h>
+#include <gui/widgets/inputbox.h>
 #include <gui/directgui.h>
 #include <string.h>
 #include <log.h>
 #include <proc.h>
+
+void InputboxSubmit(void* sender, char* text)
+{
+    int childID = Process::Run(text);
+    Process::BindSTDIO(childID, Process::ID);
+
+    Print("Launched %s with id %d\n", text, childID);
+}
 
 int main()
 {
@@ -19,8 +28,13 @@ int main()
     outputLabel->text[0] = '\0';
     mainWindow->childs.push_back(outputLabel);
 
-    int childID = Process::Run("B:\\apps\\echo.bin");
-    Process::BindSTDIO(childID, Process::ID);
+    Inputbox* input = new Inputbox();
+    mainWindow->childs.push_back(input);
+    input->y = mainWindow->height - input->height - 30;
+    input->width = mainWindow->width - 2;
+    input->x = 1;
+    input->InputSubmit += InputboxSubmit;
+    mainWindow->focusedChild = input;
     
     GUI::MakeAsync();
     while(GUI::HasItems())
