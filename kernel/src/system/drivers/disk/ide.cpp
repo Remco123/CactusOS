@@ -36,6 +36,9 @@ IDEController::IDEController(PCIDevice* device)
 {
     this->pciDevice = device;
 
+    //Clear ideDevices list
+    MemoryOperations::memset((void*)this->ideDevices, 0, sizeof(this->ideDevices));
+
     //Register Interrupt Handlers
     this->intHandle1 = new IDEInterruptHandler(this, 14);
     this->intHandle2 = new IDEInterruptHandler(this, 15);
