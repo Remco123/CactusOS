@@ -24,9 +24,9 @@ namespace LIBCactusOS
         */
         static SharedSystemInfo* systemInfo;
         /**
-         * Start a new process and return its PID
+         * Start a new process and return its PID, if block is set to true the process will not be started automaticly.
         */
-        static int Run(const char* path);
+        static int Run(const char* path, bool block = false);
         /**
          * Create a block of shared memory
         */
@@ -71,6 +71,14 @@ namespace LIBCactusOS
          * Redirect one process output to another process input 
         */
         static void BindSTDIO(int fromID, int toID);
+        /**
+         * Returns if a process with given pid is present and running.
+        */
+        static bool Active(int pid);
+        /**
+         * Unblock a thread of a process
+        */
+        static void Unblock(int procPID, int thread = 0);
     };
 }
 

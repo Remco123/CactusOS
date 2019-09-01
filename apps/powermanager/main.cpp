@@ -36,9 +36,9 @@ int main()
     rebootButton->x = 75;
     rebootButton->MouseClick += RebootButtonCallback;
 
-    mainWindow->childs.push_back(shutdownButton);
-    mainWindow->childs.push_back(shutdownAndEjectButton);
-    mainWindow->childs.push_back(rebootButton);
+    mainWindow->AddChild(shutdownButton);
+    mainWindow->AddChild(shutdownAndEjectButton);
+    mainWindow->AddChild(rebootButton);
     
     GUI::MakeAsync();
     while(GUI::HasItems())

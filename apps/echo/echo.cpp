@@ -16,8 +16,6 @@ using namespace LIBCactusOS;
 int main()
 {
     Print("Echo application\n");
-    for(int i = 0; i < 5; i++)
-        Print("_****************_\n");
     
     return 0;
 }

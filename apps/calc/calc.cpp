@@ -30,13 +30,12 @@ int main()
     window1->titleString = "Calculator";
 
     Control* labelBox = new Control(130, 30, 5, 5);
-    labelBox->backColor = 0xFFDDDDDD;
-    window1->childs.push_back(labelBox);
+    window1->AddChild(labelBox);
 
     char* label = new char[2];
     label[0] = '0'; label[1] = '\0';
     textLabel = new Label(label);
-    labelBox->childs.push_back(textLabel);
+    labelBox->AddChild(textLabel);
 
     int i = 0;
     for(int y = 0; y < 4; y++)
@@ -50,7 +49,7 @@ int main()
             but->x = 5 + x*(150/3);
             but->y = 37 + y*(120/3);
             but->MouseClick += ButtonClickHandler;
-            window1->childs.push_back(but);
+            window1->AddChild(but);
         }
 
     Button* plusButton = new Button("+");
@@ -58,14 +57,14 @@ int main()
     plusButton->x = 55;
     plusButton->y = 157;
     plusButton->MouseClick += ButtonClickHandler;
-    window1->childs.push_back(plusButton);
+    window1->AddChild(plusButton);
 
     Button* minButton = new Button("-");
     minButton->width = minButton->height = 30;
     minButton->x = 105;
     minButton->y = 157;
     minButton->MouseClick += ButtonClickHandler;
-    window1->childs.push_back(minButton);
+    window1->AddChild(minButton);
 
     Button* calcButton = new Button("Calculate");
     calcButton->width = 90;
@@ -73,14 +72,14 @@ int main()
     calcButton->x = 5;
     calcButton->y = 190;
     calcButton->MouseClick += CalculateButtonHandler;
-    window1->childs.push_back(calcButton);
+    window1->AddChild(calcButton);
 
     Button* newButton = new Button("New");
     newButton->width = newButton->height = 30;
     newButton->x = 105;
     newButton->y = 190;
     newButton->MouseClick += NewClickHandler;
-    window1->childs.push_back(newButton);
+    window1->AddChild(newButton);
 
     GUI::MakeAsync();
 

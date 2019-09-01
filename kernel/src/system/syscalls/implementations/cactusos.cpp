@@ -64,13 +64,20 @@ CPUState* CactusOSSyscalls::HandleSyscall(CPUState* state)
         case SYSCALL_RUN_PROC:
             {
                 char* applicationPath = (char*)state->EBX;
+                bool block = (bool)state->ECX;
                 if(System::vfs->FileExists(applicationPath) == false) {
                     state->EAX = SYSCALL_RET_ERROR;
                     break;
                 }
 
                 Process* newProc = ProcessHelper::Create(applicationPath, false);
-                newProc->Threads[0]->state = Started;
+                if(block) {
+                    newProc->Threads[0]->state = Blocked;
+                    newProc->Threads[0]->blockedState = Unkown;
+                }
+                else
+                    newProc->Threads[0]->state = Started;
+
                 if(newProc != 0) {
                     System::scheduler->AddThread(newProc->Threads[0], false);
                     state->EAX = newProc->id;
@@ -272,6 +279,22 @@ CPUState* CactusOSSyscalls::HandleSyscall(CPUState* state)
                     break;
                 }
                 state->EAX = SharedMemory::RemoveSharedRegion(proc, proc2, state->ECX, state->EDX, state->ESI);
+            }
+            break;
+        case SYSCALL_PROC_EXIST:
+            {
+                Process* proc = ProcessHelper::ProcessById(state->EBX);
+                if(proc != 0)
+                    state->EAX = true;
+                else
+                    state->EAX = false;                
+            }
+            break;
+        case SYSCALL_UNBLOCK:
+            {
+                Process* proc = ProcessHelper::ProcessById(state->EBX);
+                if(proc != 0 && (int)state->ECX < proc->Threads.size())
+                    proc->Threads[state->ECX]->state = Started;
             }
             break;
         default:

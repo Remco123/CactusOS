@@ -14,17 +14,19 @@ namespace LIBCactusOS
     */
     class Control : public EventObject, public Rectangle
     {
-    public:
-        /**
-         * Our list of childs
-        */
+    protected:
+        // All controls that are present on this control.
         List<Control*> childs;
 
+        // Which control currently is focused?
         Control* focusedChild;
+
+        // If we are a child of some control this will point to our parent.
+        Control* parent;
 
         uint32_t backColor = 0xFFCACDD1;
         uint32_t borderColor = 0xFF333333;
-
+    public:
         /**
          * Create new control with a given width, height, x and y position
         */
@@ -40,6 +42,15 @@ namespace LIBCactusOS
          * x_abs/y_abs: the coördinate of this control in absolute related to the canvas
         */
         virtual void DrawTo(Canvas* context, int x_abs, int y_abs);
+
+        // Add a control to the childs of this control, this will also set the parent property of the child to us.
+        virtual void AddChild(Control* child, bool focus = true);
+
+        // Remove a child from this control, does not delete the child!
+        virtual void RemoveChild(Control* child);
+
+        // Is this control focused?
+        virtual bool Focused();
 
     /*/////////
     // Events called by parent or context

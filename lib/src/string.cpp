@@ -47,6 +47,12 @@ void* memcpy(void* __restrict__ dstptr, const void* __restrict__ srcptr, size_t 
 	return dstptr;
 }
 
+int strcmp(const char *s1, const char *s2)
+{
+    while ((*s1 == *s2) && *s1) { ++s1; ++s2; }
+    return (((int) (unsigned char) *s1) - ((int) (unsigned char) *s2) == 0) ? 1 : 0;
+}
+
 int str_IndexOf(const char* str, char c, int skip)
 {
     int hits = 0;
@@ -142,4 +148,15 @@ char* str_Add(char* str, char c)
 	
 	delete str;
 	return newStr;
+}
+char* str_Combine(char* part1, char* part2)
+{
+    int len1 = strlen(part1);
+    int len2 = strlen(part2);
+
+    char* res = new char[len1 + len2 + 1];
+    memcpy(res, part1, len1);
+    memcpy(res + len1, part2, len2);
+    res[len1 + len2] = '\0';
+    return res;
 }

@@ -218,7 +218,7 @@ void Scheduler::ProcessSleepingThreads()
     for(int i = 0; i < threadsList.size(); i++)
     {
         Thread* thread = threadsList[i];
-        if(thread->state == Blocked && thread->timeDelta > 0)
+        if(thread->state == Blocked && thread->blockedState == SleepMS && thread->timeDelta > 0)
         {
             thread->timeDelta--;
             if(thread->timeDelta <= 0)

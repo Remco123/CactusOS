@@ -28,6 +28,9 @@ namespace LIBCactusOS
         T operator[](int index);
         void Remove(int index);
         void Remove(const T &e);
+
+        void operator+=(const T &e);
+        void operator-=(const T &e);
     private:
         ListNode<T>* head_;
         ListNode<T>* tail_;
@@ -187,6 +190,18 @@ template <typename T>
 T List<T>::operator[](int index)
 {
     return GetAt(index);
+}
+
+template <typename T>
+void List<T>::operator+=(const T &e)
+{
+    push_back(e);
+}
+
+template <typename T>
+void List<T>::operator-=(const T &e)
+{
+    Remove(e);
 }
 
 #endif

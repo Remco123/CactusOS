@@ -6,9 +6,9 @@ int Process::ID = -1;
 int Process::numThreads = 1;
 SharedSystemInfo* Process::systemInfo = 0;
 
-int Process::Run(const char* path)
+int Process::Run(const char* path, bool block)
 {
-    return DoSyscall(SYSCALL_RUN_PROC, (uint32_t)path);
+    return DoSyscall(SYSCALL_RUN_PROC, (uint32_t)path, (uint32_t)block);
 }
 bool Process::CreateSharedMemory(int proc2ID, uint32_t virtStart1, uint32_t virtStart2, uint32_t len)
 {
@@ -56,4 +56,12 @@ void Process::BindSTDIO(int fromID, int toID)
 int Process::StdInAvailable()
 {
     return DoSyscall(SYSCALL_STDIO_AVAILABLE);
+}
+bool Process::Active(int pid)
+{
+    return DoSyscall(SYSCALL_PROC_EXIST, pid);
+}
+void Process::Unblock(int procPID, int thread)
+{
+    DoSyscall(SYSCALL_UNBLOCK, procPID, thread);
 }

@@ -7,15 +7,13 @@
 #include <string.h>
 #include <log.h>
 #include <proc.h>
+#include <vfs.h>
+#include "terminalcontrol.h"
 
-void InputboxSubmit(void* sender, char* text)
-{
-    int childID = Process::Run(text);
-    Process::BindSTDIO(childID, Process::ID);
+char* workingDir = "B:\\";
+TerminalControl* termWindow = 0;
 
-    Print("Launched %s with id %d\n", text, childID);
-}
-
+int ExecCommand(char* cmd);
 int main()
 {
     GUI::Initialize();
@@ -23,25 +21,68 @@ int main()
     Window* mainWindow = new Window(300, 200, WIDTH/2 - 150, HEIGHT/2 - 100);
     mainWindow->titleString = "CactusOS Terminal";
 
-    Label* outputLabel = new Label();
-    outputLabel->text = new char[1];
-    outputLabel->text[0] = '\0';
-    mainWindow->childs.push_back(outputLabel);
-
-    Inputbox* input = new Inputbox();
-    mainWindow->childs.push_back(input);
-    input->y = mainWindow->height - input->height - 30;
-    input->width = mainWindow->width - 2;
-    input->x = 1;
-    input->InputSubmit += InputboxSubmit;
-    mainWindow->focusedChild = input;
+    termWindow = new TerminalControl(mainWindow->width, mainWindow->height - 30);
+    mainWindow->AddChild(termWindow);
     
     GUI::MakeAsync();
     while(GUI::HasItems())
     {
-        char c = Process::ReadStdIn();
-        outputLabel->text = str_Add(outputLabel->text, c);
+        mainWindow->titleString = workingDir;
+        char* cmd = termWindow->ReadCommand(workingDir);
+        int pid = ExecCommand(cmd);
+        
+        if(pid != 0)
+        {
+            Process::BindSTDIO(pid, Process::ID);
+            Process::Unblock(pid);
+            while(Process::Active(pid)) {
+                if(Process::StdInAvailable() > 0)
+                    termWindow->Write(Process::ReadStdIn());
+            }
+
+            //Read remaining data from process if available
+            while(Process::StdInAvailable() > 0)
+                termWindow->Write(Process::ReadStdIn());
+        }
+        
+        delete cmd;
     }
 
+    return 0;
+}
+
+// Excecute command and return pid of created process if necessary
+int ExecCommand(char* cmd)
+{
+    if(memcmp(cmd, "ls", 3) == 0)
+    {
+        
+    }
+    else if(memcmp(cmd, "cd", 3) == 0)
+    {
+        workingDir = "B:\\";
+        return 0;
+    }
+    else if(memcmp(cmd, "cd ", 3) == 0) //cd with argument
+    {
+        int l = strlen(cmd+3);
+        if(l <= 0)
+            return 0;
+        
+        char* newWD = new char[l+1];
+        memcpy(newWD, cmd + 3, l);
+        newWD[l] = '\0';
+        workingDir = newWD;
+        
+        return 0;
+    }
+    else
+    {
+        // Combine working directory and cmd into one string
+        char* comboCMD = str_Combine(workingDir, cmd);
+
+        if(FileExists(comboCMD))
+            return Process::Run(comboCMD, true);
+    }
     return 0;
 }

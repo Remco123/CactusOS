@@ -5,12 +5,12 @@
 using namespace LIBCactusOS;
 
 Inputbox::Inputbox()
-: InputSubmit(), Control(200, 20) {
+: Control(200, 20), InputSubmit() {
     this->text = new char[1];
     this->text[0] = '\0';
 
     this->backColor = 0xFFFFFFFF;
-    this->borderColor = 0xFF0000FF;
+    this->borderColor = 0xFF000000;
 }
 Inputbox::~Inputbox()
 {
@@ -21,15 +21,17 @@ Inputbox::~Inputbox()
 void Inputbox::DrawTo(Canvas* context, int x_abs, int y_abs)
 {
     context->DrawFillRect(this->backColor, x_abs, y_abs, this->width, this->height - 1);
-    context->DrawRect(this->borderColor, x_abs, y_abs, this->width - 1, this->height - 1);
 
+    if(this->Focused() == false) {
+        context->DrawRect(this->borderColor, x_abs, y_abs, this->width - 1, this->height - 1);   
+    }
+    else {
+        context->DrawRect(0xFF0000FF, x_abs, y_abs, this->width - 1, this->height - 1);
+    }
+    
     context->DrawString(this->text, x_abs + 2, y_abs + 5, 0xFF000000);
 }
 
-void Inputbox::OnMouseDown(int x_abs, int y_abs, uint8_t button)
-{
-    Control::OnMouseDown(x_abs, y_abs, button);
-}
 void Inputbox::OnKeyPress(char key)
 {
     switch(key)

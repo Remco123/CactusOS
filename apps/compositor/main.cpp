@@ -128,24 +128,6 @@ ContextInfo* FindTargetContext(int x, int y)
     return 0;
 }
 
-ContextInfo* FindTargetContextByIndex(int sourcePID, int index)
-{
-    if(contextList == 0)
-        return 0;
-    
-    int curIndex = 0;
-    for(int i = 0; i < contextList->size(); i++)
-    {
-        ContextInfo* c = contextList->GetAt(i);
-
-        if(c->clientID == sourcePID && curIndex == index)
-            return c;
-        else
-            curIndex++;
-    }
-    return 0;
-}
-
 int main()
 {
     Print("Starting Compositor\n");

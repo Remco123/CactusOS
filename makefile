@@ -68,7 +68,7 @@ install: CactusOS.iso
 	cp $< /media/sf_Mint_OSDev/CactusOS.iso
 	cp CactusOS.bin /media/sf_Mint_OSDev/CactusOS.bin
 
-.PHONY: clean qemu kdbg run filelist serialDBG qemuDBG
+.PHONY: clean qemu kdbg run filelist serialDBG qemuDBG fastApps
 clean:
 	rm -rf $(KRNLOBJDIR) CactusOS.bin CactusOS.iso
 	cd lib/ && $(MAKE) clean
@@ -96,6 +96,13 @@ serialDBG:
 kdbg: CactusOS.iso
 	qemu-system-i386 -cdrom CactusOS.iso -serial stdio -s -S &
 	kdbg -r localhost:1234 CactusOS.bin
+
+# Only rebuild LIBCactusOS and the apps without recompiling the kernel
+fastApps:
+	rm -rf isofiles/apps/*.bin
+	cd lib/ && $(MAKE) clean && $(MAKE)
+	cd apps/ && $(MAKE) clean && $(MAKE)
+	rm CactusOS.iso
 
 filelist:
 	@echo "Source Files:"

@@ -26,10 +26,6 @@ namespace LIBCactusOS
     friend class Context;
     protected:
         /**
-         * Called when mouse is down on control
-        */
-        void OnMouseDown(int x_abs, int y_abs, uint8_t button) override;
-        /**
          * Called on keypress
         */
         void OnKeyPress(char key) override;
