@@ -56,7 +56,12 @@ int ExecCommand(char* cmd)
 {
     if(memcmp(cmd, "ls", 3) == 0)
     {
-        
+        List<char*> items = DirectoryListing(workingDir);
+        for(char* item : items)
+        {
+            termWindow->Write(item); termWindow->Write('\n');
+            delete item;
+        }
     }
     else if(memcmp(cmd, "cd", 3) == 0)
     {
@@ -81,8 +86,12 @@ int ExecCommand(char* cmd)
         // Combine working directory and cmd into one string
         char* comboCMD = str_Combine(workingDir, cmd);
 
-        if(FileExists(comboCMD))
-            return Process::Run(comboCMD, true);
+        if(FileExists(comboCMD)) {
+            int ret = Process::Run(comboCMD, true);
+            delete comboCMD;
+            return ret;
+        }
+        delete comboCMD;
     }
     return 0;
 }

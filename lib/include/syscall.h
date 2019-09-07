@@ -38,6 +38,9 @@ namespace LIBCactusOS
     #define SYSCALL_REMOVE_SHARED_MEM 29
     #define SYSCALL_PROC_EXIST 30
     #define SYSCALL_UNBLOCK 31
+    #define SYSCALL_BEGIN_DIRLISTING 32
+    #define SYSCALL_DIRLISTING_ENTRY 33
+    #define SYSCALL_END_DIRLISTING 34
     #define SYSCALL_SET_CACTUSOS_LIB 0xFFFF
 
     int DoSyscall(unsigned int intNum, unsigned int arg1 = 0, unsigned int arg2 = 0, unsigned int arg3 = 0, unsigned int arg4 = 0, unsigned int arg5 = 0);

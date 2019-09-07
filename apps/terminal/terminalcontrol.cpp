@@ -109,9 +109,6 @@ char* TerminalControl::ReadCommand(char* prompt)
         {
             case '\n':
                 {
-                    //Remove cursor
-                    textBuffer[this->y * TERM_WIDTH + this->x] = '\0';
-
                     //Create new line
                     Write('\n');
 

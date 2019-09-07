@@ -2,6 +2,7 @@
 #define __CACTUSOSLIB__VFS_H
 
 #include <types.h>
+#include <list.h>
 
 namespace LIBCactusOS
 {
@@ -10,6 +11,7 @@ namespace LIBCactusOS
     bool FileExists(char* path);
     bool DirectoryExists(char* path);
     bool EjectDisk(char* path);
+    List<char*> DirectoryListing(char* path);
 }
 
 #endif

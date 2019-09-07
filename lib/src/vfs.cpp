@@ -24,3 +24,22 @@ bool LIBCactusOS::EjectDisk(char* path)
 {
     return (bool)DoSyscall(SYSCALL_EJECT_DISK, (uint32_t)path);
 }
+List<char*> LIBCactusOS::DirectoryListing(char* path)
+{
+    List<char*> result;
+
+    int items = DoSyscall(SYSCALL_BEGIN_DIRLISTING, (uint32_t)path);
+    for(int i = 0; i < items; i++) {
+        char* strBuf = new char[100];
+        int strLen = DoSyscall(SYSCALL_DIRLISTING_ENTRY, (uint32_t)i, (uint32_t)strBuf);
+        if(strLen == 0) {
+            delete strBuf;
+            return result; //End of items
+        }
+
+        result += strBuf;
+    }
+
+    DoSyscall(SYSCALL_END_DIRLISTING);
+    return result;
+}

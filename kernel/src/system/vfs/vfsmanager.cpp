@@ -119,8 +119,12 @@ bool VFSManager::DirectoryExists(char* path)
     uint8_t idSize = 0;
     int disk = ExtractDiskNumber(path, &idSize);
 
-    if(disk != -1 && Filesystems->size() > disk)
-        return Filesystems->GetAt(disk)->DirectoryExists(path + idSize + 2);
+    if(disk != -1 && Filesystems->size() > disk) {
+        if(String::strlen(path) == idSize + 2) //Only disk part, like 0:\ ofcourse this is a directory as well
+            return true;
+        else
+            return Filesystems->GetAt(disk)->DirectoryExists(path + idSize + 2);
+    }
     else
         return false;
 }

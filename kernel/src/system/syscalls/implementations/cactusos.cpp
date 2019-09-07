@@ -6,6 +6,7 @@
 #include <system/system.h>
 #include <system/tasking/ipcmanager.h>
 #include <core/power.h>
+#include <system/vfs/listingmanager.h>
 
 using namespace CactusOS;
 using namespace CactusOS::common;
@@ -297,6 +298,21 @@ CPUState* CactusOSSyscalls::HandleSyscall(CPUState* state)
                     proc->Threads[state->ECX]->state = Started;
             }
             break;
+        case SYSCALL_BEGIN_DIRLISTING:
+            {
+                state->EAX = ListingManager::BeginListing(System::scheduler->CurrentThread(), (char*)state->EBX);
+            }
+            break;
+        case SYSCALL_DIRLISTING_ENTRY:
+            {
+                state->EAX = ListingManager::GetEntry(System::scheduler->CurrentThread(), (int)state->EBX, (char*)state->ECX);
+            }
+            break;
+        case SYSCALL_END_DIRLISTING:
+            {
+                ListingManager::EndListing(System::scheduler->CurrentThread());
+            }
+            break;            
         default:
             Log(Warning, "Got unkown syscall %d from process %d", sysCall, proc->id);
             state->EAX = SYSCALL_RET_ERROR;
