@@ -1,6 +1,7 @@
 #include <vfs.h>
 
 #include <syscall.h>
+#include <listing.h>
 
 using namespace LIBCactusOS;
 
@@ -28,10 +29,10 @@ List<char*> LIBCactusOS::DirectoryListing(char* path)
 {
     List<char*> result;
 
-    int items = DoSyscall(SYSCALL_BEGIN_DIRLISTING, (uint32_t)path);
+    int items = DoSyscall(SYSCALL_BEGIN_LISTING, DIRECTORY_LISTING, (uint32_t)path);
     for(int i = 0; i < items; i++) {
         char* strBuf = new char[100];
-        int strLen = DoSyscall(SYSCALL_DIRLISTING_ENTRY, (uint32_t)i, (uint32_t)strBuf);
+        int strLen = DoSyscall(SYSCALL_LISTING_ENTRY, DIRECTORY_LISTING, (uint32_t)i, (uint32_t)strBuf);
         if(strLen == 0) {
             delete strBuf;
             return result; //End of items
@@ -40,6 +41,6 @@ List<char*> LIBCactusOS::DirectoryListing(char* path)
         result += strBuf;
     }
 
-    DoSyscall(SYSCALL_END_DIRLISTING);
+    DoSyscall(SYSCALL_END_LISTING, DIRECTORY_LISTING);
     return result;
 }

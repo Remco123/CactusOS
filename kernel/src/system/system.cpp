@@ -1,4 +1,5 @@
 #include <system/system.h>
+#include <system/listings/directorylisting.h>
 
 using namespace CactusOS;
 using namespace CactusOS::common;
@@ -26,6 +27,7 @@ ScreenMode System::screenMode = ScreenMode::TextMode;
 bool System::gdbEnabled = false;
 Stream* System::keyboardStream = 0;
 Stream* System::ProcStandardOut = 0;
+List<ListingController*>* System::listings = 0;
 #if BOCHS_GFX_HACK
 bool System::isBochs = false; //are we running inside bochs
 #endif
@@ -115,6 +117,10 @@ void System::Start()
 
     BootConsole::WriteLine("Preparing IPC");
     IPCManager::Initialize();
+
+    BootConsole::WriteLine("Adding default listing handlers");
+    System::listings = new List<ListingController*>();
+    System::listings->push_back(new DirectoryListing());
 
     System::ProcStandardOut = new StandardOutSteam();
     Log(Info, "System Initialized");

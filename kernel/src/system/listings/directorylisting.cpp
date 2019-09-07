@@ -1,4 +1,4 @@
-#include <system/vfs/listingmanager.h>
+#include <system/listings/directorylisting.h>
 #include <system/system.h>
 
 using namespace CactusOS;
@@ -6,17 +6,15 @@ using namespace CactusOS::common;
 using namespace CactusOS::core;
 using namespace CactusOS::system;
 
-// Threads that have also requested a filelist before an other one was finished.
-List<Thread*> waitingQueue;
-// Current thread which has requested a list
-Thread* currentReqThread;
-// Are we currently handling a request?
-bool requestBusy = false;
 // List which holds the files in the current requested directory.
 List<char*>* currentDirectoryList = 0;
 
-int ListingManager::BeginListing(Thread* thread, char* path)
+DirectoryListing::DirectoryListing()
+: ListingController() { }
+
+int DirectoryListing::BeginListing(Thread* thread, uint32_t pathPtr)
 {
+    char* path = (char*)pathPtr;
     if(!System::vfs->DirectoryExists(path))
         return 0;
     
@@ -32,15 +30,16 @@ int ListingManager::BeginListing(Thread* thread, char* path)
     currentDirectoryList = System::vfs->DirectoryList(path);
     return currentDirectoryList->size();
 }
-int ListingManager::GetEntry(Thread* thread, int entry, char* buf)
+int DirectoryListing::GetEntry(Thread* thread, int entry, uint32_t bufPtr)
 {
+    char* buf = (char*)bufPtr;
     if(currentReqThread != thread)
     {
         Log(Error, "Thread requested entry while it was not the original requestor");
         return 0;
     }
 
-    if(entry >= 0 && currentDirectoryList->size() > entry)
+    if(entry >= 0 && currentDirectoryList->size() > entry && buf != 0)
     {
         char* str = currentDirectoryList->GetAt(entry);
         int len = String::strlen(str);
@@ -59,7 +58,7 @@ int ListingManager::GetEntry(Thread* thread, int entry, char* buf)
     // End of items
     return 0;
 }
-void ListingManager::EndListing(Thread* thread)
+void DirectoryListing::EndListing(Thread* thread)
 {
     if(currentReqThread != thread || currentReqThread == 0)
     {

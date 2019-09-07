@@ -6,7 +6,7 @@
 #include <system/system.h>
 #include <system/tasking/ipcmanager.h>
 #include <core/power.h>
-#include <system/vfs/listingmanager.h>
+#include <system/listings/listingcontroller.h>
 
 using namespace CactusOS;
 using namespace CactusOS::common;
@@ -298,19 +298,37 @@ CPUState* CactusOSSyscalls::HandleSyscall(CPUState* state)
                     proc->Threads[state->ECX]->state = Started;
             }
             break;
-        case SYSCALL_BEGIN_DIRLISTING:
+        case SYSCALL_BEGIN_LISTING:
             {
-                state->EAX = ListingManager::BeginListing(System::scheduler->CurrentThread(), (char*)state->EBX);
+                int type = state->EBX;
+                if(!(System::listings->size() > type)) {
+                    state->EAX = 0;
+                    break;
+                }
+                
+                state->EAX = System::listings->GetAt(type)->BeginListing(System::scheduler->CurrentThread(), state->ECX);
             }
             break;
-        case SYSCALL_DIRLISTING_ENTRY:
+        case SYSCALL_LISTING_ENTRY:
             {
-                state->EAX = ListingManager::GetEntry(System::scheduler->CurrentThread(), (int)state->EBX, (char*)state->ECX);
+                int type = state->EBX;
+                if(!(System::listings->size() > type)) {
+                    state->EAX = 0;
+                    break;
+                }
+
+                state->EAX = System::listings->GetAt(type)->GetEntry(System::scheduler->CurrentThread(), (int)state->ECX, state->EDX);
             }
             break;
-        case SYSCALL_END_DIRLISTING:
+        case SYSCALL_END_LISTING:
             {
-                ListingManager::EndListing(System::scheduler->CurrentThread());
+                int type = state->EBX;
+                if(!(System::listings->size() > type)) {
+                    state->EAX = 0;
+                    break;
+                }
+
+                System::listings->GetAt(type)->EndListing(System::scheduler->CurrentThread());
             }
             break;            
         default:
