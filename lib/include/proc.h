@@ -4,6 +4,8 @@
 #include <syscall.h>
 #include <types.h>
 #include <systeminfo.h>
+#include <list.h>
+#include <processinfo.h>
 
 namespace LIBCactusOS
 {
@@ -79,6 +81,10 @@ namespace LIBCactusOS
          * Unblock a thread of a process
         */
         static void Unblock(int procPID, int thread = 0);
+        /**
+         * Get a list from the kernel containing all known processes
+        */
+        static List<ProcessInfo*> GetProcessList();
     };
 }
 

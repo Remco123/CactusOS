@@ -72,14 +72,15 @@ CPUState* CactusOSSyscalls::HandleSyscall(CPUState* state)
                 }
 
                 Process* newProc = ProcessHelper::Create(applicationPath, false);
-                if(block) {
-                    newProc->Threads[0]->state = Blocked;
-                    newProc->Threads[0]->blockedState = Unkown;
-                }
-                else
-                    newProc->Threads[0]->state = Started;
-
                 if(newProc != 0) {
+                    if(block) {
+                        newProc->Threads[0]->state = Blocked;
+                        newProc->Threads[0]->blockedState = Unkown;
+                    }
+                    else
+                        newProc->Threads[0]->state = Started;
+                    
+                    
                     System::scheduler->AddThread(newProc->Threads[0], false);
                     state->EAX = newProc->id;
                 }

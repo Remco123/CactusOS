@@ -1,5 +1,6 @@
 #include <system/system.h>
 #include <system/listings/directorylisting.h>
+#include <system/listings/processlisting.h>
 
 using namespace CactusOS;
 using namespace CactusOS::common;
@@ -121,7 +122,8 @@ void System::Start()
     BootConsole::WriteLine("Adding default listing handlers");
     System::listings = new List<ListingController*>();
     System::listings->push_back(new DirectoryListing());
-
+    System::listings->push_back(new ProcessListing())
+;
     System::ProcStandardOut = new StandardOutSteam();
     Log(Info, "System Initialized");
 }

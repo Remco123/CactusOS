@@ -1,3 +1,6 @@
+#ifndef __CACTUSOS__SYSTEM__LISTINGS__DIRECTORYLISTING_H
+#define __CACTUSOS__SYSTEM__LISTINGS__DIRECTORYLISTING_H
+
 #include <system/listings/listingcontroller.h>
 
 namespace CactusOS
@@ -30,3 +33,5 @@ namespace CactusOS
         };
     }
 }
+
+#endif

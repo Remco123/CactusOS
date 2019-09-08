@@ -7,6 +7,7 @@
 #include <string.h>
 #include <log.h>
 #include <proc.h>
+#include <convert.h>
 #include <vfs.h>
 #include "terminalcontrol.h"
 
@@ -81,6 +82,25 @@ int ExecCommand(char* cmd)
         
         return 0;
     }
+    else if(memcmp(cmd, "proc", 5) == 0)
+    {
+        List<ProcessInfo*> items = Process::GetProcessList();
+        for(ProcessInfo* item : items)
+        {
+            termWindow->Write(item->fileName);
+            termWindow->Write(" PID=");
+            termWindow->Write(Convert::IntToString(item->id));
+            termWindow->Write(" T=");
+            termWindow->Write(Convert::IntToString(item->threads));
+            termWindow->Write(" M=");
+            termWindow->Write(Convert::IntToString(item->heapMemory / 1024));
+            termWindow->Write(" Kb");
+            termWindow->Write('\n');
+            delete item;
+        }
+
+        return 0;
+    }
     else
     {
         // Combine working directory and cmd into one string
@@ -88,8 +108,14 @@ int ExecCommand(char* cmd)
 
         if(FileExists(comboCMD)) {
             int ret = Process::Run(comboCMD, true);
+            if(ret == 0)
+                termWindow->Write("File is not an executable\n");
+            
             delete comboCMD;
             return ret;
+        }
+        else {
+            termWindow->Write("Command or executable not found\n");
         }
         delete comboCMD;
     }
