@@ -19,7 +19,7 @@ int main()
 {
     GUI::Initialize();
 
-    Window* mainWindow = new Window(300, 200, WIDTH/2 - 150, HEIGHT/2 - 100);
+    Window* mainWindow = new Window(600, 400, WIDTH/2 - 300, HEIGHT/2 - 200);
     mainWindow->titleString = "CactusOS Terminal";
 
     termWindow = new TerminalControl(mainWindow->width, mainWindow->height - 30);
@@ -88,11 +88,14 @@ int ExecCommand(char* cmd)
         for(ProcessInfo* item : items)
         {
             termWindow->Write(item->fileName);
+            for(int i = 0; i < (32-strlen(item->fileName)); i++)
+                termWindow->Write(' ');
+
             termWindow->Write(" PID=");
             termWindow->Write(Convert::IntToString(item->id));
-            termWindow->Write(" T=");
+            termWindow->Write(" Treads ");
             termWindow->Write(Convert::IntToString(item->threads));
-            termWindow->Write(" M=");
+            termWindow->Write(" Memory ");
             termWindow->Write(Convert::IntToString(item->heapMemory / 1024));
             termWindow->Write(" Kb");
             termWindow->Write('\n');

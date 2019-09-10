@@ -1,11 +1,12 @@
 #include "terminalcontrol.h"
 #include <string.h>
 #include <proc.h>
+#include <gui/widgets/window.h>
 
 using namespace LIBCactusOS;
 
 TerminalControl::TerminalControl(int w, int h)
-: Control(w, h)
+: inputKeys(), Control(w, h)
 {
     this->textBuffer = new char[TERM_WIDTH * TERM_HEIGH];
     memset(this->textBuffer, '\0', TERM_WIDTH * TERM_HEIGH);
@@ -102,10 +103,17 @@ char* TerminalControl::ReadCommand(char* prompt)
     uint8_t numChars = 0;
     while(true)
     {
-        while(this->lastInputKey == 0)
-            Process::Yield();
+        while(this->inputKeys.size() == 0)
+            if(GUI::HasItems())
+                Process::Yield();
+            else //Window has been closed down
+            {
+                result[0] = '\0';
+                return result; //Return empty string so appliation exits
+            }
         
-        switch(this->lastInputKey)
+        char lastInputKey = this->inputKeys[0];
+        switch(lastInputKey)
         {
             case '\n':
                 {
@@ -115,8 +123,8 @@ char* TerminalControl::ReadCommand(char* prompt)
                     //terminate string
                     result[numChars] = '\0';
 
-                    //reset key
-                    this->lastInputKey = 0;
+                    //remove key
+                    this->inputKeys.Remove(0);
                     return result;
                 }
 
@@ -142,7 +150,7 @@ char* TerminalControl::ReadCommand(char* prompt)
                 }
                 break;
         }
-        this->lastInputKey = 0;
+        this->inputKeys.Remove(0);
     }
 }
 
@@ -163,7 +171,7 @@ void TerminalControl::DrawTo(Canvas* context, int x_abs, int y_abs)
 
 void TerminalControl::OnKeyPress(char key)
 {
-    lastInputKey = key;
+    inputKeys.push_back(key);
 
     Control::OnKeyPress(key);
 }

@@ -3,14 +3,14 @@
 
 #include <gui/widgets/control.h>
 
-#define TERM_WIDTH 37
-#define TERM_HEIGH 12
+#define TERM_WIDTH 74
+#define TERM_HEIGH 26
 
 class TerminalControl : public Control
 {
 private:
     char* textBuffer = 0;
-    char lastInputKey = 0;
+    List<char> inputKeys;
 
     int x,y;
 public:

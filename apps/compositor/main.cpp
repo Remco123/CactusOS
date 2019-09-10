@@ -109,6 +109,11 @@ void GUILoop()
         // Draw a new version of the desktop
         ////////
         UpdateDesktop();
+
+        ////////
+        // Switch processes after drawing desktop
+        // It is useless to draw it like 30 times in a couple milliseconds.
+        Process::Yield();
     }
 }
 
@@ -291,68 +296,15 @@ void UpdateDesktop()
         }
         
         if(info->supportsTransparency) //Draw context using transparency
-        {
-            // Create temporary canvas for easy pixel access.
-            Canvas tempCanvas((void*)info->virtAddrServer, info->width, info->height);
-            
-            /////////////
-            // Draw context with every context in the background
-            /////////////
-
-            // Generate a rectangle in the shape of this context
-            Rectangle infoRectangle(info->width, info->height, info->x, info->y);
-
-            // Create a list that holds all the rectangles that are beneath this context
-            List<Rectangle> underlayingRectangles;
-
-            // Loop trough all the contexts that have a lower index than us
-            for(int j = contextList->size(); j --> 0; )
+        {        
+            for(int y = 0; y < info->height; y++)
             {
-                ContextInfo* underlayingContext = contextList->GetAt(j);
+                uint32_t pixBase = info->virtAddrServer + y*info->width*4;
+                uint32_t wallBase = (uint32_t)wallPaperBuffer + (info->y+y)*WIDTH*4;
 
-                if(underlayingContext == info) // This is ourself
-                    break; //Stop becouse we only want to check contexts that are beneath this context
-                
-                // Create rectangle for the target context
-                Rectangle targetRect(underlayingContext->width, underlayingContext->height, underlayingContext->x, underlayingContext->y);
-                
-                // Calculate intersection
-                Rectangle intersectRect(0, 0, 0, 0);
-                bool intersect = infoRectangle.Intersect(targetRect, &intersectRect);
-                if(intersect) // There is a intersection between this context and an other context
-                {
-                    underlayingRectangles.push_back(intersectRect);
-                    for(int x = 0; x < intersectRect.width; x++)
-                        for(int y = 0; y < intersectRect.height; y++)
-                        {
-                            uint32_t pix = tempCanvas.GetPixel(x + (intersectRect.x - info->x), y + (intersectRect.y - info->y));
-                            uint32_t oldPix = backBufferCanvas->GetPixel(intersectRect.x + x, intersectRect.y + y);
-                            backBufferCanvas->SetPixel(intersectRect.x + x, intersectRect.y + y, Colors::AlphaBlend(oldPix, pix));
-                        }
-                }
+                for(int x = 0; x < info->width; x++)
+                    backBufferCanvas->SetPixel(info->x + x, info->y + y, Colors::AlphaBlend(*(uint32_t*)(wallBase + (info->x+x)*4), *(uint32_t*)(pixBase + x*4)));
             }
-
-            //////////////
-            // Draw parts where only the wallpaper is behind
-            //////////////
-            // Which rectangles contain the wallpaper
-            List<Rectangle> backgroundRects;
-            backgroundRects.push_back(infoRectangle);
-            for(int k = 0; k < underlayingRectangles.size(); k++) {
-                underlayingRectangles[k].PushToClipList(&backgroundRects);
-                backgroundRects.Remove(backgroundRects.size() - 1);
-            }
-
-            //Loop through all the rects with wallpaper behind them
-            for(Rectangle r : backgroundRects)
-                if(r.width > 0 && r.height > 0)
-                    for(int x = 0; x < r.width; x++)
-                        for(int y = 0; y < r.height; y++)
-                        {
-                            uint32_t pix = tempCanvas.GetPixel(x + (r.x - info->x), y + (r.y - info->y));
-                            uint32_t oldPix = wallPaperCanvas->GetPixel(r.x + x, r.y + y);
-                            backBufferCanvas->SetPixel(r.x + x, r.y + y, Colors::AlphaBlend(oldPix, pix));
-                        }
         }
         else
         {
