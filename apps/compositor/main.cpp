@@ -259,6 +259,7 @@ void HandleMessage(IPCMessage msg)
                         Log(Error, "Could not remove shared memory");
                 }
             }
+            IPCSend(msg.source, IPC_TYPE_GUI, 1);
             break;
         }
 

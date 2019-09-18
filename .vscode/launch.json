@@ -37,7 +37,7 @@
                 {
                     "description": "Load additional app binary",
                     "ignoreFailures": true,
-                    "text": "add-symbol-file /home/remco/Documenten/CactusOS/isofiles/apps/terminal.bin 0x800000"
+                    "text": "add-symbol-file /home/remco/Documenten/CactusOS/isofiles/apps/mines.bin 0x800000"
                 }
             ],
         }

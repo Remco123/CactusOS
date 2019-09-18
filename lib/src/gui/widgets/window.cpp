@@ -100,3 +100,9 @@ void Window::Close(void* sender, MouseButtonArgs arg)
     this->contextBase->CloseContext();
     this->contextBase->Window = 0;
 }
+void Window::Close()
+{
+    Print("Closing window %x\n", (uint32_t)this);
+    this->contextBase->CloseContext();
+    this->contextBase->Window = 0;
+}

@@ -18,6 +18,19 @@ void GUI::Initialize()
     GUI::contextList = new List<Context*>();
 }
 
+void GUI::CleanUp()
+{
+    if(GUI::contextList != 0)
+    {
+        for(Context* c : *GUI::contextList)
+        {
+            c->CloseContext();
+            delete c;
+        }
+        GUI:contextList->Clear();
+    }
+}
+
 void GUI::ProcessEvents()
 {
     /*

@@ -17,8 +17,6 @@ TerminalControl* termWindow = 0;
 int ExecCommand(char* cmd);
 int main()
 {
-    GUI::Initialize();
-
     Window* mainWindow = new Window(600, 400, WIDTH/2 - 300, HEIGHT/2 - 200);
     mainWindow->titleString = "CactusOS Terminal";
 

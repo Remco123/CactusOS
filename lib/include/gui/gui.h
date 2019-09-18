@@ -17,6 +17,10 @@ namespace LIBCactusOS
     #define COMPOSITOR_CONTEXTMOVED 2
     #define COMPOSITOR_CONTEXTCLOSE 3
 
+    #define MOUSE_LEFT 0
+    #define MOUSE_MIDDLE 1
+    #define MOUSE_RIGHT 2
+
     class GUI
     {
     private:
@@ -41,6 +45,10 @@ namespace LIBCactusOS
          * Initalize the gui for this process
         */
         static void Initialize();
+        /**
+         * Remove all gui elements created by this process
+        */
+        static void CleanUp();
         
         /**
          * Process all the possible gui events

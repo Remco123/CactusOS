@@ -45,6 +45,9 @@ void Context::MoveToPosition(int newX, int newY)
 void Context::CloseContext()
 {
     IPCSend(GUI::compositorPID, IPC_TYPE_GUI, COMPOSITOR_CONTEXTCLOSE, this->sharedContextInfo->id);
+    if(ICPReceive(GUI::compositorPID, 0, IPC_TYPE_GUI).arg1 != 1)
+        Log(Error, "Did not receive ack from compositor when removing context");
+    
     GUI::contextList->Remove(this);
 }
 

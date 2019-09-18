@@ -14,8 +14,6 @@ void PoweroffAndEjectButtonCallback(void* sender, MouseButtonArgs arg);
 
 int main()
 {
-    GUI::Initialize();
-
     Window* mainWindow = new Window(150, 100, WIDTH/2 - 75, HEIGHT/2 - 50);
     mainWindow->titleString = "Power Options";
 

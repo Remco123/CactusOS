@@ -37,13 +37,15 @@ extern "C" void libMain()
 
     UserHeap::Initialize();
 
+    GUI::Initialize();
+
     callConstructors();
 
     int ret = main();
 
     callDestructors();
 
-    //GUI::CleanUp(); //TODO: Implement
+    GUI::CleanUp();
 
     DoSyscall(SYSCALL_EXIT, ret);
 }

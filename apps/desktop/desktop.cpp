@@ -24,8 +24,6 @@ void ButtonHandler(void* sender, MouseButtonArgs arg)
 
 int main()
 {
-    GUI::Initialize();
-
     Log(Info, "Parsing dekstop items");
     if(FileExists("B:\\desktop\\items.txt") == false)
     {

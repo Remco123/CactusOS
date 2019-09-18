@@ -51,6 +51,10 @@ namespace LIBCactusOS
          * Close this window, this can cause the application to exit
         */
         void Close(void* sender, MouseButtonArgs arg);
+        /**
+         * Close this window, this can cause the application to exit
+        */
+        void Close();
 
         /**
          * Draw this window to a canvas

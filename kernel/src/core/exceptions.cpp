@@ -107,6 +107,25 @@ uint32_t Exceptions::FloatingPointException(uint32_t esp)
     InterruptDescriptorTable::DisableInterrupts();
     while(1);
 }
+uint32_t Exceptions::StackSegmentFault(uint32_t esp)
+{
+    BootConsole::ForegroundColor = VGA_COLOR_RED;
+    BootConsole::WriteLine("Got Stack Segment Fault Exception");
+
+    CPUState* state = (CPUState*)esp;
+    BootConsole::Write("Instruction Pointer: 0x"); Print::printfHex32(((CPUState*)esp)->EIP); BootConsole::WriteLine();
+
+    if(state->ErrorCode != 0)
+    {
+        SelectorErrorCode* error = (SelectorErrorCode*)&state->ErrorCode;
+        BootConsole::Write("External: "); BootConsole::WriteLine(Convert::IntToString(error->External));
+        BootConsole::Write("Table: "); BootConsole::WriteLine(Convert::IntToString(error->Table));
+        BootConsole::Write("Index: "); BootConsole::WriteLine(Convert::IntToString(error->TableIndex));
+    }
+
+    InterruptDescriptorTable::DisableInterrupts();
+    while(1);
+}
 
 uint32_t Exceptions::HandleException(uint32_t number, uint32_t esp)
 {
@@ -120,6 +139,8 @@ uint32_t Exceptions::HandleException(uint32_t number, uint32_t esp)
             return PageFault(esp);
         case 0x1:
             return TrapException(esp);
+        case 0xC:
+            return StackSegmentFault(esp);
         case 0x13:
             return FloatingPointException(esp);
         default:
