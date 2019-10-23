@@ -16,7 +16,7 @@
             },*/
             "targetArchitecture": "x86",
             "MIMode": "gdb",
-            "miDebuggerPath": "/usr/bin/gdb",
+            "miDebuggerPath": "/usr/local/bin/gdb",
             "miDebuggerArgs": "",
             "customLaunchSetupCommands": [
                 {

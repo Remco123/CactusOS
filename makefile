@@ -6,6 +6,7 @@
 ##########
 
 INCLUDEDIRS := kernel/include
+USBOPTIONS := -boot d -device usb-ehci,id=ehci -drive if=none,id=usbstick,file=../usbdisk.img,format=raw -device usb-storage,bus=ehci.0,drive=usbstick
 
 G++PARAMS := -m32 -g -I $(INCLUDEDIRS) -fno-use-cxa-atexit -nostdlib -fno-builtin -fno-exceptions -fno-rtti -fno-leading-underscore -Wno-write-strings -fpermissive -Wall
 GCCPARAMS := -m32 -g -I $(INCLUDEDIRS) -nostdlib -fno-builtin -Wall -fleading-underscore
@@ -76,25 +77,26 @@ clean:
 	rm -rf isofiles/apps/*.bin
 
 qemu: CactusOS.iso
-	qemu-system-i386 -cdrom CactusOS.iso -serial stdio
+	qemu-system-i386 -cdrom CactusOS.iso -serial stdio $(USBOPTIONS)
 
 qemuDBG: CactusOS.iso
-	qemu-system-i386 -cdrom CactusOS.iso -serial stdio -s -S &
+	qemu-system-i386 -cdrom CactusOS.iso -serial stdio $(USBOPTIONS) -s -S &
 
 qemuGDB: CactusOS.iso
-	qemu-system-i386 -cdrom CactusOS.iso -serial pty &
+	qemu-system-i386 -cdrom CactusOS.iso $(USBOPTIONS) -serial pty &
 	gdb -ex 'file CactusOS.bin' -ex 'target remote /dev/pts/1' -q
 
 run: CactusOS.iso
 	(killall VirtualBox && sleep 1) || true
-	virtualbox --startvm 'CactusOS' 
+	virtualbox --startvm 'CactusOS' &
+	tail -f "../Virtualbox Serial Log.txt"
 
 serialDBG:
 	gcc -o tools/serialDebugger/a.out tools/serialDebugger/main.c
 	sudo ./tools/serialDebugger/a.out
 
 kdbg: CactusOS.iso
-	qemu-system-i386 -cdrom CactusOS.iso -serial stdio -s -S &
+	qemu-system-i386 -cdrom CactusOS.iso $(USBOPTIONS) -serial stdio -s -S &
 	kdbg -r localhost:1234 CactusOS.bin
 
 # Only rebuild LIBCactusOS and the apps without recompiling the kernel

@@ -29,6 +29,7 @@ bool System::gdbEnabled = false;
 Stream* System::keyboardStream = 0;
 Stream* System::ProcStandardOut = 0;
 List<ListingController*>* System::listings = 0;
+USBManager* System::usbManager = 0;
 #if BOCHS_GFX_HACK
 bool System::isBochs = false; //are we running inside bochs
 #endif
@@ -79,6 +80,9 @@ void System::Start()
     BootConsole::WriteLine("Starting Disk Manager");
     System::diskManager = new DiskManager();
 
+    BootConsole::WriteLine("Starting USB Manager");
+    System::usbManager = new USBManager();
+
     BootConsole::WriteLine("Setting up random...");
     Random::SetSeed(pit->Ticks());
 
@@ -92,9 +96,12 @@ void System::Start()
     BootConsole::WriteLine("Added drivers for integrated devices");
     System::driverManager->AddDriver(new MouseDriver());
     System::driverManager->AddDriver(new KeyboardDriver());
-
+    
     BootConsole::WriteLine("Activating Drivers");
     System::driverManager->ActivateAll();
+
+    BootConsole::WriteLine("Setting up found USB controllers");
+    System::usbManager->SetupAll();
 
     BootConsole::Write("Found a total of: "); BootConsole::Write(Convert::IntToString(System::diskManager->allDisks.size())); BootConsole::WriteLine(System::diskManager->allDisks.size() > 1 ? (char*)" disks" : (char*)" disk");
     BootConsole::WriteLine("Initializing Virtual File System");

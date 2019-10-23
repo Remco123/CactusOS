@@ -51,6 +51,14 @@ namespace CactusOS
         inline static void outportsm(unsigned short port, unsigned char * data, unsigned long size) {
 	        asm volatile ("rep outsw" : "+S" (data), "+c" (size) : "d" (port));
         }
+
+        inline static void writeMemReg(const common::uint32_t addr, const common::uint32_t val) {
+            *(common::uint32_t*)addr = val;
+        }
+
+        inline static common::uint32_t readMemReg(const common::uint32_t addr) {
+            return *(common::uint32_t*)addr;
+        }
     }
 }
 

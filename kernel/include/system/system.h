@@ -28,6 +28,8 @@
 #include <system/tasking/ipcmanager.h>
 #include <system/memory/sharedmem.h>
 #include <system/listings/listingcontroller.h>
+#include <system/usb/usbmanager.h>
+#include <system/drivers/usb/controllers/usb.h>
 
 #include <system/log.h>
 #include <../../lib/include/systeminfo.h>
@@ -85,6 +87,7 @@ namespace CactusOS
             static Stream* keyboardStream;
             static Stream* ProcStandardOut;
             static List<ListingController*>* listings;
+            static USBManager* usbManager;
             #if BOCHS_GFX_HACK
             static bool isBochs; //are we running inside bochs
             #endif
