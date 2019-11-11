@@ -1,5 +1,6 @@
 #include <system/drivers/usb/controllers/ohci.h>
 #include <system/system.h>
+#include <system/drivers/usb/usbdefs.h>
 
 using namespace CactusOS;
 using namespace CactusOS::common;
@@ -155,43 +156,23 @@ void OHCIController::Setup()
                     Log(Error, "Error when trying to set device address to %d", dev_address);
                     continue;
                 }
+
+                //Create Device
+                USBDevice* newDev = new USBDevice();
+                newDev->controller = this;
+                newDev->devAddress = dev_address;
+                newDev->portNum = i;
+                newDev->ohciProperties.desc_mps = desc_mps;
+                newDev->ohciProperties.ls_device = ls_device;
                 
-                // now request the whole descriptor
-                CreateStack(&our_frame, desc_mps, desc_len, ls_device, dev_address);
-                good_ret = RequestDesc(&our_frame, desc_len);
-                if (good_ret) {
-                    MemoryOperations::memcpy(&dev_desc, our_frame.packet, sizeof(struct DEVICE_DESC));
-                    Log(Info, "Found Device Descriptor:"
-                        "\n                 len: %d"
-                        "\n                type: %d"
-                        "\n             version: %b.%b"
-                        "\n               class: %d"
-                        "\n            subclass: %d"
-                        "\n            protocol: %d"
-                        "\n     max packet size: %d"
-                        "\n           vendor id: %w"
-                        "\n          product id: %w"
-                        "\n         release ver: %d%d.%d%d"
-                        "\n   manufacture index: %d (index to a string)"
-                        "\n       product index: %d"
-                        "\n        serial index: %d"
-                        "\n   number of configs: %d",
-                        dev_desc.len, dev_desc.type, dev_desc.usb_ver >> 8, dev_desc.usb_ver & 0xFF, dev_desc._class, dev_desc.subclass, 
-                        dev_desc.protocol, dev_desc.max_packet_size, dev_desc.vendorid, dev_desc.productid, 
-                        (dev_desc.device_rel & 0xF000) >> 12, (dev_desc.device_rel & 0x0F00) >> 8,
-                        (dev_desc.device_rel & 0x00F0) >> 4,  (dev_desc.device_rel & 0x000F) >> 0,
-                        dev_desc.manuf_indx, dev_desc.prod_indx, dev_desc.serial_indx, dev_desc.configs);
-                } else {
-                    Log(Error, "Error when trying to get all %d bytes of descriptor.", desc_len);
-                    continue;
-                }
+                System::usbManager->AddDevice(newDev);
                 
                 dev_address++;
             }
         }
     }
 }
-bool OHCIController::ResetPort(int port) {
+bool OHCIController::ResetPort(uint8_t port) {
     int timeout = 30;
     writeMemReg(regBase + OHCRhPortStatus + (port * 4), (1<<4)); // reset port
     while ((readMemReg(regBase + OHCRhPortStatus + (port * 4)) & (1<<20)) == 0) {
@@ -343,4 +324,30 @@ uint32_t OHCIController::HandleInterrupt(uint32_t esp)
     Log(Info, "OHCI Interrupt");
 
     return esp;
+}
+/////////
+// USB Controller Functions
+/////////
+bool OHCIController::GetDeviceDescriptor(struct DEVICE_DESC* dev_desc, USBDevice* device)
+{
+    // make a local frame list, and clear it out
+    struct OHCI_FRAME our_frame;
+    MemoryOperations::memset(&our_frame, 0, sizeof(struct OHCI_FRAME));
+        
+    // create the control list, locally
+    for (int i = 0; i < 16; i++) {
+        our_frame.control_ed[i].nexted = (uint32_t) (hccaPhys + ((uint32_t) &our_frame.control_ed[i+1] - (uint32_t) &our_frame));
+        our_frame.control_ed[i].flags = (1<<13); // sKip bit
+    }
+    our_frame.control_ed[15].nexted = 0x00000000;  // mark the last one
+
+    //copy our local stack to the real stack
+    MemoryOperations::memcpy(hcca, &our_frame, sizeof(struct OHCI_FRAME));
+
+    CreateStack(&our_frame, device->ohciProperties.desc_mps, 18, device->ohciProperties.ls_device, device->devAddress);
+    if (RequestDesc(&our_frame, 18)) {
+        MemoryOperations::memcpy(dev_desc, our_frame.packet, sizeof(struct DEVICE_DESC));
+        return true;
+    }
+    return false;
 }

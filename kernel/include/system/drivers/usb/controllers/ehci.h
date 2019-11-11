@@ -73,6 +73,12 @@ namespace CactusOS
             #define EHCI_QH_OFF_BUFF3_HI          60
             #define EHCI_QH_OFF_BUFF4_HI          64
             //Space for 6 additional items
+            #define EHCI_QH_OFF_HORZ_PTR_VIRT     68
+            #define EHCI_QH_OFF_PREV_PTR_VIRT     72
+            #define EHCI_QH_OFF_UNUSED0           76
+            #define EHCI_QH_OFF_UNUSED1           80
+            #define EHCI_QH_OFF_UNUSED2           84
+            #define EHCI_QH_OFF_UNUSED3           88
             #define EHCI_QH_OFF_PREV_PTR          92  // we use this for our insert/remove queue stuff
 
 
@@ -138,6 +144,8 @@ namespace CactusOS
 
                 uint32_t AsyncListVirt = 0;
                 uint32_t AsyncListPhys = 0;
+                uint8_t dev_address = 1;
+                uint8_t numPorts = 0;
             public:
                 EHCIController(PCIDevice* device);
 
@@ -145,8 +153,7 @@ namespace CactusOS
                 void Setup() override;
 
                 uint32_t HandleInterrupt(uint32_t esp);
-
-                bool ResetPort(uint8_t port);
+                
                 bool ehciHandshake(const uint32_t reg, const uint32_t mask, const uint32_t result, unsigned ms);
                 bool StopLegacy(const uint32_t params);
                 bool GetDescriptor(const int port);
@@ -160,10 +167,19 @@ namespace CactusOS
                 bool RemoveFromQueue(uint32_t itemVirt);
                 int WaitForInterrupt(uint32_t virtAddr, const uint32_t timeout, bool* spd);
                 bool ControlIn(void* targ, const int len, const int max_packet, const uint8_t address);
+                void CheckPortChange();
 
 
                 uint32_t ReadOpReg(uint32_t reg);
                 void WriteOpReg(uint32_t reg, uint32_t val);
+
+                //////////
+                // USB Controller Common Functions
+                //////////
+                //Reset port of this controller, returns true when succesfull
+                bool ResetPort(uint8_t port) override;
+                //Receive descriptor from device, returns true when succesfull
+                bool GetDeviceDescriptor(struct DEVICE_DESC* dev_desc, USBDevice* device) override;
             };
         }
     }

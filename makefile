@@ -6,7 +6,7 @@
 ##########
 
 INCLUDEDIRS := kernel/include
-USBOPTIONS := -boot d -device usb-ehci,id=ehci -drive if=none,id=usbstick,file=../usbdisk.img,format=raw -device usb-storage,bus=ehci.0,drive=usbstick
+USBOPTIONS := -boot d -device ich9-usb-uhci1 -drive if=none,id=usbstick,file=../usbdisk.img,format=raw -device usb-storage,id=stick,drive=usbstick
 
 G++PARAMS := -m32 -g -I $(INCLUDEDIRS) -fno-use-cxa-atexit -nostdlib -fno-builtin -fno-exceptions -fno-rtti -fno-leading-underscore -Wno-write-strings -fpermissive -Wall
 GCCPARAMS := -m32 -g -I $(INCLUDEDIRS) -nostdlib -fno-builtin -Wall -fleading-underscore
@@ -89,6 +89,8 @@ qemuGDB: CactusOS.iso
 run: CactusOS.iso
 	(killall VirtualBox && sleep 1) || true
 	virtualbox --startvm 'CactusOS' &
+	rm "../Virtualbox Serial Log.txt"
+	echo "" > "../Virtualbox Serial Log.txt"
 	tail -f "../Virtualbox Serial Log.txt"
 
 serialDBG:

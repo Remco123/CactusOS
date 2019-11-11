@@ -1,4 +1,5 @@
 #include <system/drivers/usb/controllers/uhci.h>
+#include <system/drivers/usb/usbdefs.h>
 #include <system/system.h>
 
 using namespace CactusOS;
@@ -94,39 +95,21 @@ void UHCIController::Setup()
             if (inportw(pciDevice->portBase + port) & 1) {
                 bool ls_device = (inportw(pciDevice->portBase + port) & (1<<8)) ? true : false;
                 Log(Info, "UHCI, Found Device at port %d, low speed = %b", (port - 0x10) >> 1, ls_device);
-            
+
                 // get first 8 bytes of descriptor
-                if (GetDescriptor(&dev_desc, ls_device, 0, 8, 8)) {
+                if (GetDescriptor(&dev_desc, ls_device, 0, 8, 8, STDRD_GET_REQUEST, DeviceRequest::GET_DESCRIPTOR, DescriptorTypes::DEVICE)) {
                     // reset the port again
                     ResetPort(port);
                     // set address of device
                     if (SetAddress(dev_address, ls_device)) {
-                        Log(Info, "Getting Descriptor");
-                        // get all 18 bytes of descriptor
-                        if (GetDescriptor(&dev_desc, ls_device, dev_address, dev_desc.max_packet_size, dev_desc.len)) {
-                            Log(Info, "Found Device Descriptor:"
-                                    "\n                 len: %d"
-                                    "\n                type: %d"
-                                    "\n             version: %b.%b"
-                                    "\n               class: %d"
-                                    "\n            subclass: %d"
-                                    "\n            protocol: %d"
-                                    "\n     max packet size: %d"
-                                    "\n           vendor id: %w"
-                                    "\n          product id: %w"
-                                    "\n         release ver: %d%d.%d%d"
-                                    "\n   manufacture index: %d (index to a string)"
-                                    "\n       product index: %d"
-                                    "\n        serial index: %d"
-                                    "\n   number of configs: %d",
-                                    dev_desc.len, dev_desc.type, dev_desc.usb_ver >> 8, dev_desc.usb_ver & 0xFF, dev_desc._class, dev_desc.subclass, 
-                                    dev_desc.protocol, dev_desc.max_packet_size, dev_desc.vendorid, dev_desc.productid, 
-                                    (dev_desc.device_rel & 0xF000) >> 12, (dev_desc.device_rel & 0x0F00) >> 8,
-                                    (dev_desc.device_rel & 0x00F0) >> 4,  (dev_desc.device_rel & 0x000F) >> 0,
-                                    dev_desc.manuf_indx, dev_desc.prod_indx, dev_desc.serial_indx, dev_desc.configs);
-                            dev_address++;
-                        } else
-                            Log(Error, "Error when trying to get all %d bytes of descriptor.", dev_desc.len);
+                        //Setup device
+                        USBDevice* newDev = new USBDevice();
+                        newDev->controller = this;
+                        newDev->devAddress = dev_address;
+                        newDev->portNum = (port - 0x10) / 2;
+                        newDev->uhciProperties.lowSpeedDevice = ls_device;
+                        newDev->uhciProperties.maxPacketSize = dev_desc.max_packet_size;
+                        System::usbManager->AddDevice(newDev);
                     } else
                         Log(Error, "Error setting device address.");
                 } else
@@ -199,52 +182,57 @@ bool UHCIController::ResetPort(uint8_t port)
 }
 
 // set up a queue, and enough TD's to get 'size' bytes
-bool UHCIController::GetDescriptor(struct DEVICE_DESC* dev_desc, const bool ls_device, const int dev_address, const int packet_size, const int size) {
-    static uint8_t setup_packet[8] = { 0x80, 0x06, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00 };
-    uint8_t our_buff[120];
-    int i = 1, t, sz = size, timeout;
-    uint32_t io_base = pciDevice->portBase;
+bool UHCIController::GetDescriptor(void* devDesc, const bool lsDevice, const int devAddress, const int packetSize, const int size, const uint8_t requestType, const uint8_t request, const uint16_t valueLow, const uint16_t valueHigh, const uint16_t index) {
+    //Create Request Packet
+    REQUEST_PACKET requestPacket;
+    {
+        requestPacket.request_type = requestType;
+        requestPacket.request = request;
+        requestPacket.value = (valueHigh >> 8) | (valueLow << 8);
+        requestPacket.index = index;
+        requestPacket.length = size;
+    }
+
+    //Create temporary buffer and clear it
+    uint8_t* tempBuf = new uint8_t[size];
+    MemoryOperations::memset(tempBuf, 0, size);
+
+    int i = 1, t, sz = size;
     uint32_t frameListVirt = (uint32_t)frameList;
     
     struct UHCI_QUEUE_HEAD queue;
     struct UHCI_TRANSFER_DESCRIPTOR td[10];
     
-    // set the size of the packet to return
-    *((uint16_t*)&setup_packet[6]) = (uint16_t)size;
-    
-    MemoryOperations::memset(our_buff, 0, 120);
-    
     queue.horz_ptr = 0x00000001;
     queue.vert_ptr = (frameListPhys + 4096 + 128 + sizeof(struct UHCI_QUEUE_HEAD));  // 128 to skip past buffers
     
     td[0].link_ptr = ((queue.vert_ptr & ~0xF) + sizeof(struct UHCI_TRANSFER_DESCRIPTOR));
-    td[0].reply = (ls_device ? (1<<26) : 0) | (3<<27) | (0x80 << 16);
-    td[0].info = (7<<21) | ((dev_address & 0x7F)<<8) | TOKEN_SETUP;
+    td[0].reply = (lsDevice ? (1<<26) : 0) | (3<<27) | (0x80 << 16);
+    td[0].info = (7<<21) | ((devAddress & 0x7F)<<8) | TOKEN_SETUP;
     td[0].buff_ptr = frameListPhys + 4096;
     
     while ((sz > 0) && (i<9)) {
         td[i].link_ptr = ((td[i-1].link_ptr & ~0xF) + sizeof(struct UHCI_TRANSFER_DESCRIPTOR));
-        td[i].reply = (ls_device ? (1<<26) : 0) | (3<<27) | (0x80 << 16);
-        t = ((sz <= packet_size) ? sz : packet_size);
-        td[i].info = ((t-1)<<21) | ((i & 1) ? (1<<19) : 0) | ((dev_address & 0x7F)<<8) | TOKEN_IN;
+        td[i].reply = (lsDevice ? (1<<26) : 0) | (3<<27) | (0x80 << 16);
+        t = ((sz <= packetSize) ? sz : packetSize);
+        td[i].info = ((t-1)<<21) | ((i & 1) ? (1<<19) : 0) | ((devAddress & 0x7F)<<8) | TOKEN_IN;
         td[i].buff_ptr = frameListPhys + 4096 + (8 * i);
         sz -= t;
         i++;
     }
     
     td[i].link_ptr = 0x00000001;
-    td[i].reply = (ls_device ? (1<<26) : 0) | (3<<27) | (1<<24) | (0x80 << 16);
-    td[i].info = (0x7FF<<21) | (1<<19) | ((dev_address & 0x7F)<<8) | TOKEN_OUT;
+    td[i].reply = (lsDevice ? (1<<26) : 0) | (3<<27) | (1<<24) | (0x80 << 16);
+    td[i].info = (0x7FF<<21) | (1<<19) | ((devAddress & 0x7F)<<8) | TOKEN_OUT;
     td[i].buff_ptr = 0x00000000;
     i++; // for a total count
     
     // make sure status:int bit is clear
-    outportw(io_base+UHCI_STATUS, 1);
+    outportw(pciDevice->portBase + UHCI_STATUS, 1);
     
     // now move our queue into the physical memory allocated
-    //movedata(src_selector, src_offset, dst_selector, dst_offset, size)
-    MemoryOperations::memcpy((void*)(frameListVirt + 4096 + 0), setup_packet, 8);
-    MemoryOperations::memcpy((void*)(frameListVirt + 4096 + 8), our_buff, 120);
+    MemoryOperations::memcpy((void*)(frameListVirt + 4096 + 0), &requestPacket, 8);
+    MemoryOperations::memcpy((void*)(frameListVirt + 4096 + 8), tempBuf, size);
     MemoryOperations::memcpy((void*)(frameListVirt + 4096 + 128), &queue, sizeof(struct UHCI_QUEUE_HEAD));
     MemoryOperations::memcpy((void*)(frameListVirt + 4096 + 128 + sizeof(struct UHCI_QUEUE_HEAD)), &td[0], sizeof(struct UHCI_TRANSFER_DESCRIPTOR) * 10);
     
@@ -252,8 +240,8 @@ bool UHCIController::GetDescriptor(struct DEVICE_DESC* dev_desc, const bool ls_d
     frameList[0] = (frameListPhys + 4096 + 128) | QUEUE_HEAD_Q;
     
     // wait for the IOC to happen
-    timeout = 10000; // 10 seconds
-    while (!(inportw(io_base+UHCI_STATUS) & 1) && (timeout > 0)) {
+    int timeout = 10000; // 10 seconds
+    while (!(inportw(pciDevice->portBase + UHCI_STATUS) & 1) && (timeout > 0)) {
         timeout--;
         System::pit->Sleep(1);
     }
@@ -264,24 +252,27 @@ bool UHCIController::GetDescriptor(struct DEVICE_DESC* dev_desc, const bool ls_d
     }
 
     Log(Info, "Frame: %d - USB transaction completed", inportw(pciDevice->portBase + UHCI_FRAME_NUM) & 0b1111111111);
-    outportw(io_base+UHCI_STATUS, 1);  // acknowledge the interrupt
+    outportw(pciDevice->portBase + UHCI_STATUS, 1);  // acknowledge the interrupt
     
     frameList[0] = 1; // mark the first stack frame pointer invalid
     
     // copy the stack frame back to our local buffer
-    MemoryOperations::memcpy(our_buff, (void*)(frameListVirt + 4096 + 8), 120);
+    MemoryOperations::memcpy(tempBuf, (void*)(frameListVirt + 4096 + 8), size);
     MemoryOperations::memcpy(&queue, (void*)(frameListVirt + 4096 + 128), sizeof(struct UHCI_QUEUE_HEAD));
     MemoryOperations::memcpy(&td[0], (void*)(frameListVirt + 4096 + 128 + sizeof(struct UHCI_QUEUE_HEAD)), (sizeof(struct UHCI_TRANSFER_DESCRIPTOR) * 10));
     
     // check the TD's for error
     for (t=0; t<i; t++) {
-        if (((td[t].reply & (0xFF<<16)) != 0))
+        if (((td[t].reply & (0xFF<<16)) != 0)) {
+            delete tempBuf;
             return false;
+        }
     }
     
     // copy the descriptor to the passed memory block
-    MemoryOperations::memcpy(dev_desc, our_buff, size);
+    MemoryOperations::memcpy(devDesc, tempBuf, size);
     
+    delete tempBuf;
     return true;
 }
 
@@ -393,4 +384,20 @@ uint32_t UHCIController::HandleInterrupt(uint32_t esp)
     }
 
     return esp;
+}
+
+/////////
+// USB Controller Functions
+/////////
+bool UHCIController::GetDeviceDescriptor(struct DEVICE_DESC* dev_desc, USBDevice* device)
+{
+    return GetDescriptor(dev_desc, device->uhciProperties.lowSpeedDevice, device->devAddress, device->uhciProperties.maxPacketSize, sizeof(struct DEVICE_DESC), STDRD_GET_REQUEST, DeviceRequest::GET_DESCRIPTOR, DescriptorTypes::DEVICE);
+}
+bool UHCIController::GetStringDescriptor(struct STRING_DESC* stringDesc, USBDevice* device, uint16_t index, uint16_t lang)
+{
+    if(!GetDescriptor(stringDesc, device->uhciProperties.lowSpeedDevice, device->devAddress, device->uhciProperties.maxPacketSize, 8, STDRD_GET_REQUEST, DeviceRequest::GET_DESCRIPTOR, DescriptorTypes::STRING, lang, index))
+        return false;
+        
+    int totalSize = stringDesc->len;
+    return GetDescriptor(stringDesc, device->uhciProperties.lowSpeedDevice, device->devAddress, device->uhciProperties.maxPacketSize, totalSize, STDRD_GET_REQUEST, DeviceRequest::GET_DESCRIPTOR, DescriptorTypes::STRING, lang, index);
 }

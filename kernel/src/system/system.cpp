@@ -102,6 +102,8 @@ void System::Start()
 
     BootConsole::WriteLine("Setting up found USB controllers");
     System::usbManager->SetupAll();
+    BootConsole::WriteLine("Setting up found USB devices");
+    System::usbManager->AssignAllDrivers();
 
     BootConsole::Write("Found a total of: "); BootConsole::Write(Convert::IntToString(System::diskManager->allDisks.size())); BootConsole::WriteLine(System::diskManager->allDisks.size() > 1 ? (char*)" disks" : (char*)" disk");
     BootConsole::WriteLine("Initializing Virtual File System");

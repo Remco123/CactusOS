@@ -70,6 +70,14 @@ uint32_t Exceptions::PageFault(uint32_t esp)
     Print::printfHex32(errorAddress);
     BootConsole::Write(" EIP: 0x");
     Print::printfHex32(regs->EIP);
+
+    #if USE_HEAP_MAGIC
+    BootConsole::Write(" Memory Intact: ");
+    if(KernelHeap::CheckForErrors())
+        BootConsole::Write(" No ");
+    else
+        BootConsole::Write(" Yes ");
+    #endif
     
     if(System::scheduler != 0 && System::scheduler->CurrentProcess() != 0) {
         BootConsole::Write(" Process: ");

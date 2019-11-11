@@ -101,13 +101,20 @@ namespace CactusOS
 
                 //Check if this port is present on the controller
                 bool PortPresent(uint8_t port);
-                //Reset port of this controller, returns true when succesfull
-                bool ResetPort(uint8_t port);
 
-                bool GetDescriptor(struct DEVICE_DESC* dev_desc, const bool ls_device, const int dev_address, const int packet_size, const int size);
-                bool SetAddress(const int dev_address, const bool ls_device);
-            
+                bool GetDescriptor(void* devDesc, const bool lsDevice, const int devAddress, const int packetSize, const int size, const uint8_t requestType = 0, const uint8_t request = 0, const uint16_t valueLow = 0, const uint16_t valueHigh = 0, const uint16_t index = 0);
+                bool SetAddress(const int dev_address, const bool ls_device); 
                 uint32_t HandleInterrupt(uint32_t esp);
+
+                //////////
+                // USB Controller Common Functions
+                //////////
+                //Reset port of this controller, returns true when succesfull
+                bool ResetPort(uint8_t port) override;
+                //Receive descriptor from device, returns true when succesfull
+                bool GetDeviceDescriptor(struct DEVICE_DESC* dev_desc, USBDevice* device) override;
+                //Receive descriptor from device, returns true when succesfull
+                bool GetStringDescriptor(struct STRING_DESC* stringDesc, USBDevice* device, uint16_t index, uint16_t lang = 0) override;
             };
         }
     }

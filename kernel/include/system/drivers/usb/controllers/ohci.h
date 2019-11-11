@@ -94,13 +94,19 @@ namespace CactusOS
                 bool Initialize() override;
                 void Setup() override;
 
-                bool ResetPort(int port);
-
                 void CreateStack(struct OHCI_FRAME* frame, const int mps, int cnt, const bool ls_device, const int address);
                 void SetAddress(struct OHCI_FRAME* frame, int dev_address, bool ls_device);
                 bool RequestDesc(struct OHCI_FRAME* our_frame, int cnt);
 
                 uint32_t HandleInterrupt(uint32_t esp);
+
+                //////////
+                // USB Controller Common Functions
+                //////////
+                //Reset port of this controller, returns true when succesfull
+                bool ResetPort(uint8_t port) override;
+                //Receive descriptor from device, returns true when succesfull
+                bool GetDeviceDescriptor(struct DEVICE_DESC* dev_desc, USBDevice* device) override;
             };
         }
     }

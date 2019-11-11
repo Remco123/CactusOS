@@ -4,6 +4,7 @@
 #include <system/drivers/driver.h>
 #include <system/components/pci.h>
 #include <system/interruptmanager.h>
+#include <system/usb/usbdevice.h>
 
 namespace CactusOS
 {
@@ -17,15 +18,27 @@ namespace CactusOS
             xHCI
         };
 
+        class USBDevice;
         class USBController
-        {
-        friend class USBManager;
-        protected:
-            USBControllerType type;
+        {            
         public:
+            //What type of controller is this
+            USBControllerType type;
+            //Create new instance of USBController class
             USBController(USBControllerType usbType);
 
+            //Setup this controller into the active state
             virtual void Setup();
+
+            /////
+            // USB Common functions per controller
+            /////
+            //Reset specific port on controller
+            virtual bool ResetPort(uint8_t port);
+            //Get Device descriptor of specific device
+            virtual bool GetDeviceDescriptor(struct DEVICE_DESC* dev_desc, USBDevice* device);
+            //Get String descriptor of specific device
+            virtual bool GetStringDescriptor(struct STRING_DESC* stringDesc, USBDevice* device, uint16_t index, uint16_t lang = 0);
         };
     }
 }

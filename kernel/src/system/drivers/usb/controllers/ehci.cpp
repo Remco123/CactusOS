@@ -1,4 +1,5 @@
 #include <system/drivers/usb/controllers/ehci.h>
+#include <system/drivers/usb/usbdefs.h>
 #include <system/system.h>
 
 using namespace CactusOS;
@@ -44,12 +45,12 @@ bool EHCIController::Initialize()
         if (--timeout == 0)
             return false;
     }
-
+    /*
     if((readMemReg(this->regBase + EHC_CAPS_HCCParams) & (1<<2)) && (ReadOpReg(EHC_OPS_USBCommand) != 0x0080B00))
         return false;
     if(!(readMemReg(this->regBase + EHC_CAPS_HCCParams) & (1<<2)) && (ReadOpReg(EHC_OPS_USBCommand) != 0x0080000))
         return false;
-
+    */
     //if(ReadOpReg(EHC_OPS_USBStatus) != 0x00001000)
     //    return false;
     if(ReadOpReg(EHC_OPS_USBInterrupt) != 0)
@@ -82,7 +83,7 @@ void EHCIController::Setup()
     }
 
     //Get num_ports from EHCI's HCSPARAMS register
-    uint8_t numPorts = (uint8_t)(hcsparams & 0x0F);  // at least 1 and no more than 15
+    numPorts = (uint8_t)(hcsparams & 0x0F);  // at least 1 and no more than 15
     Log(Info, "EHCI Found %d root hub ports.", numPorts);
 
     // allocate then initialize the async queue list (Control and Bulk TD's)
@@ -104,7 +105,7 @@ void EHCIController::Setup()
     WriteOpReg(EHC_OPS_CtrlDSSegemnt, 0);
 
     WriteOpReg(EHC_OPS_USBStatus, 0x3F);
-    WriteOpReg(EHC_OPS_USBCommand, 0x00080031);
+    WriteOpReg(EHC_OPS_USBCommand, 0b10000000000000100001); //0x00080031);
 
     //Enable the asynchronous list
     if (!EnableAsycnList(true)) {
@@ -153,6 +154,7 @@ uint32_t EHCIController::HandleInterrupt(uint32_t esp)
     if (val & (1<<2))
     {
         Log(Info, "Port Change");
+        CheckPortChange();
     }
 
     if (val & (1<<3))
@@ -166,6 +168,30 @@ uint32_t EHCIController::HandleInterrupt(uint32_t esp)
     }
 
     return esp;
+}
+void EHCIController::CheckPortChange()
+{
+    for (int i = 0; i < numPorts; i++)
+    {
+        uint32_t HCPortStatusOff = EHC_OPS_PortStatus + (i * 4);
+        uint32_t portStatus = ReadOpReg(HCPortStatusOff);
+        if (portStatus & EHCI_PORT_CSC)
+        {
+            Log(Info, "Port %d Connection change", i);
+            portStatus |= EHCI_PORT_CSC; //Clear bit
+            if (portStatus & EHCI_PORT_CCS)
+            {
+                Log(Info, "Device Attached on port %d", i);
+                if(ResetPort(i))
+                    GetDescriptor(i);
+            }
+            else
+            {
+                Log(Info, "Device detached on port %d", i);
+                //TODO: In the future unload driver here if needed                
+            }
+        }
+    }
 }
 bool EHCIController::ResetPort(uint8_t port)
 {
@@ -242,7 +268,6 @@ bool EHCIController::GetDescriptor(const int port) {
     */
     
     uint8_t max_packet = 64;
-    uint8_t dev_address = 1;
     
     // send the "get_descriptor" packet (get 18 bytes)
     if (!ControlIn(&dev_desc, 18, max_packet, 0))
@@ -253,33 +278,15 @@ bool EHCIController::GetDescriptor(const int port) {
     
     // set address
     SetAddress(max_packet, dev_address);
-    
-    // get the whole packet.
-    MemoryOperations::memset(&dev_desc, 0, 18);
-    if (!ControlIn(&dev_desc, 18, max_packet, dev_address))
-        return false;
-    
-    // print the descriptor
-    Log(Info, "Found Device Descriptor:"
-        "\n                 len: %d"
-        "\n                type: %d"
-        "\n             version: %b.%b"
-        "\n               class: %d"
-        "\n            subclass: %d"
-        "\n            protocol: %d"
-        "\n     max packet size: %d"
-        "\n           vendor id: %w"
-        "\n          product id: %w"
-        "\n         release ver: %d%d.%d%d"
-        "\n   manufacture index: %d (index to a string)"
-        "\n       product index: %d"
-        "\n        serial index: %d"
-        "\n   number of configs: %d",
-        dev_desc.len, dev_desc.type, dev_desc.usb_ver >> 8, dev_desc.usb_ver & 0xFF, dev_desc._class, dev_desc.subclass, 
-        dev_desc.protocol, dev_desc.max_packet_size, dev_desc.vendorid, dev_desc.productid, 
-        (dev_desc.device_rel & 0xF000) >> 12, (dev_desc.device_rel & 0x0F00) >> 8,
-        (dev_desc.device_rel & 0x00F0) >> 4,  (dev_desc.device_rel & 0x000F) >> 0,
-        dev_desc.manuf_indx, dev_desc.prod_indx, dev_desc.serial_indx, dev_desc.configs);
+
+    //Setup Device
+    USBDevice* newDev = new USBDevice();
+    newDev->controller = this;
+    newDev->devAddress = dev_address;
+    newDev->portNum = port;
+                
+    System::usbManager->AddDevice(newDev);
+    dev_address++;
     
     return true;
 }
@@ -320,6 +327,7 @@ void EHCIController::InitStackFrame() {
     // the async queue (Control and Bulk TD's) is a round robin set of 16 Queue Heads.
     for (int i = 0; i < 16; i++) {
         *((uint32_t*)(queueHeadPtr + EHCI_QH_OFF_HORZ_PTR)) = (queueHeadPhysPtr + EHCI_QUEUE_HEAD_SIZE) | QH_HS_TYPE_QH | QH_HS_T0;
+        *((uint32_t*)(queueHeadPtr + EHCI_QH_OFF_HORZ_PTR_VIRT)) = (queueHeadPtr + EHCI_QUEUE_HEAD_SIZE) | QH_HS_TYPE_QH | QH_HS_T0;
         *((uint32_t*)(queueHeadPtr + EHCI_QH_OFF_ENDPT_CAPS)) = (0 << 16) | ((i==0) ? (1<<15) : (0<<15)) | QH_HS_EPS_HS | (0<<8) | 0;
         *((uint32_t*)(queueHeadPtr + EHCI_QH_OFF_HUB_INFO)) = (1<<30);
         *((uint32_t*)(queueHeadPtr + EHCI_QH_OFF_NEXT_QTD_PTR)) = QH_HS_T1;
@@ -331,6 +339,7 @@ void EHCIController::InitStackFrame() {
     // backup and point the last one at the first one
     queueHeadPtr -= EHCI_QUEUE_HEAD_SIZE;
     *((uint32_t*)(queueHeadPtr + EHCI_QH_OFF_HORZ_PTR)) = (AsyncListPhys | QH_HS_TYPE_QH | QH_HS_T0);
+    *((uint32_t*)(queueHeadPtr + EHCI_QH_OFF_HORZ_PTR_VIRT)) = (AsyncListVirt | QH_HS_TYPE_QH | QH_HS_T0);
 }
 
 /* Release BIOS ownership of controller
@@ -373,6 +382,7 @@ void EHCIController::SetupQueueHead(uint32_t headVirt, const uint32_t qtd, uint8
     MemoryOperations::memset((void*)headVirt, 0, EHCI_QUEUE_HEAD_SIZE);
     
     *((uint32_t*)(headVirt + EHCI_QH_OFF_HORZ_PTR)) = 1;
+    *((uint32_t*)(headVirt + EHCI_QH_OFF_HORZ_PTR_VIRT)) = 1;
     *((uint32_t*)(headVirt + EHCI_QH_OFF_ENDPT_CAPS)) = (8<<28) | ((mps & 0x7FF) << 16) | (0<<15) | 
         (1<<14) | (2<<12) | ((endpt & 0x0F) << 8) | (0<<7) | (address & 0x7F);
     *((uint32_t*)(headVirt + EHCI_QH_OFF_HUB_INFO)) = (1<<30) | (0<<23) | (0<<16);
@@ -443,22 +453,31 @@ int EHCIController::MakeTransferDesc(uint32_t virtAddr, uint32_t physAddr, const
 
 void EHCIController::InsertIntoQueue(uint32_t itemVirt, uint32_t itemPhys, const uint8_t type) {
     *(uint32_t*)(itemVirt + EHCI_QH_OFF_HORZ_PTR) = *(uint32_t*)(AsyncListVirt + EHCI_QH_OFF_HORZ_PTR);
+    *(uint32_t*)(itemVirt + EHCI_QH_OFF_HORZ_PTR_VIRT) = *(uint32_t*)(AsyncListVirt + EHCI_QH_OFF_HORZ_PTR_VIRT);
+
     *(uint32_t*)(AsyncListVirt + EHCI_QH_OFF_HORZ_PTR) = itemPhys | type;
+    *(uint32_t*)(AsyncListVirt + EHCI_QH_OFF_HORZ_PTR_VIRT) = itemVirt | type;
+
     *(uint32_t*)(itemVirt + EHCI_QH_OFF_PREV_PTR) = AsyncListPhys;
+    *(uint32_t*)(itemVirt + EHCI_QH_OFF_PREV_PTR_VIRT) = AsyncListVirt;
 }
 
 // removes a queue from the async list
 // EHCI section 4.8.2, shows that we must watch for three bits before we have "fully and successfully" removed
 //   the queue(s) from the list
 bool EHCIController::RemoveFromQueue(uint32_t itemVirt) {
-  
-    uint32_t temp_addr;
     
-    temp_addr = *(uint32_t*)(itemVirt + EHCI_QH_OFF_PREV_PTR);
-    *(uint32_t*)(temp_addr + EHCI_QH_OFF_HORZ_PTR) = *(uint32_t*)(itemVirt + EHCI_QH_OFF_HORZ_PTR);
+    uint32_t prevPhys = *(uint32_t*)(itemVirt + EHCI_QH_OFF_PREV_PTR);
+    uint32_t prevVirt = *(uint32_t*)(itemVirt + EHCI_QH_OFF_PREV_PTR_VIRT);
 
-    temp_addr = *(uint32_t*)(itemVirt + EHCI_QH_OFF_HORZ_PTR) & ~EHCI_QUEUE_HEAD_PTR_MASK;
-    *(uint32_t*)(temp_addr + EHCI_QH_OFF_PREV_PTR) = *(uint32_t*)(itemVirt + EHCI_QH_OFF_PREV_PTR);
+    *(uint32_t*)(prevVirt + EHCI_QH_OFF_HORZ_PTR) = *(uint32_t*)(itemVirt + EHCI_QH_OFF_HORZ_PTR);
+    *(uint32_t*)(prevVirt + EHCI_QH_OFF_HORZ_PTR_VIRT) = *(uint32_t*)(itemVirt + EHCI_QH_OFF_HORZ_PTR_VIRT);
+
+    uint32_t horzPhys = *(uint32_t*)(itemVirt + EHCI_QH_OFF_HORZ_PTR) & ~EHCI_QUEUE_HEAD_PTR_MASK;
+    uint32_t horzVirt = *(uint32_t*)(itemVirt + EHCI_QH_OFF_HORZ_PTR_VIRT) & ~EHCI_QUEUE_HEAD_PTR_MASK;
+    
+    *(uint32_t*)(horzVirt + EHCI_QH_OFF_PREV_PTR) = *(uint32_t*)(itemVirt + EHCI_QH_OFF_PREV_PTR);
+    *(uint32_t*)(horzVirt + EHCI_QH_OFF_PREV_PTR_VIRT) = *(uint32_t*)(itemVirt + EHCI_QH_OFF_PREV_PTR_VIRT);
     
     // now wait for the successful "doorbell"
     // set bit 6 in command register (to tell the controller that something has been removed from the schedule)
@@ -488,16 +507,26 @@ int EHCIController::WaitForInterrupt(uint32_t virtAddr, const uint32_t timeout, 
                     if (spd) 
                         *spd = true;
             } else {
-                if (status & (1<<6))
+                if (status & (1<<6)) {
                     ret = 0; //ERROR_STALLED;
-                else if (status & (1<<5))
+                    Log(Error, "USB EHCI wait interrupt qtd->status = ERROR_STALLED");
+                }
+                else if (status & (1<<5)) {
                     ret = 0; //ERROR_DATA_BUFFER_ERROR;
-                else if (status & (1<<4))
+                    Log(Error, "USB EHCI wait interrupt qtd->status = ERROR_DATA_BUFFER_ERROR");
+                }
+                else if (status & (1<<4)) {
                     ret = 0; //ERROR_BABBLE_DETECTED;
-                else if (status & (1<<3))
+                    Log(Error, "USB EHCI wait interrupt qtd->status = ERROR_BABBLE_DETECTED");
+                }
+                else if (status & (1<<3)) {
                     ret = 0; //ERROR_NAK;
-                else if (status & (1<<2))
+                    Log(Error, "USB EHCI wait interrupt qtd->status = ERROR_NAK");
+                }
+                else if (status & (1<<2)) {
                     ret = 0; //ERROR_TIME_OUT;
+                    Log(Error, "USB EHCI wait interrupt qtd->status = ERROR_TIME_OUT");
+                }
                 else {
                     Log(Error, "USB EHCI wait interrupt qtd->status = %x", status);
                     ret = 0; //ERROR_UNKNOWN;
@@ -554,6 +583,8 @@ bool EHCIController::SetAddress(const uint8_t max_packet, const uint8_t address)
     InsertIntoQueue(queueVirt, queuePhys, QH_HS_TYPE_QH);
     int ret = WaitForInterrupt(td0Virt, 2000, 0);
     RemoveFromQueue(queueVirt);
+
+    KernelHeap::allignedFree((void*)packetVirt);
     
     return (ret == 1);
 }
@@ -569,7 +600,7 @@ bool EHCIController::ControlIn(void* targ, const int len, const int max_packet, 
     uint32_t td0Virt = queueVirt + EHCI_QUEUE_HEAD_SIZE;
     
     uint32_t bufferPhys;
-    uint32_t bufferVirt = (uint32_t)KernelHeap::allignedMalloc(256, 1, &bufferPhys);  // get a physical address buffer and then copy from it later
+    uint32_t bufferVirt = (uint32_t)KernelHeap::malloc(256, &bufferPhys);  // get a physical address buffer and then copy from it later
     
     static struct REQUEST_PACKET temp = { STDRD_GET_REQUEST, GET_DESCRIPTOR, ((DEVICE << 8) | 0), 0, 0 };
     temp.length = len;
@@ -588,13 +619,16 @@ bool EHCIController::ControlIn(void* targ, const int len, const int max_packet, 
     InsertIntoQueue(queueVirt, queuePhys, QH_HS_TYPE_QH);
     int ret = WaitForInterrupt(td0Virt, 2000, &spd);
     RemoveFromQueue(queueVirt);
+    KernelHeap::allignedFree((void*)packetVirt);
     
     if (ret == 1) {
         // now copy from the physical buffer to the specified buffer
         MemoryOperations::memcpy(targ, (void*)bufferVirt, len);
+        KernelHeap::free((void*)bufferVirt);
         return true;
     }
     
+    KernelHeap::allignedFree((void*)bufferVirt);
     return false;
 }
 
@@ -605,4 +639,11 @@ uint32_t EHCIController::ReadOpReg(uint32_t reg)
 void EHCIController::WriteOpReg(uint32_t reg, uint32_t val)
 {
     writeMemReg(regBase + operRegsOffset + reg, val);
+}
+/////////
+// USB Controller Functions
+/////////
+bool EHCIController::GetDeviceDescriptor(struct DEVICE_DESC* dev_desc, USBDevice* device)
+{
+    return ControlIn(dev_desc, 18, 64, device->devAddress);
 }

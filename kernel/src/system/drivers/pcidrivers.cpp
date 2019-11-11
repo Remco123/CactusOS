@@ -85,8 +85,9 @@ void PCIDrivers::AssignDriversFromPCI(PCIController* pci, DriverManager* driverM
                             }
                             case 0x30: //xHCI
                             {
-                                driverManager->AddDriver(new XHCIController(pciDevice));
-                                goto FoundDriver;
+                                BootConsole::WriteLine("xHCI Controller found, no support for this controller (yet)");
+                                //driverManager->AddDriver(new XHCIController(pciDevice));
+                                //goto FoundDriver;
                                 break;
                             }
                         }   
