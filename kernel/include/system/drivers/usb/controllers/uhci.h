@@ -42,11 +42,11 @@ namespace CactusOS
             #define QUEUE_HEAD_Q         0x00000002
             #define QUEUE_HEAD_T         0x00000001
 
-            struct UHCI_QUEUE_HEAD {
+            typedef struct UHCI_QUEUE_HEAD {
                 uint32_t   horz_ptr;
                 uint32_t   vert_ptr;
                 uint32_t   resv0[2];   // to make it 16 bytes in length
-            } __attribute__((packed));
+            } queueHead_t;
 
 
             #define TD_PTR_MASK  0xFFFFFFF0
@@ -78,13 +78,13 @@ namespace CactusOS
             #define TD_INFO_ADDR_SHFT     8
             #define TD_INFO_PID           0x000000FF
 
-            struct UHCI_TRANSFER_DESCRIPTOR { 
+            typedef struct UHCI_TRANSFER_DESCRIPTOR { 
                 uint32_t   link_ptr;
                 uint32_t   reply;
                 uint32_t   info;
                 uint32_t   buff_ptr;
                 uint32_t   resv0[4];          // the last 4 dwords are reserved for software use.
-            } __attribute__((packed));
+            } transferDescriptor_t;
 
             class UHCIController : public USBController, public Driver, public InterruptHandler
             {

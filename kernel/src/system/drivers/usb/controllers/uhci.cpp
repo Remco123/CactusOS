@@ -65,12 +65,12 @@ void UHCIController::Setup()
         System::pci->Write(pciDevice->bus, pciDevice->device, pciDevice->function, UHCI_LEGACY, 0x8F00);
 
     //Allocate Stack frame
-    this->frameList = (uint32_t*)KernelHeap::allignedMalloc(1024 * sizeof(uint32_t) * 2, 4096, &this->frameListPhys);
-    MemoryOperations::memset(this->frameList, 0x0, 1024 * sizeof(uint32_t) * 2);
+    this->frameList = (uint32_t*)KernelHeap::allignedMalloc(1024 * sizeof(uint32_t), 4096, &this->frameListPhys);
+    MemoryOperations::memset(this->frameList, 0x0, 1024 * sizeof(uint32_t));
 
-    //And set all entries to 0
+    //And set all entries to point to the main queue
     for(int i = 0; i < 1024; i++)
-        this->frameList[i] = 0x00000001;
+        this->frameList[i] = QUEUE_HEAD_T;
 
     //Set stack frame address
     outportl(pciDevice->portBase + UHCI_FRAME_BASE, frameListPhys);
@@ -184,7 +184,7 @@ bool UHCIController::ResetPort(uint8_t port)
 // set up a queue, and enough TD's to get 'size' bytes
 bool UHCIController::GetDescriptor(void* devDesc, const bool lsDevice, const int devAddress, const int packetSize, const int size, const uint8_t requestType, const uint8_t request, const uint16_t valueLow, const uint16_t valueHigh, const uint16_t index) {
     //Create Request Packet
-    REQUEST_PACKET requestPacket;
+    REQUEST_PACKET requestPacket __attribute__((aligned(16)));
     {
         requestPacket.request_type = requestType;
         requestPacket.request = request;
@@ -194,33 +194,43 @@ bool UHCIController::GetDescriptor(void* devDesc, const bool lsDevice, const int
     }
 
     //Create temporary buffer and clear it
-    uint8_t* tempBuf = new uint8_t[size];
-    MemoryOperations::memset(tempBuf, 0, size);
+    uint32_t returnBufPhys;
+    uint8_t* returnBuf = (uint8_t*)KernelHeap::malloc(size, &returnBufPhys);
+    MemoryOperations::memset(returnBuf, 0, size);
+    
+    //Allocate Transfer Descriptors
+    uint32_t tdPhys;
+    transferDescriptor_t* td = (transferDescriptor_t*)KernelHeap::allignedMalloc(sizeof(transferDescriptor_t) * 10, 16, &tdPhys);
+    MemoryOperations::memset(td, 0, sizeof(transferDescriptor_t) * 10);
 
-    int i = 1, t, sz = size;
-    uint32_t frameListVirt = (uint32_t)frameList;
-    
-    struct UHCI_QUEUE_HEAD queue;
-    struct UHCI_TRANSFER_DESCRIPTOR td[10];
-    
-    queue.horz_ptr = 0x00000001;
-    queue.vert_ptr = (frameListPhys + 4096 + 128 + sizeof(struct UHCI_QUEUE_HEAD));  // 128 to skip past buffers
-    
-    td[0].link_ptr = ((queue.vert_ptr & ~0xF) + sizeof(struct UHCI_TRANSFER_DESCRIPTOR));
+    //Allocate queue head
+    uint32_t queuePhys;
+    queueHead_t* queue = (queueHead_t*)KernelHeap::allignedMalloc(sizeof(queueHead_t), 16, &queuePhys);
+    queue->vert_ptr = tdPhys;
+    queue->horz_ptr = QUEUE_HEAD_T;
+
+    //Setup Transfer Descriptor
+    td[0].link_ptr = ((tdPhys & ~0xF) + sizeof(transferDescriptor_t));
     td[0].reply = (lsDevice ? (1<<26) : 0) | (3<<27) | (0x80 << 16);
     td[0].info = (7<<21) | ((devAddress & 0x7F)<<8) | TOKEN_SETUP;
-    td[0].buff_ptr = frameListPhys + 4096;
+    td[0].buff_ptr = (uint32_t)virt2phys((uint32_t)&requestPacket);
     
+
+    int i = 1;
+    int sz = size;
+    //Transfer Descriptors depending on size of request
     while ((sz > 0) && (i<9)) {
-        td[i].link_ptr = ((td[i-1].link_ptr & ~0xF) + sizeof(struct UHCI_TRANSFER_DESCRIPTOR));
+        td[i].link_ptr = ((td[i-1].link_ptr & ~0xF) + sizeof(transferDescriptor_t));
         td[i].reply = (lsDevice ? (1<<26) : 0) | (3<<27) | (0x80 << 16);
-        t = ((sz <= packetSize) ? sz : packetSize);
+        int t = ((sz <= packetSize) ? sz : packetSize);
         td[i].info = ((t-1)<<21) | ((i & 1) ? (1<<19) : 0) | ((devAddress & 0x7F)<<8) | TOKEN_IN;
-        td[i].buff_ptr = frameListPhys + 4096 + (8 * i);
+        td[i].buff_ptr = returnBufPhys + (8 * (i-1));
         sz -= t;
         i++;
     }
     
+
+    //Acknowledge Transfer Descriptor (Status)
     td[i].link_ptr = 0x00000001;
     td[i].reply = (lsDevice ? (1<<26) : 0) | (3<<27) | (1<<24) | (0x80 << 16);
     td[i].info = (0x7FF<<21) | (1<<19) | ((devAddress & 0x7F)<<8) | TOKEN_OUT;
@@ -230,14 +240,8 @@ bool UHCIController::GetDescriptor(void* devDesc, const bool lsDevice, const int
     // make sure status:int bit is clear
     outportw(pciDevice->portBase + UHCI_STATUS, 1);
     
-    // now move our queue into the physical memory allocated
-    MemoryOperations::memcpy((void*)(frameListVirt + 4096 + 0), &requestPacket, 8);
-    MemoryOperations::memcpy((void*)(frameListVirt + 4096 + 8), tempBuf, size);
-    MemoryOperations::memcpy((void*)(frameListVirt + 4096 + 128), &queue, sizeof(struct UHCI_QUEUE_HEAD));
-    MemoryOperations::memcpy((void*)(frameListVirt + 4096 + 128 + sizeof(struct UHCI_QUEUE_HEAD)), &td[0], sizeof(struct UHCI_TRANSFER_DESCRIPTOR) * 10);
-    
-    // mark the first stack frame pointer
-    frameList[0] = (frameListPhys + 4096 + 128) | QUEUE_HEAD_Q;
+    //Instert queue into list
+    frameList[0] = queuePhys | QUEUE_HEAD_Q;
     
     // wait for the IOC to happen
     int timeout = 10000; // 10 seconds
@@ -247,33 +251,37 @@ bool UHCIController::GetDescriptor(void* devDesc, const bool lsDevice, const int
     }
     if (timeout == 0) {
         Log(Warning, "UHCI timed out.");
-        frameList[0] = 1; // mark the first stack frame pointer invalid
+        frameList[0] = QUEUE_HEAD_T;
         return false;
     }
 
     Log(Info, "Frame: %d - USB transaction completed", inportw(pciDevice->portBase + UHCI_FRAME_NUM) & 0b1111111111);
     outportw(pciDevice->portBase + UHCI_STATUS, 1);  // acknowledge the interrupt
     
-    frameList[0] = 1; // mark the first stack frame pointer invalid
+    frameList[0] = QUEUE_HEAD_T;
     
-    // copy the stack frame back to our local buffer
-    MemoryOperations::memcpy(tempBuf, (void*)(frameListVirt + 4096 + 8), size);
-    MemoryOperations::memcpy(&queue, (void*)(frameListVirt + 4096 + 128), sizeof(struct UHCI_QUEUE_HEAD));
-    MemoryOperations::memcpy(&td[0], (void*)(frameListVirt + 4096 + 128 + sizeof(struct UHCI_QUEUE_HEAD)), (sizeof(struct UHCI_TRANSFER_DESCRIPTOR) * 10));
-    
+    bool ret = true;
     // check the TD's for error
-    for (t=0; t<i; t++) {
-        if (((td[t].reply & (0xFF<<16)) != 0)) {
-            delete tempBuf;
-            return false;
+    for (int t = 0; t < i; t++) {
+        if (((td[t].reply & (0xFF << 16)) != 0)) { //Check if any error bit is set
+            ret = false;
+            break;
         }
     }
     
-    // copy the descriptor to the passed memory block
-    MemoryOperations::memcpy(devDesc, tempBuf, size);
+    if(ret) {
+        // copy the descriptor to the passed memory block
+        MemoryOperations::memcpy(devDesc, returnBuf, size);
+    }
     
-    delete tempBuf;
-    return true;
+    //Free temporary buffer
+    KernelHeap::free(returnBuf);
+    //Free td's
+    KernelHeap::allignedFree(td);
+    //Free queue head
+    KernelHeap::allignedFree(queue);
+
+    return ret;
 }
 
 bool UHCIController::SetAddress(const int dev_address, const bool ls_device) {
