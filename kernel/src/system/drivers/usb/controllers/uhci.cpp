@@ -285,68 +285,75 @@ bool UHCIController::GetDescriptor(void* devDesc, const bool lsDevice, const int
 }
 
 bool UHCIController::SetAddress(const int dev_address, const bool ls_device) {
-    // our setup packet (with the third byte replaced below)
-    static uint8_t setup_packet[8] = { 0x00, 0x05, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
-    int i, timeout;
-    uint32_t io_base = pciDevice->portBase;
-    uint32_t frameListVirt = (uint32_t)frameList;
+    //Create setupPacket
+    REQUEST_PACKET setupPacket __attribute__((aligned(16)));
+    {
+        setupPacket.request_type = STDRD_SET_REQUEST;
+        setupPacket.request = SET_ADDRESS;
+        setupPacket.value = dev_address;
+        setupPacket.index = 0;
+        setupPacket.length = 0;
+    }
     
-    // one queue and two TD's
-    struct UHCI_QUEUE_HEAD queue;
-    struct UHCI_TRANSFER_DESCRIPTOR td[2];
+    //Allocate Transfer Descriptors
+    uint32_t tdPhys;
+    transferDescriptor_t* td = (transferDescriptor_t*)KernelHeap::allignedMalloc(sizeof(transferDescriptor_t) * 2, 16, &tdPhys);
+    MemoryOperations::memset(td, 0, sizeof(transferDescriptor_t) * 2);
+
+    //Allocate queue head
+    uint32_t queuePhys;
+    queueHead_t* queue = (queueHead_t*)KernelHeap::allignedMalloc(sizeof(queueHead_t), 16, &queuePhys);
+    queue->vert_ptr = tdPhys;
+    queue->horz_ptr = QUEUE_HEAD_T;
     
-    setup_packet[2] = (uint8_t)dev_address;
-    
-    queue.horz_ptr = 0x00000001;
-    queue.vert_ptr = (frameListPhys + 4096 + 128 + sizeof(struct UHCI_QUEUE_HEAD));  // 128 to skip past buffers
-    
-    td[0].link_ptr = ((queue.vert_ptr & ~0xF) + sizeof(struct UHCI_TRANSFER_DESCRIPTOR));
+    //Create set address td
+    td[0].link_ptr = ((tdPhys & ~0xF) + sizeof(transferDescriptor_t));
     td[0].reply = (ls_device ? (1<<26) : 0) | (3<<27) | (0x80 << 16);
     td[0].info = (7<<21) | (0<<8) | TOKEN_SETUP;
-    td[0].buff_ptr = frameListPhys + 4096;
+    td[0].buff_ptr = (uint32_t)virt2phys((uint32_t)&setupPacket);
     
+    //Create status td
     td[1].link_ptr = 0x00000001;
     td[1].reply = (ls_device ? (1<<26) : 0) | (3<<27) | (1<<24) | (0x80 << 16);
     td[1].info = (0x7FF<<21) | (1<<19) | (0<<8) | TOKEN_IN;
     td[1].buff_ptr = 0x00000000;
     
-    // make sure status:int bit is clear
-    outportw(io_base+UHCI_STATUS, 1);
-    
-    // now move our queue into the physicall memory allocated
-    MemoryOperations::memcpy((void*)(frameListVirt + 4096), setup_packet, 8);
-    MemoryOperations::memcpy((void*)(frameListVirt + 4096 + 128), &queue, sizeof(struct UHCI_QUEUE_HEAD));
-    MemoryOperations::memcpy((void*)(frameListVirt + 4096 + 128 + sizeof(struct UHCI_QUEUE_HEAD)), &td[0], (sizeof(struct UHCI_TRANSFER_DESCRIPTOR) * 2));
+    //Make sure status:int bit is clear
+    outportw(pciDevice->portBase + UHCI_STATUS, 1);
    
-    // mark the first stack frame pointer
-    frameList[0] = (frameListPhys + 4096 + 128) | QUEUE_HEAD_Q;
+    //Mark the first stack frame pointer
+    frameList[0] = queuePhys | QUEUE_HEAD_Q;
     
-    // wait for the IOC to happen
-    timeout = 10000; // 10 seconds
-    while (!(inportw(io_base+UHCI_STATUS) & 1) && (timeout > 0)) {
+    //Wait for the IOC to happen
+    int timeout = 10000; // 10 seconds
+    while (!(inportw(pciDevice->portBase + UHCI_STATUS) & 1) && (timeout > 0)) {
         timeout--;
         System::pit->Sleep(1);
     }
     if (timeout == 0) {
         Log(Warning, "UHCI timed out.");
-        frameList[0] = 1; // mark the first stack frame pointer invalid
+        frameList[0] = QUEUE_HEAD_T; // mark the first stack frame pointer invalid
         return false;
     }
-    outportw(io_base+UHCI_STATUS, 1);  // acknowledge the interrupt
+    outportw(pciDevice->portBase + UHCI_STATUS, 1);  // acknowledge the interrupt
     
-    frameList[0] = 1; // mark the first stack frame pointer invalid
-    
-    // copy the stack frame back to our local buffer
-    MemoryOperations::memcpy(&queue, (void*)(frameListVirt + 4096 + 128), sizeof(struct UHCI_QUEUE_HEAD));
-    MemoryOperations::memcpy(&td[0], (void*)(frameListVirt + 4096 + 128 + sizeof(struct UHCI_QUEUE_HEAD)), (sizeof(struct UHCI_TRANSFER_DESCRIPTOR) * 2));
+    frameList[0] = QUEUE_HEAD_T; // mark the first stack frame pointer invalid
    
-    // check the TD's for error
-    for (i=0; i<2; i++) {
-        if ((td[i].reply & (0xFF<<16)) != 0)
-            return false;
+    //Check the TD's for error
+    bool ret = true;
+    for (int i = 0; i < 2; i++) {
+        if ((td[i].reply & (0xFF<<16)) != 0) {
+            ret = false;
+            break;
+        }
     }
 
-    return true;
+    //Free td's
+    KernelHeap::allignedFree(td);
+    //Free queue head
+    KernelHeap::allignedFree(queue);
+
+    return ret;
 }
 uint32_t UHCIController::HandleInterrupt(uint32_t esp)
 {
