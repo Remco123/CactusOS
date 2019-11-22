@@ -46,7 +46,7 @@ namespace CactusOS
                 uint32_t   horz_ptr;
                 uint32_t   vert_ptr;
                 uint32_t   resv0[2];   // to make it 16 bytes in length
-            } queueHead_t;
+            } u_queueHead_t;
 
 
             #define TD_PTR_MASK  0xFFFFFFF0
@@ -84,7 +84,7 @@ namespace CactusOS
                 uint32_t   info;
                 uint32_t   buff_ptr;
                 uint32_t   resv0[4];          // the last 4 dwords are reserved for software use.
-            } transferDescriptor_t;
+            } u_transferDescriptor_t;
 
             class UHCIController : public USBController, public Driver, public InterruptHandler
             {
@@ -115,6 +115,11 @@ namespace CactusOS
                 bool GetDeviceDescriptor(struct DEVICE_DESC* dev_desc, USBDevice* device) override;
                 //Receive descriptor from device, returns true when succesfull
                 bool GetStringDescriptor(struct STRING_DESC* stringDesc, USBDevice* device, uint16_t index, uint16_t lang = 0) override;
+                //Get String descriptor of specific device
+                //Returns buffer with Configuration header and additional data            
+                uint8_t* GetConfigDescriptor(USBDevice* device) override;
+                //Set configuration for device
+                bool SetConfiguration(USBDevice* device, uint8_t config) override;
             };
         }
     }

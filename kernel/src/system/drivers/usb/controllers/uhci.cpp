@@ -200,17 +200,17 @@ bool UHCIController::GetDescriptor(void* devDesc, const bool lsDevice, const int
     
     //Allocate Transfer Descriptors
     uint32_t tdPhys;
-    transferDescriptor_t* td = (transferDescriptor_t*)KernelHeap::allignedMalloc(sizeof(transferDescriptor_t) * 10, 16, &tdPhys);
-    MemoryOperations::memset(td, 0, sizeof(transferDescriptor_t) * 10);
+    u_transferDescriptor_t* td = (u_transferDescriptor_t*)KernelHeap::allignedMalloc(sizeof(u_transferDescriptor_t) * 10, 16, &tdPhys);
+    MemoryOperations::memset(td, 0, sizeof(u_transferDescriptor_t) * 10);
 
     //Allocate queue head
     uint32_t queuePhys;
-    queueHead_t* queue = (queueHead_t*)KernelHeap::allignedMalloc(sizeof(queueHead_t), 16, &queuePhys);
+    u_queueHead_t* queue = (u_queueHead_t*)KernelHeap::allignedMalloc(sizeof(u_queueHead_t), 16, &queuePhys);
     queue->vert_ptr = tdPhys;
     queue->horz_ptr = QUEUE_HEAD_T;
 
     //Setup Transfer Descriptor
-    td[0].link_ptr = ((tdPhys & ~0xF) + sizeof(transferDescriptor_t));
+    td[0].link_ptr = ((tdPhys & ~0xF) + sizeof(u_transferDescriptor_t));
     td[0].reply = (lsDevice ? (1<<26) : 0) | (3<<27) | (0x80 << 16);
     td[0].info = (7<<21) | ((devAddress & 0x7F)<<8) | TOKEN_SETUP;
     td[0].buff_ptr = (uint32_t)virt2phys((uint32_t)&requestPacket);
@@ -220,7 +220,7 @@ bool UHCIController::GetDescriptor(void* devDesc, const bool lsDevice, const int
     int sz = size;
     //Transfer Descriptors depending on size of request
     while ((sz > 0) && (i<9)) {
-        td[i].link_ptr = ((td[i-1].link_ptr & ~0xF) + sizeof(transferDescriptor_t));
+        td[i].link_ptr = ((td[i-1].link_ptr & ~0xF) + sizeof(u_transferDescriptor_t));
         td[i].reply = (lsDevice ? (1<<26) : 0) | (3<<27) | (0x80 << 16);
         int t = ((sz <= packetSize) ? sz : packetSize);
         td[i].info = ((t-1)<<21) | ((i & 1) ? (1<<19) : 0) | ((devAddress & 0x7F)<<8) | TOKEN_IN;
@@ -297,17 +297,17 @@ bool UHCIController::SetAddress(const int dev_address, const bool ls_device) {
     
     //Allocate Transfer Descriptors
     uint32_t tdPhys;
-    transferDescriptor_t* td = (transferDescriptor_t*)KernelHeap::allignedMalloc(sizeof(transferDescriptor_t) * 2, 16, &tdPhys);
-    MemoryOperations::memset(td, 0, sizeof(transferDescriptor_t) * 2);
+    u_transferDescriptor_t* td = (u_transferDescriptor_t*)KernelHeap::allignedMalloc(sizeof(u_transferDescriptor_t) * 2, 16, &tdPhys);
+    MemoryOperations::memset(td, 0, sizeof(u_transferDescriptor_t) * 2);
 
     //Allocate queue head
     uint32_t queuePhys;
-    queueHead_t* queue = (queueHead_t*)KernelHeap::allignedMalloc(sizeof(queueHead_t), 16, &queuePhys);
+    u_queueHead_t* queue = (u_queueHead_t*)KernelHeap::allignedMalloc(sizeof(u_queueHead_t), 16, &queuePhys);
     queue->vert_ptr = tdPhys;
     queue->horz_ptr = QUEUE_HEAD_T;
     
     //Create set address td
-    td[0].link_ptr = ((tdPhys & ~0xF) + sizeof(transferDescriptor_t));
+    td[0].link_ptr = ((tdPhys & ~0xF) + sizeof(u_transferDescriptor_t));
     td[0].reply = (ls_device ? (1<<26) : 0) | (3<<27) | (0x80 << 16);
     td[0].info = (7<<21) | (0<<8) | TOKEN_SETUP;
     td[0].buff_ptr = (uint32_t)virt2phys((uint32_t)&setupPacket);
@@ -410,9 +410,30 @@ bool UHCIController::GetDeviceDescriptor(struct DEVICE_DESC* dev_desc, USBDevice
 }
 bool UHCIController::GetStringDescriptor(struct STRING_DESC* stringDesc, USBDevice* device, uint16_t index, uint16_t lang)
 {
-    if(!GetDescriptor(stringDesc, device->uhciProperties.lowSpeedDevice, device->devAddress, device->uhciProperties.maxPacketSize, 8, STDRD_GET_REQUEST, DeviceRequest::GET_DESCRIPTOR, DescriptorTypes::STRING, lang, index))
+    if(!GetDescriptor(stringDesc, device->uhciProperties.lowSpeedDevice, device->devAddress, device->uhciProperties.maxPacketSize, 2, STDRD_GET_REQUEST, DeviceRequest::GET_DESCRIPTOR, DescriptorTypes::STRING, lang, index))
         return false;
         
     int totalSize = stringDesc->len;
     return GetDescriptor(stringDesc, device->uhciProperties.lowSpeedDevice, device->devAddress, device->uhciProperties.maxPacketSize, totalSize, STDRD_GET_REQUEST, DeviceRequest::GET_DESCRIPTOR, DescriptorTypes::STRING, lang, index);
+}
+uint8_t* UHCIController::GetConfigDescriptor(USBDevice* device)
+{
+    struct CONFIG_DESC confDesc;
+    MemoryOperations::memset(&confDesc, 0, sizeof(struct CONFIG_DESC));
+
+    if(!GetDescriptor(&confDesc, device->uhciProperties.lowSpeedDevice, device->devAddress, device->uhciProperties.maxPacketSize, sizeof(struct CONFIG_DESC), STDRD_GET_REQUEST, GET_DESCRIPTOR, CONFIG))
+        return 0;
+    
+    int totalSize = confDesc.tot_len;
+    uint8_t* buffer = new uint8_t[totalSize];
+    MemoryOperations::memset(buffer, 0, totalSize);
+
+    if(!GetDescriptor(buffer, device->uhciProperties.lowSpeedDevice, device->devAddress, device->uhciProperties.maxPacketSize, totalSize, STDRD_GET_REQUEST, GET_DESCRIPTOR, CONFIG))
+        return 0;
+    
+    return buffer;
+}
+bool UHCIController::SetConfiguration(USBDevice* device, uint8_t config)
+{
+    
 }

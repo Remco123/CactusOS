@@ -132,13 +132,14 @@ void* KernelHeap::allignedMalloc(uint32_t size, uint32_t align, uint32_t* physRe
     {
         uint32_t hdr_size = sizeof(uint16_t) + (align - 1);
 
-        void* p = malloc(size + hdr_size, physReturn);
+        uint32_t phys = 0;
+        void* p = malloc(size + hdr_size, &phys);
 
         if(p)
         {
             ptr = (void *) align_up(((uintptr_t)p + sizeof(uint16_t)), align);
             if(physReturn)
-                *physReturn = align_up(*physReturn, align);
+                *physReturn = (uint32_t)VirtualMemoryManager::virtualToPhysical(ptr); //align_up(phys, align);
 
             *((uint16_t*)ptr - 1) = (uint16_t)((uintptr_t)ptr - (uintptr_t)p);
         }

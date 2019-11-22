@@ -52,36 +52,6 @@ namespace CactusOS
 
             #define EHCI_QUEUE_HEAD_PTR_MASK  0x1F
 
-            // HC uses the first 48 (68 if 64-bit) bytes, but each queue must be 32 byte aligned
-            #define EHCI_QUEUE_HEAD_SIZE  96  // 96 bytes
-
-            #define EHCI_QH_OFF_HORZ_PTR           0  // offset of item within queue head
-            #define EHCI_QH_OFF_ENDPT_CAPS         4
-            #define EHCI_QH_OFF_HUB_INFO           8
-            #define EHCI_QH_OFF_CUR_QTD_PTR       12
-            #define EHCI_QH_OFF_NEXT_QTD_PTR      16
-            #define EHCI_QH_OFF_ALT_NEXT_QTD_PTR  20
-            #define EHCI_QH_OFF_STATUS            24
-            #define EHCI_QH_OFF_BUFF0_PTR         28
-            #define EHCI_QH_OFF_BUFF1_PTR         32
-            #define EHCI_QH_OFF_BUFF2_PTR         36
-            #define EHCI_QH_OFF_BUFF3_PTR         40
-            #define EHCI_QH_OFF_BUFF4_PTR         44
-            #define EHCI_QH_OFF_BUFF0_HI          48
-            #define EHCI_QH_OFF_BUFF1_HI          52
-            #define EHCI_QH_OFF_BUFF2_HI          56
-            #define EHCI_QH_OFF_BUFF3_HI          60
-            #define EHCI_QH_OFF_BUFF4_HI          64
-            //Space for 6 additional items
-            #define EHCI_QH_OFF_HORZ_PTR_VIRT     68
-            #define EHCI_QH_OFF_PREV_PTR_VIRT     72
-            #define EHCI_QH_OFF_UNUSED0           76
-            #define EHCI_QH_OFF_UNUSED1           80
-            #define EHCI_QH_OFF_UNUSED2           84
-            #define EHCI_QH_OFF_UNUSED3           88
-            #define EHCI_QH_OFF_PREV_PTR          92  // we use this for our insert/remove queue stuff
-
-
             #define QH_HS_T0         (0<<0)  // pointer is valid
             #define QH_HS_T1         (1<<0)  // pointer is not valid
 
@@ -92,30 +62,47 @@ namespace CactusOS
             #define QH_HS_EPS_LS     (1<<12) // Low  speed endpoint
             #define QH_HS_EPS_HS     (2<<12) // High speed endpoint
 
-
-            #define EHCI_TD_SIZE  64  // 64 bytes
-
-            #define EHCI_TD_OFF_NEXT_TD_PTR        0  // offset of item within td
-            #define EHCI_TD_OFF_ALT_NEXT_QTD_PTR   4
-            #define EHCI_TD_OFF_STATUS             8
-            #define EHCI_TD_OFF_BUFF0_PTR         12
-            #define EHCI_TD_OFF_BUFF1_PTR         16
-            #define EHCI_TD_OFF_BUFF2_PTR         20
-            #define EHCI_TD_OFF_BUFF3_PTR         24
-            #define EHCI_TD_OFF_BUFF4_PTR         28
-            #define EHCI_TD_OFF_BUFF0_HI          32
-            #define EHCI_TD_OFF_BUFF1_HI          36
-            #define EHCI_TD_OFF_BUFF2_HI          40
-            #define EHCI_TD_OFF_BUFF3_HI          44
-            #define EHCI_TD_OFF_BUFF4_HI          48
-            //Items not needed by controller but used by us
-            #define EHCI_TD_OFF_NEXT_TD_VIRT_PTR  52
-            #define EHCI_TD_OFF_ALT_TD_VIRT_PTR  56
-
             #define EHCI_TD_PID_OUT    0
             #define EHCI_TD_PID_IN     1
             #define EHCI_TD_PID_SETUP  2
 
+            typedef struct
+            {
+                uint32_t nextQTD;
+                uint32_t altNextQTD;
+                uint32_t flags;
+                uint32_t bufPtr0;
+                uint32_t bufPtr1;
+                uint32_t bufPtr2;
+                uint32_t bufPtr3;
+                uint32_t bufPtr4;
+
+                uint32_t bufPtr0_Hi;
+                uint32_t bufPtr1_Hi;
+                uint32_t bufPtr2_Hi;
+                uint32_t bufPtr3_Hi;
+                uint32_t bufPtr4_Hi;
+
+                uint32_t nextQTDVirt;
+                uint32_t altNextQTDVirt;
+
+                uint32_t pad[1];
+            } __attribute__((packed)) e_queueTransferDescriptor_t;
+
+            typedef struct
+            {
+                uint32_t horzPointer;
+                uint32_t flags;
+                uint32_t hubFlags;
+                uint32_t curQTD;
+                e_queueTransferDescriptor_t transferDescriptor;
+
+                //Additional items
+                uint32_t prevPointer;
+                uint32_t prevPointerVirt;
+                uint32_t horzPointerVirt;
+                uint32_t pad[1];
+            } __attribute__((packed)) e_queueHead_t;
 
             // ISO's
             #define EHCI_ISO_OFF_NEXT_TD_PTR        0  // offset of item within td
@@ -146,6 +133,7 @@ namespace CactusOS
                 uint32_t AsyncListPhys = 0;
                 uint8_t dev_address = 1;
                 uint8_t numPorts = 0;
+                bool hasPortIndicators = false;
             public:
                 EHCIController(PCIDevice* device);
 
@@ -158,17 +146,21 @@ namespace CactusOS
                 bool StopLegacy(const uint32_t params);
                 bool GetDescriptor(const int port);
                 bool EnableAsycnList(const bool enable);
-                bool SetAddress(const uint8_t max_packet, const uint8_t address);
-                void InitStackFrame();
-                void SetupQueueHead(uint32_t headVirt, const uint32_t qtd, uint8_t endpt, const uint16_t mps, const uint8_t address);
-                int MakeSetupTransferDesc(const uint32_t virtAddr, const uint32_t physAddr, uint32_t bufPhys);
-                int MakeTransferDesc(uint32_t virtAddr, uint32_t physAddr, const uint32_t status_qtd, uint32_t bufferPhys, const uint32_t size, const bool last, uint8_t data0, const uint8_t dir, const uint16_t mps);
-                void InsertIntoQueue(uint32_t itemVirt, uint32_t itemPhys, const uint8_t type);
-                bool RemoveFromQueue(uint32_t itemVirt);
-                int WaitForInterrupt(uint32_t virtAddr, const uint32_t timeout, bool* spd);
-                bool ControlIn(void* targ, const int len, const int max_packet, const uint8_t address);
-                void CheckPortChange();
 
+                void SetupQueueHead(e_queueHead_t* head, const uint32_t qtd, uint8_t endpt, const uint16_t mps, const uint8_t address);
+                int MakeSetupTransferDesc(e_queueTransferDescriptor_t* tdVirt, const uint32_t tdPhys, uint32_t bufPhys);
+                int MakeTransferDesc(uint32_t virtAddr, uint32_t physAddr, const uint32_t status_qtdVirt, const uint32_t status_qtdPhys, uint32_t bufferPhys, const uint32_t size, const bool last, uint8_t data0, const uint8_t dir, const uint16_t mps);
+                
+                void InsertIntoQueue(e_queueHead_t* item, uint32_t itemPhys, const uint8_t type);
+                bool RemoveFromQueue(e_queueHead_t* item);
+                
+                int WaitForInterrupt(e_queueTransferDescriptor_t* td, const uint32_t timeout, bool* spd);
+                
+                bool ControlOut(const int devAddress, const int packetSize, const int len, const uint8_t requestType = 0, const uint8_t request = 0, const uint16_t valueLow = 0, const uint16_t valueHigh = 0, const uint16_t index = 0);
+                bool ControlIn(void* targ, const int devAddress, const int packetSize, const int len, const uint8_t requestType = 0, const uint8_t request = 0, const uint16_t valueLow = 0, const uint16_t valueHigh = 0, const uint16_t index = 0);
+                
+                void CheckPortChange();
+                void SetPortIndicator(uint8_t port, uint8_t color);
 
                 uint32_t ReadOpReg(uint32_t reg);
                 void WriteOpReg(uint32_t reg, uint32_t val);
@@ -180,6 +172,13 @@ namespace CactusOS
                 bool ResetPort(uint8_t port) override;
                 //Receive descriptor from device, returns true when succesfull
                 bool GetDeviceDescriptor(struct DEVICE_DESC* dev_desc, USBDevice* device) override;
+                //Receive descriptor from device, returns true when succesfull
+                bool GetStringDescriptor(struct STRING_DESC* stringDesc, USBDevice* device, uint16_t index, uint16_t lang = 0) override;            
+                //Get String descriptor of specific device
+                //Returns buffer with Configuration header and additional data            
+                uint8_t* GetConfigDescriptor(USBDevice* device) override;
+                //Set configuration for device
+                bool SetConfiguration(USBDevice* device, uint8_t config) override;
             };
         }
     }

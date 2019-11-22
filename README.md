@@ -20,11 +20,19 @@ CactusOS is a simple operating system that is aimed to not be anything like linu
 - Applications
   - Calculator [Basic]
   - Clock [Basic]
+  - Terminal [Basic]
+  - Mine Game [Done]
+- USB Support [Basic]
+  - UHCI
+  - OHCI
+  - EHCI
+  - xHCI Not supported yet
 
 # Planned Features
 - More complete custom build api for apps
 - Some basic applications
   - File Manager
+- GUI visual improvement, could look a whole lot better
   
 # Building
 To build CactusOS I recommend running a linux like environment, personaly I use ubuntu 4.15.0-47-generic.

@@ -32,3 +32,13 @@ bool USBController::GetStringDescriptor(struct STRING_DESC* stringDesc, USBDevic
     Log(Error, "Virtual function called directly %s:%d", __FILE__, __LINE__);
     return false;
 }
+uint8_t* USBController::GetConfigDescriptor(USBDevice* device)
+{
+    Log(Error, "Virtual function called directly %s:%d", __FILE__, __LINE__);
+    return 0;
+}
+bool USBController::SetConfiguration(USBDevice* device, uint8_t config)
+{
+    Log(Error, "Virtual function called directly %s:%d", __FILE__, __LINE__);
+    return false;
+}

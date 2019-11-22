@@ -38,19 +38,19 @@ namespace CactusOS
 
             #define OHCRhDescriptorA_MASK 0xFFFFFBF0
 
-            struct OHCI_ED {
+            typedef struct OHCI_ED {
                 uint32_t flags;
                 uint32_t tailp;
                 uint32_t headp;
-                uint32_t nexted;
-            } __attribute__((packed));
+                uint32_t nextED;
+            } __attribute__((packed)) o_endpointDescriptor_t;
 
-            struct OHCI_TD {
+            typedef struct OHCI_TD {
                 uint32_t flags;
-                uint32_t cbp;
-                uint32_t nexttd;
-                uint32_t be;
-            } __attribute__((packed));
+                uint32_t curBufPtr;
+                uint32_t nextTd;
+                uint32_t bufEnd;
+            } __attribute__((packed)) o_transferDescriptor_t;
 
 
             #define TD_DP_SETUP  0
@@ -58,47 +58,41 @@ namespace CactusOS
             #define TD_DP_IN     2
             #define TD_DP_RESV   3
 
-            struct OHCI_HCCA {
+            typedef struct OHCI_HCCA {
                 uint32_t HccaInterruptTable[32];
                 uint16_t HccaFrameNumber;
                 uint16_t HccaPad1;
                 uint32_t HccaDoneHead;
                 uint8_t  reserved[116];
                 uint32_t unknown;
-            } __attribute__((packed));
+            } __attribute__((packed)) HCCA_t;
 
-            // we have to place all data in a single struct so that we can pass it back
-            //  from local access to physcal memory.
-            struct OHCI_FRAME {
-                struct OHCI_HCCA hcca;            // 256 bytes
-                uint8_t  reserved0[16];             //  16
-                struct OHCI_ED   ed_table[31];    // 496
-                struct OHCI_ED   control_ed[16];  // 256
-                struct OHCI_ED   bulk_ed[16];     // 256
-                struct OHCI_TD   our_tds[32];     // 32 * 4 * 4 
-                uint8_t  setup[8];                  // 8
-                uint8_t  packet[32];                // return packet data space
-            } __attribute__((packed));
+            #define NUM_CONTROL_EDS 16
 
             class OHCIController : public USBController, public Driver, public InterruptHandler
             {
             private:
                 PCIDevice* pciDevice;
-                uint32_t regBase; //Base address of registers
-                OHCI_HCCA* hcca;
+                volatile uint32_t regBase; //Base address of registers
+                //Host Controller Communication Area
+                HCCA_t* hcca;
                 //Value to store physical address of HCCA
                 uint32_t hccaPhys;
+
+                //Lists
+                o_endpointDescriptor_t* controlEndpoints[NUM_CONTROL_EDS];        //Control list endpoint descriptors
+                uint32_t              controlEndpointsPhys[NUM_CONTROL_EDS];    //Physical Addresses of Control ED's
             public:
                 OHCIController(PCIDevice* device);
 
                 bool Initialize() override;
                 void Setup() override;
 
-                void CreateStack(struct OHCI_FRAME* frame, const int mps, int cnt, const bool ls_device, const int address);
-                void SetAddress(struct OHCI_FRAME* frame, int dev_address, bool ls_device);
-                bool RequestDesc(struct OHCI_FRAME* our_frame, int cnt);
+                bool SetAddress(int dev_address, bool ls_device);
+                bool RequestDesc(void* devDesc, const bool lsDevice, const int devAddress, const int packetSize, const int size, const uint8_t requestType = 0, const uint8_t request = 0, const uint16_t valueLow = 0, const uint16_t valueHigh = 0, const uint16_t index = 0);
 
                 uint32_t HandleInterrupt(uint32_t esp);
+                bool WaitForInterrupt();
 
                 //////////
                 // USB Controller Common Functions
@@ -107,6 +101,13 @@ namespace CactusOS
                 bool ResetPort(uint8_t port) override;
                 //Receive descriptor from device, returns true when succesfull
                 bool GetDeviceDescriptor(struct DEVICE_DESC* dev_desc, USBDevice* device) override;
+                //Receive descriptor from device, returns true when succesfull
+                bool GetStringDescriptor(struct STRING_DESC* stringDesc, USBDevice* device, uint16_t index, uint16_t lang) override;
+                //Get String descriptor of specific device
+                //Returns buffer with Configuration header and additional data            
+                uint8_t* GetConfigDescriptor(USBDevice* device) override;
+                //Set configuration for device
+                bool SetConfiguration(USBDevice* device, uint8_t config) override;           
             };
         }
     }

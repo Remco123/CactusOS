@@ -23,6 +23,12 @@ namespace CactusOS
             USBController* controller = 0;
             //The name of this device present in the string descriptor
             char* deviceName = 0;
+            //Class code of this device
+            uint16_t classID = 0;
+            //Sub-Class code of this device
+            uint16_t subclassID = 0;
+            //Protocol used
+            uint16_t protocol = 0;
 
             //// Properties per controller
             struct UHCIProperties

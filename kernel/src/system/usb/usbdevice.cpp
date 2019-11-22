@@ -56,6 +56,10 @@ bool USBDevice::AssignDriver()
         (dev_desc.device_rel & 0x00F0) >> 4,  (dev_desc.device_rel & 0x000F) >> 0,
         dev_desc.manuf_indx, dev_desc.prod_indx, dev_desc.serial_indx, dev_desc.configs);
     
+    this->classID = dev_desc._class;
+    this->subclassID = dev_desc.subclass;
+    this->protocol = dev_desc.protocol;
+    
     struct STRING_DESC stringLangDesc;
     MemoryOperations::memset(&stringLangDesc, 0, sizeof(struct STRING_DESC));
     if(!this->controller->GetStringDescriptor(&stringLangDesc, this, 0))
@@ -80,13 +84,69 @@ bool USBDevice::AssignDriver()
                 MemoryOperations::memset(&stringDesc, 0, sizeof(struct STRING_DESC));
                 if(this->controller->GetStringDescriptor(&stringDesc, this, dev_desc.prod_indx, 0x0409))
                 {
-                    Log(Info, "Device String %d", (stringDesc.len-2)/2);
-                    for(int i = 0; i < (stringDesc.len-2)/2; i++)
-                        BootConsole::Write((char)stringDesc.string[i]);
-                    BootConsole::WriteLine();
+                    int strLen = (stringDesc.len-2)/2;
+                    if(strLen > 0) {
+                        //Convert Unicode string to ASCII
+                        this->deviceName = new char[strLen + 1];
+                        this->deviceName[strLen] = '\0';
+                        for(int i = 0; i < strLen; i++)
+                            this->deviceName[i] = stringDesc.string[i];
+                    }
                 }
             }
         }
+    }
+    else
+        Log(Warning, "USBDevice does not have any language supported");
+    
+    //Get Config Descriptor
+    uint8_t* configBuffer = this->controller->GetConfigDescriptor(this);
+    if(configBuffer)
+    {
+        int confLen = *(uint16_t*)(configBuffer + 2);
+
+        uint8_t* startByte = configBuffer;
+        uint8_t* endByte = configBuffer + confLen;
+
+        //Loop through all data
+        while ((uint32_t)startByte < (uint32_t)endByte)
+        {
+            uint8_t length = startByte[0];
+            uint8_t type = startByte[1];
+
+            if (length == 9 && type == CONFIG) // CONFIGURATION descriptor
+            {
+                struct CONFIG_DESC* c = (struct CONFIG_DESC*)startByte;
+                Log(Info, "USBDevice Config Desc: NumInterfaces=%d ConfigVal=%d ConfigString=%d Attr=%b MaxPower=%d mA", c->num_interfaces, c->config_val, c->config_indx, c->bm_attrbs, c->max_power);
+            }
+            else if (length == 9 && type == INTERFACE) // INTERFACE descriptor
+            {
+                struct INTERFACE_DESC* c = (struct INTERFACE_DESC*)startByte;
+                Log(Info, "USBDevice Interface Desc: Num=%d Alt=%d NumEP=%d Class=%w Subclass=%w Protocol=%w StrIndx=%d", c->interface_num, c->alt_setting, c->num_endpoints, c->interface_class, c->interface_sub_class, c->interface_protocol, c->interface_indx);
+                if(c->interface_num == 0) //First Interface
+                {
+                    if(this->classID == 0) this->classID = c->interface_class;
+                    if(this->subclassID == 0) this->subclassID = c->interface_sub_class;
+                    if(this->protocol == 0) this->protocol = c->interface_protocol;
+                }
+            }
+            else if (length == 7 && type == ENDPOINT) // ENDPOINT descriptor
+            {
+                struct ENDPOINT_DESC* c = (struct ENDPOINT_DESC*)startByte;
+                Log(Info, "USBDevice Endpoint Desc: Num=%d %s TransferType=%d MaxPacket=%d Interval=%d", c->end_point & 0xF, (c->end_point & (1<<7)) ? "In" : "Out", c->bm_attrbs & 0b11, c->max_packet_size, c->interval);
+            }
+            else
+                Log(Warning, "Unknown part of ConfigDescriptor: length: %d type: %d", length, type);
+
+
+            startByte += length;
+        }
+    }
+
+    //Set Default Configuration
+    if(!this->controller->SetConfiguration(this, 1)) {
+        Log(Error, "Error Setting Device config to 1");
+        return false;
     }
 
     return true;

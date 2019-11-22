@@ -39,6 +39,11 @@ namespace CactusOS
             virtual bool GetDeviceDescriptor(struct DEVICE_DESC* dev_desc, USBDevice* device);
             //Get String descriptor of specific device
             virtual bool GetStringDescriptor(struct STRING_DESC* stringDesc, USBDevice* device, uint16_t index, uint16_t lang = 0);
+            //Get String descriptor of specific device
+            //Returns buffer with Configuration header and additional data            
+            virtual uint8_t* GetConfigDescriptor(USBDevice* device);
+            //Set configuration for device
+            virtual bool SetConfiguration(USBDevice* device, uint8_t config);
         };
     }
 }

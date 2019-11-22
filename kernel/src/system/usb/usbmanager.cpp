@@ -36,10 +36,11 @@ void USBManager::SetupAll()
 
 void USBManager::AssignAllDrivers()
 {
-    for(USBDevice* c : deviceList)
+    for(USBDevice* c : deviceList) {
         if(c->AssignDriver())
             Log(Info, "USBDevice %s driver assignment succes!", c->deviceName != 0 ? c->deviceName : "Unnamed");
         else
             Log(Warning, "USBDevice %s driver assignment failed!", c->deviceName != 0 ? c->deviceName : "Unnamed");
+    }
 }
 

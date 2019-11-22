@@ -7,7 +7,7 @@ using namespace CactusOS::system;
 
 static inline void invlpg(void* addr)
 {
-    asm volatile ( "invlpg (%0)" : : "b"(addr) : "memory" );
+    asm volatile("invlpg (%0)" ::"r" (addr) : "memory");
 }
 
 void VirtualMemoryManager::PrintPageDirectoryEntry(PageDirectoryEntry pde)
@@ -172,6 +172,8 @@ void VirtualMemoryManager::mapVirtualToPhysical(void* physAddress, void* virtAdd
     page->isUser = kernel ? 0 : 1;
     page->readWrite = writeable ? 1 : 0;
     page->present = 1;
+
+    invlpg(virtAddress);
 }
 
 void VirtualMemoryManager::mapVirtualToPhysical(void* physAddress, void* virtAddress, uint32_t size, bool kernel, bool writeable)
