@@ -314,7 +314,7 @@ bool EHCIController::GetDescriptor(const int port) {
     ResetPort(port);
     
     //Set address
-    ControlOut(0, max_packet, 0, STDRD_SET_REQUEST, SET_ADDRESS, dev_address);
+    ControlOut(0, max_packet, 0, STDRD_SET_REQUEST, SET_ADDRESS, 0, dev_address);
 
     //Setup Device
     USBDevice* newDev = new USBDevice();
@@ -570,7 +570,7 @@ int EHCIController::WaitForInterrupt(e_queueTransferDescriptor_t* td, const uint
     return ret;
 }
 
-bool EHCIController::ControlOut(const int devAddress, const int packetSize, const int len, const uint8_t requestType, const uint8_t request, const uint16_t valueLow, const uint16_t valueHigh, const uint16_t index) 
+bool EHCIController::ControlOut(const int devAddress, const int packetSize, const int len, const uint8_t requestType, const uint8_t request, const uint16_t valueHigh, const uint16_t valueLow, const uint16_t index)
 {
     //Create setupPacket
     REQUEST_PACKET setupPacket __attribute__((aligned(16)));
@@ -588,7 +588,7 @@ bool EHCIController::ControlOut(const int devAddress, const int packetSize, cons
     e_queueTransferDescriptor_t* td0Virt = (e_queueTransferDescriptor_t*)((uint32_t)queueVirt + sizeof(e_queueHead_t));
     uint32_t td0Phys = queuePhys + sizeof(e_queueHead_t);
     
-    SetupQueueHead(queueVirt, td0Phys, 0, packetSize, devAddress);
+    SetupQueueHead(queueVirt, td0Phys, ENDP_CONTROL, packetSize, devAddress);
     MakeSetupTransferDesc(td0Virt, td0Phys, virt2phys((uint32_t)&setupPacket));
     MakeTransferDesc((uint32_t)td0Virt + sizeof(e_queueTransferDescriptor_t), td0Phys + sizeof(e_queueTransferDescriptor_t), 0, 0, 0, 0, true, 1, EHCI_TD_PID_IN, packetSize);
     
@@ -601,14 +601,14 @@ bool EHCIController::ControlOut(const int devAddress, const int packetSize, cons
     return (ret == 1);
 }
 
-bool EHCIController::ControlIn(void* targ, const int devAddress, const int packetSize, const int len, const uint8_t requestType, const uint8_t request, const uint16_t valueLow, const uint16_t valueHigh, const uint16_t index) 
+bool EHCIController::ControlIn(void* targ, const int devAddress, const int packetSize, const int len, const uint8_t requestType, const uint8_t request, const uint16_t valueHigh, const uint16_t valueLow, const uint16_t index) 
 {
     //Create Request Packet
     REQUEST_PACKET requestPacket __attribute__((aligned(16)));
     {
         requestPacket.request_type = requestType;
         requestPacket.request = request;
-        requestPacket.value = (valueHigh >> 8) | (valueLow << 8);
+        requestPacket.value = (valueHigh << 8) | valueLow;
         requestPacket.index = index;
         requestPacket.length = len;
     }
@@ -625,7 +625,7 @@ bool EHCIController::ControlIn(void* targ, const int devAddress, const int packe
     bool spd = 0;
     const int last = 1 + ((len + (packetSize-1)) / packetSize);
     
-    SetupQueueHead(queueVirt, td0Phys, 0, packetSize, devAddress);
+    SetupQueueHead(queueVirt, td0Phys, ENDP_CONTROL, packetSize, devAddress);
     MakeSetupTransferDesc(td0Virt, td0Phys, virt2phys((uint32_t)&requestPacket));
     MakeTransferDesc((uint32_t)td0Virt + sizeof(e_queueTransferDescriptor_t), td0Phys + sizeof(e_queueTransferDescriptor_t), (uint32_t)td0Virt + (last * sizeof(e_queueTransferDescriptor_t)), td0Phys + (last * sizeof(e_queueTransferDescriptor_t)), bufferPhys, len, false, 1, EHCI_TD_PID_IN, packetSize);
     MakeTransferDesc((uint32_t)td0Virt + (last * sizeof(e_queueTransferDescriptor_t)), td0Phys + (last * sizeof(e_queueTransferDescriptor_t)), 0, 0, 0, 0, true, 1, EHCI_TD_PID_OUT, packetSize);
@@ -664,11 +664,11 @@ bool EHCIController::GetDeviceDescriptor(struct DEVICE_DESC* dev_desc, USBDevice
 }
 bool EHCIController::GetStringDescriptor(struct STRING_DESC* stringDesc, USBDevice* device, uint16_t index, uint16_t lang)
 {
-    if(!ControlIn(stringDesc, device->devAddress, 64, 2, STDRD_GET_REQUEST, DeviceRequest::GET_DESCRIPTOR, DescriptorTypes::STRING, lang, index))
+    if(!ControlIn(stringDesc, device->devAddress, 64, 2, STDRD_GET_REQUEST, DeviceRequest::GET_DESCRIPTOR, DescriptorTypes::STRING, index, lang))
         return false;
         
     int totalSize = stringDesc->len;
-    return ControlIn(stringDesc, device->devAddress, 64, totalSize, STDRD_GET_REQUEST, DeviceRequest::GET_DESCRIPTOR, DescriptorTypes::STRING, lang, index);
+    return ControlIn(stringDesc, device->devAddress, 64, totalSize, STDRD_GET_REQUEST, DeviceRequest::GET_DESCRIPTOR, DescriptorTypes::STRING, index, lang);
 }
 uint8_t* EHCIController::GetConfigDescriptor(USBDevice* device)
 {
@@ -689,5 +689,5 @@ uint8_t* EHCIController::GetConfigDescriptor(USBDevice* device)
 }
 bool EHCIController::SetConfiguration(USBDevice* device, uint8_t config)
 {
-    return ControlOut(device->devAddress, 64, 0, STDRD_SET_REQUEST, SET_CONFIGURATION, config);
+    return ControlOut(device->devAddress, 64, 0, STDRD_SET_REQUEST, SET_CONFIGURATION, 0, config);
 }

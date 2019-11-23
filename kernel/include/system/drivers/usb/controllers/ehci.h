@@ -156,8 +156,8 @@ namespace CactusOS
                 
                 int WaitForInterrupt(e_queueTransferDescriptor_t* td, const uint32_t timeout, bool* spd);
                 
-                bool ControlOut(const int devAddress, const int packetSize, const int len, const uint8_t requestType = 0, const uint8_t request = 0, const uint16_t valueLow = 0, const uint16_t valueHigh = 0, const uint16_t index = 0);
-                bool ControlIn(void* targ, const int devAddress, const int packetSize, const int len, const uint8_t requestType = 0, const uint8_t request = 0, const uint16_t valueLow = 0, const uint16_t valueHigh = 0, const uint16_t index = 0);
+                bool ControlOut(const int devAddress, const int packetSize, const int len = 0, const uint8_t requestType = 0, const uint8_t request = 0, const uint16_t valueHigh = 0, const uint16_t valueLow = 0, const uint16_t index = 0);
+                bool ControlIn(void* targ, const int devAddress, const int packetSize, const int len = 0, const uint8_t requestType = 0, const uint8_t request = 0, const uint16_t valueHigh = 0, const uint16_t valueLow = 0, const uint16_t index = 0);
                 
                 void CheckPortChange();
                 void SetPortIndicator(uint8_t port, uint8_t color);

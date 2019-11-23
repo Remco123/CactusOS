@@ -17,6 +17,32 @@ char* USBControllerStrings[] =
     "xHCI"
 };
 
+char* USBClassCodeStrings[] = 
+{
+    "00 Unspecified",
+    "01 Audio",
+    "02 Communications and CDC Control",
+    "03 Human interface device (HID)",
+    "05 Physical Interface Device (PID)",
+    "06 Image (PTP/MTP)",
+    "07 Printer",
+    "08 Mass storage (MSC or UMS)",
+    "09 USB hub",
+    "0A CDC-Data",
+    "0B Smart Card",
+    "0D Content security",
+    "0E Video",
+    "0F Personal healthcare device class (PHDC",
+    "10 Audio/Video (AV)",
+    "11 Billboard",
+    "DC Diagnostic Device",
+    "E0 Wireless Controller",
+    "EF Miscellaneous",
+    "FE Application-specific",
+    "FF Vendor-specific"
+};
+const int numClassCodeStrings = sizeof(USBClassCodeStrings) / sizeof(char*);
+
 //Create new USBDevice, only called by controllers
 USBDevice::USBDevice()
 { }
@@ -148,6 +174,15 @@ bool USBDevice::AssignDriver()
         Log(Error, "Error Setting Device config to 1");
         return false;
     }
+
+    //Print Class Info
+    char* hexClass = Convert::IntToHexString((uint8_t)this->classID);
+    for(int i = 0; i < numClassCodeStrings; i++)
+        if(String::strncmp(hexClass, USBClassCodeStrings[i], 2) == true) {
+            Log(Info, "USB Class: %s", USBClassCodeStrings[i] + 3);
+            break;
+        }
+
 
     return true;
 }

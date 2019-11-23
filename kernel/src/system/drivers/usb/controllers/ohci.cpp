@@ -141,14 +141,14 @@ void OHCIController::Setup()
             // Some devices will only send the first 8 bytes of the device descriptor
             // while in the default state.  We must request the first 8 bytes, then reset
             // the port, set address, then request all 18 bytes.
-            bool good_ret = RequestDesc(&devDesc, ls_device, 0, 8, 8, STDRD_GET_REQUEST, DeviceRequest::GET_DESCRIPTOR, DescriptorTypes::DEVICE);
+            bool good_ret = ControlIn(&devDesc, ls_device, 0, 8, 8, STDRD_GET_REQUEST, GET_DESCRIPTOR, DEVICE);
             if (good_ret) {                
                 //Reset the port again
                 if (!ResetPort(i))
                     continue;
                
                 //Set address
-                good_ret = SetAddress(dev_address, ls_device);
+                good_ret = ControlOut(ls_device, 0, devDesc.max_packet_size, 0, STDRD_SET_REQUEST, SET_ADDRESS, 0, dev_address);
                 if (!good_ret) {
                     Log(Error, "Error when trying to set device address to %d", dev_address);
                     continue;
@@ -221,16 +221,16 @@ bool OHCIController::WaitForInterrupt()
 
     return true;
 }
-bool OHCIController::SetAddress(int dev_address, bool ls_device) 
+bool OHCIController::ControlOut(const bool lsDevice, const int devAddress, const int packetSize, const int len, const uint8_t requestType, const uint8_t request, const uint16_t valueHigh, const uint16_t valueLow, const uint16_t index) 
 {
     //Create setupPacket
     REQUEST_PACKET setupPacket __attribute__((aligned(16)));
     {
-        setupPacket.request_type = STDRD_SET_REQUEST;
-        setupPacket.request = SET_ADDRESS;
-        setupPacket.value = dev_address;
-        setupPacket.index = 0;
-        setupPacket.length = 0;
+        setupPacket.request_type = requestType;
+        setupPacket.request = request;
+        setupPacket.value = (valueHigh << 8) | valueLow;
+        setupPacket.index = index;
+        setupPacket.length = len;
     }
 
     //Allocate Transfer Descriptors
@@ -239,19 +239,19 @@ bool OHCIController::SetAddress(int dev_address, bool ls_device)
     MemoryOperations::memset(td, 0, sizeof(o_transferDescriptor_t) * 2);
     
     //Create the setup td
-    td[0].flags = (14<<28) | (2<<24) | (7<<21) | (0<<19);
+    td[0].flags = (14<<28) | (2<<24) | (7<<21) | (TD_DP_SETUP<<19);
     td[0].curBufPtr = (uint32_t)virt2phys((uint32_t)&setupPacket);
     td[0].nextTd = tdPhys + sizeof(o_transferDescriptor_t);
     td[0].bufEnd = td[0].curBufPtr + 7;
     
     //Create the status td
-    td[1].flags = (14<<28) | (3<<24) | (0<<21) | (2<<19);
+    td[1].flags = (14<<28) | (3<<24) | (0<<21) | (TD_DP_IN<<19);
     td[1].curBufPtr = 0;
     td[1].nextTd = tdPhys + (sizeof(o_transferDescriptor_t) * 2);
     td[1].bufEnd = 0;
     
     //Create the ED, using one already in the control list
-    this->controlEndpoints[0]->flags = 0x00080000 | ((ls_device) ? (1<<13) : 0);
+    this->controlEndpoints[0]->flags = (packetSize << 16) | (0 << 15) | (0 << 14) | (lsDevice ? (1<<13) : 0) | (0 << 11) | (ENDP_CONTROL << 7) | (devAddress & 0x7F);
     this->controlEndpoints[0]->tailp = tdPhys + sizeof(o_transferDescriptor_t) * 2;
     this->controlEndpoints[0]->headp = tdPhys;
 
@@ -278,21 +278,21 @@ bool OHCIController::SetAddress(int dev_address, bool ls_device)
     return ret;
 }
 
-bool OHCIController::RequestDesc(void* devDesc, const bool lsDevice, const int devAddress, const int packetSize, const int size, const uint8_t requestType, const uint8_t request, const uint16_t valueLow, const uint16_t valueHigh, const uint16_t index) {
+bool OHCIController::ControlIn(void* targ, const bool lsDevice, const int devAddress, const int packetSize, const int len, const uint8_t requestType, const uint8_t request, const uint16_t valueHigh, const uint16_t valueLow, const uint16_t index) {
     //Create Request Packet
     REQUEST_PACKET requestPacket __attribute__((aligned(16)));
     {
         requestPacket.request_type = requestType;
         requestPacket.request = request;
-        requestPacket.value = (valueHigh >> 8) | (valueLow << 8);
+        requestPacket.value = (valueHigh << 8) | valueLow;
         requestPacket.index = index;
-        requestPacket.length = size;
+        requestPacket.length = len;
     }
 
     //Create temporary buffer and clear it
     uint32_t returnBufPhys;
-    uint8_t* returnBuf = (uint8_t*)KernelHeap::malloc(size, &returnBufPhys);
-    MemoryOperations::memset(returnBuf, 0, size);
+    uint8_t* returnBuf = (uint8_t*)KernelHeap::malloc(len, &returnBufPhys);
+    MemoryOperations::memset(returnBuf, 0, len);
     
     //Allocate Transfer Descriptors
     uint32_t tdPhys;
@@ -307,7 +307,7 @@ bool OHCIController::RequestDesc(void* devDesc, const bool lsDevice, const int d
     
     //Create the rest of the in td's
     int i = 1; int p = 0; int t = 1;
-    int cnt = size;
+    int cnt = len;
     while (cnt > 0) {
         td[i].flags = (14<<28) | (0 << 26) | ((2 | (t & 1)) << 24) | (7<<21) | (TD_DP_IN << 19);
         td[i].curBufPtr = returnBufPhys + p;
@@ -326,7 +326,7 @@ bool OHCIController::RequestDesc(void* devDesc, const bool lsDevice, const int d
     td[i].bufEnd = 0;
     
     //Create the ED, using one already in the control list
-    this->controlEndpoints[0]->flags = (packetSize << 16) | (0 << 15) | (0 << 14) | (lsDevice ? (1<<13) : 0) | (0 << 11) | (0 << 7) | (devAddress & 0x7F);
+    this->controlEndpoints[0]->flags = (packetSize << 16) | (0 << 15) | (0 << 14) | (lsDevice ? (1<<13) : 0) | (0 << 11) | (ENDP_CONTROL << 7) | (devAddress & 0x7F);
     this->controlEndpoints[0]->tailp = td[i].nextTd;
     this->controlEndpoints[0]->headp = tdPhys;
     
@@ -339,7 +339,7 @@ bool OHCIController::RequestDesc(void* devDesc, const bool lsDevice, const int d
     this->controlEndpoints[0]->headp = 0;
     
     // calculate how many tds to check.
-    cnt = size;
+    cnt = len;
     if (cnt > 0)
         cnt /= 8;
     cnt += 2;
@@ -356,7 +356,7 @@ bool OHCIController::RequestDesc(void* devDesc, const bool lsDevice, const int d
 
     if(ret) {
         // copy the descriptor to the passed memory block
-        MemoryOperations::memcpy(devDesc, returnBuf, size);
+        MemoryOperations::memcpy(targ, returnBuf, len);
     }
     
     //Free temporary buffer
@@ -414,86 +414,34 @@ uint32_t OHCIController::HandleInterrupt(uint32_t esp)
 /////////
 bool OHCIController::GetDeviceDescriptor(struct DEVICE_DESC* dev_desc, USBDevice* device)
 {
-    return RequestDesc(dev_desc, device->ohciProperties.ls_device, device->devAddress, device->ohciProperties.desc_mps, sizeof(struct DEVICE_DESC), STDRD_GET_REQUEST, DeviceRequest::GET_DESCRIPTOR, DescriptorTypes::DEVICE);
+    return ControlIn(dev_desc, device->ohciProperties.ls_device, device->devAddress, device->ohciProperties.desc_mps, sizeof(struct DEVICE_DESC), STDRD_GET_REQUEST, DeviceRequest::GET_DESCRIPTOR, DescriptorTypes::DEVICE);
 }
 bool OHCIController::GetStringDescriptor(struct STRING_DESC* stringDesc, USBDevice* device, uint16_t index, uint16_t lang)
 {
-    if(!RequestDesc(stringDesc, device->ohciProperties.ls_device, device->devAddress, device->ohciProperties.desc_mps, 2, STDRD_GET_REQUEST, DeviceRequest::GET_DESCRIPTOR, DescriptorTypes::STRING, lang, index))
+    if(!ControlIn(stringDesc, device->ohciProperties.ls_device, device->devAddress, device->ohciProperties.desc_mps, 2, STDRD_GET_REQUEST, DeviceRequest::GET_DESCRIPTOR, DescriptorTypes::STRING, index, lang))
         return false;
         
     int totalSize = stringDesc->len;
-    return RequestDesc(stringDesc, device->ohciProperties.ls_device, device->devAddress, device->ohciProperties.desc_mps, totalSize, STDRD_GET_REQUEST, DeviceRequest::GET_DESCRIPTOR, DescriptorTypes::STRING, lang, index);
+    return ControlIn(stringDesc, device->ohciProperties.ls_device, device->devAddress, device->ohciProperties.desc_mps, totalSize, STDRD_GET_REQUEST, DeviceRequest::GET_DESCRIPTOR, DescriptorTypes::STRING, index, lang);
 }
 uint8_t* OHCIController::GetConfigDescriptor(USBDevice* device)
 {
     struct CONFIG_DESC confDesc;
     MemoryOperations::memset(&confDesc, 0, sizeof(struct CONFIG_DESC));
 
-    if(!RequestDesc(&confDesc, device->ohciProperties.ls_device, device->devAddress, device->ohciProperties.desc_mps, sizeof(struct CONFIG_DESC), STDRD_GET_REQUEST, GET_DESCRIPTOR, CONFIG))
+    if(!ControlIn(&confDesc, device->ohciProperties.ls_device, device->devAddress, device->ohciProperties.desc_mps, sizeof(struct CONFIG_DESC), STDRD_GET_REQUEST, GET_DESCRIPTOR, CONFIG))
         return 0;
     
     int totalSize = confDesc.tot_len;
     uint8_t* buffer = new uint8_t[totalSize];
     MemoryOperations::memset(buffer, 0, totalSize);
 
-    if(!RequestDesc(buffer, device->ohciProperties.ls_device, device->devAddress, device->ohciProperties.desc_mps, totalSize, STDRD_GET_REQUEST, GET_DESCRIPTOR, CONFIG))
+    if(!ControlIn(buffer, device->ohciProperties.ls_device, device->devAddress, device->ohciProperties.desc_mps, totalSize, STDRD_GET_REQUEST, GET_DESCRIPTOR, CONFIG))
         return 0;
     
     return buffer;
 }
 bool OHCIController::SetConfiguration(USBDevice* device, uint8_t config) 
 {
-//Create setupPacket
-    REQUEST_PACKET setupPacket __attribute__((aligned(16)));
-    {
-        setupPacket.request_type = STDRD_SET_REQUEST;
-        setupPacket.request = SET_CONFIGURATION;
-        setupPacket.value = config;
-        setupPacket.index = 0;
-        setupPacket.length = 0;
-    }
-
-    //Allocate Transfer Descriptors
-    uint32_t tdPhys;
-    o_transferDescriptor_t* td = (o_transferDescriptor_t*)KernelHeap::allignedMalloc(sizeof(o_transferDescriptor_t) * 2, 16, &tdPhys);
-    MemoryOperations::memset(td, 0, sizeof(o_transferDescriptor_t) * 2);
-    
-    //Create the setup td
-    td[0].flags = (14<<28) | (2<<24) | (7<<21) | (0<<19);
-    td[0].curBufPtr = (uint32_t)virt2phys((uint32_t)&setupPacket);
-    td[0].nextTd = tdPhys + sizeof(o_transferDescriptor_t);
-    td[0].bufEnd = td[0].curBufPtr + 7;
-    
-    //Create the status td
-    td[1].flags = (14<<28) | (3<<24) | (0<<21) | (2<<19);
-    td[1].curBufPtr = 0;
-    td[1].nextTd = tdPhys + (sizeof(o_transferDescriptor_t) * 2);
-    td[1].bufEnd = 0;
-    
-    //Create the ED, using one already in the control list
-    this->controlEndpoints[0]->flags = 0x00080000 | (device->ohciProperties.desc_mps << 16) | ((device->ohciProperties.ls_device) ? (1<<13) : 0) | (device->devAddress & 0x7F);
-    this->controlEndpoints[0]->tailp = tdPhys + sizeof(o_transferDescriptor_t) * 2;
-    this->controlEndpoints[0]->headp = tdPhys;
-
-    //Wait for interrupt from controller
-    WaitForInterrupt();
-
-    //Reset Used ED
-    this->controlEndpoints[0]->flags = (1<<14);
-    this->controlEndpoints[0]->tailp = 0;
-    this->controlEndpoints[0]->headp = 0;
-    
-    bool ret = true;
-    for (int i = 0; i < 2; i++) {
-        if ((td[i].flags & 0xF0000000) != 0) {
-            ret = false;
-            Log(Error, "our_tds[%d].cc != 0  (%d)", i, (td[i].flags & 0xF0000000) >> 28);
-            break;
-        }
-    }
-    
-    //Free td's
-    KernelHeap::allignedFree(td);
-
-    return ret;
+    return ControlOut(device->ohciProperties.ls_device, device->devAddress, device->ohciProperties.desc_mps, 0, STDRD_SET_REQUEST, SET_CONFIGURATION, 0, config);
 }

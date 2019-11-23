@@ -15,6 +15,7 @@ namespace CactusOS
         #define PINDC_OFF 0b00
         #define PINDC_AMBER 0b01
         #define PINDC_GREEN 0b10
+        #define ENDP_CONTROL 0
 
         struct DEVICE_DESC {
             common::uint8_t  len;

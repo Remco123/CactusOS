@@ -88,8 +88,8 @@ namespace CactusOS
                 bool Initialize() override;
                 void Setup() override;
 
-                bool SetAddress(int dev_address, bool ls_device);
-                bool RequestDesc(void* devDesc, const bool lsDevice, const int devAddress, const int packetSize, const int size, const uint8_t requestType = 0, const uint8_t request = 0, const uint16_t valueLow = 0, const uint16_t valueHigh = 0, const uint16_t index = 0);
+                bool ControlOut(const bool lsDevice, const int devAddress, const int packetSize, const int len = 0, const uint8_t requestType = 0, const uint8_t request = 0, const uint16_t valueHigh = 0, const uint16_t valueLow = 0, const uint16_t index = 0);
+                bool ControlIn(void* targ, const bool lsDevice, const int devAddress, const int packetSize, const int len = 0, const uint8_t requestType = 0, const uint8_t request = 0, const uint16_t valueHigh = 0, const uint16_t valueLow = 0, const uint16_t index = 0);
 
                 uint32_t HandleInterrupt(uint32_t esp);
                 bool WaitForInterrupt();
