@@ -9,7 +9,15 @@ using namespace CactusOS::system::drivers;
 
 USBManager::USBManager()
 : controllerList(), deviceList()
-{ }
+{
+    this->initDone = false;
+}
+
+void USBManager::USBPoll()
+{
+    for(USBController* c : controllerList)
+        c->ControllerChecksThread();
+}
 
 void USBManager::AddController(USBController* c)
 {
@@ -22,6 +30,10 @@ void USBManager::RemoveController(USBController* c)
 void USBManager::AddDevice(USBDevice* c)
 {
     deviceList.push_back(c);
+
+    if(this->initDone)
+        if(c->AssignDriver())
+            Log(Info, "USBDevice %s driver assignment succes!", c->deviceName != 0 ? c->deviceName : "Unnamed");
 }
 void USBManager::RemoveDevice(USBDevice* c)
 {
@@ -42,5 +54,6 @@ void USBManager::AssignAllDrivers()
         else
             Log(Warning, "USBDevice %s driver assignment failed!", c->deviceName != 0 ? c->deviceName : "Unnamed");
     }
+    this->initDone = true;
 }
 

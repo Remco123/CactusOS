@@ -224,13 +224,14 @@ bool OHCIController::WaitForInterrupt()
 bool OHCIController::ControlOut(const bool lsDevice, const int devAddress, const int packetSize, const int len, const uint8_t requestType, const uint8_t request, const uint16_t valueHigh, const uint16_t valueLow, const uint16_t index) 
 {
     //Create setupPacket
-    REQUEST_PACKET setupPacket __attribute__((aligned(16)));
+    uint32_t setupPacketPhys;
+    REQUEST_PACKET* setupPacket = (REQUEST_PACKET*)KernelHeap::allignedMalloc(sizeof(REQUEST_PACKET), 16, &setupPacketPhys);
     {
-        setupPacket.request_type = requestType;
-        setupPacket.request = request;
-        setupPacket.value = (valueHigh << 8) | valueLow;
-        setupPacket.index = index;
-        setupPacket.length = len;
+        setupPacket->request_type = requestType;
+        setupPacket->request = request;
+        setupPacket->value = (valueHigh << 8) | valueLow;
+        setupPacket->index = index;
+        setupPacket->length = len;
     }
 
     //Allocate Transfer Descriptors
@@ -240,7 +241,7 @@ bool OHCIController::ControlOut(const bool lsDevice, const int devAddress, const
     
     //Create the setup td
     td[0].flags = (14<<28) | (2<<24) | (7<<21) | (TD_DP_SETUP<<19);
-    td[0].curBufPtr = (uint32_t)virt2phys((uint32_t)&setupPacket);
+    td[0].curBufPtr = setupPacketPhys;
     td[0].nextTd = tdPhys + sizeof(o_transferDescriptor_t);
     td[0].bufEnd = td[0].curBufPtr + 7;
     
@@ -274,19 +275,22 @@ bool OHCIController::ControlOut(const bool lsDevice, const int devAddress, const
     
     //Free td's
     KernelHeap::allignedFree(td);
+    //Free Packet
+    KernelHeap::allignedFree(setupPacket);
 
     return ret;
 }
 
 bool OHCIController::ControlIn(void* targ, const bool lsDevice, const int devAddress, const int packetSize, const int len, const uint8_t requestType, const uint8_t request, const uint16_t valueHigh, const uint16_t valueLow, const uint16_t index) {
     //Create Request Packet
-    REQUEST_PACKET requestPacket __attribute__((aligned(16)));
+    uint32_t requestPacketPhys;
+    REQUEST_PACKET* requestPacket = (REQUEST_PACKET*)KernelHeap::allignedMalloc(sizeof(REQUEST_PACKET), 16, &requestPacketPhys);
     {
-        requestPacket.request_type = requestType;
-        requestPacket.request = request;
-        requestPacket.value = (valueHigh << 8) | valueLow;
-        requestPacket.index = index;
-        requestPacket.length = len;
+        requestPacket->request_type = requestType;
+        requestPacket->request = request;
+        requestPacket->value = (valueHigh << 8) | valueLow;
+        requestPacket->index = index;
+        requestPacket->length = len;
     }
 
     //Create temporary buffer and clear it
@@ -301,7 +305,7 @@ bool OHCIController::ControlIn(void* targ, const bool lsDevice, const int devAdd
     
     //Create the setup td
     td[0].flags = (14<<28) | (0 << 26) | (2 << 24) | (7<<21) | (TD_DP_SETUP << 19);
-    td[0].curBufPtr = (uint32_t)virt2phys((uint32_t)&requestPacket);
+    td[0].curBufPtr = requestPacketPhys;
     td[0].nextTd = tdPhys + sizeof(o_transferDescriptor_t);
     td[0].bufEnd = td[0].curBufPtr + 7;
     
@@ -363,6 +367,8 @@ bool OHCIController::ControlIn(void* targ, const bool lsDevice, const int devAdd
     KernelHeap::free(returnBuf);
     //Free td's
     KernelHeap::allignedFree(td);
+    //Free packet
+    KernelHeap::allignedFree(requestPacket);
     
     return ret;
 }

@@ -38,6 +38,9 @@ extern "C" void _set_debug_traps();
 void IdleThread()
 {
     while(1){
+        if(System::usbManager)
+            System::usbManager->USBPoll();
+        
         System::scheduler->ForceSwitch();
     }
 }

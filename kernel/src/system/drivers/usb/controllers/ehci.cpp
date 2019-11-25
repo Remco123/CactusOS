@@ -21,14 +21,16 @@ bool EHCIController::Initialize()
     if(BAR0.type == InputOutput)
         return false; //We only want memory mapped controllers
     
+    uint32_t virtIOArea = (uint32_t)KernelHeap::allignedMalloc(pageRoundUp(BAR0.size), PAGE_SIZE);
+    MemoryOperations::memset((void*)virtIOArea, 0, pageRoundUp(BAR0.size));
     //Save Register memory base
-    this->regBase = BAR0.address;
+    this->regBase = virtIOArea;
 
     //Enable BUS Mastering
     System::pci->Write(pciDevice->bus, pciDevice->device, pciDevice->function, 0x04, 0x0006);
 
     //Map memory so that we can use it
-    VirtualMemoryManager::mapVirtualToPhysical((void*)this->regBase, (void*)this->regBase, pageRoundUp(BAR0.size), true, true);
+    VirtualMemoryManager::mapVirtualToPhysical((void*)BAR0.address, (void*)virtIOArea, pageRoundUp(BAR0.size), true, true);
 
     //Calculate the operational base
     //Must be before any ReadOpReg() or WriteOpReg() calls
@@ -168,7 +170,7 @@ uint32_t EHCIController::HandleInterrupt(uint32_t esp)
     if(val == 0) // Interrupt came from another EHCI device
     {
         Log(Warning, "Interrupt came from another EHCI device!\n");
-        return;
+        return esp;
     }
 
     WriteOpReg(EHC_OPS_USBStatus, val);
@@ -573,13 +575,14 @@ int EHCIController::WaitForInterrupt(e_queueTransferDescriptor_t* td, const uint
 bool EHCIController::ControlOut(const int devAddress, const int packetSize, const int len, const uint8_t requestType, const uint8_t request, const uint16_t valueHigh, const uint16_t valueLow, const uint16_t index)
 {
     //Create setupPacket
-    REQUEST_PACKET setupPacket __attribute__((aligned(16)));
+    uint32_t setupPacketPhys;
+    REQUEST_PACKET* setupPacket = (REQUEST_PACKET*)KernelHeap::allignedMalloc(sizeof(REQUEST_PACKET), 16, &setupPacketPhys);
     {
-        setupPacket.request_type = requestType;
-        setupPacket.request = request;
-        setupPacket.value = (valueHigh << 8) | valueLow;
-        setupPacket.index = index;
-        setupPacket.length = len;
+        setupPacket->request_type = requestType;
+        setupPacket->request = request;
+        setupPacket->value = (valueHigh << 8) | valueLow;
+        setupPacket->index = index;
+        setupPacket->length = len;
     }
 
     //Allocate enough memory to hold the queue and the TD's
@@ -589,7 +592,7 @@ bool EHCIController::ControlOut(const int devAddress, const int packetSize, cons
     uint32_t td0Phys = queuePhys + sizeof(e_queueHead_t);
     
     SetupQueueHead(queueVirt, td0Phys, ENDP_CONTROL, packetSize, devAddress);
-    MakeSetupTransferDesc(td0Virt, td0Phys, virt2phys((uint32_t)&setupPacket));
+    MakeSetupTransferDesc(td0Virt, td0Phys, setupPacketPhys);
     MakeTransferDesc((uint32_t)td0Virt + sizeof(e_queueTransferDescriptor_t), td0Phys + sizeof(e_queueTransferDescriptor_t), 0, 0, 0, 0, true, 1, EHCI_TD_PID_IN, packetSize);
     
     InsertIntoQueue(queueVirt, queuePhys, QH_HS_TYPE_QH);
@@ -597,6 +600,7 @@ bool EHCIController::ControlOut(const int devAddress, const int packetSize, cons
     RemoveFromQueue(queueVirt);
 
     KernelHeap::allignedFree(queueVirt);
+    KernelHeap::allignedFree(setupPacket);
     
     return (ret == 1);
 }
@@ -604,13 +608,14 @@ bool EHCIController::ControlOut(const int devAddress, const int packetSize, cons
 bool EHCIController::ControlIn(void* targ, const int devAddress, const int packetSize, const int len, const uint8_t requestType, const uint8_t request, const uint16_t valueHigh, const uint16_t valueLow, const uint16_t index) 
 {
     //Create Request Packet
-    REQUEST_PACKET requestPacket __attribute__((aligned(16)));
+    uint32_t requestPacketPhys;
+    REQUEST_PACKET* requestPacket = (REQUEST_PACKET*)KernelHeap::allignedMalloc(sizeof(REQUEST_PACKET), 16, &requestPacketPhys);
     {
-        requestPacket.request_type = requestType;
-        requestPacket.request = request;
-        requestPacket.value = (valueHigh << 8) | valueLow;
-        requestPacket.index = index;
-        requestPacket.length = len;
+        requestPacket->request_type = requestType;
+        requestPacket->request = request;
+        requestPacket->value = (valueHigh << 8) | valueLow;
+        requestPacket->index = index;
+        requestPacket->length = len;
     }
     
     //Allocate enough memory to hold the queue and the TD's
@@ -626,7 +631,7 @@ bool EHCIController::ControlIn(void* targ, const int devAddress, const int packe
     const int last = 1 + ((len + (packetSize-1)) / packetSize);
     
     SetupQueueHead(queueVirt, td0Phys, ENDP_CONTROL, packetSize, devAddress);
-    MakeSetupTransferDesc(td0Virt, td0Phys, virt2phys((uint32_t)&requestPacket));
+    MakeSetupTransferDesc(td0Virt, td0Phys, requestPacketPhys);
     MakeTransferDesc((uint32_t)td0Virt + sizeof(e_queueTransferDescriptor_t), td0Phys + sizeof(e_queueTransferDescriptor_t), (uint32_t)td0Virt + (last * sizeof(e_queueTransferDescriptor_t)), td0Phys + (last * sizeof(e_queueTransferDescriptor_t)), bufferPhys, len, false, 1, EHCI_TD_PID_IN, packetSize);
     MakeTransferDesc((uint32_t)td0Virt + (last * sizeof(e_queueTransferDescriptor_t)), td0Phys + (last * sizeof(e_queueTransferDescriptor_t)), 0, 0, 0, 0, true, 1, EHCI_TD_PID_OUT, packetSize);
     
@@ -640,10 +645,12 @@ bool EHCIController::ControlIn(void* targ, const int devAddress, const int packe
         // now copy from the physical buffer to the specified buffer
         MemoryOperations::memcpy(targ, bufferVirt, len);
         KernelHeap::free(bufferVirt);
+        KernelHeap::allignedFree(requestPacket);
         return true;
     }
     
     KernelHeap::free(bufferVirt);
+    KernelHeap::allignedFree(requestPacket);
     return false;
 }
 

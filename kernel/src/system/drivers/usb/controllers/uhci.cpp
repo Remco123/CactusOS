@@ -12,6 +12,7 @@ UHCIController::UHCIController(PCIDevice* device)
 : USBController(UHCI), Driver("UHCI USB Controller", "Controller for a UHCI device"), InterruptHandler(IDT_INTERRUPT_OFFSET + device->interrupt)
 {
     this->pciDevice = device;
+    this->numRootPorts = 0;
 }
 
 bool UHCIController::Initialize()
@@ -81,45 +82,75 @@ void UHCIController::Setup()
     //Finally enable controller (Max Packet bit, Configured bit and run bit)
     outportw(pciDevice->portBase + UHCI_COMMAND, (1<<7) | (1<<6) | (1<<0));
 
-    int dev_address = 1;
-    struct DEVICE_DESC dev_desc;
-
     /////////////
     // Device Enumeration
     /////////////
     uint8_t port = 0x10; //Start of ports
     while (PortPresent(port)) {
+        numRootPorts++;
         // reset the port
         if (ResetPort(port)) {
             // is a device is attached?
             if (inportw(pciDevice->portBase + port) & 1) {
-                bool ls_device = (inportw(pciDevice->portBase + port) & (1<<8)) ? true : false;
-                Log(Info, "UHCI, Found Device at port %d, low speed = %b", (port - 0x10) >> 1, ls_device);
-
-                // get first 8 bytes of descriptor
-                if (ControlIn(&dev_desc, ls_device, 0, 8, 8, STDRD_GET_REQUEST, DeviceRequest::GET_DESCRIPTOR, DescriptorTypes::DEVICE)) {
-                    // reset the port again
-                    ResetPort(port);
-                    // set address of device
-                    if (ControlOut(ls_device, 0, dev_desc.max_packet_size, 0, STDRD_SET_REQUEST, SET_ADDRESS, 0, dev_address)) {
-                        //Setup device
-                        USBDevice* newDev = new USBDevice();
-                        newDev->controller = this;
-                        newDev->devAddress = dev_address;
-                        newDev->portNum = (port - 0x10) / 2;
-                        newDev->uhciProperties.lowSpeedDevice = ls_device;
-                        newDev->uhciProperties.maxPacketSize = dev_desc.max_packet_size;
-                        System::usbManager->AddDevice(newDev);
-                    } else
-                        Log(Error, "Error setting device address.");
-                } else
-                    Log(Error, "Error getting first 8 bytes of descriptor.");
+                SetupNewDevice(port);
             }
         }
         port += 2;  // move to next port
     }
 }
+void UHCIController::SetupNewDevice(uint8_t port)
+{
+    static int dev_address = 1;
+    struct DEVICE_DESC dev_desc;
 
+    bool ls_device = (inportw(pciDevice->portBase + port) & (1<<8)) ? true : false;
+    Log(Info, "UHCI, Found Device at port %d, low speed = %b", (port - 0x10) / 2, ls_device);
+
+    // get first 8 bytes of descriptor
+    if (ControlIn(&dev_desc, ls_device, 0, 8, 8, STDRD_GET_REQUEST, DeviceRequest::GET_DESCRIPTOR, DescriptorTypes::DEVICE)) 
+    {
+        // reset the port again
+        ResetPort(port);
+        // set address of device
+        if (ControlOut(ls_device, 0, dev_desc.max_packet_size, 0, STDRD_SET_REQUEST, SET_ADDRESS, 0, dev_address)) 
+        {
+            //Setup device
+            USBDevice* newDev = new USBDevice();
+            newDev->controller = this;
+            newDev->devAddress = dev_address++;
+            newDev->portNum = (port - 0x10) / 2;
+            newDev->uhciProperties.lowSpeedDevice = ls_device;
+            newDev->uhciProperties.maxPacketSize = dev_desc.max_packet_size;
+            System::usbManager->AddDevice(newDev);
+        } 
+        else
+            Log(Error, "Error setting device address.");
+    } 
+    else
+        Log(Error, "Error getting first 8 bytes of descriptor.");
+}
+void UHCIController::ControllerChecksThread()
+{
+    for(int i = 0; i < numRootPorts; i++)
+    {
+        uint8_t port = 0x10 + i*2;
+
+        uint16_t portSts = inportw(pciDevice->portBase + port);
+        if(portSts & (1<<1))
+        {
+            outportw(pciDevice->portBase + port, (1<<1));
+            Log(Info, "Port %d Connection change, now %s", (port-0x10)/2, (portSts & (1<<0)) ? "Connected" : "Not Connected");
+
+            if((portSts & (1<<0)) == 1) { //Connected
+                if(ResetPort(port))
+                    SetupNewDevice(port);
+            }
+            else { //Not Connected
+
+            }
+        }
+    }
+}
 bool UHCIController::PortPresent(uint8_t port)
 {
     uint32_t base = pciDevice->portBase;
@@ -158,7 +189,7 @@ bool UHCIController::ResetPort(uint8_t port)
         
         // if bit 0 is clear, nothing attached, don't enable
         if (!(val & (1<<0))) {
-            ret = true;
+            ret = false;
             break;
         }
         
@@ -184,13 +215,14 @@ bool UHCIController::ResetPort(uint8_t port)
 // set up a queue, and enough TD's to get 'size' bytes
 bool UHCIController::ControlIn(void* targ, const bool lsDevice, const int devAddress, const int packetSize, const int len, const uint8_t requestType, const uint8_t request, const uint16_t valueHigh, const uint16_t valueLow, const uint16_t index) {
     //Create Request Packet
-    REQUEST_PACKET requestPacket __attribute__((aligned(16)));
+    uint32_t requestPacketPhys;
+    REQUEST_PACKET* requestPacket = (REQUEST_PACKET*)KernelHeap::allignedMalloc(sizeof(REQUEST_PACKET), 16, &requestPacketPhys);
     {
-        requestPacket.request_type = requestType;
-        requestPacket.request = request;
-        requestPacket.value = (valueHigh << 8) | valueLow;
-        requestPacket.index = index;
-        requestPacket.length = len;
+        requestPacket->request_type = requestType;
+        requestPacket->request = request;
+        requestPacket->value = (valueHigh << 8) | valueLow;
+        requestPacket->index = index;
+        requestPacket->length = len;
     }
 
     //Create temporary buffer and clear it
@@ -213,7 +245,7 @@ bool UHCIController::ControlIn(void* targ, const bool lsDevice, const int devAdd
     td[0].link_ptr = ((tdPhys & ~0xF) + sizeof(u_transferDescriptor_t));
     td[0].reply = (lsDevice ? (1<<26) : 0) | (3<<27) | (0x80 << 16);
     td[0].info = (7<<21) | ((devAddress & 0x7F)<<8) | (ENDP_CONTROL<<15) | TOKEN_SETUP;
-    td[0].buff_ptr = (uint32_t)virt2phys((uint32_t)&requestPacket);
+    td[0].buff_ptr = requestPacketPhys;
     
     int i = 1;
     int sz = len;
@@ -279,19 +311,22 @@ bool UHCIController::ControlIn(void* targ, const bool lsDevice, const int devAdd
     KernelHeap::allignedFree(td);
     //Free queue head
     KernelHeap::allignedFree(queue);
+    //Free Packet
+    KernelHeap::allignedFree(requestPacket);
 
     return ret;
 }
 
 bool UHCIController::ControlOut(const bool lsDevice, const int devAddress, const int packetSize, const int len, const uint8_t requestType, const uint8_t request, const uint16_t valueHigh, const uint16_t valueLow, const uint16_t index) {
     //Create setupPacket
-    REQUEST_PACKET setupPacket __attribute__((aligned(16)));
+    uint32_t setupPacketPhys;
+    REQUEST_PACKET* setupPacket = (REQUEST_PACKET*)KernelHeap::allignedMalloc(sizeof(REQUEST_PACKET), 16, &setupPacketPhys);
     {
-        setupPacket.request_type = requestType;
-        setupPacket.request = request;
-        setupPacket.value = (valueHigh << 8) | valueLow;
-        setupPacket.index = index;
-        setupPacket.length = len;
+        setupPacket->request_type = requestType;
+        setupPacket->request = request;
+        setupPacket->value = (valueHigh << 8) | valueLow;
+        setupPacket->index = index;
+        setupPacket->length = len;
     }
     
     //Allocate Transfer Descriptors
@@ -309,7 +344,7 @@ bool UHCIController::ControlOut(const bool lsDevice, const int devAddress, const
     td[0].link_ptr = ((tdPhys & ~0xF) + sizeof(u_transferDescriptor_t));
     td[0].reply = (lsDevice ? (1<<26) : 0) | (3<<27) | (0x80 << 16);
     td[0].info = (7<<21) | (ENDP_CONTROL<<15) | ((devAddress & 0x7F)<<8) | TOKEN_SETUP;
-    td[0].buff_ptr = (uint32_t)virt2phys((uint32_t)&setupPacket);
+    td[0].buff_ptr = setupPacketPhys;
     
     //Create status td
     td[1].link_ptr = 0x00000001;
@@ -351,6 +386,8 @@ bool UHCIController::ControlOut(const bool lsDevice, const int devAddress, const
     KernelHeap::allignedFree(td);
     //Free queue head
     KernelHeap::allignedFree(queue);
+    //Free packet
+    KernelHeap::allignedFree(setupPacket);
 
     return ret;
 }

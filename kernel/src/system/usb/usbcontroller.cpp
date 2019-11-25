@@ -16,7 +16,10 @@ void USBController::Setup()
 {
     Log(Error, "Virtual function called directly %s:%d", __FILE__, __LINE__);
 }
-
+void USBController::ControllerChecksThread()
+{
+    Log(Error, "Virtual function called directly %s:%d", __FILE__, __LINE__);
+}
 bool USBController::ResetPort(uint8_t port)
 {
     Log(Error, "Virtual function called directly %s:%d", __FILE__, __LINE__);

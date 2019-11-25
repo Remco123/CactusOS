@@ -15,6 +15,8 @@ namespace CactusOS
             List<USBController*> controllerList;
             //List of all known USBDevices
             List<USBDevice*> deviceList;
+            //Holds if usb devices present on boot are all initialized
+            bool initDone = false;
         public:
             //Create new instance of USBManager
             USBManager();
@@ -31,6 +33,8 @@ namespace CactusOS
             void SetupAll();
             //Make all usb devices detect their properties and automaticly select a driver
             void AssignAllDrivers();
+            //Check for changes in usb status
+            void USBPoll();
         };
     }
 }

@@ -30,6 +30,10 @@ namespace CactusOS
             //Setup this controller into the active state
             virtual void Setup();
 
+            //Function that will get called on a periodic interval in which the controller can perform specific kinds of things.
+            //One of these things is port connection change checking and updating devices if necessary.
+            virtual void ControllerChecksThread();
+
             /////
             // USB Common functions per controller
             /////

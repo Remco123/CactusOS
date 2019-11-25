@@ -80,6 +80,11 @@ void System::Start()
     BootConsole::WriteLine("Starting Disk Manager");
     System::diskManager = new DiskManager();
 
+    BootConsole::WriteLine("Starting Scheduler");
+    InterruptDescriptorTable::DisableInterrupts();
+    System::scheduler = new Scheduler();
+    InterruptDescriptorTable::EnableInterrupts();
+
     BootConsole::WriteLine("Starting USB Manager");
     System::usbManager = new USBManager();
 
@@ -117,11 +122,6 @@ void System::Start()
     else
         BootConsole::WriteLine(" [Not found]");
 
-    BootConsole::WriteLine("Starting Scheduler");
-    InterruptDescriptorTable::DisableInterrupts();
-    System::scheduler = new Scheduler();
-    InterruptDescriptorTable::EnableInterrupts();
-
     BootConsole::WriteLine("Starting Systemcalls");
     System::syscalls = new SystemCallHandler();
 
@@ -131,8 +131,8 @@ void System::Start()
     BootConsole::WriteLine("Adding default listing handlers");
     System::listings = new List<ListingController*>();
     System::listings->push_back(new DirectoryListing());
-    System::listings->push_back(new ProcessListing())
-;
+    System::listings->push_back(new ProcessListing());
+
     System::ProcStandardOut = new StandardOutSteam();
     Log(Info, "System Initialized");
 }

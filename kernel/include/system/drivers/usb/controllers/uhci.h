@@ -93,6 +93,7 @@ namespace CactusOS
 
                 uint32_t* frameList = 0;
                 uint32_t frameListPhys = 0;
+                int numRootPorts = 0;
             public:
                 UHCIController(PCIDevice* device);
 
@@ -101,6 +102,7 @@ namespace CactusOS
 
                 //Check if this port is present on the controller
                 bool PortPresent(uint8_t port);
+                void SetupNewDevice(uint8_t port);
 
                 bool ControlOut(const bool lsDevice, const int devAddress, const int packetSize, const int len = 0, const uint8_t requestType = 0, const uint8_t request = 0, const uint16_t valueHigh = 0, const uint16_t valueLow = 0, const uint16_t index = 0);
                 bool ControlIn(void* targ, const bool lsDevice, const int devAddress, const int packetSize, const int len = 0, const uint8_t requestType = 0, const uint8_t request = 0, const uint16_t valueHigh = 0, const uint16_t valueLow = 0, const uint16_t index = 0);
@@ -110,6 +112,9 @@ namespace CactusOS
                 //////////
                 // USB Controller Common Functions
                 //////////
+                
+                //Function that will get called on a periodic interval in which the controller can perform specific kinds of things.
+                void ControllerChecksThread() override;
                 //Reset port of this controller, returns true when succesfull
                 bool ResetPort(uint8_t port) override;
                 //Receive descriptor from device, returns true when succesfull
