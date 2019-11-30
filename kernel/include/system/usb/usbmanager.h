@@ -25,10 +25,10 @@ namespace CactusOS
             void AddController(USBController* c);
             //Remove controller from list
             void RemoveController(USBController* c);
-            //Add controller to list, called by HC drivers.
+            //Add device to list, called by HC drivers.
             void AddDevice(USBDevice* c);
-            //Remove controller from list
-            void RemoveDevice(USBDevice* c);
+            //Remove device, called after device unplug
+            void RemoveDevice(USBController* controller, uint8_t port);
             //Send the setup command to all the controllers
             void SetupAll();
             //Make all usb devices detect their properties and automaticly select a driver

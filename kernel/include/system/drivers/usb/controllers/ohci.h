@@ -78,6 +78,8 @@ namespace CactusOS
                 HCCA_t* hcca;
                 //Value to store physical address of HCCA
                 uint32_t hccaPhys;
+                //Number of root hub ports
+                uint8_t numPorts;
 
                 //Lists
                 o_endpointDescriptor_t* controlEndpoints[NUM_CONTROL_EDS];        //Control list endpoint descriptors
@@ -92,7 +94,9 @@ namespace CactusOS
                 bool ControlIn(void* targ, const bool lsDevice, const int devAddress, const int packetSize, const int len = 0, const uint8_t requestType = 0, const uint8_t request = 0, const uint16_t valueHigh = 0, const uint16_t valueLow = 0, const uint16_t index = 0);
 
                 uint32_t HandleInterrupt(uint32_t esp);
-                bool WaitForInterrupt();
+
+                void ControllerChecksThread() override;
+                void SetupNewDevice(uint8_t port);
 
                 //////////
                 // USB Controller Common Functions

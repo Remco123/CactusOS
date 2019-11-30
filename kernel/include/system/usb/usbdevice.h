@@ -47,6 +47,9 @@ namespace CactusOS
 
             //Automaticly test this device for its specs and assign a driver if found
             bool AssignDriver();
+
+            //Called when device is unplugged from system
+            void OnUnplugged();
         };
     }
 }

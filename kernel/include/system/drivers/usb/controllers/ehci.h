@@ -144,7 +144,7 @@ namespace CactusOS
                 
                 bool ehciHandshake(const uint32_t reg, const uint32_t mask, const uint32_t result, unsigned ms);
                 bool StopLegacy(const uint32_t params);
-                bool GetDescriptor(const int port);
+                bool SetupNewDevice(const int port);
                 bool EnableAsycnList(const bool enable);
 
                 void SetupQueueHead(e_queueHead_t* head, const uint32_t qtd, uint8_t endpt, const uint16_t mps, const uint8_t address);
@@ -159,8 +159,8 @@ namespace CactusOS
                 bool ControlOut(const int devAddress, const int packetSize, const int len = 0, const uint8_t requestType = 0, const uint8_t request = 0, const uint16_t valueHigh = 0, const uint16_t valueLow = 0, const uint16_t index = 0);
                 bool ControlIn(void* targ, const int devAddress, const int packetSize, const int len = 0, const uint8_t requestType = 0, const uint8_t request = 0, const uint16_t valueHigh = 0, const uint16_t valueLow = 0, const uint16_t index = 0);
                 
-                void CheckPortChange();
                 void SetPortIndicator(uint8_t port, uint8_t color);
+                void ControllerChecksThread() override;
 
                 uint32_t ReadOpReg(uint32_t reg);
                 void WriteOpReg(uint32_t reg, uint32_t val);

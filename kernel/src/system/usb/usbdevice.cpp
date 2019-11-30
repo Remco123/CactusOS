@@ -186,3 +186,7 @@ bool USBDevice::AssignDriver()
 
     return true;
 }
+void USBDevice::OnUnplugged()
+{
+    Log(Warning, "TODO: Call driver de-init and remove it from the system");
+}

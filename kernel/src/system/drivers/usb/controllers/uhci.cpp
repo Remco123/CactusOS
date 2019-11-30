@@ -29,16 +29,17 @@ bool UHCIController::Initialize()
         System::pit->Sleep(11);
         outportw(base + UHCI_COMMAND, 0x0000);
     }
-
+    /*
     //Check if command register has default value
     if(inportw(base+UHCI_COMMAND) != 0x0000) return false;
     //Check if status register has default value
     if(inportw(base+UHCI_STATUS) != 0x0020) return false;
+    */
     //Clear status register
     outportw(base+UHCI_STATUS, 0x00FF);
 
     //Is the SOF register its default value?
-    if(inportw(base+UHCI_SOF_MOD) != 0x40) return false;
+    //if(inportw(base+UHCI_SOF_MOD) != 0x40) return false;
 
     //Set bit 1 in command register, should be reset automaticly
     outportw(base+UHCI_COMMAND, 0x0002);
@@ -136,17 +137,17 @@ void UHCIController::ControllerChecksThread()
         uint8_t port = 0x10 + i*2;
 
         uint16_t portSts = inportw(pciDevice->portBase + port);
-        if(portSts & (1<<1))
+        if(portSts & (1<<1)) //Port Connection Change Bit
         {
             outportw(pciDevice->portBase + port, (1<<1));
-            Log(Info, "Port %d Connection change, now %s", (port-0x10)/2, (portSts & (1<<0)) ? "Connected" : "Not Connected");
+            Log(Info, "UHCI Port %d Connection change, now %s", i, (portSts & (1<<0)) ? "Connected" : "Not Connected");
 
             if((portSts & (1<<0)) == 1) { //Connected
                 if(ResetPort(port))
                     SetupNewDevice(port);
             }
             else { //Not Connected
-
+                System::usbManager->RemoveDevice(this, i);
             }
         }
     }
@@ -393,44 +394,43 @@ bool UHCIController::ControlOut(const bool lsDevice, const int devAddress, const
 }
 uint32_t UHCIController::HandleInterrupt(uint32_t esp)
 {
-    Log(Info, "UHCI Interrupt");
     uint16_t val = inportw(pciDevice->portBase + UHCI_STATUS);
 
     if(val == 0) // Interrupt came from another UHCI device
     {
-        Log(Info, "Interrupt came from another UHCI device!");
+        //Log(Info, "Interrupt came from another UHCI device!");
         return esp;
     }
 
     if (val & UHCI_STS_RESUME_DETECT)
     {
-        Log(Info, "Resume Detect");
+        Log(Info, "UHCI: Resume Detect");
         outportw(pciDevice->portBase + UHCI_STATUS, UHCI_STS_RESUME_DETECT); // reset interrupt
     }
 
     if (val & UHCI_STS_HCHALTED)
     {
-        Log(Error, "Host Controller Halted");
+        Log(Error, "UHCI: Host Controller Halted");
         outportw(pciDevice->portBase + UHCI_STATUS, UHCI_STS_HCHALTED); // reset interrupt
     }
 
     if (val & UHCI_STS_HC_PROCESS_ERROR)
     {
-        Log(Error, "Host Controller Process Error");
+        Log(Error, "UHCI: Host Controller Process Error");
         outportw(pciDevice->portBase + UHCI_STATUS, UHCI_STS_HC_PROCESS_ERROR); // reset interrupt
     }
 
     if (val & UHCI_STS_USB_ERROR)
     {
-        Log(Error, "USB Error");
+        Log(Error, "UHCI: USB Error");
         int num = inportw(pciDevice->portBase + UHCI_FRAME_NUM) & 0b1111111111;
-        Log(Info, "Frame Base: %x Frame Num: %d Frame: %x", inportl(pciDevice->portBase + UHCI_FRAME_BASE), num, this->frameList[num]);
+        Log(Info, "UHCI: Frame Base: %x Frame Num: %d Frame: %x", inportl(pciDevice->portBase + UHCI_FRAME_BASE), num, this->frameList[num]);
         outportw(pciDevice->portBase + UHCI_STATUS, UHCI_STS_USB_ERROR); // reset interrupt
     }
 
     if (val & UHCI_STS_HOST_SYSTEM_ERROR)
     {
-        Log(Error, "Host System Error");
+        Log(Error, "UHCI: Host System Error");
         outportw(pciDevice->portBase + UHCI_STATUS, UHCI_STS_HOST_SYSTEM_ERROR); // reset interrupt
     }
 

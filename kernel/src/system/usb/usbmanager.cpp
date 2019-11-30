@@ -7,6 +7,8 @@ using namespace CactusOS::core;
 using namespace CactusOS::system;
 using namespace CactusOS::system::drivers;
 
+extern char* USBControllerStrings[];
+
 USBManager::USBManager()
 : controllerList(), deviceList()
 {
@@ -35,9 +37,24 @@ void USBManager::AddDevice(USBDevice* c)
         if(c->AssignDriver())
             Log(Info, "USBDevice %s driver assignment succes!", c->deviceName != 0 ? c->deviceName : "Unnamed");
 }
-void USBManager::RemoveDevice(USBDevice* c)
+void USBManager::RemoveDevice(USBController* controller, uint8_t port)
 {
-    deviceList.Remove(c);
+    USBDevice* dev = 0;
+    for(USBDevice* c : deviceList)
+        if(c->controller == controller && c->portNum == port) {
+            dev = c;
+            break;
+        }
+    
+    if(dev == 0 || !initDone)
+        Log(Error, "Device was removed from port but no USBDevice was found!");
+    else
+    {
+        Log(Info, "Device %s Removed at port %d from %s controller", dev->deviceName, port, USBControllerStrings[dev->controller->type]);
+        deviceList.Remove(dev);
+        dev->OnUnplugged();
+        delete dev;
+    }
 }
 
 void USBManager::SetupAll()

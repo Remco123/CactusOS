@@ -97,7 +97,7 @@ void OHCIController::Setup()
     writeMemReg(regBase + OHCPeriodicStart, 0x00002A2F);
 
     // get the number of downstream ports
-    uint8_t numPorts = (uint8_t)(readMemReg(regBase + OHCRhDescriptorA) & 0x000000FF);
+    numPorts = (uint8_t)(readMemReg(regBase + OHCRhDescriptorA) & 0x000000FF);
     Log(Info, "OHCI Found %d root hub ports.", numPorts);
     
     //Write the offset of our HCCA
@@ -110,7 +110,7 @@ void OHCIController::Setup()
 
     //Disallow interrupts (we poll the DoneHeadWrite bit instead)
     //writeMemReg(regBase + OHCInterruptDisable, (1<<31));
-    writeMemReg(regBase + OHCInterruptEnable, (1<<0) | (1<<1) | (0<<2) | (1<<3) | (1<<4)| (0<<5) | (1<<6) | (1<<30) | (1<<31));
+    writeMemReg(regBase + OHCInterruptEnable, (1<<0) | (0<<1) | (0<<2) | (1<<3) | (1<<4)| (0<<5) | (1<<6) | (1<<30) | (1<<31));
     
     // Start the controller  
     writeMemReg(regBase + OHCControl, 0x00000690);  // CLE & operational
@@ -122,8 +122,6 @@ void OHCIController::Setup()
     writeMemReg(regBase + OHCRhDescriptorA, ((val & OHCRhDescriptorA_MASK) & ~(1<<9)) | (1<<8));
 
     // loop through the ports
-    int dev_address = 1;
-    struct DEVICE_DESC devDesc;
     for (int i = 0; i < numPorts; i++) {
         // power the port
         writeMemReg(regBase + OHCRhPortStatus + (i * 4), (1<<8));
@@ -134,37 +132,64 @@ void OHCIController::Setup()
             if (!ResetPort(i))
                 continue;
             
-            // port has been reset, and is ready to be used
-            bool ls_device = (readMemReg(regBase + OHCRhPortStatus + (i * 4)) & (1<<9)) ? 1 : 0;
-            Log(Info, "OHCI, Found Device at port %d, low speed = %b", i, ls_device);
+            SetupNewDevice(i);
+        }
+    }
+}
+void OHCIController::SetupNewDevice(uint8_t port)
+{
+    static int dev_address = 1;
+    struct DEVICE_DESC devDesc;
 
-            // Some devices will only send the first 8 bytes of the device descriptor
-            // while in the default state.  We must request the first 8 bytes, then reset
-            // the port, set address, then request all 18 bytes.
-            bool good_ret = ControlIn(&devDesc, ls_device, 0, 8, 8, STDRD_GET_REQUEST, GET_DESCRIPTOR, DEVICE);
-            if (good_ret) {                
-                //Reset the port again
-                if (!ResetPort(i))
-                    continue;
-               
-                //Set address
-                good_ret = ControlOut(ls_device, 0, devDesc.max_packet_size, 0, STDRD_SET_REQUEST, SET_ADDRESS, 0, dev_address);
-                if (!good_ret) {
-                    Log(Error, "Error when trying to set device address to %d", dev_address);
-                    continue;
-                }
+    // port has been reset, and is ready to be used
+    bool ls_device = (readMemReg(regBase + OHCRhPortStatus + (port * 4)) & (1<<9)) ? 1 : 0;
+    Log(Info, "OHCI, Found Device at port %d, low speed = %b", port, ls_device);
 
-                //Create Device
-                USBDevice* newDev = new USBDevice();
-                newDev->controller = this;
-                newDev->devAddress = dev_address;
-                newDev->portNum = i;
-                newDev->ohciProperties.desc_mps = devDesc.max_packet_size;
-                newDev->ohciProperties.ls_device = ls_device;
-                
-                System::usbManager->AddDevice(newDev);
-                
-                dev_address++;
+    // Some devices will only send the first 8 bytes of the device descriptor
+    // while in the default state.  We must request the first 8 bytes, then reset
+    // the port, set address, then request all 18 bytes.
+    bool good_ret = ControlIn(&devDesc, ls_device, 0, 8, 8, STDRD_GET_REQUEST, GET_DESCRIPTOR, DEVICE);
+    if (good_ret) {                
+        //Reset the port again
+        if (!ResetPort(port))
+            return;
+       
+        //Set address
+        good_ret = ControlOut(ls_device, 0, devDesc.max_packet_size, 0, STDRD_SET_REQUEST, SET_ADDRESS, 0, dev_address);
+        if (!good_ret) {
+            Log(Error, "Error when trying to set device address to %d", dev_address);
+            return;
+        }
+
+        //Create Device
+        USBDevice* newDev = new USBDevice();
+        newDev->controller = this;
+        newDev->devAddress = dev_address;
+        newDev->portNum = port;
+        newDev->ohciProperties.desc_mps = devDesc.max_packet_size;
+        newDev->ohciProperties.ls_device = ls_device;
+        
+        System::usbManager->AddDevice(newDev);
+        
+        dev_address++;
+    }
+}
+void OHCIController::ControllerChecksThread()
+{
+    for (int i = 0; i < numPorts; i++) 
+    {        
+        uint32_t portSts = readMemReg(regBase + OHCRhPortStatus + (i * 4));
+        if(portSts & (1<<16)) //Port Connection Change Bit
+        {
+            writeMemReg(regBase + OHCRhPortStatus + (i * 4), (1<<16));
+            Log(Info, "OHCI Port %d Connection change, now %s", i, (portSts & (1<<0)) ? "Connected" : "Not Connected");
+
+            if((portSts & (1<<0)) == 1) { //Connected
+                if(ResetPort(i))
+                    SetupNewDevice(i);
+            }
+            else { //Not Connected
+                System::usbManager->RemoveDevice(this, i);
             }
         }
     }
@@ -186,39 +211,6 @@ bool OHCIController::ResetPort(uint8_t port) {
     // clear status change bits
     writeMemReg(regBase + OHCRhPortStatus + (port * 4), (0x1F<<16));
     
-    return true;
-}
-bool OHCIController::WaitForInterrupt()
-{
-    // clear all the bits in the interrupt status register
-    writeMemReg(regBase + OHCInterruptStatus, (1<<30) | 0x7F);
-    
-    // set ControlListFilled bit
-    writeMemReg(regBase + OHCCommandStatus, (1<<1));
-
-    //TODO: Find alternative to this delay
-    System::pit->Sleep(5);
-    
-    // wait for bit 1 to be set in the status register
-    int timeout = 2000; // 2 seconds
-    while ((readMemReg(pciDevice->portBase + OHCInterruptStatus) & (1<<1)) == 0) {
-        System::pit->Sleep(1);
-        if (--timeout == 0)
-            break;
-    }
-    if (timeout == 0) {
-        Log(Warning, "Bit 1 in the HCInterruptStatus register never was set.");
-        return false;
-    }
-    
-    // here is were we would read the HCCA.DoneHead field, and go through the list
-    //  to see if there were any errors.
-    // For the purpose of this example, we will not use the HCCA.DoneHead, but just
-    //  scroll through our transfer descriptors in our local stack.
-    
-    // clear the bit for next time
-    writeMemReg(regBase + OHCInterruptStatus, (1<<1));
-
     return true;
 }
 bool OHCIController::ControlOut(const bool lsDevice, const int devAddress, const int packetSize, const int len, const uint8_t requestType, const uint8_t request, const uint16_t valueHigh, const uint16_t valueLow, const uint16_t index) 
@@ -255,9 +247,20 @@ bool OHCIController::ControlOut(const bool lsDevice, const int devAddress, const
     this->controlEndpoints[0]->flags = (packetSize << 16) | (0 << 15) | (0 << 14) | (lsDevice ? (1<<13) : 0) | (0 << 11) | (ENDP_CONTROL << 7) | (devAddress & 0x7F);
     this->controlEndpoints[0]->tailp = tdPhys + sizeof(o_transferDescriptor_t) * 2;
     this->controlEndpoints[0]->headp = tdPhys;
-
-    //Wait for interrupt from controller
-    WaitForInterrupt();
+    
+    //Set ControlListFilled bit
+    writeMemReg(regBase + OHCCommandStatus, (1<<1));
+    
+    //Wait for TD completion
+    for(int c = 0; c <= 1; c++) {
+        int timeOut = 10000;
+        while((((td[c].flags & 0xF0000000) >> 28) == 14) && (timeOut > 0)) //This TD Has not been accesed
+        { 
+            timeOut--; 
+            System::pit->Sleep(1); 
+        }
+        //Log(Info, "OHCI TD %d Finished by controller err=%d timeout=%d", c, ((td[c].flags & 0xF0000000) >> 28), timeOut);
+    }
 
     //Reset Used ED
     this->controlEndpoints[0]->flags = (1<<14);
@@ -333,9 +336,20 @@ bool OHCIController::ControlIn(void* targ, const bool lsDevice, const int devAdd
     this->controlEndpoints[0]->flags = (packetSize << 16) | (0 << 15) | (0 << 14) | (lsDevice ? (1<<13) : 0) | (0 << 11) | (ENDP_CONTROL << 7) | (devAddress & 0x7F);
     this->controlEndpoints[0]->tailp = td[i].nextTd;
     this->controlEndpoints[0]->headp = tdPhys;
+
+    //Set ControlListFilled bit
+    writeMemReg(regBase + OHCCommandStatus, (1<<1));
     
-    //Wait for interrupt from controller
-    WaitForInterrupt();
+    //Wait for TD completion
+    for(int c = 0; c <= i; c++) {
+        int timeOut = 10000;
+        while((((td[c].flags & 0xF0000000) >> 28) == 14) && (timeOut > 0)) //This TD Has not been accesed
+        { 
+            timeOut--; 
+            System::pit->Sleep(1); 
+        }
+        //Log(Info, "OHCI TD %d Finished by controller err=%d timeout=%d", c, ((td[c].flags & 0xF0000000) >> 28), timeOut);
+    }
 
     //Reset Used ED
     this->controlEndpoints[0]->flags = (1<<14);
@@ -387,17 +401,22 @@ uint32_t OHCIController::HandleInterrupt(uint32_t esp)
 
     if (val & (1<<0))
     {
-        Log(Info, "Scheduling overrun.");
+        Log(Info, "OHCI: Scheduling overrun.");
+    }
+
+    if(val & (1<<1))
+    {
+        Log(Info, "OHCI: Writeback Done Head");
     }
 
     if (val & (1<<3))
     {
-        Log(Info, "Resume detected.");
+        Log(Info, "OHCI: Resume detected.");
     }
 
     if (val & (1<<4))
     {
-        Log(Info, "Unrecoverable HC error.");
+        Log(Info, "OHCI: Unrecoverable HC error.");
     }
 
     if (val & (1<<5))

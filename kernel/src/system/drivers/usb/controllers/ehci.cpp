@@ -52,9 +52,9 @@ bool EHCIController::Initialize()
         return false;
     if(!(readMemReg(this->regBase + EHC_CAPS_HCCParams) & (1<<2)) && (ReadOpReg(EHC_OPS_USBCommand) != 0x0080000))
         return false;
-    */
-    //if(ReadOpReg(EHC_OPS_USBStatus) != 0x00001000)
-    //    return false;
+
+    if(ReadOpReg(EHC_OPS_USBStatus) != 0x00001000)
+        return false;
     if(ReadOpReg(EHC_OPS_USBInterrupt) != 0)
         return false;
     
@@ -64,6 +64,7 @@ bool EHCIController::Initialize()
         return false;
     if(ReadOpReg(EHC_OPS_ConfigFlag) != 0)
         return false;
+    */
     
     //Valid Controller if we get here.
 
@@ -158,7 +159,7 @@ void EHCIController::Setup()
         //Power and reset the port
         if (ResetPort(i)) {
             SetPortIndicator(i, PINDC_GREEN);
-            GetDescriptor(i);
+            SetupNewDevice(i);
         }
     }
 }
@@ -183,7 +184,6 @@ uint32_t EHCIController::HandleInterrupt(uint32_t esp)
     if (val & (1<<2))
     {
         Log(Info, "Port Change");
-        //CheckPortChange();
     }
 
     if (val & (1<<3))
@@ -198,7 +198,7 @@ uint32_t EHCIController::HandleInterrupt(uint32_t esp)
 
     return esp;
 }
-void EHCIController::CheckPortChange()
+void EHCIController::ControllerChecksThread()
 {
     for (int i = 0; i < numPorts; i++)
     {
@@ -206,18 +206,21 @@ void EHCIController::CheckPortChange()
         uint32_t portStatus = ReadOpReg(HCPortStatusOff);
         if (portStatus & EHCI_PORT_CSC)
         {
-            Log(Info, "Port %d Connection change", i);
+            Log(Info, "EHCI Port %d Connection change, now %s", i, (portStatus & EHCI_PORT_CCS) ? "Connected" : "Not Connected");
             portStatus |= EHCI_PORT_CSC; //Clear bit
-            if (portStatus & EHCI_PORT_CCS)
+            WriteOpReg(HCPortStatusOff, portStatus);
+            SetPortIndicator(i, PINDC_AMBER);
+
+            if (portStatus & EHCI_PORT_CCS) //Connected
             {
-                Log(Info, "Device Attached on port %d", i);
-                if(ResetPort(i))
-                    GetDescriptor(i);
+                if(ResetPort(i)) {
+                    SetupNewDevice(i);
+                    SetPortIndicator(i, PINDC_GREEN);
+                }
             }
-            else
+            else //Not Connected
             {
-                Log(Info, "Device detached on port %d", i);
-                //TODO: In the future unload driver here if needed                
+                System::usbManager->RemoveDevice(this, i);          
             }
         }
     }
@@ -295,7 +298,7 @@ bool EHCIController::ehciHandshake(const uint32_t reg, const uint32_t mask, cons
     
     return false;
 }
-bool EHCIController::GetDescriptor(const int port) {
+bool EHCIController::SetupNewDevice(const int port) {
   
     struct DEVICE_DESC dev_desc;
     
@@ -312,7 +315,7 @@ bool EHCIController::GetDescriptor(const int port) {
     if (!ControlIn(&dev_desc, 0, max_packet, 18, STDRD_GET_REQUEST, GET_DESCRIPTOR, DEVICE))
         return false;
     
-    // reset the port
+    //Reset the port
     ResetPort(port);
     
     //Set address
