@@ -16,6 +16,8 @@ namespace CactusOS
 
             VFSManager();
             void Mount(VirtualFileSystem* vfs);
+            void Unmount(VirtualFileSystem* vfs);
+            void UnmountByDisk(Disk* disk);
 
             int ExtractDiskNumber(char* path, common::uint8_t* idSizeReturn);
             bool SearchBootPartition();

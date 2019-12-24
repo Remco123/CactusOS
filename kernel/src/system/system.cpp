@@ -87,6 +87,8 @@ void System::Start()
 
     BootConsole::WriteLine("Starting USB Manager");
     System::usbManager = new USBManager();
+    BootConsole::WriteLine("Initializing Virtual File System");
+    System::vfs = new VFSManager();
 
     BootConsole::WriteLine("Setting up random...");
     Random::SetSeed(pit->Ticks());
@@ -112,10 +114,6 @@ void System::Start()
     System::usbManager->USBPoll();
 
     BootConsole::Write("Found a total of: "); BootConsole::Write(Convert::IntToString(System::diskManager->allDisks.size())); BootConsole::WriteLine(System::diskManager->allDisks.size() > 1 ? (char*)" disks" : (char*)" disk");
-    BootConsole::WriteLine("Initializing Virtual File System");
-    System::vfs = new VFSManager();
-    PartitionManager::DetectAndLoadFilesystems(System::diskManager, System::vfs);
-
     BootConsole::Write("Searching for boot partition");
     if(System::vfs->SearchBootPartition()) {
         BootConsole::Write(" [Found] ("); BootConsole::Write(Convert::IntToString(System::vfs->bootPartitionID)); BootConsole::WriteLine(")");

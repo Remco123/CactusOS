@@ -52,6 +52,16 @@ void VFSManager::Mount(VirtualFileSystem* vfs)
 {
     this->Filesystems->push_back(vfs); //Just add it to the list of known filesystems, easy.
 }
+void VFSManager::Unmount(VirtualFileSystem* vfs)
+{
+    this->Filesystems->Remove(vfs);
+}
+void VFSManager::UnmountByDisk(Disk* disk)
+{
+    for(VirtualFileSystem* vfs : *Filesystems)
+        if(vfs->disk == disk)
+            Unmount(vfs);
+}
 
 bool VFSManager::SearchBootPartition()
 {

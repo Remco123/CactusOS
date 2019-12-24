@@ -14,8 +14,9 @@ namespace CactusOS
         class Disk
         {
         public:
-            DiskController* controller;
-            common::uint32_t controllerIndex; //The real number for the disk
+            DiskController* controller; //Which controller is controling this disk device
+            common::uint32_t controllerIndex; //The real number for the disk on the controller
+            char* identifier = 0; //Disk Identifier
 
             Disk(common::uint32_t controllerIndex, DiskController* controller);
             

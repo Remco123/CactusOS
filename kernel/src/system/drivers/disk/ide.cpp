@@ -154,7 +154,20 @@ bool IDEController::Initialize()
             BootConsole::Write(" Drive "); BootConsole::Write(Convert::IntToString(ideDevices[i].Size / 1024 / 2));
             BootConsole::Write("MB - "); BootConsole::WriteLine((char*)ideDevices[i].Model);
 
-            System::diskManager->AddDisk(new Disk(i, this));
+            Disk* disk = new Disk(i, this);
+            
+            //////////
+            // Create Identifier
+            //////////
+            int strLen = 40;
+            while(ideDevices[i].Model[strLen - 1] == ' ' && strLen > 1)
+                strLen--;
+            disk->identifier = new char[strLen + 1];
+            
+            MemoryOperations::memcpy(disk->identifier, ideDevices[i].Model, strLen);
+            disk->identifier[strLen] = '\0';
+            
+            System::diskManager->AddDisk(disk);
         }
 
     return true;

@@ -42,9 +42,11 @@ namespace CactusOS
         class PartitionManager
         {
         private:
-            static void AssignVFS(PartitionTableEntry partition, Disk* disk, VFSManager* vfs);
+            //Check partition type and assign filesystem driver if available
+            static void AssignVFS(PartitionTableEntry partition, Disk* disk);
         public:
-            static void DetectAndLoadFilesystems(DiskManager* disks, VFSManager* vfs);
+            //Read partition descriptor of disk and assign fileysysem if possible
+            static void DetectAndLoadFilesystem(Disk* disk);
         };
     }
 }

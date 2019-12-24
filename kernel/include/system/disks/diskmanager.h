@@ -24,7 +24,10 @@ namespace CactusOS
 
             DiskManager();
 
+            //Add disk to system and check for filesystems
             void AddDisk(Disk* disk);
+            //Remove disk from system and unmount filesystems
+            void RemoveDisk(Disk* disk);
 
             char ReadSector(common::uint16_t drive, common::uint32_t lba, common::uint8_t* buf);
             char WriteSector(common::uint16_t drive, common::uint32_t lba, common::uint8_t* buf);

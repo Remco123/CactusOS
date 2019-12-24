@@ -41,6 +41,16 @@ bool USBMassStorageDriver::Initialize()
             char revision[4 + 1]; revision[4] = '\0'; MemoryOperations::memcpy(revision, retBuf.productRevisionLevel, 4);
 
             Log(Info, "MSD Vendor: %s Product: %s Revision: %s", vendorInfo, productInfo, revision);
+
+            //////////
+            // Create Identifier
+            //////////
+            int strLen = 16;
+            while(productInfo[strLen - 1] == ' ' && strLen > 1)
+                strLen--;
+            this->identifier = new char[strLen + 1];
+            MemoryOperations::memcpy(this->identifier, productInfo, strLen);
+            this->identifier[strLen] = '\0';
         }
         else {
             delete sendBuf;
@@ -283,7 +293,7 @@ bool USBMassStorageDriver::SCSIRequestOut(CommandBlockWrapper* request, uint8_t*
 //Called when mass storage device is unplugged from system
 void USBMassStorageDriver::DeInitialize()
 {
-
+    System::diskManager->RemoveDisk(this);
 }
 
 //Read Sector from mass storage device
