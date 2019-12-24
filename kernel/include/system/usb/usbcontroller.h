@@ -48,6 +48,12 @@ namespace CactusOS
             virtual uint8_t* GetConfigDescriptor(USBDevice* device);
             //Set configuration for device
             virtual bool SetConfiguration(USBDevice* device, uint8_t config);
+            //Get maximum of Logical unit numbers, Only for Mass Storage Devices!
+            virtual int GetMaxLuns(USBDevice* device);
+            //Perform a bulk in operation
+            virtual bool BulkIn(USBDevice* device, void* retBuffer, int len, int endP);
+            //Perform a bulk out operation
+            virtual bool BulkOut(USBDevice* device, void* sendBuffer, int len, int endP);
         };
     }
 }

@@ -701,3 +701,55 @@ bool EHCIController::SetConfiguration(USBDevice* device, uint8_t config)
 {
     return ControlOut(device->devAddress, 64, 0, STDRD_SET_REQUEST, SET_CONFIGURATION, 0, config);
 }
+int EHCIController::GetMaxLuns(USBDevice* device)
+{
+    uint8_t ret;
+    if(ControlIn(&ret, device->devAddress, 64, 1, DEV_TO_HOST | REQ_TYPE_CLASS | RECPT_INTERFACE, GET_MAX_LUNS))
+        return ret;
+    return 0;
+}
+bool EHCIController::BulkIn(USBDevice* device, void* retBuffer, int len, int endP)
+{
+    uint32_t bufferPhys;
+    uint8_t* bufferVirt = (uint8_t*)KernelHeap::malloc(len, &bufferPhys);  // get a physical address buffer and then copy from it later
+
+    //Allocate enough memory to hold the queue and the TD's
+    uint32_t queuePhys;
+    e_queueHead_t* queueVirt = (e_queueHead_t*)KernelHeap::allignedMalloc(sizeof(e_queueHead_t) + (16 * sizeof(e_queueTransferDescriptor_t)), 64, &queuePhys);
+    e_queueTransferDescriptor_t* td0Virt = (e_queueTransferDescriptor_t*)((uint32_t)queueVirt + sizeof(e_queueHead_t));
+    uint32_t td0Phys = queuePhys + sizeof(e_queueHead_t);
+    
+    SetupQueueHead(queueVirt, td0Phys, endP, device->endpoints[endP-1]->max_packet_size, device->devAddress);
+    MakeTransferDesc((uint32_t)td0Virt, td0Phys, 0, 0, bufferPhys, len, true, 0, EHCI_TD_PID_IN, device->endpoints[endP-1]->max_packet_size);
+    
+    InsertIntoQueue(queueVirt, queuePhys, QH_HS_TYPE_QH);
+    int ret = WaitForInterrupt(td0Virt, 2000, 0);
+    RemoveFromQueue(queueVirt);
+
+    KernelHeap::allignedFree(queueVirt);
+    if(ret == 1) {
+        MemoryOperations::memcpy(retBuffer, bufferVirt, len);
+    }
+    
+    delete bufferVirt;
+    return (ret == 1);
+}
+bool EHCIController::BulkOut(USBDevice* device, void* sendBuffer, int len, int endP)
+{
+    //Allocate enough memory to hold the queue and the TD's
+    uint32_t queuePhys;
+    e_queueHead_t* queueVirt = (e_queueHead_t*)KernelHeap::allignedMalloc(sizeof(e_queueHead_t) + (16 * sizeof(e_queueTransferDescriptor_t)), 64, &queuePhys);
+    e_queueTransferDescriptor_t* td0Virt = (e_queueTransferDescriptor_t*)((uint32_t)queueVirt + sizeof(e_queueHead_t));
+    uint32_t td0Phys = queuePhys + sizeof(e_queueHead_t);
+    
+    SetupQueueHead(queueVirt, td0Phys, endP, device->endpoints[endP-1]->max_packet_size, device->devAddress);
+    MakeTransferDesc((uint32_t)td0Virt, td0Phys, 0, 0, (uint32_t)VirtualMemoryManager::virtualToPhysical(sendBuffer), len, true, 0, EHCI_TD_PID_OUT, device->endpoints[endP-1]->max_packet_size);
+    
+    InsertIntoQueue(queueVirt, queuePhys, QH_HS_TYPE_QH);
+    int ret = WaitForInterrupt(td0Virt, 2000, 0);
+    RemoveFromQueue(queueVirt);
+
+    KernelHeap::allignedFree(queueVirt);
+    
+    return (ret == 1);
+}

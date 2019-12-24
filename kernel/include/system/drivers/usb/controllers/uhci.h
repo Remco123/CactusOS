@@ -107,6 +107,9 @@ namespace CactusOS
                 bool ControlOut(const bool lsDevice, const int devAddress, const int packetSize, const int len = 0, const uint8_t requestType = 0, const uint8_t request = 0, const uint16_t valueHigh = 0, const uint16_t valueLow = 0, const uint16_t index = 0);
                 bool ControlIn(void* targ, const bool lsDevice, const int devAddress, const int packetSize, const int len = 0, const uint8_t requestType = 0, const uint8_t request = 0, const uint16_t valueHigh = 0, const uint16_t valueLow = 0, const uint16_t index = 0);
                 
+                bool BulkOut(const bool lsDevice, const int devAddress, const int packetSize, const int endP, void* bufPtr, const int len = 0);
+                bool BulkIn(const bool lsDevice, const int devAddress, const int packetSize, const int endP, void* bufPtr, const int len = 0);
+
                 uint32_t HandleInterrupt(uint32_t esp);
 
                 //////////
@@ -126,6 +129,12 @@ namespace CactusOS
                 uint8_t* GetConfigDescriptor(USBDevice* device) override;
                 //Set configuration for device
                 bool SetConfiguration(USBDevice* device, uint8_t config) override;
+                //Get maximum of Logical unit numbers, Only for Mass Storage Devices!
+                int GetMaxLuns(USBDevice* device) override;
+                //Perform a bulk in operation
+                bool BulkIn(USBDevice* device, void* retBuffer, int len, int endP) override;
+                //Perform a bulk out operation
+                bool BulkOut(USBDevice* device, void* sendBuffer, int len, int endP) override;
             };
         }
     }

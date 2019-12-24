@@ -179,6 +179,12 @@ namespace CactusOS
                 uint8_t* GetConfigDescriptor(USBDevice* device) override;
                 //Set configuration for device
                 bool SetConfiguration(USBDevice* device, uint8_t config) override;
+                //Get maximum of Logical unit numbers, Only for Mass Storage Devices!
+                int GetMaxLuns(USBDevice* device) override;
+                //Perform a bulk in operation
+                bool BulkIn(USBDevice* device, void* retBuffer, int len, int endP) override;
+                //Perform a bulk out operation
+                bool BulkOut(USBDevice* device, void* sendBuffer, int len, int endP) override;
             };
         }
     }

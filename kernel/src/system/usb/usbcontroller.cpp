@@ -45,3 +45,18 @@ bool USBController::SetConfiguration(USBDevice* device, uint8_t config)
     Log(Error, "Virtual function called directly %s:%d", __FILE__, __LINE__);
     return false;
 }
+int USBController::GetMaxLuns(USBDevice* device)
+{
+    Log(Error, "Virtual function called directly %s:%d", __FILE__, __LINE__);
+    return 0;
+}
+bool USBController::BulkIn(USBDevice* device, void* retBuffer, int len, int endP)
+{
+    Log(Error, "Virtual function called directly %s:%d", __FILE__, __LINE__);
+    return false;
+}
+bool USBController::BulkOut(USBDevice* device, void* sendBuffer, int len, int endP)
+{
+    Log(Error, "Virtual function called directly %s:%d", __FILE__, __LINE__);
+    return false;
+}

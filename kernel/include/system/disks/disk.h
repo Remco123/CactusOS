@@ -19,8 +19,8 @@ namespace CactusOS
 
             Disk(common::uint32_t controllerIndex, DiskController* controller);
             
-            char ReadSector(common::uint32_t lba, common::uint8_t* buf);          
-            char WriteSector(common::uint32_t lba, common::uint8_t* buf);
+            virtual char ReadSector(common::uint32_t lba, common::uint8_t* buf);          
+            virtual char WriteSector(common::uint32_t lba, common::uint8_t* buf);
         };
     }
 }

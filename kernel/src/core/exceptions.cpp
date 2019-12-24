@@ -79,7 +79,7 @@ uint32_t Exceptions::PageFault(uint32_t esp)
         BootConsole::Write(" Yes ");
     #endif
     
-    if(System::scheduler != 0 && System::scheduler->CurrentProcess() != 0) {
+    if(System::scheduler != 0 && System::scheduler->CurrentProcess() != 0 && System::scheduler->CurrentProcess()->fileName != 0) {
         BootConsole::Write(" Process: ");
         BootConsole::WriteLine(System::scheduler->CurrentProcess()->fileName);
     }

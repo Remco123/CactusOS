@@ -73,11 +73,14 @@ void OHCIController::Setup()
     }
     //Clear structure
     MemoryOperations::memset(this->hcca, 0x0, sizeof(OHCI_HCCA));
-        
-    //Create Control list
-    uint32_t edBase = (uint32_t)KernelHeap::allignedMalloc(sizeof(o_endpointDescriptor_t) * NUM_CONTROL_EDS, 16);
+
+    
+    /////////////////
+    // Create Control list
+    /////////////////
+    uint32_t controlEDBase = (uint32_t)KernelHeap::allignedMalloc(sizeof(o_endpointDescriptor_t) * NUM_CONTROL_EDS, 16);
     for(int i = 0; i < NUM_CONTROL_EDS; i++) { //First Allocate all ED's
-        this->controlEndpoints[i] = (o_endpointDescriptor_t*)(edBase + sizeof(o_endpointDescriptor_t) * i);
+        this->controlEndpoints[i] = (o_endpointDescriptor_t*)(controlEDBase + sizeof(o_endpointDescriptor_t) * i);
         this->controlEndpointsPhys[i] = (uint32_t)VirtualMemoryManager::virtualToPhysical(this->controlEndpoints[i]);
         MemoryOperations::memset(this->controlEndpoints[i], 0, sizeof(o_endpointDescriptor_t));
     }
@@ -86,6 +89,23 @@ void OHCIController::Setup()
         controlEndpoints[i]->nextED = i < 15 ? controlEndpointsPhys[i + 1] : 0x00000000;
         controlEndpoints[i]->flags = (1<<14); // sKip bit, should be 14 right? Not 13
     }
+
+
+    /////////////////
+    // Create Bulk list
+    /////////////////
+    uint32_t bulkEDBase = (uint32_t)KernelHeap::allignedMalloc(sizeof(o_endpointDescriptor_t) * NUM_BULK_EDS, 16);
+    for(int i = 0; i < NUM_BULK_EDS; i++) { //First Allocate all ED's
+        this->bulkEndpoints[i] = (o_endpointDescriptor_t*)(bulkEDBase + sizeof(o_endpointDescriptor_t) * i);
+        this->bulkEndpointsPhys[i] = (uint32_t)VirtualMemoryManager::virtualToPhysical(this->bulkEndpoints[i]);
+        MemoryOperations::memset(this->bulkEndpoints[i], 0, sizeof(o_endpointDescriptor_t));
+    }
+    //Now make it a linked list
+    for (int i = 0; i < NUM_BULK_EDS; i++) {
+        bulkEndpoints[i]->nextED = i < 15 ? bulkEndpointsPhys[i + 1] : 0x00000000;
+        bulkEndpoints[i]->flags = (1<<14); // sKip bit, should be 14 right? Not 13
+    }
+
 
     //Reset the root hub
     writeMemReg(regBase + OHCControl, 0x00000000);
@@ -106,6 +126,7 @@ void OHCIController::Setup()
     // write the offset of the control head ed
     writeMemReg(regBase + OHCControlHeadED, controlEndpointsPhys[0]);
     writeMemReg(regBase + OHCControlCurrentED, 0x00000000);
+    writeMemReg(regBase + OHCBulkHeadED, bulkEndpointsPhys[0]);
     writeMemReg(regBase + OHCBulkCurrentED, 0x00000000);
 
     //Disallow interrupts (we poll the DoneHeadWrite bit instead)
@@ -113,7 +134,7 @@ void OHCIController::Setup()
     writeMemReg(regBase + OHCInterruptEnable, (1<<0) | (0<<1) | (0<<2) | (1<<3) | (1<<4)| (0<<5) | (1<<6) | (1<<30) | (1<<31));
     
     // Start the controller  
-    writeMemReg(regBase + OHCControl, 0x00000690);  // CLE & operational
+    writeMemReg(regBase + OHCControl, (1<<4) | (1<<5) | (1<<7) | (1<<9) | (1<<10));  // CLE & operational
     
     //Set port power switching
     uint32_t val = readMemReg(regBase + OHCRhDescriptorA);
@@ -253,7 +274,7 @@ bool OHCIController::ControlOut(const bool lsDevice, const int devAddress, const
     
     //Wait for TD completion
     for(int c = 0; c <= 1; c++) {
-        int timeOut = 10000;
+        int timeOut = OHCI_TD_TIMEOUT;
         while((((td[c].flags & 0xF0000000) >> 28) == 14) && (timeOut > 0)) //This TD Has not been accesed
         { 
             timeOut--; 
@@ -342,7 +363,7 @@ bool OHCIController::ControlIn(void* targ, const bool lsDevice, const int devAdd
     
     //Wait for TD completion
     for(int c = 0; c <= i; c++) {
-        int timeOut = 10000;
+        int timeOut = OHCI_TD_TIMEOUT;
         while((((td[c].flags & 0xF0000000) >> 28) == 14) && (timeOut > 0)) //This TD Has not been accesed
         { 
             timeOut--; 
@@ -383,6 +404,140 @@ bool OHCIController::ControlIn(void* targ, const bool lsDevice, const int devAdd
     KernelHeap::allignedFree(td);
     //Free packet
     KernelHeap::allignedFree(requestPacket);
+    
+    return ret;
+}
+bool OHCIController::BulkOut(const bool lsDevice, const int devAddress, const int packetSize, const int endP, void* bufPtr, const int len)
+{
+    uint32_t bufPhys = (uint32_t)VirtualMemoryManager::virtualToPhysical(bufPtr); 
+
+    //Allocate Transfer Descriptors
+    uint32_t tdPhys;
+    o_transferDescriptor_t* td = (o_transferDescriptor_t*)KernelHeap::allignedMalloc(sizeof(o_transferDescriptor_t) * 10, 16, &tdPhys);
+    MemoryOperations::memset(td, 0, sizeof(o_transferDescriptor_t) * 10);
+    
+    //Create the rest of the in td's
+    int i = 0; int p = 0; int toggle = 1;
+    int cnt = len;
+    while (cnt > 0) {
+        td[i].flags = (14<<28) | (0 << 26) | ((2 | (toggle & 1)) << 24) | (7<<21) | (0 << 19) /*Dir from ED*/;
+        td[i].curBufPtr = bufPhys + p;
+        td[i].nextTd = ((i > 0) ? td[i-1].nextTd : tdPhys) + sizeof(o_transferDescriptor_t);
+        td[i].bufEnd = td[i].curBufPtr + ((cnt > packetSize) ? (packetSize - 1) : (cnt - 1));
+        toggle ^= 1;
+        p += packetSize;
+        i++;
+        cnt -= packetSize;
+    }
+    
+    //Create the ED, using one already in the bulk list
+    this->bulkEndpoints[0]->flags = (packetSize << 16) | (0 << 15) | (0 << 14) | (lsDevice ? (1<<13) : 0) | (TD_DP_OUT << 11) | (endP << 7) | (devAddress & 0x7F);
+    this->bulkEndpoints[0]->tailp = tdPhys + sizeof(o_transferDescriptor_t) * i;
+    this->bulkEndpoints[0]->headp = tdPhys;
+    
+    //Set BulkListFilled bit
+    writeMemReg(regBase + OHCCommandStatus, (1<<2));
+    
+    //Wait for TD completion
+    for(int c = 0; c < i; c++) {
+        int timeOut = OHCI_TD_TIMEOUT;
+        while((((td[c].flags & 0xF0000000) >> 28) == 14) && (timeOut > 0)) //This TD Has not been accesed
+        { 
+            timeOut--; 
+            System::pit->Sleep(1); 
+        }
+        //Log(Info, "OHCI TD %d Finished by controller err=%d timeout=%d", c, ((td[c].flags & 0xF0000000) >> 28), timeOut);
+        if(timeOut == 0)
+            break;
+    }
+
+    //Reset Used ED
+    this->bulkEndpoints[0]->flags = (1<<14);
+    this->bulkEndpoints[0]->tailp = 0;
+    this->bulkEndpoints[0]->headp = 0;
+    
+    bool ret = true;
+    for (int c = 0; c < i; c++) {
+        if ((td[c].flags & 0xF0000000) != 0) {
+            ret = false;
+            Log(Error, "our_tds[%d].cc != 0  (%d)", c, (td[c].flags & 0xF0000000) >> 28);
+            break;
+        }
+    }
+    
+    //Free td's
+    KernelHeap::allignedFree(td);
+    return ret;
+}
+bool OHCIController::BulkIn(const bool lsDevice, const int devAddress, const int packetSize, const int endP, void* bufPtr, const int len)
+{
+    //Create temporary buffer and clear it
+    uint32_t returnBufPhys;
+    uint8_t* returnBuf = (uint8_t*)KernelHeap::malloc(len, &returnBufPhys);
+    MemoryOperations::memset(returnBuf, 0, len);
+    
+    //Allocate Transfer Descriptors
+    uint32_t tdPhys;
+    o_transferDescriptor_t* td = (o_transferDescriptor_t*)KernelHeap::allignedMalloc(sizeof(o_transferDescriptor_t) * 10, 16, &tdPhys);
+    MemoryOperations::memset(td, 0, sizeof(o_transferDescriptor_t) * 10);
+    
+    //Create the rest of the in td's
+    int i = 0; int p = 0; int t = 1;
+    int cnt = len;
+    while (cnt > 0) {
+        td[i].flags = (14<<28) | (0 << 26) | ((2 | (t & 1)) << 24) | (7<<21) | (0 << 19) /*Dir from ED*/  | (1<<18) /*Buffer Rounding*/;
+        td[i].curBufPtr = returnBufPhys + p;
+        td[i].nextTd = ((i > 0) ? td[i-1].nextTd : tdPhys) + sizeof(o_transferDescriptor_t);
+        td[i].bufEnd = td[i].curBufPtr + ((cnt > packetSize) ? (packetSize - 1) : (cnt - 1));
+        t ^= 1;
+        p += packetSize;
+        i++;
+        cnt -= packetSize;
+    }
+    
+    //Create the ED, using one already in the bulk list
+    this->bulkEndpoints[0]->flags = (packetSize << 16) | (0 << 15) | (0 << 14) | (lsDevice ? (1<<13) : 0) | (TD_DP_IN << 11) | (endP << 7) | (devAddress & 0x7F);
+    this->bulkEndpoints[0]->tailp = tdPhys + sizeof(o_transferDescriptor_t) * i;
+    this->bulkEndpoints[0]->headp = tdPhys;
+
+    //Set BulklListFilled bit
+    writeMemReg(regBase + OHCCommandStatus, (1<<2));
+    
+    //Wait for TD completion
+    for(int c = 0; c < i; c++) {
+        int timeOut = OHCI_TD_TIMEOUT;
+        while((((td[c].flags & 0xF0000000) >> 28) == 14) && (timeOut > 0)) //This TD Has not been accesed
+        { 
+            timeOut--; 
+            System::pit->Sleep(1); 
+        }
+        //Log(Info, "OHCI TD %d Finished by controller err=%d timeout=%d", c, ((td[c].flags & 0xF0000000) >> 28), timeOut);
+    }
+
+    //Reset Used ED
+    this->bulkEndpoints[0]->flags = (1<<14);
+    this->bulkEndpoints[0]->tailp = 0;
+    this->bulkEndpoints[0]->headp = 0;
+    
+    bool ret = true;
+    for (int c = 0; c < i; c++) {
+        if ((td[c].flags & 0xF0000000) != 0) {
+            uint8_t err = (td[c].flags & 0xF0000000) >> 28;
+            ret = false;
+            Log(Error, "our_tds[%d].cc != 0  (%d)", c, err);
+            break;
+        }
+    }
+
+    if(ret) {
+        // copy the descriptor to the passed memory block
+        MemoryOperations::memcpy(bufPtr, returnBuf, len);
+    }
+    
+    //Free temporary buffer
+    KernelHeap::free(returnBuf);
+    //Free td's
+    KernelHeap::allignedFree(td);
     
     return ret;
 }
@@ -469,4 +624,19 @@ uint8_t* OHCIController::GetConfigDescriptor(USBDevice* device)
 bool OHCIController::SetConfiguration(USBDevice* device, uint8_t config) 
 {
     return ControlOut(device->ohciProperties.ls_device, device->devAddress, device->ohciProperties.desc_mps, 0, STDRD_SET_REQUEST, SET_CONFIGURATION, 0, config);
+}
+int OHCIController::GetMaxLuns(USBDevice* device)
+{
+    uint8_t ret;
+    if(ControlIn(&ret, device->ohciProperties.ls_device, device->devAddress, device->ohciProperties.desc_mps, 1, DEV_TO_HOST | REQ_TYPE_CLASS | RECPT_INTERFACE, GET_MAX_LUNS))
+        return ret;
+    return 0;
+}
+bool OHCIController::BulkIn(USBDevice* device, void* retBuffer, int len, int endP)
+{
+    return BulkIn(device->ohciProperties.ls_device, device->devAddress, device->endpoints[endP-1]->max_packet_size, endP, retBuffer, len);
+}
+bool OHCIController::BulkOut(USBDevice* device, void* sendBuffer, int len, int endP)
+{
+    return BulkOut(device->ohciProperties.ls_device, device->devAddress, device->endpoints[endP-1]->max_packet_size, endP, sendBuffer, len);
 }

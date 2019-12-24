@@ -8,11 +8,10 @@ using namespace CactusOS::common;
 using namespace CactusOS::core;
 using namespace CactusOS::system;
 
-static uint8_t Readbuf[2048];
-
 void PartitionManager::DetectAndLoadFilesystems(DiskManager* disks, VFSManager* vfs)
 {
     BootConsole::WriteLine("Detecting partitions on disks");
+    uint8_t* Readbuf = new uint8_t[2048];
     MemoryOperations::memset(Readbuf, 0, 2048);
 
     for(int i = 0; i < disks->allDisks.size(); i++)
@@ -54,6 +53,7 @@ void PartitionManager::DetectAndLoadFilesystems(DiskManager* disks, VFSManager* 
             BootConsole::Write("Error reading disk: "); BootConsole::Write(Convert::IntToString(i)); BootConsole::Write(" Code: 0x"); Print::printfHex(ret); BootConsole::WriteLine();
         }
     }
+    delete Readbuf;
 }
 
 void PartitionManager::AssignVFS(PartitionTableEntry partition, Disk* disk, VFSManager* vfs)

@@ -392,6 +392,152 @@ bool UHCIController::ControlOut(const bool lsDevice, const int devAddress, const
 
     return ret;
 }
+bool UHCIController::BulkOut(const bool lsDevice, const int devAddress, const int packetSize, const int endP, void* bufPtr, const int len)
+{
+    uint32_t bufPhys = (uint32_t)VirtualMemoryManager::virtualToPhysical(bufPtr); 
+
+    //Allocate Transfer Descriptors
+    uint32_t tdPhys;
+    u_transferDescriptor_t* td = (u_transferDescriptor_t*)KernelHeap::allignedMalloc(sizeof(u_transferDescriptor_t) * 10, 16, &tdPhys);
+    MemoryOperations::memset(td, 0, sizeof(u_transferDescriptor_t) * 10);
+
+    //Allocate queue head
+    uint32_t queuePhys;
+    u_queueHead_t* queue = (u_queueHead_t*)KernelHeap::allignedMalloc(sizeof(u_queueHead_t), 16, &queuePhys);
+    queue->vert_ptr = tdPhys;
+    queue->horz_ptr = QUEUE_HEAD_T;
+    
+    int i = 0;
+    int sz = len;
+    //Transfer Descriptors depending on size of request
+    while ((sz > 0) && (i<9)) {
+        td[i].link_ptr = (i > 0 ? (td[i-1].link_ptr & ~0xF) : tdPhys) + sizeof(u_transferDescriptor_t);
+        td[i].reply = (lsDevice ? (1<<26) : 0) | (3<<27) | (0x80 << 16);
+        int t = ((sz <= packetSize) ? sz : packetSize);
+        td[i].info = ((t-1)<<21) | ((i & 1) ? (1<<19) : 0)  | (endP<<15) | ((devAddress & 0x7F)<<8) | TOKEN_OUT;
+        td[i].buff_ptr = bufPhys + (packetSize*i);
+        sz -= t;
+        i++;
+    }
+    td[i-1].reply |= (1<<24); //Enable IOC
+    
+    // make sure status:int bit is clear
+    outportw(pciDevice->portBase + UHCI_STATUS, 1);
+    
+    //Instert queue into list
+    frameList[0] = queuePhys | QUEUE_HEAD_Q;
+    
+    // wait for the IOC to happen
+    int timeout = 10000; // 10 seconds
+    while (!(inportw(pciDevice->portBase + UHCI_STATUS) & 1) && (timeout > 0)) {
+        timeout--;
+        System::pit->Sleep(1);
+    }
+    if (timeout == 0) {
+        Log(Warning, "UHCI timed out.");
+        frameList[0] = QUEUE_HEAD_T;
+        return false;
+    }
+
+    Log(Info, "Frame: %d - USB transaction completed", inportw(pciDevice->portBase + UHCI_FRAME_NUM) & 0b1111111111);
+    outportw(pciDevice->portBase + UHCI_STATUS, 1);  // acknowledge the interrupt
+    
+    frameList[0] = QUEUE_HEAD_T;
+    
+    bool ret = true;
+    // check the TD's for error
+    for (int t = 0; t < i; t++) {
+        if (((td[t].reply & (0xFF << 16)) != 0)) { //Check if any error bit is set
+            ret = false;
+            break;
+        }
+    }
+    
+    //Free td's
+    KernelHeap::allignedFree(td);
+    //Free queue head
+    KernelHeap::allignedFree(queue);
+
+    return ret;
+}
+bool UHCIController::BulkIn(const bool lsDevice, const int devAddress, const int packetSize, const int endP, void* bufPtr, const int len)
+{
+    //Create temporary buffer and clear it
+    uint32_t returnBufPhys;
+    uint8_t* returnBuf = (uint8_t*)KernelHeap::malloc(len, &returnBufPhys);
+    MemoryOperations::memset(returnBuf, 0, len);
+    
+    //Allocate Transfer Descriptors
+    uint32_t tdPhys;
+    u_transferDescriptor_t* td = (u_transferDescriptor_t*)KernelHeap::allignedMalloc(sizeof(u_transferDescriptor_t) * 10, 16, &tdPhys);
+    MemoryOperations::memset(td, 0, sizeof(u_transferDescriptor_t) * 10);
+
+    //Allocate queue head
+    uint32_t queuePhys;
+    u_queueHead_t* queue = (u_queueHead_t*)KernelHeap::allignedMalloc(sizeof(u_queueHead_t), 16, &queuePhys);
+    queue->vert_ptr = tdPhys;
+    queue->horz_ptr = QUEUE_HEAD_T;
+    
+    int i = 0;
+    int sz = len;
+    //Transfer Descriptors depending on size of request
+    while ((sz > 0) && (i<9)) {
+        td[i].link_ptr = (i > 0 ? (td[i-1].link_ptr & ~0xF) : tdPhys) + sizeof(u_transferDescriptor_t);
+        td[i].reply = (lsDevice ? (1<<26) : 0) | (3<<27) | (0x80 << 16);
+        int t = ((sz <= packetSize) ? sz : packetSize);
+        td[i].info = ((t-1)<<21) | ((i & 1) ? (1<<19) : 0)  | (endP<<15) | ((devAddress & 0x7F)<<8) | TOKEN_IN;
+        td[i].buff_ptr = returnBufPhys + (packetSize*i);
+        sz -= t;
+        i++;
+    }
+    td[i-1].reply |= (1<<24); //Enable IOC
+    
+    // make sure status:int bit is clear
+    outportw(pciDevice->portBase + UHCI_STATUS, 1);
+    
+    //Instert queue into list
+    frameList[0] = queuePhys | QUEUE_HEAD_Q;
+    
+    // wait for the IOC to happen
+    int timeout = 10000; // 10 seconds
+    while (!(inportw(pciDevice->portBase + UHCI_STATUS) & 1) && (timeout > 0)) {
+        timeout--;
+        System::pit->Sleep(1);
+    }
+    if (timeout == 0) {
+        Log(Warning, "UHCI timed out.");
+        frameList[0] = QUEUE_HEAD_T;
+        return false;
+    }
+
+    Log(Info, "Frame: %d - USB transaction completed", inportw(pciDevice->portBase + UHCI_FRAME_NUM) & 0b1111111111);
+    outportw(pciDevice->portBase + UHCI_STATUS, 1);  // acknowledge the interrupt
+    
+    frameList[0] = QUEUE_HEAD_T;
+    
+    bool ret = true;
+    // check the TD's for error
+    for (int t = 0; t < i; t++) {
+        if (((td[t].reply & (0xFF << 16)) != 0)) { //Check if any error bit is set
+            ret = false;
+            break;
+        }
+    }
+    
+    if(ret) {
+        // copy the descriptor to the passed memory block
+        MemoryOperations::memcpy(bufPtr, returnBuf, len);
+    }
+    
+    //Free temporary buffer
+    KernelHeap::free(returnBuf);
+    //Free td's
+    KernelHeap::allignedFree(td);
+    //Free queue head
+    KernelHeap::allignedFree(queue);
+
+    return ret;
+}
 uint32_t UHCIController::HandleInterrupt(uint32_t esp)
 {
     uint16_t val = inportw(pciDevice->portBase + UHCI_STATUS);
@@ -472,4 +618,19 @@ uint8_t* UHCIController::GetConfigDescriptor(USBDevice* device)
 bool UHCIController::SetConfiguration(USBDevice* device, uint8_t config)
 {
     return ControlOut(device->uhciProperties.lowSpeedDevice, device->devAddress, device->uhciProperties.maxPacketSize, 0, STDRD_SET_REQUEST, SET_CONFIGURATION, 0, config);
+}
+int UHCIController::GetMaxLuns(USBDevice* device)
+{
+    uint8_t ret;
+    if(ControlIn(&ret, device->uhciProperties.lowSpeedDevice, device->devAddress, device->uhciProperties.maxPacketSize, 1, DEV_TO_HOST | REQ_TYPE_CLASS | RECPT_INTERFACE, GET_MAX_LUNS))
+        return ret;
+    return 0;
+}
+bool UHCIController::BulkIn(USBDevice* device, void* retBuffer, int len, int endP)
+{
+    return BulkIn(device->uhciProperties.lowSpeedDevice, device->devAddress, device->endpoints[endP-1]->max_packet_size, endP, retBuffer, len);
+}
+bool UHCIController::BulkOut(USBDevice* device, void* sendBuffer, int len, int endP)
+{
+    return BulkOut(device->uhciProperties.lowSpeedDevice, device->devAddress, device->endpoints[endP-1]->max_packet_size, endP, sendBuffer, len);
 }

@@ -8,6 +8,7 @@ namespace CactusOS
     namespace system
     {
         class USBController;
+        class USBDriver;
         
         //Class describing a common interface to interact with different usb devices
         class USBDevice
@@ -29,6 +30,8 @@ namespace CactusOS
             uint16_t subclassID = 0;
             //Protocol used
             uint16_t protocol = 0;
+            //Driver associated with this device, 0 if none found
+            USBDriver* driver = 0;
 
             //// Properties per controller
             struct UHCIProperties
@@ -41,9 +44,14 @@ namespace CactusOS
                 int desc_mps;
                 bool ls_device;
             } ohciProperties;
+
+            //List of all endpoints of device
+            List<struct ENDPOINT_DESC*> endpoints;
         public:
             //Create new USBDevice, only called by controllers
             USBDevice();
+            //Destructor
+            ~USBDevice();
 
             //Automaticly test this device for its specs and assign a driver if found
             bool AssignDriver();

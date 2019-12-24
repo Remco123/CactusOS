@@ -68,6 +68,8 @@ namespace CactusOS
             } __attribute__((packed)) HCCA_t;
 
             #define NUM_CONTROL_EDS 16
+            #define NUM_BULK_EDS    16
+            #define OHCI_TD_TIMEOUT 1000
 
             class OHCIController : public USBController, public Driver, public InterruptHandler
             {
@@ -83,7 +85,9 @@ namespace CactusOS
 
                 //Lists
                 o_endpointDescriptor_t* controlEndpoints[NUM_CONTROL_EDS];        //Control list endpoint descriptors
-                uint32_t              controlEndpointsPhys[NUM_CONTROL_EDS];    //Physical Addresses of Control ED's
+                uint32_t                controlEndpointsPhys[NUM_CONTROL_EDS];    //Physical Addresses of Control ED's
+                o_endpointDescriptor_t* bulkEndpoints[NUM_BULK_EDS];              //Bulk list endpoint descriptors
+                uint32_t                bulkEndpointsPhys[NUM_BULK_EDS];          //Physical Addresses of Bulk ED's
             public:
                 OHCIController(PCIDevice* device);
 
@@ -92,6 +96,8 @@ namespace CactusOS
 
                 bool ControlOut(const bool lsDevice, const int devAddress, const int packetSize, const int len = 0, const uint8_t requestType = 0, const uint8_t request = 0, const uint16_t valueHigh = 0, const uint16_t valueLow = 0, const uint16_t index = 0);
                 bool ControlIn(void* targ, const bool lsDevice, const int devAddress, const int packetSize, const int len = 0, const uint8_t requestType = 0, const uint8_t request = 0, const uint16_t valueHigh = 0, const uint16_t valueLow = 0, const uint16_t index = 0);
+                bool BulkOut(const bool lsDevice, const int devAddress, const int packetSize, const int endP, void* bufPtr, const int len = 0);
+                bool BulkIn(const bool lsDevice, const int devAddress, const int packetSize, const int endP, void* bufPtr, const int len = 0);
 
                 uint32_t HandleInterrupt(uint32_t esp);
 
@@ -111,7 +117,13 @@ namespace CactusOS
                 //Returns buffer with Configuration header and additional data            
                 uint8_t* GetConfigDescriptor(USBDevice* device) override;
                 //Set configuration for device
-                bool SetConfiguration(USBDevice* device, uint8_t config) override;           
+                bool SetConfiguration(USBDevice* device, uint8_t config) override;
+                //Get maximum of Logical unit numbers, Only for Mass Storage Devices!
+                int GetMaxLuns(USBDevice* device) override;
+                //Perform a bulk in operation
+                bool BulkIn(USBDevice* device, void* retBuffer, int len, int endP) override;
+                //Perform a bulk out operation
+                bool BulkOut(USBDevice* device, void* sendBuffer, int len, int endP) override;           
             };
         }
     }

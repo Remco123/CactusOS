@@ -1,7 +1,9 @@
 #include <system/log.h>
 #include <system/drivers/usb/usbdefs.h>
 #include <system/usb/usbdevice.h>
-#include <system/system.h>
+#include <system/drivers/usb/usbdriver.h>
+
+#include <system/drivers/usb/mass_storage.h>
 
 using namespace CactusOS;
 using namespace CactusOS::common;
@@ -45,6 +47,7 @@ const int numClassCodeStrings = sizeof(USBClassCodeStrings) / sizeof(char*);
 
 //Create new USBDevice, only called by controllers
 USBDevice::USBDevice()
+: endpoints()
 { }
 
 //Automaticly test this device for its specs and assign a driver if found
@@ -160,6 +163,10 @@ bool USBDevice::AssignDriver()
             {
                 struct ENDPOINT_DESC* c = (struct ENDPOINT_DESC*)startByte;
                 Log(Info, "USBDevice Endpoint Desc: Num=%d %s TransferType=%d MaxPacket=%d Interval=%d", c->end_point & 0xF, (c->end_point & (1<<7)) ? "In" : "Out", c->bm_attrbs & 0b11, c->max_packet_size, c->interval);
+
+                struct ENDPOINT_DESC* endP = new ENDPOINT_DESC();
+                MemoryOperations::memcpy(endP, c, sizeof(struct ENDPOINT_DESC));
+                this->endpoints.push_back(endP);
             }
             else
                 Log(Warning, "Unknown part of ConfigDescriptor: length: %d type: %d", length, type);
@@ -167,6 +174,7 @@ bool USBDevice::AssignDriver()
 
             startByte += length;
         }
+        delete configBuffer;
     }
 
     //Set Default Configuration
@@ -183,10 +191,41 @@ bool USBDevice::AssignDriver()
             break;
         }
 
+    ////////////
+    // Driver Selection
+    ////////////
+    if(this->classID == 0x08 && this->subclassID == 0x06 && this->protocol == 0x50) {
+        this->driver = new USBMassStorageDriver(this);
+    }
 
-    return true;
+    ////////////
+    // Initialize Driver
+    ////////////
+    if(this->driver != 0)
+    {
+        if(this->driver->Initialize())
+            return true;
+        else 
+        {
+            delete this->driver;
+            this->driver = 0;
+            return false;
+        }
+    }
+
+    return false;
+}
+USBDevice::~USBDevice()
+{
+    for(ENDPOINT_DESC* endP : this->endpoints)
+        delete endP;
 }
 void USBDevice::OnUnplugged()
 {
-    Log(Warning, "TODO: Call driver de-init and remove it from the system");
+    if(this->driver != 0) {
+        Log(Info, "Unloading driver %s", this->driver->GetDriverName());
+        this->driver->DeInitialize();
+    }
+    else
+        Log(Info, "No driver found for this device");
 }

@@ -1,4 +1,5 @@
 #include <system/drivers/driver.h>
+#include <system/log.h>
 
 using namespace CactusOS;
 using namespace CactusOS::system;
@@ -19,6 +20,6 @@ char* Driver::GetDriverDescription() {
 
 bool Driver::Initialize()
 {
-    //This should not be called
+    Log(Error, "Virtual function called directly %s:%d", __FILE__, __LINE__);
     return false;
 }
