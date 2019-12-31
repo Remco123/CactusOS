@@ -12,6 +12,7 @@
 #include <string.h>
 #include <systeminfo.h>
 #include <gui/contextinfo.h>
+#include <math.h>
 #include "cursor.h"
 
 using namespace LIBCactusOS;
@@ -131,6 +132,24 @@ ContextInfo* FindTargetContext(int x, int y)
                 return c;
     }
     return 0;
+}
+// Makes rectangle fit into desktop rectangle
+void ApplyDesktopBounds(Rectangle* rect)
+{
+    if(rect->x < 0) {
+        rect->width -= Math::Abs(rect->x);
+        rect->x = 0;
+    }
+    if(rect->y < 0) {
+        rect->height -= Math::Abs(rect->y);
+        rect->y = 0;
+    }
+    if((rect->x + rect->width) >= WIDTH) {
+        rect->width = WIDTH - rect->x;// - 1;
+    }
+    if((rect->y + rect->height) >= HEIGHT) {
+        rect->height = HEIGHT - rect->y;// - 1;
+    }
 }
 
 int main()
@@ -280,6 +299,7 @@ void UpdateDesktop()
     while(dirtyRectList->size() > 0)
     {
         Rectangle rect = dirtyRectList->GetAt(0);
+        ApplyDesktopBounds(&rect);
         uint32_t byteWidth = (rect.width + rect.x <= WIDTH ? rect.width : rect.width-(rect.x + rect.width - WIDTH))*4;
         for(uint32_t y = 0; y < rect.height; y++)
             memcpy((void*)(backBuffer + ((rect.y + y)*WIDTH*4) + rect.x*4), (void*)((uint32_t)wallPaperBuffer + (rect.y + y)*WIDTH*4 + rect.x*4), byteWidth);
@@ -295,24 +315,20 @@ void UpdateDesktop()
             Log(Warning, "Context is out of desktop bounds");
             continue;
         }
+        Rectangle contextRectangle = Rectangle(info->width, info->height, info->x, info->y);
+        ApplyDesktopBounds(&contextRectangle);
         
-        if(info->supportsTransparency) //Draw context using transparency
-        {        
-            for(int y = 0; y < info->height; y++)
-            {
-                uint32_t pixBase = info->virtAddrServer + y*info->width*4;
-                uint32_t wallBase = (uint32_t)wallPaperBuffer + (info->y+y)*WIDTH*4;
+        #define leftOffset ((info->x < 0) ? -info->x : 0)
+        #define topOffset  ((info->y < 0) ? -info->y : 0)
 
-                for(int x = 0; x < info->width; x++)
-                    backBufferCanvas->SetPixel(info->x + x, info->y + y, Colors::AlphaBlend(*(uint32_t*)(wallBase + (info->x+x)*4), *(uint32_t*)(pixBase + x*4)));
-            }
+        if(info->supportsTransparency) {
+            for(int y = 0; y < contextRectangle.height; y++)
+                for(int x = 0; x < contextRectangle.width; x++)
+                    backBufferCanvas->SetPixel(contextRectangle.x + x, contextRectangle.y + y, Colors::AlphaBlend(wallPaperCanvas->GetPixel(contextRectangle.x + x, contextRectangle.y + y), *(uint32_t*)(info->virtAddrServer + (topOffset+y)*info->width*4 + (leftOffset+x)*4)));
         }
-        else
-        {
-            //Draw context the normal way by copying the framebuffer onto the backbuffer line by line
-            uint32_t byteWidth = (info->width + info->x <= WIDTH ? info->width : info->width-(info->x + info->width - WIDTH))*4;
-            for(uint32_t y = (info->y < 0 ? -info->y : 0); y < info->height; y++)
-                memcpy((void*)(backBuffer + ((info->y + y)*WIDTH*4) + info->x*4), (void*)(info->virtAddrServer + y*info->width*4), byteWidth);
+        else {
+            for(int hOffset = 0; hOffset < contextRectangle.height; hOffset++)
+                memcpy((backBuffer + (contextRectangle.y+hOffset)*WIDTH*4 + contextRectangle.x*4), (void*)(info->virtAddrServer + leftOffset*4 + (topOffset + hOffset)*info->width*4), contextRectangle.width * 4);
         }
     }
     DrawCursor();
