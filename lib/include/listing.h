@@ -5,6 +5,7 @@ namespace LIBCactusOS
 {
     #define DIRECTORY_LISTING 0
     #define PROCESS_LISTING 1
+    #define DISK_LISTING 2
 }
 
 #endif

@@ -16,7 +16,7 @@ int DirectoryListing::BeginListing(Thread* thread, uint32_t pathPtr)
 {
     char* path = (char*)pathPtr;
     if(!System::vfs->DirectoryExists(path))
-        return 0;
+        return -1;
     
     if(requestBusy)
     {

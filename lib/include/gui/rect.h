@@ -55,7 +55,7 @@ namespace LIBCactusOS
         /**
          * Explode this rect into a list of contiguous rects
         */
-        List<Rectangle>* Split(Rectangle cuttingRect);
+        List<Rectangle>* Split(Rectangle cuttingRect, List<Rectangle>* output = 0);
 
         /**
          * Insert this rectangle into the clip list, splitting all existing rectangles against it to prevent overlap 

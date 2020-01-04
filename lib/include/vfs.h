@@ -3,6 +3,7 @@
 
 #include <types.h>
 #include <list.h>
+#include <shared.h>
 
 namespace LIBCactusOS
 {
@@ -12,6 +13,7 @@ namespace LIBCactusOS
     bool DirectoryExists(char* path);
     bool EjectDisk(char* path);
     List<char*> DirectoryListing(char* path);
+    List<DiskInfo> DiskListing();
 }
 
 #endif

@@ -1,6 +1,7 @@
 #include <system/system.h>
 #include <system/listings/directorylisting.h>
 #include <system/listings/processlisting.h>
+#include <system/listings/disklisting.h>
 
 using namespace CactusOS;
 using namespace CactusOS::common;
@@ -131,6 +132,7 @@ void System::Start()
     System::listings = new List<ListingController*>();
     System::listings->push_back(new DirectoryListing());
     System::listings->push_back(new ProcessListing());
+    System::listings->push_back(new DiskListing());
 
     System::ProcStandardOut = new StandardOutSteam();
     Log(Info, "System Initialized");

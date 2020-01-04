@@ -5,7 +5,7 @@
 #include <types.h>
 #include <systeminfo.h>
 #include <list.h>
-#include <processinfo.h>
+#include <shared.h>
 
 namespace LIBCactusOS
 {

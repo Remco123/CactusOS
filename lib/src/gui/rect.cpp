@@ -51,10 +51,10 @@ typedef struct Rect_struct {
 // Mostly from http://www.trackze.ro/wsbe-4-get-clippy/
 ///////////
 
-List<Rectangle>* Rectangle::Split(Rectangle cutter)
+List<Rectangle>* Rectangle::Split(Rectangle cutter, List<Rectangle>* output)
 {
     //Allocate the list of result rectangles
-    List<Rectangle>* output_rects = new List<Rectangle>();
+    List<Rectangle>* output_rects = output != 0 ? output : new List<Rectangle>();
 
     //We're going to modify the subject rect as we go,
     //so we'll clone it so as to not upset the object 

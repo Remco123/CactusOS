@@ -1,7 +1,7 @@
 #include <system/listings/processlisting.h>
 
 #include <system/system.h>
-#include <../../lib/include/processinfo.h>
+#include <../../lib/include/shared.h>
 
 using namespace CactusOS;
 using namespace CactusOS::common;

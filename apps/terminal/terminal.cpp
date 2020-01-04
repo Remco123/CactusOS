@@ -61,6 +61,7 @@ int ExecCommand(char* cmd)
             termWindow->Write(item); termWindow->Write('\n');
             delete item;
         }
+        return 0;
     }
     else if(memcmp(cmd, "cd", 3) == 0)
     {
@@ -100,6 +101,21 @@ int ExecCommand(char* cmd)
             delete item;
         }
 
+        return 0;
+    }
+    else if(memcmp(cmd, "shutdown", 8) == 0) {
+        DoSyscall(SYSCALL_SHUTDOWN);
+        return 0;
+    }
+    else if(memcmp(cmd, "reboot", 6) == 0) {
+        DoSyscall(SYSCALL_REBOOT);
+        return 0;
+    }
+    else if(memcmp(cmd, "ldir", 4) == 0) {
+        List<DiskInfo> items = DiskListing();
+        for(DiskInfo item : items) {
+            termWindow->Write(item.identifier); termWindow->Write('\n');
+        }
         return 0;
     }
     else
