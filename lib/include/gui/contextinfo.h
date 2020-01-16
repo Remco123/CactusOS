@@ -3,6 +3,21 @@
 
 #include <types.h>
 
+//Directions a context can be resized in
+enum ResizeDirection
+{
+    None = (0<<0),
+    Top = (1<<0),
+    Right = (1<<1),
+    Bottom = (1<<2),
+    Left = (1<<3)
+};
+
+inline ResizeDirection operator|(ResizeDirection a, ResizeDirection b)
+{
+    return static_cast<ResizeDirection>(static_cast<int>(a) | static_cast<int>(b));
+}
+
 struct ContextInfo
 {
     // To which memory address is the framebuffer mapped on the server side
@@ -26,6 +41,10 @@ struct ContextInfo
     bool supportsTransparency;
     // Can this context be moved to the front using a mouse click in it? (this will be done automatically when set to false)
     bool background;
+    // Can this context be resized in the defined directions?
+    bool allowResize;
+    // In which direction can this context be resized?
+    ResizeDirection resizeDirections;
     // Each context gets it own uniqe id, this way the compositor can find the right context for each message. For example when a keypress occurs.
     int id;
 };

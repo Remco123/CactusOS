@@ -85,6 +85,38 @@ bool prevMouseMiddle = false;
  * Which ID does the next context get on creation? 
 */
 int nextContextID = 1;
+/**
+ * Maximum distance between cursor and edge to see it as resizing
+*/
+const int resizeMaxDistance = 4;
+/**
+ * Color of border for resizing
+*/
+const uint32_t resizeBorderColor = 0xFFAAAAAA;
+/**
+ * Color of rect for resizing
+*/
+const uint32_t resizeRectColor = 0xFF00FF00;
+/**
+ * On which context is the mouse in resize borders
+*/
+ContextInfo* drawResizing = 0;
+/**
+ * In which border is the mouse of the drawResizing context
+*/
+ResizeDirection drawResizeDirection = None;
+/**
+ * Which context are we currently resizing
+*/
+ContextInfo* currentlyResizing = 0;
+/**
+ * In which direction are we currently resizing a context
+*/
+ResizeDirection currentResizeDirection = None;
+/**
+ * This rect will hold the new size of the context while the mouse is moving around
+*/
+Rectangle resizeRectangle(0, 0, 0, 0);
 
 void GUILoop()
 {
@@ -151,6 +183,16 @@ void ApplyDesktopBounds(Rectangle* rect)
         rect->height = HEIGHT - rect->y;// - 1;
     }
 }
+// Check for the given context if the mouse is in a resize border
+void CheckContextResizeBorders(int mouseX, int mouseY, ContextInfo* c, bool* top, bool* right, bool* bottom, bool* left)
+{
+    Rectangle cr(c->width, c->height, c->x, c->y);
+
+    *top = Math::Abs(cr.y - mouseY) < resizeMaxDistance                 &&    (c->resizeDirections & Top);
+    *right = Math::Abs(cr.x + cr.width - mouseX) < resizeMaxDistance    &&    (c->resizeDirections & Right);
+    *bottom = Math::Abs(cr.y + cr.height - mouseY) < resizeMaxDistance  &&    (c->resizeDirections & Bottom);
+    *left = Math::Abs(cr.x - mouseX) < resizeMaxDistance                &&    (c->resizeDirections & Left);
+}
 
 int main()
 {
@@ -176,6 +218,11 @@ int main()
 
     Print("Requesting direct keyboard input\n");
     Process::BindSTDIO(-1, Process::ID);
+
+    currentlyResizing = 0;
+    drawResizing = 0;
+    currentResizeDirection = None;
+    drawResizeDirection = None;
 
     contextList = new List<ContextInfo*>(); contextList->Clear();
     dirtyRectList = new List<Rectangle>(); dirtyRectList->Clear();
@@ -238,6 +285,8 @@ void HandleMessage(IPCMessage msg)
             info->clientID = msg.source;
             info->supportsTransparency = false;
             info->background = false;
+            info->allowResize = false;
+            info->resizeDirections = (Top | Right | Bottom | Left);
             info->id = nextContextID++;
 
             newContextAddress += pageRoundUp(bytes);
@@ -330,7 +379,25 @@ void UpdateDesktop()
             for(int hOffset = 0; hOffset < contextRectangle.height; hOffset++)
                 memcpy((backBuffer + (contextRectangle.y+hOffset)*WIDTH*4 + contextRectangle.x*4), (void*)(info->virtAddrServer + leftOffset*4 + (topOffset + hOffset)*info->width*4), contextRectangle.width * 4);
         }
+
+        if(info == drawResizing) { //Context has mouse in resize border
+            contextRectangle.width -= 1;
+            contextRectangle.height -= 1;
+
+            if(drawResizeDirection & Top)
+                backBufferCanvas->DrawLine(resizeBorderColor, contextRectangle.x, contextRectangle.y, contextRectangle.x + contextRectangle.width, contextRectangle.y);
+            if(drawResizeDirection & Right)
+                backBufferCanvas->DrawLine(resizeBorderColor, contextRectangle.x + contextRectangle.width, contextRectangle.y, contextRectangle.x + contextRectangle.width, contextRectangle.y + contextRectangle.height);
+            if(drawResizeDirection & Bottom)
+                backBufferCanvas->DrawLine(resizeBorderColor, contextRectangle.x, contextRectangle.y + contextRectangle.height, contextRectangle.x + contextRectangle.width, contextRectangle.y + contextRectangle.height);
+            if(drawResizeDirection & Left)
+                backBufferCanvas->DrawLine(resizeBorderColor, contextRectangle.x, contextRectangle.y, contextRectangle.x, contextRectangle.y + contextRectangle.height);
+        }
     }
+    if(currentlyResizing != 0) { //We are resizing a context at the moment
+        backBufferCanvas->DrawRect(resizeRectColor, resizeRectangle.x, resizeRectangle.y, resizeRectangle.width-1, resizeRectangle.height-1);
+    }
+
     DrawCursor();
 
     //Swap buffers
@@ -383,25 +450,53 @@ void ProcessEvents()
     if(mouseLeft!=prevMouseLeft || mouseRight!=prevMouseRight || mouseMiddle!=prevMouseMiddle)
     {
         ContextInfo* info = FindTargetContext(curMouseX, curMouseY);
+
+        uint8_t changedButton;
+        if(mouseLeft!=prevMouseLeft)
+            changedButton = 0;
+        else if(mouseMiddle!=prevMouseMiddle)
+            changedButton = 1;
+        else
+            changedButton = 2;
+
         if(info != 0) {
-            uint8_t changedButton;
-            if(mouseLeft!=prevMouseLeft)
-                changedButton = 0;
-            else if(mouseMiddle!=prevMouseMiddle)
-                changedButton = 1;
-            else
-                changedButton = 2;
+            bool sendEvent = true;
+            if(changedButton == 0 && info->allowResize && mouseLeft) { //Left mouse button has changed, check for resize
+                bool top, right, bottom, left;
+                CheckContextResizeBorders(curMouseX, curMouseY, info, &top, &right, &bottom, &left);
+                if(top || right || bottom || left) { //Start resizing context
+                    currentlyResizing = info;
+                    currentResizeDirection = ((top ? Top : None) | (right ? Right : None) | (bottom ? Bottom : None) | (left ? Left : None));
+                    sendEvent = false;
+                    resizeRectangle = Rectangle(info->width-1, info->height-1, info->x, info->y);
 
-            //Check if the mouse has been held down or up
-            bool mouseDown = changedButton == 0 ? mouseLeft : (changedButton == 1 ? mouseMiddle : (changedButton == 2 ? mouseRight : 0));
-            IPCSend(info->clientID, IPC_TYPE_GUI_EVENT, mouseDown ? EVENT_TYPE_MOUSEDOWN : EVENT_TYPE_MOUSEUP, curMouseX, curMouseY, changedButton);
-
-            if(mouseDown && !info->background)
-            {
-                //Move window to the front
-                contextList->Remove(info);
-                contextList->push_front(info);
+                    Print("GUI: Start window resize %d in dir %b\n", info->id, (int)currentResizeDirection);
+                }
             }
+            else if(changedButton == 0 && currentlyResizing != 0) //Mouse release while resizing context
+                sendEvent = false;
+
+            if(sendEvent) {
+                //Check if the mouse has been held down or up
+                bool mouseDown = changedButton == 0 ? mouseLeft : (changedButton == 1 ? mouseMiddle : (changedButton == 2 ? mouseRight : 0));
+                IPCSend(info->clientID, IPC_TYPE_GUI_EVENT, mouseDown ? EVENT_TYPE_MOUSEDOWN : EVENT_TYPE_MOUSEUP, curMouseX, curMouseY, changedButton);
+
+                if(mouseDown && !info->background)
+                {
+                    //Move window to the front
+                    contextList->Remove(info);
+                    contextList->push_front(info);
+                }
+            }
+        }
+        if(changedButton == 0 && currentlyResizing != 0 && !mouseLeft) { //Left mouse up
+            Print("GUI: Stop window resize of context %d\n", currentlyResizing->id);
+
+            //Remove green border from screen
+            //Could be more efficient but this works fine
+            dirtyRectList->push_back(Rectangle(WIDTH, HEIGHT, 0, 0));
+            currentResizeDirection = None;
+            currentlyResizing = 0;
         }
     }
 
@@ -410,6 +505,10 @@ void ProcessEvents()
     ////////////
     if(curMouseX != prevMouseX || curMouseY != prevMouseY)
     {
+        //Reset resize vars
+        drawResizing = 0;
+        drawResizeDirection = None;
+
         //Which context was under the previous mouse
         ContextInfo* prevMouseInfo = FindTargetContext(prevMouseX, prevMouseY);
         //Which context is under the current mouse
@@ -420,7 +519,40 @@ void ProcessEvents()
         
         if(curMouseInfo != 0 && curMouseInfo != prevMouseInfo)
             IPCSend(curMouseInfo->clientID, IPC_TYPE_GUI_EVENT, EVENT_TYPE_MOUSEMOVE, prevMouseX, prevMouseY, curMouseX, curMouseY);
-    
+        
+        // Check for resize event
+        if(curMouseInfo != 0 && curMouseInfo->allowResize && currentlyResizing == 0) {            
+            bool top, right, bottom, left;
+            CheckContextResizeBorders(curMouseX, curMouseY, curMouseInfo, &top, &right, &bottom, &left);
+
+            if(top || right || bottom || left) {
+                drawResizing = curMouseInfo;
+                drawResizeDirection = ((top ? Top : None) | (right ? Right : None) | (bottom ? Bottom : None) | (left ? Left : None));
+            }
+        }
+        else if(currentlyResizing != 0 && currentlyResizing->allowResize) {
+            Print("GUI: Window Resize of context %d in dir %b\n", currentlyResizing->id, (int)currentResizeDirection);
+
+            Rectangle tempRect = resizeRectangle;
+            if(currentResizeDirection & Top) {
+                tempRect.y -= (prevMouseY - curMouseY);
+                tempRect.height += (prevMouseY - curMouseY);
+            }
+            if(currentResizeDirection & Right) {
+                tempRect.width -= (prevMouseX - curMouseX);
+            }
+            if(currentResizeDirection & Bottom) {
+                tempRect.height -= (prevMouseY - curMouseY);
+            }
+            if(currentResizeDirection & Left) {
+                tempRect.x -= (prevMouseX - curMouseX);
+                tempRect.width += (prevMouseX - curMouseX);
+            }
+            ApplyDesktopBounds(&tempRect);
+            //Add dirty rect for whole desktop, saves some calculations
+            dirtyRectList->push_back(Rectangle(WIDTH, HEIGHT, 0, 0));
+            resizeRectangle = tempRect;
+        }
     }
 
     prevMouseLeft = mouseLeft;
