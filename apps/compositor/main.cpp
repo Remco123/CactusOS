@@ -13,6 +13,7 @@
 #include <systeminfo.h>
 #include <gui/contextinfo.h>
 #include <math.h>
+#include <gui/contextheap.h>
 #include "cursor.h"
 
 using namespace LIBCactusOS;
@@ -25,6 +26,7 @@ void UpdateDesktop();
 void RemovePreviousCursor();
 void DrawCursor();
 void ProcessEvents();
+void ResizeContext(ContextInfo* c, Rectangle newSize);
 extern uint8_t* LoadBackground(char*); //In background.cpp
 
 //////////
@@ -41,10 +43,6 @@ List<ContextInfo*>* contextList;
  * All the rectangles that need to be redrawn on the next iteration
 */
 List<Rectangle>* dirtyRectList;
-/**
- * To wich address are context mapped in virtual memory?
-*/
-uint32_t newContextAddress = 0xA0000000;
 /**
  * The double buffer
 */
@@ -219,6 +217,9 @@ int main()
     Print("Requesting direct keyboard input\n");
     Process::BindSTDIO(-1, Process::ID);
 
+    Print("Preparing Context Memory allocation\n");
+    ContextHeap::Init();
+
     currentlyResizing = 0;
     drawResizing = 0;
     currentResizeDirection = None;
@@ -268,16 +269,17 @@ void HandleMessage(IPCMessage msg)
 
             uint32_t bytes = width * height * 4 + sizeof(ContextInfo);
             uint32_t virtAddrC = msg.arg2;
-            Print("Process %d requested a gui context of %d bytes at %x (w=%d,h=%d,x=%d,y=%d)\n", msg.source, bytes, virtAddrC, width, height, x, y);
-            if(Process::CreateSharedMemory(msg.source, newContextAddress, virtAddrC, pageRoundUp(bytes)) == false) {
+            uint32_t contextAddress = ContextHeap::AllocateArea(pageRoundUp(bytes) / 0x1000);
+            Print("Process %d requested a gui context of %d bytes at %x (w=%d,h=%d,x=%d,y=%d) mapping to %x\n", msg.source, bytes, virtAddrC, width, height, x, y, contextAddress);
+            if(Process::CreateSharedMemory(msg.source, contextAddress, virtAddrC, pageRoundUp(bytes)) == false) {
                 Print("Error creating shared memory\n");
                 break;
             }
 
-            ContextInfo* info = (ContextInfo*)newContextAddress;
+            ContextInfo* info = (ContextInfo*)contextAddress;
             info->bytes = bytes;
             info->virtAddrClient = virtAddrC + sizeof(ContextInfo);
-            info->virtAddrServer = newContextAddress + sizeof(ContextInfo);
+            info->virtAddrServer = contextAddress + sizeof(ContextInfo);
             info->width = width;
             info->height = height;
             info->x = x;
@@ -289,7 +291,6 @@ void HandleMessage(IPCMessage msg)
             info->resizeDirections = (Top | Right | Bottom | Left);
             info->id = nextContextID++;
 
-            newContextAddress += pageRoundUp(bytes);
             contextList->push_front(info);
 
             //Send response to client
@@ -321,9 +322,12 @@ void HandleMessage(IPCMessage msg)
                     //Add a dirty rect at the old position of the context
                     Rectangle dirtyRect(c->width, c->height, c->x, c->y);
                     dirtyRectList->push_back(dirtyRect);
+
+                    //Free area of virtual allocated memory
+                    ContextHeap::FreeArea(c->virtAddrServer + sizeof(ContextInfo), pageRoundUp(c->bytes) / 0x1000);
                     
                     //Free shared memory
-                    if(!Process::DeleteSharedMemory(c->clientID, c->virtAddrServer, c->virtAddrClient, pageRoundUp(c->bytes)))
+                    if(!Process::DeleteSharedMemory(c->clientID, c->virtAddrServer - sizeof(ContextInfo), c->virtAddrClient - sizeof(ContextInfo), pageRoundUp(c->bytes)))
                         Log(Error, "Could not remove shared memory");
                 }
             }
@@ -491,6 +495,7 @@ void ProcessEvents()
         }
         if(changedButton == 0 && currentlyResizing != 0 && !mouseLeft) { //Left mouse up
             Print("GUI: Stop window resize of context %d\n", currentlyResizing->id);
+            ResizeContext(currentlyResizing, resizeRectangle);
 
             //Remove green border from screen
             //Could be more efficient but this works fine
@@ -531,7 +536,7 @@ void ProcessEvents()
             }
         }
         else if(currentlyResizing != 0 && currentlyResizing->allowResize) {
-            Print("GUI: Window Resize of context %d in dir %b\n", currentlyResizing->id, (int)currentResizeDirection);
+            //Print("GUI: Window Resize of context %d in dir %b\n", currentlyResizing->id, (int)currentResizeDirection);
 
             Rectangle tempRect = resizeRectangle;
             if(currentResizeDirection & Top) {
@@ -567,4 +572,20 @@ void ProcessEvents()
         ContextInfo* sendTo = contextList->GetAt(0); //Send key to the context currenly in focus
         IPCSend(sendTo->clientID, IPC_TYPE_GUI_EVENT, EVENT_TYPE_KEYPRESS, (uint32_t)key, (uint32_t)sendTo->id);
     }
+}
+void ResizeContext(ContextInfo* c, Rectangle newSize)
+{
+    if(newSize.width < 0) {
+        newSize.x += newSize.width;
+        newSize.width = -newSize.width;
+    }
+    if(newSize.height < 0) {
+        newSize.y += newSize.height;
+        newSize.height = -newSize.height;
+    }
+
+    //c->width = newSize.width;
+    //c->height = newSize.height;
+    //c->x = newSize.x;
+    //c->y = newSize.y;
 }

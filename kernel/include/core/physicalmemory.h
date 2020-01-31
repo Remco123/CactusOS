@@ -45,8 +45,8 @@ namespace CactusOS
                 return memoryArray[bit / 32] &  (1 << (bit % 32));
             }
 
-            static int FirstFree ();
-            static int FirstFreeSize (common::uint32_t size);
+            static common::uint32_t FirstFree ();
+            static common::uint32_t FirstFreeSize (common::uint32_t size);
         public:
             static void Initialize(common::uint32_t size, common::uint32_t bitmap);
             static void SetRegionFree(common::uint32_t base, common::uint32_t size);

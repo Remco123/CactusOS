@@ -10,7 +10,7 @@ uint32_t PhysicalMemoryManager::usedBlocks = 0;
 uint32_t PhysicalMemoryManager::maximumBlocks = 0;
 uint32_t *PhysicalMemoryManager::memoryArray = 0;
 
-int PhysicalMemoryManager::FirstFree()
+uint32_t PhysicalMemoryManager::FirstFree()
 {
     for (uint32_t i = 0; i < TotalBlocks(); i++)
         if (memoryArray[i] != 0xffffffff)
@@ -24,7 +24,7 @@ int PhysicalMemoryManager::FirstFree()
 
     return -1;
 }
-int PhysicalMemoryManager::FirstFreeSize(uint32_t size)
+uint32_t PhysicalMemoryManager::FirstFreeSize(uint32_t size)
 {
     if (size == 0)
         return -1;
@@ -41,7 +41,7 @@ int PhysicalMemoryManager::FirstFreeSize(uint32_t size)
                 if (!(memoryArray[i] & bit))
                 {
 
-                    int startingBit = i * 32;
+                    uint32_t startingBit = i * 32;
                     startingBit += j; //get the free bit in the dword at index i
 
                     uint32_t free = 0; //loop through each bit to see if its enough space
@@ -72,7 +72,7 @@ void PhysicalMemoryManager::Initialize(uint32_t size, uint32_t bitmap)
     maximumBlocks = size / BLOCK_SIZE;
     usedBlocks = maximumBlocks; //We use all at startup
 
-    MemoryOperations::memset(memoryArray, 0xf, usedBlocks / BLOCKS_PER_BYTE);
+    MemoryOperations::memset(memoryArray, 0xFF, usedBlocks / BLOCKS_PER_BYTE);
 
     BootConsole::Write("Bitmap size: ");
     BootConsole::Write(Convert::IntToString(GetBitmapSize() / 1024));
@@ -81,9 +81,9 @@ void PhysicalMemoryManager::Initialize(uint32_t size, uint32_t bitmap)
 }
 void PhysicalMemoryManager::SetRegionFree(uint32_t base, uint32_t size)
 {
-    int align = base / BLOCK_SIZE;
+    uint32_t align = base / BLOCK_SIZE;
 
-    for (int blocks = size / BLOCK_SIZE; blocks > 0; blocks--)
+    for (uint32_t blocks = size / BLOCK_SIZE; blocks > 0; blocks--)
     {
         UnsetBit(align++);
         usedBlocks--;
@@ -93,9 +93,9 @@ void PhysicalMemoryManager::SetRegionFree(uint32_t base, uint32_t size)
 }
 void PhysicalMemoryManager::SetRegionUsed(uint32_t base, uint32_t size)
 {
-    int align = base / BLOCK_SIZE;
+    uint32_t align = base / BLOCK_SIZE;
 
-    for (int blocks = size / BLOCK_SIZE; blocks > 0; blocks--)
+    for (uint32_t blocks = size / BLOCK_SIZE; blocks > 0; blocks--)
     {
         SetBit(align++);
         usedBlocks++;
@@ -110,7 +110,7 @@ void PhysicalMemoryManager::ParseMemoryMap(const multiboot_info_t* mbi)
 
     grub_multiboot_memory_map_t *mmap = (grub_multiboot_memory_map_t *)phys2virt(mbi->mmap_addr);
     BootConsole::WriteLine("-------------------------------------------------");
-    while ((unsigned int)mmap < phys2virt(mbi->mmap_addr) + mbi->mmap_length)
+    while ((uint32_t)mmap < phys2virt(mbi->mmap_addr) + mbi->mmap_length)
     {
         BootConsole::Write("|->   0x"); Print::printfHex32(mmap->base_addr_low); BootConsole::Write("   ");
         BootConsole::Write(Convert::IntToString(mmap->length_low / 1024)); BootConsole::Write(" Kb      ");
@@ -124,7 +124,7 @@ void PhysicalMemoryManager::ParseMemoryMap(const multiboot_info_t* mbi)
         }
         BootConsole::WriteLine();
 
-        mmap = (grub_multiboot_memory_map_t*)((unsigned int)mmap + mmap->size + sizeof(unsigned int));
+        mmap = (grub_multiboot_memory_map_t*)((uint32_t)mmap + mmap->size + sizeof(uint32_t));
     }
     BootConsole::WriteLine("-------------------------------------------------");
 }
@@ -134,7 +134,7 @@ void* PhysicalMemoryManager::AllocateBlock()
     if (FreeBlocks() <= 0)
         return 0;
 
-    int frame = FirstFree();
+    uint32_t frame = FirstFree();
 
     if (frame == -1)
         return 0;
@@ -149,7 +149,7 @@ void* PhysicalMemoryManager::AllocateBlock()
 void PhysicalMemoryManager::FreeBlock(void* ptr)
 {
     uint32_t addr = (uint32_t)ptr;
-    int frame = addr / BLOCK_SIZE;
+    uint32_t frame = addr / BLOCK_SIZE;
 
     UnsetBit(frame);
 
@@ -160,7 +160,7 @@ void* PhysicalMemoryManager::AllocateBlocks(uint32_t size)
     if (FreeBlocks() <= size)
         return 0; //not enough space
 
-    int frame = FirstFreeSize(size);
+    uint32_t frame = FirstFreeSize(size);
 
     if (frame == -1)
         return 0; //not enough space
@@ -176,7 +176,7 @@ void* PhysicalMemoryManager::AllocateBlocks(uint32_t size)
 void PhysicalMemoryManager::FreeBlocks(void *ptr, uint32_t size)
 {
     uint32_t addr = (uint32_t)ptr;
-    int frame = addr / BLOCK_SIZE;
+    uint32_t frame = addr / BLOCK_SIZE;
 
     for (uint32_t i = 0; i < size; i++)
         UnsetBit(frame + i);

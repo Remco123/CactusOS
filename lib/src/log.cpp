@@ -113,7 +113,7 @@ void LIBCactusOS::Print(const char* __restrict__ format, ...)
                 /* if the nue is == the floored nue (integer portion),
                 then there are no more decimal places that are non-zero. */
                 if(n == (double)((int)n))
-                    return;
+                    break;
             
                 // subtract the integer portion
                 n -= (double)((int)n);

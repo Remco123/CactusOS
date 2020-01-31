@@ -6,16 +6,18 @@
 #include <proc.h>
 #include <time.h>
 #include <gui/contextinfo.h>
+#include <gui/contextheap.h>
+#include <gui/directgui.h>
 
 using namespace LIBCactusOS;
 
 List<Context*>* GUI::contextList = 0;
 int GUI::compositorPID = 3;
-uint32_t GUI::curVirtualFramebufferAddress = 0xA0000000;
 
 void GUI::Initialize()
 {
     GUI::contextList = new List<Context*>();
+    ContextHeap::Init();
 }
 
 void GUI::CleanUp()
@@ -128,20 +130,16 @@ Context* GUI::FindTargetContext(int mouseX, int mouseY)
 
 Context* GUI::RequestContext(int width, int height, int x, int y)
 {
-    if(IPCSend(compositorPID, IPC_TYPE_GUI, COMPOSITOR_REQUESTCONTEXT, curVirtualFramebufferAddress, width, height, x, y) != SYSCALL_RET_SUCCES)
+    uint32_t contextAddress = ContextHeap::AllocateArea(pageRoundUp(width * height * 4 + sizeof(ContextInfo)) / 0x1000);
+    if(IPCSend(compositorPID, IPC_TYPE_GUI, COMPOSITOR_REQUESTCONTEXT, contextAddress, width, height, x, y) != SYSCALL_RET_SUCCES)
         return 0;
 
     //Wait for response from server
     IPCMessage response = ICPReceive(compositorPID, 0, IPC_TYPE_GUI);
     if(response.arg1 == 1) {
-        uint32_t oldFB = curVirtualFramebufferAddress;
-        uint32_t newFB = pageRoundUp(oldFB + width*height*4 + sizeof(ContextInfo));
-        
-        curVirtualFramebufferAddress = newFB;
-
         //Create context struct
-        Context* ret = new Context(oldFB + sizeof(ContextInfo), width, height);
-        ret->sharedContextInfo = (ContextInfo*)oldFB;
+        Context* ret = new Context(contextAddress + sizeof(ContextInfo), width, height);
+        ret->sharedContextInfo = (ContextInfo*)contextAddress;
 
         //Add it to our list
         contextList->push_back(ret);

@@ -25,11 +25,6 @@ namespace LIBCactusOS
     {
     private:
         static Context* FindTargetContext(int m_x, int m_y);
-        
-        /**
-         * The address whera a new context will be mapped to
-        */
-        static uint32_t curVirtualFramebufferAddress;
     public:
         /**
          * The PID used by the compositor process

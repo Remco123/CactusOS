@@ -3,6 +3,8 @@
 #include <ipc.h>
 #include <syscall.h>
 #include <gui/gui.h>
+#include <gui/contextheap.h>
+#include <heap.h>
 
 using namespace LIBCactusOS;
 
@@ -44,11 +46,12 @@ void Context::MoveToPosition(int newX, int newY)
 
 void Context::CloseContext()
 {
+    ContextHeap::FreeArea(this->sharedContextInfo->virtAddrClient - sizeof(ContextInfo), pageRoundUp(this->sharedContextInfo->bytes) / 0x1000);
+    GUI::contextList->Remove(this);
+
     IPCSend(GUI::compositorPID, IPC_TYPE_GUI, COMPOSITOR_CONTEXTCLOSE, this->sharedContextInfo->id);
     if(ICPReceive(GUI::compositorPID, 0, IPC_TYPE_GUI).arg1 != 1)
         Log(Error, "Did not receive ack from compositor when removing context");
-    
-    GUI::contextList->Remove(this);
 }
 
 void Context::OnMouseDown(int x_abs, int y_abs, uint8_t button)

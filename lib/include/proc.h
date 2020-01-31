@@ -9,6 +9,14 @@
 
 namespace LIBCactusOS
 {
+    #define DECLARE_LOCK(name) volatile int name ## Locked
+    #define LOCK(name) \
+	    while (name ## Locked == 1) asm("pause"); \
+	    __sync_synchronize();
+    #define UNLOCK(name) \
+	    __sync_synchronize(); \
+	    name ## Locked = 0;
+
     class Process
     {
     private:
