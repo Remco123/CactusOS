@@ -33,6 +33,11 @@ namespace LIBCactusOS
          * Create a new instance of the Rectangle Class
         */
         Rectangle(int w, int h, int x = 0, int y = 0);
+        
+        /**
+         * Create a new instance of the Rectangle Class
+        */
+        Rectangle();
 
         /**
          * Get the area of this rectangle

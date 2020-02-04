@@ -11,6 +11,7 @@ namespace LIBCactusOS
     #define EVENT_TYPE_MOUSEUP 1
     #define EVENT_TYPE_MOUSEMOVE 2
     #define EVENT_TYPE_KEYPRESS 3
+    #define EVENT_TYPE_RESIZE 4
     
     //Communication to the compositor definitions
     #define COMPOSITOR_REQUESTCONTEXT 1

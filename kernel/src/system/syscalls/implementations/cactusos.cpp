@@ -331,7 +331,13 @@ CPUState* CactusOSSyscalls::HandleSyscall(CPUState* state)
 
                 System::listings->GetAt(type)->EndListing(System::scheduler->CurrentThread());
             }
-            break;            
+            break;
+        case SYCALL_SET_SCHEDULER:
+            {
+                bool active = (bool)state->EBX;
+                System::scheduler->Enabled = active;
+            }
+            break;     
         default:
             Log(Warning, "Got unkown syscall %d from process %d", sysCall, proc->id);
             state->EAX = SYSCALL_RET_ERROR;

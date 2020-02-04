@@ -12,6 +12,13 @@ Rectangle::Rectangle(int w, int h, int x_p, int y_p)
     this->x = x_p;
     this->y = y_p;
 }
+Rectangle::Rectangle()
+{
+    this->width = 0;
+    this->height = 0;
+    this->x = 0;
+    this->y = 0;
+}
 int Rectangle::Area()
 {
     return this->width * this->height;

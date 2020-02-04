@@ -19,7 +19,6 @@ int main()
 {
     Window* mainWindow = new Window(600, 400, WIDTH/2 - 300, HEIGHT/2 - 200);
     mainWindow->titleString = "CactusOS Terminal";
-    mainWindow->contextBase->sharedContextInfo->allowResize = true;
 
     termWindow = new TerminalControl(mainWindow->width, mainWindow->height - 30);
     mainWindow->AddChild(termWindow);

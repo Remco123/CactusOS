@@ -102,6 +102,19 @@ void GUI::ProcessEvents()
             }
         }
     }
+    else if(guiEventType == EVENT_TYPE_RESIZE)
+    {
+        for(int i = 0; i < contextList->size(); i++) {
+            Context* c = contextList->GetAt(i);
+            if(c->sharedContextInfo == 0)
+                continue;
+
+            if(c->sharedContextInfo->id == guiEvent.arg2) {
+                c->OnResize(Rectangle(guiEvent.arg3, guiEvent.arg4, guiEvent.arg5, guiEvent.arg6));
+                break; // Quit loop
+            }
+        }
+    }
 }
 
 void GUI::DrawGUI()
@@ -130,7 +143,7 @@ Context* GUI::FindTargetContext(int mouseX, int mouseY)
 
 Context* GUI::RequestContext(int width, int height, int x, int y)
 {
-    uint32_t contextAddress = ContextHeap::AllocateArea(pageRoundUp(width * height * 4 + sizeof(ContextInfo)) / 0x1000);
+    uint32_t contextAddress = ContextHeap::AllocateArea(pageRoundUp(WIDTH * HEIGHT * 4 + sizeof(ContextInfo)) / 0x1000);
     if(IPCSend(compositorPID, IPC_TYPE_GUI, COMPOSITOR_REQUESTCONTEXT, contextAddress, width, height, x, y) != SYSCALL_RET_SUCCES)
         return 0;
 

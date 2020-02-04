@@ -267,7 +267,7 @@ void HandleMessage(IPCMessage msg)
             uint32_t x = msg.arg5;
             uint32_t y = msg.arg6;
 
-            uint32_t bytes = width * height * 4 + sizeof(ContextInfo);
+            uint32_t bytes = WIDTH * HEIGHT * 4 + sizeof(ContextInfo); //TODO: Actualy use width and height and realocate memory when resizing
             uint32_t virtAddrC = msg.arg2;
             uint32_t contextAddress = ContextHeap::AllocateArea(pageRoundUp(bytes) / 0x1000);
             Print("Process %d requested a gui context of %d bytes at %x (w=%d,h=%d,x=%d,y=%d) mapping to %x\n", msg.source, bytes, virtAddrC, width, height, x, y, contextAddress);
@@ -584,8 +584,12 @@ void ResizeContext(ContextInfo* c, Rectangle newSize)
         newSize.height = -newSize.height;
     }
 
-    //c->width = newSize.width;
-    //c->height = newSize.height;
-    //c->x = newSize.x;
-    //c->y = newSize.y;
+    Rectangle oldSize = Rectangle(c->width, c->height, c->x, c->y);
+
+    c->width = newSize.width;
+    c->height = newSize.height;
+    c->x = newSize.x;
+    c->y = newSize.y;
+
+    IPCSend(c->clientID, IPC_TYPE_GUI_EVENT, EVENT_TYPE_RESIZE, c->id, oldSize.width, oldSize.height, oldSize.x, oldSize.height);
 }

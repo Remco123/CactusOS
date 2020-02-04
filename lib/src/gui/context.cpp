@@ -89,3 +89,17 @@ void Context::OnKeyPress(char key)
     
     Window->OnKeyPress(key);
 }
+void Context::OnResize(Rectangle oldSize)
+{
+    this->Resize.Invoke(this, ResizeArgs(oldSize));
+    this->canvas->Width = this->sharedContextInfo->width;
+    this->canvas->Height = this->sharedContextInfo->height;
+    
+    if(this->Window == 0 || this->sharedContextInfo == 0)
+        return;
+    
+    Window->x = this->sharedContextInfo->x;
+    Window->y = this->sharedContextInfo->y;
+    Window->width = this->sharedContextInfo->width;
+    Window->height = this->sharedContextInfo->height;
+}

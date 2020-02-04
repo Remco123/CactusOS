@@ -75,6 +75,10 @@ namespace LIBCactusOS
          * Called when a key is pressed and this is the active context.
         */
         void OnKeyPress(char key);
+        /**
+         * Called when contex is resized
+        */
+        void OnResize(Rectangle old);
     };
 }
 

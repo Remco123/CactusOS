@@ -90,6 +90,10 @@ namespace LIBCactusOS
         */
         static void Unblock(int procPID, int thread = 0);
         /**
+         * Dissable or enable kernel scheduler
+        */
+        static void SetScheduler(bool active);
+        /**
          * Get a list from the kernel containing all known processes
         */
         static List<ProcessInfo*> GetProcessList();
