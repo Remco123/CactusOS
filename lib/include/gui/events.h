@@ -162,7 +162,6 @@ namespace LIBCactusOS
     CREATE_ARGUMENT_CLASS4(MouseMoveArgs, int, prevX, int, prevY, int, newX, int, newY)
     CREATE_ARGUMENT_CLASS3(MouseButtonArgs, int, x, int, y, int, button)
     CREATE_ARGUMENT_CLASS1(KeypressArgs, char, key)
-    CREATE_ARGUMENT_CLASS1(ResizeArgs, Rectangle, oldSize)
 
     /**
      * An object that hosts multiple gui events
@@ -174,10 +173,9 @@ namespace LIBCactusOS
         EventHandlerList<MouseButtonArgs> MouseUp;
         EventHandlerList<MouseButtonArgs> MouseClick;
         EventHandlerList<KeypressArgs> KeyPress;
-        EventHandlerList<ResizeArgs> Resize;
 
         EventObject()
-        : MouseDown(), MouseUp(), MouseClick(), KeyPress(), Resize()
+        : MouseDown(), MouseUp(), MouseClick(), KeyPress()
         {        }
     };
 }

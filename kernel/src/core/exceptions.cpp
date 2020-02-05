@@ -23,6 +23,9 @@ uint32_t Exceptions::GeneralProtectionFault(uint32_t esp)
     BootConsole::WriteLine("Got General Protection Fault Exception");
 
     CPUState* state = (CPUState*)esp;
+    BootConsole::Write("EIP: 0x");
+    Print::printfHex32(state->EIP);
+    BootConsole::WriteLine();
 
     if(state->ErrorCode != 0)
     {
