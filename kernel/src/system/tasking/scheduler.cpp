@@ -1,13 +1,14 @@
 #include <system/tasking/scheduler.h>
 
 #include <system/system.h>
+#include <core/tss.h>
 
 using namespace CactusOS;
 using namespace CactusOS::common;
 using namespace CactusOS::system;
 using namespace CactusOS::core;
 
-extern "C" void enter_usermode(uint32_t location, uint32_t stackAddress);
+extern "C" void enter_usermode(uint32_t location, uint32_t stackAddress, uint32_t flags);
 
 Scheduler::Scheduler()
 : InterruptHandler(0x20)
@@ -176,7 +177,7 @@ void Scheduler::InitialThreadUserJump(Thread* thread)
     //Ack Timer interrupt
     outportb(0x20, 0x20);
 
-    enter_usermode(thread->regsPtr->EIP, (uint32_t)thread->userStack + thread->userStackSize);
+    enter_usermode(thread->regsPtr->EIP, (uint32_t)thread->userStack + thread->userStackSize, thread->regsPtr->EFLAGS);
 }
 
 void Scheduler::ForceSwitch()

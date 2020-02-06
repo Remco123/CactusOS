@@ -48,8 +48,8 @@ Thread* ThreadHelper::CreateFromFunction(void (*entryPoint)(), bool isKernel, ui
     //Default state is wait here
     result->state = ThreadState::Ready;
 
-    //The thread does not have a parent by default
-    result->parent = 0;
+    //Assign thread parent
+    result->parent = parent;
 
     //Create a buffer for the fpu
     result->FPUBuffer = (uint8_t*)KernelHeap::allignedMalloc(512, 16);

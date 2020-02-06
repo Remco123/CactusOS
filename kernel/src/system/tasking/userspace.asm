@@ -17,7 +17,7 @@ enter_usermode:
 
    pushf  ; push flags onto stack
    pop eax ; pop into eax
-   or eax, 0x200 ; set IF (enable interrupts)
+   or eax, [ebp+12] ; Copy EFLAGS from arg 3
    push eax ; push eflags
    push 0x18 | 3 ; push CS, requested priv. level = 3
 
