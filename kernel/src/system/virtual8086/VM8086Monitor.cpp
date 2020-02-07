@@ -1,4 +1,5 @@
 #include <system/virtual8086/VM86Monitor.h>
+#include <common/memoryoperations.h>
 
 using namespace CactusOS;
 using namespace CactusOS::common;
@@ -122,11 +123,7 @@ uint32_t Virtual8086Monitor::HandleInterrupt(uint32_t esp)
         uint8_t intNo = peekb(state->CS, ++state->IP);
         if(intNo == 0xFE)
         { // special interrupt
-            //memcpy(state, &vm86CPUState, sizeof(MachineState));
-            uint32_t size = sizeof(CPUState);
-            uint8_t *dst = (uint8_t *)state;
-            uint8_t *src = (uint8_t *)&vm86CPUState;
-            while(size--) *dst++ = *src++;
+            MemoryOperations::memcpy(state, &vm86CPUState, sizeof(CPUState));
             return esp;
         }
         pushw(state, state->FLAGS);

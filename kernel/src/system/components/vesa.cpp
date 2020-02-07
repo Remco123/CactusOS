@@ -25,8 +25,8 @@ VESAModeInfo* VESA::GetModeInfo(uint16_t mode)
     VESAModeInfo* info = (VESAModeInfo*)0x8000;
     MemoryOperations::memset(info, 0, sizeof(VESAModeInfo));
 
-	VM86Registers regs;
-	MemoryOperations::memset(&regs, 0, sizeof(VM86Registers));
+	VM86Arguments regs;
+	MemoryOperations::memset(&regs, 0, sizeof(VM86Arguments));
 
 	regs.AX = 0x4F01;
 	regs.CX = mode;
@@ -39,9 +39,9 @@ VESAModeInfo* VESA::GetModeInfo(uint16_t mode)
 
 void VESA::SetVideoMode(uint16_t mode)
 {
-	VM86Registers regs;
-	MemoryOperations::memset(&regs, 0, sizeof(VM86Registers));
-	regs.AX = 0x4f02;
+	VM86Arguments regs;
+	MemoryOperations::memset(&regs, 0, sizeof(VM86Arguments));
+	regs.AX = 0x4F02;
 	regs.BX = mode;
 	virtual8086Manager->CallInterrupt(0x10, &regs);
 }
@@ -54,8 +54,8 @@ bool VESA::SelectBestVideoMode()
 	MemoryOperations::memcpy(vesaInfo->Signature, "VBE2", 4);
 	
 	BootConsole::WriteLine("Probing for VBE controller Information");
-	VM86Registers regs;
-	MemoryOperations::memset(&regs, 0, sizeof(VM86Registers));
+	VM86Arguments regs;
+	MemoryOperations::memset(&regs, 0, sizeof(VM86Arguments));
 	regs.AX = 0x4f00;
 	regs.DI = (uint16_t)vesaInfo;
 	virtual8086Manager->CallInterrupt(0x10, &regs);

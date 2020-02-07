@@ -10,9 +10,9 @@ static const uint16_t stackSegment = 0x8000;
 
 CPUState vm86CPUState;
 
-extern "C" uint8_t __VM86CodeStart;
-extern "C" uint8_t __VM86CodeEnd;
-extern "C" uint8_t __Int86;
+extern "C" uint8_t VM86CodeStart;
+extern "C" uint8_t VM86CodeEnd;
+extern "C" uint8_t Int86;
 
 extern "C" uintptr_t cpuGetEIP();
 extern "C" uintptr_t cpuGetESP();
@@ -24,10 +24,8 @@ Virtual8086Manager::Virtual8086Manager()
 : InterruptHandler(0xFD)
 { 
     // install int86 trampoline code in conventional memory
-    uint32_t codeSize = &__VM86CodeEnd - &__VM86CodeStart;
-    uint8_t* dst = (uint8_t*)(codeSegment << 4);
-    uint8_t* src = &__VM86CodeStart;
-    while(codeSize--) *dst++ = *src++;
+    uint32_t codeSize = &VM86CodeEnd - &VM86CodeStart;
+    MemoryOperations::memcpy((uint8_t*)(codeSegment << 4), &VM86CodeStart, codeSize);
 }
 
 uint32_t Virtual8086Manager::HandleInterrupt(common::uint32_t esp)
@@ -53,11 +51,9 @@ void vm86Enter(uint16_t ss, uint16_t sp, uint16_t cs, uint16_t ip, uint32_t arg)
     cpuEnterV86Int(0, ss, sp, cs, ip, arg);
 }
 
-void Virtual8086Manager::CallInterrupt(common::uint8_t intNumber, VM86Registers* regs)
+void Virtual8086Manager::CallInterrupt(common::uint8_t intNumber, VM86Arguments* regs)
 {
-    uint32_t size = sizeof(VM86Registers);
-    uint8_t*dst = (uint8_t*)((codeSegment << 4) + 0x8000);
-    uint8_t*src = (uint8_t*)regs;
-    while(size--) *dst++ = *src++;
-    vm86Enter(stackSegment, 0x0000, codeSegment, &__Int86 - &__VM86CodeStart, intNumber);
+    MemoryOperations::memcpy((uint8_t*)((codeSegment << 4) + 0x8000), (uint8_t*)regs, sizeof(VM86Arguments));
+    vm86Enter(stackSegment, 0x0000, codeSegment, &Int86 - &VM86CodeStart, intNumber);
+    MemoryOperations::memcpy((uint8_t*)regs, (uint8_t*)((codeSegment << 4) + 0x8000), sizeof(VM86Arguments));
 }
