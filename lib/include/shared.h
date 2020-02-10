@@ -20,6 +20,8 @@ namespace LIBCactusOS
         unsigned int heapMemory;
         // Is this a ring 3 process?
         bool isUserspace;
+        // Is process currently blocked (main thread only)
+        bool blocked;
         // Filename of process excecutable
         char fileName[32];
     };

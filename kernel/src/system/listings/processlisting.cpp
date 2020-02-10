@@ -58,6 +58,7 @@ int ProcessListing::GetEntry(Thread* thread, int entry, uint32_t bufPtr)
         targetInfo->isUserspace = item->isUserspace;
         targetInfo->syscallID = item->syscallID;
         targetInfo->threads = item->Threads.size();
+        targetInfo->blocked = (item->Threads[0]->state == ThreadState::Blocked);
         
         return 1;
     }

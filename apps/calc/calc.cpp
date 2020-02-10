@@ -80,10 +80,9 @@ int main()
     newButton->MouseClick += NewClickHandler;
     window1->AddChild(newButton);
 
-    GUI::MakeAsync();
-
-    while(GUI::HasItems()) {
-        Process::Yield();
+    while (GUI::HasItems()) {
+        GUI::DrawGUI();
+        GUI::ProcessEvents();
     }
 
     return 0;

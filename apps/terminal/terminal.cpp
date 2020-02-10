@@ -94,6 +94,7 @@ int ExecCommand(char* cmd)
             termWindow->Write(Convert::IntToString(item->id));
             termWindow->Write(" Treads ");
             termWindow->Write(Convert::IntToString(item->threads));
+            termWindow->Write(item->blocked ? (char*)" Blocked" : (char*)" !Blocked");
             termWindow->Write(" Memory ");
             termWindow->Write(Convert::IntToString(item->heapMemory / 1024));
             termWindow->Write(" Kb");
