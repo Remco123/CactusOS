@@ -37,9 +37,14 @@ extern "C" void _set_debug_traps();
 
 void IdleThread()
 {
+    uint64_t prevTicks = System::pit->Ticks();
     while(1) {
         if(System::usbManager)
             System::usbManager->USBPoll();
+        if(System::apm->Enabled && (System::pit->Ticks() - prevTicks > 500)) {
+            System::apm->CheckAndHandleEvents();
+            prevTicks = System::pit->Ticks();
+        }
         
         System::scheduler->ForceSwitch();
     }
@@ -151,7 +156,7 @@ extern "C" void kernelMain(const multiboot_info_t* mbi, unsigned int multiboot_m
     Process* kernelProcess = ProcessHelper::CreateKernelProcess();
     kernelProcess->Threads.push_back(ThreadHelper::CreateFromFunction(IdleThread, true));
     kernelProcess->Threads[0]->parent = kernelProcess;
-    System::scheduler->AddThread(kernelProcess->Threads[0], false);
+    System::scheduler->AddThread(kernelProcess->Threads[0], true);
 
     Log(Info, "Loading Init.bin");
 

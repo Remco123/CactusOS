@@ -11,6 +11,7 @@
 #include <system/components/graphicsdevice.h>
 #include <system/components/vesa.h>
 #include <system/components/pci.h>
+#include <system/components/apm.h>
 #include <system/virtual8086/VM86Manager.h>
 #include <system/virtual8086/VM86Monitor.h>
 
@@ -79,6 +80,7 @@ namespace CactusOS
             static VFSManager* vfs;
             static Scheduler* scheduler;
             static SystemCallHandler* syscalls;
+            static APMController* apm;
             static LIBCactusOS::SharedSystemInfo* systemInfo;
 
             static ScreenMode screenMode;

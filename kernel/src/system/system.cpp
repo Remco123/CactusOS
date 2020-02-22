@@ -22,6 +22,7 @@ DriverManager* System::driverManager = 0;
 DiskManager* System::diskManager = 0;
 VFSManager* System::vfs = 0;
 Scheduler* System::scheduler = 0;
+APMController* System::apm = 0;
 SystemCallHandler* System::syscalls = 0;
 SharedSystemInfo* System::systemInfo = 0;
 
@@ -113,6 +114,9 @@ void System::Start()
     BootConsole::WriteLine("Setting up found USB devices");
     System::usbManager->AssignAllDrivers();
     System::usbManager->USBPoll();
+
+    //Advanced Power Management
+    System::apm = new APMController();
 
     BootConsole::Write("Found a total of: "); BootConsole::Write(Convert::IntToString(System::diskManager->allDisks.size())); BootConsole::WriteLine(System::diskManager->allDisks.size() > 1 ? (char*)" disks" : (char*)" disk");
     BootConsole::Write("Searching for boot partition");

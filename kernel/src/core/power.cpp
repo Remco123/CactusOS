@@ -289,6 +289,13 @@ void Power::Initialize()
 
 void Power::Poweroff()
 {
+    if(System::apm->Enabled) {
+        Log(Info, "Shutdown via APM");
+        System::apm->SetPowerState(APM_ALL_DEVICE, APM_POWER_OFF);
+    }
+    
+    // Else try ACPI
+
     // SCI_EN is set to 1 if acpi shutdown is possible
     if (SCI_EN == 0)
     {
