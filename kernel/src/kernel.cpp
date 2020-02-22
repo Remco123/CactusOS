@@ -156,7 +156,7 @@ extern "C" void kernelMain(const multiboot_info_t* mbi, unsigned int multiboot_m
     Process* kernelProcess = ProcessHelper::CreateKernelProcess();
     kernelProcess->Threads.push_back(ThreadHelper::CreateFromFunction(IdleThread, true));
     kernelProcess->Threads[0]->parent = kernelProcess;
-    System::scheduler->AddThread(kernelProcess->Threads[0], true);
+    System::scheduler->AddThread(kernelProcess->Threads[0], false);
 
     Log(Info, "Loading Init.bin");
 
