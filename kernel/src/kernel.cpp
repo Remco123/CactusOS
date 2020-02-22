@@ -35,8 +35,10 @@ extern "C" void callConstructors()
 
 extern "C" void _set_debug_traps();
 
+PowerRequest powerRequestState;
 void IdleThread()
 {
+    powerRequestState = None;
     uint64_t prevTicks = System::pit->Ticks();
     while(1) {
         if(System::usbManager)
@@ -45,7 +47,18 @@ void IdleThread()
             System::apm->CheckAndHandleEvents();
             prevTicks = System::pit->Ticks();
         }
+
+        //Handle power state requests from userspace
+        //Processes can not do this themself because the first mb of memory is not mapped for them
+        //And that should not be the case due to security issues :)
+        if(powerRequestState == Reboot) {
+            Power::Reboot();
+        }
+        if(powerRequestState == Shutdown) {
+            Power::Poweroff();
+        }
         
+        //Nothing more to do here
         System::scheduler->ForceSwitch();
     }
 }

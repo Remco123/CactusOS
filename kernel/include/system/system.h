@@ -46,6 +46,13 @@ namespace CactusOS
             GraphicsMode
         };
 
+        enum PowerRequest
+        {
+            None,
+            Shutdown,
+            Reboot
+        };
+
         /**
          * The default stream where processes data is send to.
          * Data is send to the screen/serial output

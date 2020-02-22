@@ -14,6 +14,7 @@ using namespace CactusOS::core;
 using namespace CactusOS::system;
 
 DECLARE_LOCK(stdOutStream);
+extern PowerRequest powerRequestState; //Defined in kernel.cpp
 
 CPUState* CactusOSSyscalls::HandleSyscall(CPUState* state)
 {
@@ -184,19 +185,17 @@ CPUState* CactusOSSyscalls::HandleSyscall(CPUState* state)
         case SYSCALL_SHUTDOWN:
             {
                 Log(Info, "Process requested shutdown");
-                Power::Poweroff();
+                powerRequestState = Shutdown; //Tell kernel process to shutdown on next schedule
                 
-                //We should not return after shutting down
-                state->EAX = SYSCALL_RET_ERROR;
+                state->EAX = SYSCALL_RET_SUCCES;
             }
             break;
         case SYSCALL_REBOOT:
             {
                 Log(Info, "Process requested reboot");
-                Power::Reboot();
+                powerRequestState = Reboot; //Tell kernel process to reboot on next schedule
 
-                //We should not return from a reboot :)
-                state->EAX = SYSCALL_RET_ERROR;
+                state->EAX = SYSCALL_RET_SUCCES;
             }
             break;
         case SYSCALL_EJECT_DISK:
