@@ -67,15 +67,19 @@ namespace LIBCactusOS
         /**
          * Called when mouse is down on window
         */
-        void OnMouseDown(int x_abs, int y_abs, uint8_t button);
+        void OnMouseDown(int x_abs, int y_abs, uint8_t button) override;
         /**
          * Called when mouse is up on window
         */
-        void OnMouseUp(int x_abs, int y_abs, uint8_t button);
+        void OnMouseUp(int x_abs, int y_abs, uint8_t button) override;
         /**
          * Called when mouse is moved on window
         */
-        void OnMouseMove(int prevX_abs, int prevY_abs, int newX_abs, int newY_abs);
+        void OnMouseMove(int prevX_abs, int prevY_abs, int newX_abs, int newY_abs) override;
+        /**
+         * Called when Window is resized
+        */
+        void OnResize(Rectangle old) override;
     };
 }
 

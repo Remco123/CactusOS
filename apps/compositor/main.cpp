@@ -102,7 +102,7 @@ ContextInfo* drawResizing = 0;
 /**
  * In which border is the mouse of the drawResizing context
 */
-ResizeDirection drawResizeDirection = None;
+Direction drawResizeDirection = None;
 /**
  * Which context are we currently resizing
 */
@@ -110,7 +110,7 @@ ContextInfo* currentlyResizing = 0;
 /**
  * In which direction are we currently resizing a context
 */
-ResizeDirection currentResizeDirection = None;
+Direction currentResizeDirection = None;
 /**
  * This rect will hold the new size of the context while the mouse is moving around
 */
@@ -472,7 +472,7 @@ void ProcessEvents()
                     currentlyResizing = info;
                     currentResizeDirection = ((top ? Top : None) | (right ? Right : None) | (bottom ? Bottom : None) | (left ? Left : None));
                     sendEvent = false;
-                    resizeRectangle = Rectangle(info->width-1, info->height-1, info->x, info->y);
+                    resizeRectangle = Rectangle(info->width, info->height, info->x, info->y);
 
                     Print("GUI: Start window resize %d in dir %b\n", info->id, (int)currentResizeDirection);
                 }

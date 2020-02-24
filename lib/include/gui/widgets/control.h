@@ -6,6 +6,7 @@
 #include <list.h>
 #include <gui/canvas.h>
 #include <gui/events.h>
+#include <gui/contextinfo.h>
 
 namespace LIBCactusOS
 {
@@ -26,6 +27,8 @@ namespace LIBCactusOS
 
         uint32_t backColor = 0xFFCACDD1;
         uint32_t borderColor = 0xFF333333;
+    public:
+        Direction anchor = 0;
     public:
         /**
          * Create new control with a given width, height, x and y position
@@ -74,6 +77,10 @@ namespace LIBCactusOS
          * Called on keypress 
         */
         virtual void OnKeyPress(char key);
+        /**
+         * Called when control is resized
+        */
+        virtual void OnResize(Rectangle old);
     };
 }
 

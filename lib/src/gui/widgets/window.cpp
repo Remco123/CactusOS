@@ -104,3 +104,8 @@ void Window::Close()
     Print("Closing window %x\n", (uint32_t)this);
     this->contextBase->CloseContext();
 }
+void Window::OnResize(Rectangle old)
+{
+    this->closeButton->x = width - this->titleBarHeight + 5;
+    Control::OnResize(old);
+}

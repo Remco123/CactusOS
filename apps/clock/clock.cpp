@@ -21,7 +21,7 @@ int main()
     while(1) {
         DateTime currentTime = DateTime::Current();
         if(currentTime.Seconds == prevSec)
-            Process::Yield();
+            Time::Sleep(500);
 
         mainScreen->canvas->Clear(0x00395772);
         mainScreen->canvas->DrawFillCircle(0xFFDDDDDD, 160/2, 160/2 - 15, 60);

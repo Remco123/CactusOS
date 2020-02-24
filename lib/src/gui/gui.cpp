@@ -155,7 +155,7 @@ Context* GUI::RequestContext(int width, int height, int x, int y)
         ret->sharedContextInfo = (ContextInfo*)contextAddress;
 
         //Add it to our list
-        contextList->push_back(ret);
+        contextList->push_front(ret);
 
         return ret;
     }

@@ -101,4 +101,5 @@ void Context::OnResize(Rectangle oldSize)
     Window->y = this->sharedContextInfo->y;
     Window->width = this->sharedContextInfo->width;
     Window->height = this->sharedContextInfo->height;
+    Window->OnResize(oldSize);
 }

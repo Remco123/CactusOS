@@ -9,6 +9,7 @@ Control::Control(int w, int h, int x, int y)
     this->childs.Clear();
     this->focusedChild = 0;
     this->parent = 0;
+    this->anchor = Top | Left;
 }
 
 Control::~Control()
@@ -85,4 +86,38 @@ void Control::OnKeyPress(char key)
 
     if(this->focusedChild != 0)
         this->focusedChild->OnKeyPress(key);
+}
+
+void Control::OnResize(Rectangle old)
+{
+    int dWidth = this->width - old.width;
+    int dHeight = this->height - old.height;
+
+    // Loop through childs and update their position
+    for(Control* child : this->childs) {
+        bool resized = false;
+        Rectangle oldSize(child->width, child->height, child->x, child->y);
+        if(child->anchor & Top) {
+            if(child->anchor & Bottom) {
+                child->height += dHeight;
+                resized = true;
+            }
+        }
+        if(child->anchor & Right) {
+            if(child->anchor & Left) {
+                child->width += dWidth;
+                resized = true;
+            }
+            else { 
+                child->x += dWidth;
+            }
+        }
+        if(child->anchor & Bottom && !(child->anchor & Top)) {
+            child->y += dHeight;
+        }
+        
+        if(resized)
+            child->OnResize(oldSize);
+
+    }    
 }

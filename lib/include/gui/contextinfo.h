@@ -4,7 +4,7 @@
 #include <types.h>
 
 //Directions a context can be resized in
-enum ResizeDirection
+enum Direction
 {
     None = (0<<0),
     Top = (1<<0),
@@ -13,9 +13,9 @@ enum ResizeDirection
     Left = (1<<3)
 };
 
-inline ResizeDirection operator|(ResizeDirection a, ResizeDirection b)
+inline Direction operator|(Direction a, Direction b)
 {
-    return static_cast<ResizeDirection>(static_cast<int>(a) | static_cast<int>(b));
+    return static_cast<Direction>(static_cast<int>(a) | static_cast<int>(b));
 }
 
 struct ContextInfo
@@ -44,7 +44,7 @@ struct ContextInfo
     // Can this context be resized in the defined directions?
     bool allowResize;
     // In which direction can this context be resized?
-    ResizeDirection resizeDirections;
+    Direction resizeDirections;
     // Each context gets it own uniqe id, this way the compositor can find the right context for each message. For example when a keypress occurs.
     int id;
 };
