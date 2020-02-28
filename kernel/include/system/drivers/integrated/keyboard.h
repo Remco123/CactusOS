@@ -11,19 +11,13 @@ namespace CactusOS
     {
         namespace drivers
         {
-            #define LEFT_SHIFT      0x2A
-            #define RIGHT_SHIFT     0x36
-            #define CAPS_LOCK       0x3A
-            #define NUM_LOCK        0x45
-            #define NUM_LOCK_LED    2
-            #define CAPS_LOCK_LED   4
-
             struct KeyboardInternalStatus
             {
                 bool LeftShift;
                 bool RightShift;
                 bool Alt;
-                bool Control;
+                bool LeftControl;
+                bool RightControl;
                 bool CapsLock;
                 bool NumberLock;
             };

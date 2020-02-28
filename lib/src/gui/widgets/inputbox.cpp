@@ -32,7 +32,7 @@ void Inputbox::DrawTo(Canvas* context, int x_abs, int y_abs)
     context->DrawString(this->text, x_abs + 2, y_abs + 5, 0xFF000000);
 }
 
-void Inputbox::OnKeyPress(char key)
+void Inputbox::OnKeyDown(uint8_t key, KEYPACKET_FLAGS modifiers)
 {
     switch(key)
     {
@@ -61,10 +61,11 @@ void Inputbox::OnKeyPress(char key)
             break;
         default:
             {
-                this->text = str_Add(this->text, key);
+                if(isvalid(key))
+                    this->text = str_Add(this->text, key);
             }
             break;
     }
 
-    Control::OnKeyPress(key);
+    Control::OnKeyDown(key, modifiers);
 }

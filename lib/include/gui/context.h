@@ -5,6 +5,7 @@
 #include <gui/rect.h>
 #include <gui/contextinfo.h>
 #include <gui/widgets/control.h>
+#include <shared.h>
 
 namespace LIBCactusOS
 {   
@@ -72,9 +73,13 @@ namespace LIBCactusOS
         */
         void OnMouseMove(int prevX_abs, int prevY_abs, int newX_abs, int newY_abs);
         /**
-         * Called when a key is pressed and this is the active context.
+         * Called when a key is held down and this is the active context.
         */
-        void OnKeyPress(char key);
+        void OnKeyDown(uint8_t key, KEYPACKET_FLAGS modifiers);
+        /**
+         * Called when a key is held up and this is the active context.
+        */
+        void OnKeyUp(uint8_t key, KEYPACKET_FLAGS modifiers);
         /**
          * Called when contex is resized
         */

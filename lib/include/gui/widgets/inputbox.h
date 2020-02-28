@@ -28,7 +28,7 @@ namespace LIBCactusOS
         /**
          * Called on keypress
         */
-        void OnKeyPress(char key) override;
+        void OnKeyDown(uint8_t key, KEYPACKET_FLAGS modifiers) override;
     };
 }
 

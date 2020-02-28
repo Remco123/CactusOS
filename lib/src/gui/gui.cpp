@@ -95,9 +95,13 @@ void GUI::ProcessEvents()
             if(c->sharedContextInfo == 0)
                 continue;
 
-            if(c->sharedContextInfo->id == guiEvent.arg3)
+            if(c->sharedContextInfo->id == guiEvent.arg4)
             {
-                c->OnKeyPress((char)guiEvent.arg2);
+                KEYPACKET_FLAGS args = (KEYPACKET_FLAGS)guiEvent.arg3;
+                if(args & Pressed)
+                    c->OnKeyDown((uint8_t)guiEvent.arg2, args);
+                else
+                    c->OnKeyUp((uint8_t)guiEvent.arg2, args);
                 break; // Quit loop
             }
         }

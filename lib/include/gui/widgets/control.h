@@ -15,7 +15,7 @@ namespace LIBCactusOS
     */
     class Control : public EventObject, public Rectangle
     {
-    protected:
+    public:
         // All controls that are present on this control.
         List<Control*> childs;
 
@@ -27,8 +27,9 @@ namespace LIBCactusOS
 
         uint32_t backColor = 0xFFCACDD1;
         uint32_t borderColor = 0xFF333333;
-    public:
-        Direction anchor = 0;
+
+        // Anchor of this control
+        Direction anchor = Direction::None;
     public:
         /**
          * Create new control with a given width, height, x and y position
@@ -74,9 +75,13 @@ namespace LIBCactusOS
         */
         virtual void OnMouseMove(int prevX_abs, int prevY_abs, int newX_abs, int newY_abs);
         /**
-         * Called on keypress 
+         * Called when key is held down
         */
-        virtual void OnKeyPress(char key);
+        virtual void OnKeyDown(uint8_t key, KEYPACKET_FLAGS modifiers);
+        /**
+         * Called when key is held up
+        */
+        virtual void OnKeyUp(uint8_t key, KEYPACKET_FLAGS modifiers);
         /**
          * Called when control is resized
         */

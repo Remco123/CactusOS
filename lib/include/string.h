@@ -20,6 +20,8 @@ extern "C"
     char* str_Lowercase(char* str);
     char* str_Add(char* str, char c);
     char* str_Combine(char* part1, char* part2);
+
+    bool isvalid(unsigned char key);
 }
 
 #endif

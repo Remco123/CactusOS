@@ -80,14 +80,23 @@ void Context::OnMouseMove(int prevX_abs, int prevY_abs, int newX_abs, int newY_a
     
     Window->OnMouseMove(prevX_abs, prevY_abs, newX_abs, newY_abs);
 }
-void Context::OnKeyPress(char key)
+void Context::OnKeyDown(uint8_t key, KEYPACKET_FLAGS modifiers)
 {
-    this->KeyPress.Invoke(this, KeypressArgs(key));
+    this->KeyDown.Invoke(this, KeypressArgs(key, modifiers));
     
     if(this->Window == 0)
         return;
     
-    Window->OnKeyPress(key);
+    Window->OnKeyDown(key, modifiers);
+}
+void Context::OnKeyUp(uint8_t key, KEYPACKET_FLAGS modifiers)
+{
+    this->KeyUp.Invoke(this, KeypressArgs(key, modifiers));
+    
+    if(this->Window == 0)
+        return;
+    
+    Window->OnKeyUp(key, modifiers);
 }
 void Context::OnResize(Rectangle oldSize)
 {

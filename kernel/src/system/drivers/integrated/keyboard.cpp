@@ -2,6 +2,7 @@
 #include <core/port.h>
 #include <system/bootconsole.h>
 #include <system/system.h>
+#include <../../lib/include/shared.h>
 
 using namespace CactusOS;
 using namespace CactusOS::common;
@@ -9,97 +10,16 @@ using namespace CactusOS::system;
 using namespace CactusOS::system::drivers;
 using namespace CactusOS::core;
 
-/////////////////
-// US/International keyboard map
-/////////////////
-char US_Keyboard[128] =
-{
-    0, 27,
-    '1','2','3','4','5','6','7','8','9','0',
-    '-','=','\b',
-    '\t', /* tab */
-    'q','w','e','r','t','y','u','i','o','p','[',']','\n',
-    0, /* control */
-    'a','s','d','f','g','h','j','k','l',';','\'', '`',
-    0, /* left shift */
-    '\\','z','x','c','v','b','n','m',',','.','/',
-    0, /* right shift */
-    '*',
-    0, /* alt */
-    ' ', /* space */
-    0, /* caps lock */
-    0, /* F1 [59] */
-    0, 0, 0, 0, 0, 0, 0, 0,
-    0, /* ... F10 */
-    0, /* 69 num lock */
-    0, /* scroll lock */
-    0, /* home */
-    0, /* up */
-    0, /* page up */
-    '-',
-    0, /* left arrow */
-    0,
-    0, /* right arrow */
-    '+',
-    0, /* 79 end */
-    0, /* down */
-    0, /* page down */
-    0, /* insert */
-    0, /* delete */
-    0, 0, 0,
-    0, /* F11 */
-    0, /* F12 */
-    0, /* everything else */
-};
-char US_KeyboardShift[128] =
-{
-    0, 27,
-    '!','@','#','$','%','^','&','*','(',')',
-    '_','+','\b',
-    '\t', /* tab */
-    'Q','W','E','R','T','Y','U','I','O','P','{','}','\n',
-    0, /* control */
-    'A','S','D','F','G','H','J','K','L',':','"', '~',
-    0, /* left shift */
-    '|','Z','X','C','V','B','N','M','<','>','?',
-    0, /* right shift */
-    '*',
-    0, /* alt */
-    ' ', /* space */
-    0, /* caps lock */
-    0, /* F1 [59] */
-    0, 0, 0, 0, 0, 0, 0, 0,
-    0, /* ... F10 */
-    0, /* 69 num lock */
-    0, /* scroll lock */
-    0, /* home */
-    0, /* up */
-    0, /* page up */
-    '-',
-    0, /* left arrow */
-    0,
-    0, /* right arrow */
-    '+',
-    0, /* 79 end */
-    0, /* down */
-    0, /* page down */
-    0, /* insert */
-    0, /* delete */
-    0, 0, 0,
-    0, /* F11 */
-    0, /* F12 */
-    0, /* everything else */
-};
-
 KeyboardDriver::KeyboardDriver()
 : InterruptHandler(0x21), Driver("PS2 Keyboard", "Driver for a generic ps2 keyboard"), FIFOStream(100)
 {
-    status.Alt = false;
-    status.CapsLock = false;
-    status.Control = false;
     status.LeftShift = false;
-    status.NumberLock = false;
     status.RightShift = false;
+    status.Alt = false;
+    status.LeftControl = false;
+    status.RightControl = false;
+    status.CapsLock = false;
+    status.NumberLock = false;
 
     System::keyboardStream = this;
 }
@@ -121,46 +41,57 @@ bool KeyboardDriver::Initialize()
 uint32_t KeyboardDriver::HandleInterrupt(uint32_t esp)
 {
     uint8_t key = inportb(0x60);
+     
+    LIBCactusOS::KeypressPacket packet = {.startByte = KEYPACKET_START, .keyCode = 0, .flags = LIBCactusOS::NoFlags};
 
-    if(key & 0x80)
-    {
-        key &= 0x7F;
-        switch(key)
-        {
-            case LEFT_SHIFT:
-                status.LeftShift = false;
-                break;
-            case RIGHT_SHIFT:
-                status.RightShift = false;
-                break;
-        }
+    if(!(key & 0x80))   // Pressed
+        packet.flags = packet.flags | LIBCactusOS::Pressed;
+    else                // Released
+        key &= 0x7F;    // Remove first bit indicating state
+    
+    if(key == 0x7A) // CapsLock also sends 2 0x7A keycodes for some reason
+        return esp;
+    
+    ////////////
+    // Update driver status Flags
+    ////////////
+    if(key == 0x3A && !(packet.flags & LIBCactusOS::Pressed)) { //Toggle Keys
+        status.CapsLock = !status.CapsLock;
+        UpdateLeds();
     }
-    else
-    {
-        switch(key)
-        {
-            case CAPS_LOCK:
-                status.CapsLock = !status.CapsLock;
-                UpdateLeds();
-                break;
-            case NUM_LOCK:
-                status.NumberLock = !status.NumberLock;
-                UpdateLeds();
-                break;
-            case LEFT_SHIFT:
-                status.LeftShift = true;
-                break;
-            case RIGHT_SHIFT:
-                status.RightShift = true;
-                break;
-            default:
-                char c = (status.LeftShift || status.RightShift) ? US_KeyboardShift[key] : US_Keyboard[key];
-                if(System::screenMode == ScreenMode::GraphicsMode)
-                    this->Write(c);
-                //Log(Info, "Got key %c", c);
-                break;
-        }
+    else if(key == 0x45 && !(packet.flags & LIBCactusOS::Pressed)) { //Toggle Keys
+        status.NumberLock = !status.NumberLock;
+        UpdateLeds();
     }
+    //Modifier Keys
+    else if(key == 0x2A)
+        status.LeftShift = packet.flags & LIBCactusOS::Pressed;
+    else if(key == 0x36)
+        status.RightShift = packet.flags & LIBCactusOS::Pressed;
+    else if(key == 0x1D)
+        status.LeftControl = packet.flags & LIBCactusOS::Pressed;
+    else if(key == 0xE0)
+        status.RightControl = packet.flags & LIBCactusOS::Pressed;
+    else if(key == 0x38)
+        status.Alt = packet.flags & LIBCactusOS::Pressed;
+    
+    // Update packet flags
+    packet.flags = (packet.flags | (status.CapsLock ? LIBCactusOS::CapsLock : LIBCactusOS::NoFlags));
+    packet.flags = (packet.flags | (status.NumberLock ? LIBCactusOS::NumLock : LIBCactusOS::NoFlags));
+    packet.flags = (packet.flags | (status.LeftShift ? LIBCactusOS::LeftShift : LIBCactusOS::NoFlags));
+    packet.flags = (packet.flags | (status.RightShift ? LIBCactusOS::RightShift : LIBCactusOS::NoFlags));
+    packet.flags = (packet.flags | (status.LeftControl ? LIBCactusOS::LeftControl : LIBCactusOS::NoFlags));
+    packet.flags = (packet.flags | (status.RightControl ? LIBCactusOS::RightControl : LIBCactusOS::NoFlags));
+    packet.flags = (packet.flags | (status.Alt ? LIBCactusOS::Alt : LIBCactusOS::NoFlags));
+
+    // Set keycode
+    packet.keyCode = key;
+
+    //Log(Info, "%d %d %d %d %d %d %d", status.CapsLock,status.NumberLock,status.LeftShift,status.RightShift,status.LeftControl,status.RightControl,status.Alt);
+
+    if(System::screenMode == ScreenMode::GraphicsMode)
+        for(int i = 0; i < sizeof(LIBCactusOS::KeypressPacket); i++)
+            this->Write(*((char*)((uint32_t)&packet + i)));
 
     return esp;
 }

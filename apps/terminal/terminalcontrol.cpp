@@ -169,9 +169,10 @@ void TerminalControl::DrawTo(Canvas* context, int x_abs, int y_abs)
         }
 }
 
-void TerminalControl::OnKeyPress(char key)
+void TerminalControl::OnKeyDown(uint8_t key, KEYPACKET_FLAGS modifiers)
 {
-    inputKeys.push_back(key);
+    if(isvalid(key))
+        inputKeys.push_back(key);
 
-    Control::OnKeyPress(key);
+    Control::OnKeyDown(key, modifiers);
 }

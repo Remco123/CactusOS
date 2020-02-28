@@ -160,3 +160,7 @@ char* str_Combine(char* part1, char* part2)
     res[len1 + len2] = '\0';
     return res;
 }
+bool isvalid(unsigned char key)
+{
+    return ((int)key > 31 && (int)key < 127) || key == '\n' || key == '\b' || key == '\t';
+}

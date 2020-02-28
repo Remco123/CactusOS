@@ -109,3 +109,10 @@ void Window::OnResize(Rectangle old)
     this->closeButton->x = width - this->titleBarHeight + 5;
     Control::OnResize(old);
 }
+void Window::OnKeyDown(uint8_t key, KEYPACKET_FLAGS modifiers)
+{
+    Control::OnKeyDown(key, modifiers);
+
+    if((key == 'W' || key == 'w') && (modifiers & LeftControl))
+        this->Close();
+}

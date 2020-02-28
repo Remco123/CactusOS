@@ -28,6 +28,7 @@ void DrawCursor();
 void ProcessEvents();
 void ResizeContext(ContextInfo* c, Rectangle newSize);
 extern uint8_t* LoadBackground(char*); //In background.cpp
+extern uint8_t ConvertKeycode(KeypressPacket* packet); //In scancodes.cpp
 
 //////////
 // Holds current mouse positions
@@ -568,9 +569,27 @@ void ProcessEvents()
     // Process all the pressed keys
     while(Process::StdInAvailable() > 0)
     {
-        char key = Process::ReadStdIn();
+        uint8_t startByte = Process::ReadStdIn();
+        if(startByte != KEYPACKET_START) {
+            Log(Warning, "Some noise on Compositor standard input");
+            continue;
+        }
+        
+        KeypressPacket packet;
+        memset(&packet, 0, sizeof(KeypressPacket));
+        for(int i = 1 /*skip start byte*/; i < sizeof(KeypressPacket); i++)
+            *(uint8_t*)((uint32_t)&packet + i) = Process::ReadStdIn();
+        
+        uint8_t key = ConvertKeycode(&packet);
+        if(key == 0) {
+            Print("No key for scancode %b\n", packet.keyCode);
+            continue;
+        }
+        if(contextList->size() == 0)
+            continue;
+        
         ContextInfo* sendTo = contextList->GetAt(0); //Send key to the context currenly in focus
-        IPCSend(sendTo->clientID, IPC_TYPE_GUI_EVENT, EVENT_TYPE_KEYPRESS, (uint32_t)key, (uint32_t)sendTo->id);
+        IPCSend(sendTo->clientID, IPC_TYPE_GUI_EVENT, EVENT_TYPE_KEYPRESS, (uint32_t)key, (uint32_t)packet.flags, (uint32_t)sendTo->id);
     }
 }
 void ResizeContext(ContextInfo* c, Rectangle newSize)

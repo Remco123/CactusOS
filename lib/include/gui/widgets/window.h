@@ -80,6 +80,10 @@ namespace LIBCactusOS
          * Called when Window is resized
         */
         void OnResize(Rectangle old) override;
+        /**
+         * Called when key is held down
+        */
+        void OnKeyDown(uint8_t key, KEYPACKET_FLAGS modifiers) override;
     };
 }
 

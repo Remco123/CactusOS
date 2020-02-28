@@ -80,12 +80,19 @@ void Control::OnMouseMove(int prevX_abs, int prevY_abs, int newX_abs, int newY_a
     //TODO: Implement mouseEnter and mouseLeave here
 }
 
-void Control::OnKeyPress(char key)
+void Control::OnKeyDown(uint8_t key, KEYPACKET_FLAGS modifiers)
 {
-    this->KeyPress.Invoke(this, KeypressArgs(key));
+    this->KeyDown.Invoke(this, KeypressArgs(key, modifiers));
 
     if(this->focusedChild != 0)
-        this->focusedChild->OnKeyPress(key);
+        this->focusedChild->OnKeyDown(key, modifiers);
+}
+void Control::OnKeyUp(uint8_t key, KEYPACKET_FLAGS modifiers)
+{
+    this->KeyUp.Invoke(this, KeypressArgs(key, modifiers));
+
+    if(this->focusedChild != 0)
+        this->focusedChild->OnKeyUp(key, modifiers);
 }
 
 void Control::OnResize(Rectangle old)

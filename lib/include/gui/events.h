@@ -3,6 +3,7 @@
 
 #include <list.h>
 #include <gui/widgets/control.h>
+#include <shared.h>
 
 namespace LIBCactusOS
 {
@@ -161,7 +162,7 @@ namespace LIBCactusOS
     ///////////
     CREATE_ARGUMENT_CLASS4(MouseMoveArgs, int, prevX, int, prevY, int, newX, int, newY)
     CREATE_ARGUMENT_CLASS3(MouseButtonArgs, int, x, int, y, int, button)
-    CREATE_ARGUMENT_CLASS1(KeypressArgs, char, key)
+    CREATE_ARGUMENT_CLASS2(KeypressArgs, uint8_t, key, KEYPACKET_FLAGS, modifiers)
 
     /**
      * An object that hosts multiple gui events
@@ -172,10 +173,11 @@ namespace LIBCactusOS
         EventHandlerList<MouseButtonArgs> MouseDown;
         EventHandlerList<MouseButtonArgs> MouseUp;
         EventHandlerList<MouseButtonArgs> MouseClick;
-        EventHandlerList<KeypressArgs> KeyPress;
+        EventHandlerList<KeypressArgs> KeyDown;
+        EventHandlerList<KeypressArgs> KeyUp;
 
         EventObject()
-        : MouseDown(), MouseUp(), MouseClick(), KeyPress()
+        : MouseDown(), MouseUp(), MouseClick(), KeyDown(), KeyUp()
         {        }
     };
 }
