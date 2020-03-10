@@ -17,6 +17,7 @@ SMBIOS* System::smbios = 0;
 Virtual8086Manager* System::vm86Manager = 0;
 Virtual8086Monitor* System::vm86Monitor = 0;
 GraphicsDevice* System::gfxDevice = 0;
+EDID* System::edid = 0;
 PCIController* System::pci = 0;
 DriverManager* System::driverManager = 0;
 DiskManager* System::diskManager = 0;
@@ -66,6 +67,10 @@ void System::Start()
     BootConsole::Write("Graphics Device");
     System::gfxDevice = GraphicsDevice::GetBestDevice();
     BootConsole::WriteLine(" [Done]");
+
+    //Check for monitor EDID
+    System::edid = new EDID();
+    System::edid->AcquireEDID();
 
     BootConsole::WriteLine("Loading Initial Ramdisk");
     InitialRamDisk::Initialize(System::mbi);

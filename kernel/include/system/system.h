@@ -10,6 +10,7 @@
 #include <system/components/smbios.h>
 #include <system/components/graphicsdevice.h>
 #include <system/components/vesa.h>
+#include <system/components/edid.h>
 #include <system/components/pci.h>
 #include <system/components/apm.h>
 #include <system/virtual8086/VM86Manager.h>
@@ -81,6 +82,7 @@ namespace CactusOS
             static Virtual8086Manager* vm86Manager;
             static Virtual8086Monitor* vm86Monitor;
             static GraphicsDevice* gfxDevice;
+            static EDID* edid;
             static PCIController* pci;
             static drivers::DriverManager* driverManager;
             static DiskManager* diskManager;

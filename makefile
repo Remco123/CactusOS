@@ -24,7 +24,7 @@
 #######################
 
 INCLUDEDIRS := kernel/include
-USBOPTIONS := -boot d -device ich9-usb-ehci1 -trace events=../qemuTrace.txt -drive if=none,id=usbstick,file=../usbdisk.img,format=raw -device usb-storage,id=stick,drive=usbstick
+QEMUOPTIONS := -boot d -device ich9-usb-ehci1 -device VGA,edid=on -trace events=../qemuTrace.txt -drive if=none,id=usbstick,file=../usbdisk.img,format=raw -device usb-storage,id=stick,drive=usbstick
 
 G++PARAMS := -m32 -g -I $(INCLUDEDIRS) -fno-use-cxa-atexit -nostdlib -fno-builtin -fno-exceptions -fno-rtti -fno-leading-underscore -Wno-write-strings -fpermissive -Wall
 GCCPARAMS := -m32 -g -I $(INCLUDEDIRS) -nostdlib -fno-builtin -Wall -fleading-underscore
@@ -95,13 +95,13 @@ clean:
 	rm -rf isofiles/apps/*.bin
 
 qemu: CactusOS.iso
-	qemu-system-i386 -cdrom CactusOS.iso -serial stdio $(USBOPTIONS)
+	qemu-system-i386 -cdrom CactusOS.iso -serial stdio $(QEMUOPTIONS)
 
 qemuDBG: CactusOS.iso
-	qemu-system-i386 -cdrom CactusOS.iso -serial stdio $(USBOPTIONS) -s -S &
+	qemu-system-i386 -cdrom CactusOS.iso -serial stdio $(QEMUOPTIONS) -s -S &
 
 qemuGDB: CactusOS.iso
-	qemu-system-i386 -cdrom CactusOS.iso $(USBOPTIONS) -serial pty &
+	qemu-system-i386 -cdrom CactusOS.iso $(QEMUOPTIONS) -serial pty &
 	gdb -ex 'file CactusOS.bin' -ex 'target remote /dev/pts/1' -q
 
 run: CactusOS.iso
