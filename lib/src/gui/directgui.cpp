@@ -1,5 +1,6 @@
 #include <gui/directgui.h>
 #include <gui/canvas.h>
+#include <gui/gui.h>
 #include <log.h>
 #include <syscall.h>
 #include <string.h>
@@ -15,7 +16,7 @@ bool DirectGUI::RequestFramebuffer()
 
     bool ret = DoSyscall(SYSCALL_GUI_GETLFB, DIRECT_GUI_ADDR);
     if(ret)
-        base = new Canvas((void*)DIRECT_GUI_ADDR, WIDTH, HEIGHT);
+        base = new Canvas((void*)DIRECT_GUI_ADDR, GUI::Width, GUI::Height);
     
     return ret;
 }

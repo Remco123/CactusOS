@@ -38,7 +38,7 @@ void Process::Yield()
 }
 void Process::SetScheduler(bool active)
 {
-    DoSyscall(SYCALL_SET_SCHEDULER, active);
+    DoSyscall(SYSCALL_SET_SCHEDULER, active);
 }
 void Process::WriteStdOut(char byte)
 {

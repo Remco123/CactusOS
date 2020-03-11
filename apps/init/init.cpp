@@ -10,6 +10,7 @@
 #include <ipc.h>
 #include <time.h>
 #include <math.h>
+#include <gui/gui.h>
 #include "bmp.h"
 #include "progress.h"
 
@@ -26,8 +27,8 @@ int main()
 
     DirectGUI::Clear(0xFFFFFFFF);
 
-    int x_p = WIDTH/2 - 100;
-    int y_p = HEIGHT/2 - 200;
+    int x_p = GUI::Width/2 - 100;
+    int y_p = GUI::Width/2 - 200;
 
     ProgressBar* bar = new ProgressBar(x_p, y_p + 250, 200, 10);
     bar->SetValue(0);

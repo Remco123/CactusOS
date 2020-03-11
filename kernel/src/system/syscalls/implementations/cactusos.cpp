@@ -331,12 +331,24 @@ CPUState* CactusOSSyscalls::HandleSyscall(CPUState* state)
                 System::listings->GetAt(type)->EndListing(System::scheduler->CurrentThread());
             }
             break;
-        case SYCALL_SET_SCHEDULER:
+        case SYSCALL_SET_SCHEDULER:
             {
                 bool active = (bool)state->EBX;
                 System::scheduler->Enabled = active;
             }
-            break;     
+            break;
+        case SYSCALL_GET_SCREEN_PROPERTIES:
+            {
+                if(System::gfxDevice) {
+                    *((int*)state->EBX) = System::gfxDevice->width;
+                    *((int*)state->ECX) = System::gfxDevice->height;
+
+                    state->EAX = SYSCALL_RET_SUCCES;
+                }
+                else
+                    state->EAX = SYSCALL_RET_ERROR;
+            }
+            break;
         default:
             Log(Warning, "Got unkown syscall %d from process %d", sysCall, proc->id);
             state->EAX = SYSCALL_RET_ERROR;

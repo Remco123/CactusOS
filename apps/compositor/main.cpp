@@ -123,7 +123,7 @@ void GUILoop()
 
     //Copy background to backbuffer
     if(wallPaperBuffer != 0)
-        memcpy((void*)backBuffer, (void*)wallPaperBuffer, WIDTH*HEIGHT*4);
+        memcpy((void*)backBuffer, (void*)wallPaperBuffer, GUI::Width*GUI::Height*4);
     
     while(true) {
         ////////
@@ -175,11 +175,11 @@ void ApplyDesktopBounds(Rectangle* rect)
         rect->height -= Math::Abs(rect->y);
         rect->y = 0;
     }
-    if((rect->x + rect->width) >= WIDTH) {
-        rect->width = WIDTH - rect->x;// - 1;
+    if((rect->x + rect->width) >= GUI::Width) {
+        rect->width = GUI::Width - rect->x;// - 1;
     }
-    if((rect->y + rect->height) >= HEIGHT) {
-        rect->height = HEIGHT - rect->y;// - 1;
+    if((rect->y + rect->height) >= GUI::Height) {
+        rect->height = GUI::Height - rect->y;// - 1;
     }
 }
 // Check for the given context if the mouse is in a resize border
@@ -203,13 +203,14 @@ int main()
     Print("Framebuffer Initialized\n");
 
     Print("Allocating Backbuffer\n");
-    backBuffer = new uint8_t[WIDTH*HEIGHT*4];
-    backBufferCanvas = new Canvas(backBuffer, WIDTH, HEIGHT);
+    backBuffer = new uint8_t[GUI::Width*GUI::Height*4];
+    backBufferCanvas = new Canvas(backBuffer, GUI::Width, GUI::Height);
 
     DirectGUI::DrawString("Loading Background...", 3, 3, 0xFF000000);
     Print("Loading Background\n");
-    wallPaperBuffer = LoadBackground("B:\\wallpap.bmp");
-    wallPaperCanvas = new Canvas(wallPaperBuffer, WIDTH, HEIGHT);
+    wallPaperBuffer = new uint8_t[GUI::Width*GUI::Height*4]; //LoadBackground("B:\\wallpap.bmp");
+    memset(wallPaperBuffer, 0x00, GUI::Width*GUI::Height*4);
+    wallPaperCanvas = new Canvas(wallPaperBuffer, GUI::Width, GUI::Height);
 
     Print("Requesting Systeminfo\n");
     if(!RequestSystemInfo())
@@ -268,7 +269,7 @@ void HandleMessage(IPCMessage msg)
             uint32_t x = msg.arg5;
             uint32_t y = msg.arg6;
 
-            uint32_t bytes = WIDTH * HEIGHT * 4 + sizeof(ContextInfo); //TODO: Actualy use width and height and realocate memory when resizing
+            uint32_t bytes = GUI::Width * GUI::Height * 4 + sizeof(ContextInfo); //TODO: Actualy use width and height and realocate memory when resizing
             uint32_t virtAddrC = msg.arg2;
             uint32_t contextAddress = ContextHeap::AllocateArea(pageRoundUp(bytes) / 0x1000);
             Print("Process %d requested a gui context of %d bytes at %x (w=%d,h=%d,x=%d,y=%d) mapping to %x\n", msg.source, bytes, virtAddrC, width, height, x, y, contextAddress);
@@ -354,9 +355,9 @@ void UpdateDesktop()
     {
         Rectangle rect = dirtyRectList->GetAt(0);
         ApplyDesktopBounds(&rect);
-        uint32_t byteWidth = (rect.width + rect.x <= WIDTH ? rect.width : rect.width-(rect.x + rect.width - WIDTH))*4;
+        uint32_t byteWidth = (rect.width + rect.x <= GUI::Width ? rect.width : rect.width-(rect.x + rect.width - GUI::Width))*4;
         for(uint32_t y = 0; y < rect.height; y++)
-            memcpy((void*)(backBuffer + ((rect.y + y)*WIDTH*4) + rect.x*4), (void*)((uint32_t)wallPaperBuffer + (rect.y + y)*WIDTH*4 + rect.x*4), byteWidth);
+            memcpy((void*)(backBuffer + ((rect.y + y)*GUI::Width*4) + rect.x*4), (void*)((uint32_t)wallPaperBuffer + (rect.y + y)*GUI::Width*4 + rect.x*4), byteWidth);
 
         dirtyRectList->Remove(0);
     }
@@ -365,7 +366,7 @@ void UpdateDesktop()
     for(int i = (contextList->size()-1); i >= 0; i--)
     {
         ContextInfo* info = contextList->GetAt(i);
-        if(info->x >= WIDTH || info->y >= HEIGHT) {
+        if(info->x >= GUI::Width || info->y >= GUI::Height) {
             Log(Warning, "Context is out of desktop bounds");
             continue;
         }
@@ -382,7 +383,7 @@ void UpdateDesktop()
         }
         else {
             for(int hOffset = 0; hOffset < contextRectangle.height; hOffset++)
-                memcpy((backBuffer + (contextRectangle.y+hOffset)*WIDTH*4 + contextRectangle.x*4), (void*)(info->virtAddrServer + leftOffset*4 + (topOffset + hOffset)*info->width*4), contextRectangle.width * 4);
+                memcpy((backBuffer + (contextRectangle.y+hOffset)*GUI::Width*4 + contextRectangle.x*4), (void*)(info->virtAddrServer + leftOffset*4 + (topOffset + hOffset)*info->width*4), contextRectangle.width * 4);
         }
 
         if(info == drawResizing) { //Context has mouse in resize border
@@ -406,15 +407,15 @@ void UpdateDesktop()
     DrawCursor();
 
     //Swap buffers
-    memcpy((void*)DIRECT_GUI_ADDR, (void*)backBuffer, WIDTH*HEIGHT*4);
+    memcpy((void*)DIRECT_GUI_ADDR, (void*)backBuffer, GUI::Width*GUI::Height*4);
 }
 
 void RemovePreviousCursor()
 {
     //How much of the previous cursor should be removed?
     //These values will be smaller than the cursor width when the mouse is partialy in the corner
-    uint8_t x_d = prevMouseX + CURSOR_W < WIDTH ? CURSOR_W : WIDTH - prevMouseX;
-    uint8_t y_d = prevMouseY + CURSOR_H < HEIGHT ? CURSOR_H : HEIGHT - prevMouseY;
+    uint8_t x_d = prevMouseX + CURSOR_W < GUI::Width ? CURSOR_W : GUI::Width - prevMouseX;
+    uint8_t y_d = prevMouseY + CURSOR_H < GUI::Height ? CURSOR_H : GUI::Height - prevMouseY;
 
     for(uint8_t x = 0; x < x_d; x++)
         for(uint8_t y = 0; y < y_d; y++)
@@ -426,8 +427,8 @@ void DrawCursor()
     //////////////
     // Draw new Cursor at position
     //////////////
-    uint8_t x_d = curMouseX + CURSOR_W < WIDTH ? CURSOR_W : WIDTH - curMouseX;
-    uint8_t y_d = curMouseY + CURSOR_H < HEIGHT ? CURSOR_H : HEIGHT - curMouseY;
+    uint8_t x_d = curMouseX + CURSOR_W < GUI::Width ? CURSOR_W : GUI::Width - curMouseX;
+    uint8_t y_d = curMouseY + CURSOR_H < GUI::Height ? CURSOR_H : GUI::Height - curMouseY;
 
     for(uint8_t x = 0; x < x_d; x++)
         for(uint8_t y = 0; y < y_d; y++) {
@@ -500,7 +501,7 @@ void ProcessEvents()
 
             //Remove green border from screen
             //Could be more efficient but this works fine
-            dirtyRectList->push_back(Rectangle(WIDTH, HEIGHT, 0, 0));
+            dirtyRectList->push_back(Rectangle(GUI::Width, GUI::Height, 0, 0));
             currentResizeDirection = None;
             currentlyResizing = 0;
         }
@@ -556,7 +557,7 @@ void ProcessEvents()
             }
             ApplyDesktopBounds(&tempRect);
             //Add dirty rect for whole desktop, saves some calculations
-            dirtyRectList->push_back(Rectangle(WIDTH, HEIGHT, 0, 0));
+            dirtyRectList->push_back(Rectangle(GUI::Width, GUI::Height, 0, 0));
             resizeRectangle = tempRect;
         }
     }

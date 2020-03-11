@@ -25,7 +25,7 @@ int main()
 {
     Print("Starting Calculator\n");
 
-    Window* window1 = new Window(140, 260, WIDTH/2 - 140/2, HEIGHT/2 - 260/2);
+    Window* window1 = new Window(140, 260, GUI::Width/2 - 140/2, GUI::Width/2 - 260/2);
     window1->titleString = "Calculator";
 
     Control* labelBox = new Control(130, 30, 5, 5);

@@ -7,10 +7,6 @@ namespace LIBCactusOS
 {
     #define DIRECT_GUI_ADDR 0xB0000000 //TODO: Change to a better address
 
-    #define WIDTH 1024
-    #define HEIGHT 768
-    #define BPP 32
-
     class DirectGUI
     {
     public:

@@ -27,6 +27,11 @@ namespace LIBCactusOS
     private:
         static Context* FindTargetContext(int m_x, int m_y);
     public:
+        //Current Width of video mode
+        static int Width;
+        //Current Height of video mode
+        static int Height;
+    public:
         /**
          * The PID used by the compositor process
         */

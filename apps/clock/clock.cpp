@@ -11,7 +11,7 @@
 
 int main()
 {
-    Context* mainScreen = GUI::RequestContext(160, 160, WIDTH-160, 0);
+    Context* mainScreen = GUI::RequestContext(160, 160, GUI::Width-160, 0);
     if(mainScreen == 0)
         return -1;
 

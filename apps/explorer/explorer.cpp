@@ -124,7 +124,7 @@ void RefreshCallback(void* sender, MouseButtonArgs arg)
 
 int main()
 {
-    Window* mainWindow = new Window(500, 300, WIDTH/2 - 250, HEIGHT/2 - 150);
+    Window* mainWindow = new Window(500, 300, GUI::Width/2 - 250, GUI::Width/2 - 150);
     mainWindow->titleString = "File Explorer";
     mainWindow->contextBase->sharedContextInfo->allowResize = true;
 

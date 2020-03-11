@@ -234,7 +234,7 @@ int main()
     firstClick = true;
     gameStatus = Bussy;
     
-    Window* mainWindow = new Window(300, 330, WIDTH/2 - 150, HEIGHT/2 - 165);
+    Window* mainWindow = new Window(300, 330, GUI::Width/2 - 150, GUI::Width/2 - 165);
     mainWindow->titleString = "CactusOS Mines Game";
     
     for(int placeY = 0; placeY < fieldHeight; placeY++)
@@ -263,7 +263,7 @@ int main()
     
     mainWindow->Close();
 
-    Window* resultWindow = new Window(200, 100, WIDTH/2 - 100, HEIGHT/2 - 50);
+    Window* resultWindow = new Window(200, 100, GUI::Width/2 - 100, GUI::Width/2 - 50);
     resultWindow->titleString = "Game Finished!";
 
     Label* label = new Label(gameStatus == Won ? (char*)"You completed the game!" : (char*)"You have lost!");

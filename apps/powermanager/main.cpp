@@ -14,7 +14,7 @@ void PoweroffAndEjectButtonCallback(void* sender, MouseButtonArgs arg);
 
 int main()
 {
-    Window* mainWindow = new Window(150, 100, WIDTH/2 - 75, HEIGHT/2 - 50);
+    Window* mainWindow = new Window(150, 100, GUI::Width/2 - 75, GUI::Width/2 - 50);
     mainWindow->titleString = "Power Options";
 
     Button* shutdownButton = new Button("Poweroff");

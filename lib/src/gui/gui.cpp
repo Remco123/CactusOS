@@ -11,6 +11,9 @@
 
 using namespace LIBCactusOS;
 
+int GUI::Width = 0;
+int GUI::Height = 0;
+
 List<Context*>* GUI::contextList = 0;
 int GUI::compositorPID = 3;
 
@@ -18,6 +21,9 @@ void GUI::Initialize()
 {
     GUI::contextList = new List<Context*>();
     ContextHeap::Init();
+
+    if(DoSyscall(SYSCALL_GET_SCREEN_PROPERTIES, (uint32_t)&GUI::Width, (uint32_t)&GUI::Height) == 0)
+        Log(Error, "Error while requesting screen info");
 }
 
 void GUI::CleanUp()
@@ -147,7 +153,7 @@ Context* GUI::FindTargetContext(int mouseX, int mouseY)
 
 Context* GUI::RequestContext(int width, int height, int x, int y)
 {
-    uint32_t contextAddress = ContextHeap::AllocateArea(pageRoundUp(WIDTH * HEIGHT * 4 + sizeof(ContextInfo)) / 0x1000);
+    uint32_t contextAddress = ContextHeap::AllocateArea(pageRoundUp(GUI::Width * GUI::Height * 4 + sizeof(ContextInfo)) / 0x1000);
     if(IPCSend(compositorPID, IPC_TYPE_GUI, COMPOSITOR_REQUESTCONTEXT, contextAddress, width, height, x, y) != SYSCALL_RET_SUCCES)
         return 0;
 
