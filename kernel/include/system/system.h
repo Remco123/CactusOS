@@ -41,6 +41,10 @@ namespace CactusOS
 {
     namespace system
     {
+        #define DEFAULT_SCREEN_WIDTH 1024
+        #define DEFAULT_SCREEN_HEIGHT 768
+        #define DEFAULT_SCREEN_BPP 32
+
         enum ScreenMode
         {
             TextMode,

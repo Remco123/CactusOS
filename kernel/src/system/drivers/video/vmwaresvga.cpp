@@ -57,14 +57,14 @@ bool VMWARESVGAII::Initialize()
 
 bool VMWARESVGAII::SelectBestVideoMode()
 {
-    WriteRegister(SVGA_REG_FB_Width, 1024);
-    WriteRegister(SVGA_REG_FB_Height, 768);
-    WriteRegister(SVGA_REG_FB_BitsPerPixel, 32);
+    WriteRegister(SVGA_REG_FB_Width, DEFAULT_SCREEN_WIDTH);
+    WriteRegister(SVGA_REG_FB_Height, DEFAULT_SCREEN_HEIGHT);
+    WriteRegister(SVGA_REG_FB_BitsPerPixel, DEFAULT_SCREEN_BPP);
     WriteRegister(SVGA_REG_FB_Enable, 1);
 
-    this->width = 1024;
-    this->height = 768;
-    this->bpp = 32;
+    this->width = DEFAULT_SCREEN_WIDTH;
+    this->height = DEFAULT_SCREEN_HEIGHT;
+    this->bpp = DEFAULT_SCREEN_BPP;
     
     return true;
 }

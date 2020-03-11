@@ -176,8 +176,11 @@ extern "C" void kernelMain(const multiboot_info_t* mbi, unsigned int multiboot_m
     Process* proc = ProcessHelper::Create("B:\\apps\\init.bin", false);
     if(proc != 0)
     {
-        if(System::gfxDevice->SelectBestVideoMode() == false)
-            Log(Error, "Could not set a video mode");
+        if(System::gfxDevice->SelectBestVideoMode() == false) {
+            Log(Error, "Could not set a video mode, halting system");
+            InterruptDescriptorTable::DisableInterrupts();
+            while(1);
+        }
 
         Log(Info, "Switched to graphics mode, phys=%x", System::gfxDevice->framebufferPhys);
         System::screenMode = ScreenMode::GraphicsMode;

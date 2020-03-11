@@ -20,7 +20,7 @@ namespace CactusOS
             common::uint32_t Capabilities;
             Real_Pointer VideoModePtr;
             common::uint16_t TotalMemory;
-            common::uint32_t OemSoftwareRev;
+            common::uint16_t OemSoftwareRev;
             Real_Pointer OemVendorNamePtr;
             Real_Pointer OemProductNamePtr;
             Real_Pointer OemProductRevPtr;

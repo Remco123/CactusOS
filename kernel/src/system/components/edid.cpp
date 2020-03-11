@@ -102,7 +102,7 @@ void EDID::AcquireEDID()
 void EDID::PreferedMode(int* widthPtr, int* heightPtr)
 {
     if(edidBuffer == 0) {
-        Log(Info, "Could not find prefered mode since edid is not loaded");
+        Log(Info, "EDID: Could not find prefered mode since edid is not loaded");
         return;
     }
     
@@ -117,5 +117,5 @@ void EDID::PreferedMode(int* widthPtr, int* heightPtr)
     }
 
     if(*widthPtr == 0 || *heightPtr == 0)
-        Log(Info, "Could not find prefered mode, error parsing timings");
+        Log(Info, "EDID: Could not find prefered mode, error parsing timings");
 }
