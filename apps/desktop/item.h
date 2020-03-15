@@ -3,9 +3,11 @@
 
 #include <gui/context.h>
 #include <gui/gui.h>
-#include "../init/bmp.h"
+#include <imaging/image.h>
+#include <imaging/bmpformat.h>
 
 using namespace LIBCactusOS;
+using namespace LIBCactusOS::Imaging;
 
 class DesktopItem : Rectangle
 {
@@ -32,41 +34,15 @@ void DesktopItem::DrawToContext()
 {
     if(this->iconBuffer)
     {
-        BMPFileHeader* h = (BMPFileHeader*)iconBuffer;
-        BMPInfoHeader* info = (BMPInfoHeader*)(iconBuffer + sizeof(BMPFileHeader));
-        uint8_t* imageData = (uint8_t*)((unsigned int)iconBuffer + h->bfOffBits);
-
-        int alignment = 0;
-        alignment = (info->biWidth * 3) % 4;
-        if (alignment != 0)
-        {
-            alignment = 4 - alignment;
-        }  
-
-        int offset, rowOffset;
-        for (int y = 0; y < info->biHeight; y++)
-        {
-            rowOffset = (info->biHeight - y - 1) * (info->biWidth * 3 + alignment);
-
-            for (int x = 0; x < info->biWidth; x++)
-            {
-                offset = rowOffset + x * 3;
-                    
-                uint32_t b = imageData[offset + 0];
-                uint32_t g = imageData[offset + 1];
-                uint32_t r = imageData[offset + 2];
-
-                uint32_t argb = 0xFF000000 |
-                                r << 16 |
-                                g << 8  |
-                                b;
-
+        Image img = ConvertBMPRaw(this->iconBuffer);
+        for(int x = 0; x < img.GetWidth(); x++)
+            for(int y = 0; y < img.GetHeight(); y++) {
+                uint32_t argb = img[y * img.GetWidth() + x];
                 if(argb != 0xFFFFFFFF)
                     this->context->canvas->SetPixel(x, y, argb);
                 else
                     this->context->canvas->SetPixel(x, y, 0x00000000);
             }
-        }
     }
     if(this->drawLabel) {
         this->context->canvas->DrawRect(0xFF000000, 0, height-20, width-1, 20-1);

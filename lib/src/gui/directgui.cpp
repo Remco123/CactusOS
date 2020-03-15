@@ -21,6 +21,11 @@ bool DirectGUI::RequestFramebuffer()
     return ret;
 }
 
+Canvas* DirectGUI::GetCanvas()
+{
+    return base;
+}
+
 void DirectGUI::SetPixel(int x, int y, uint32_t color)
 {
     base->SetPixel(x, y, color);

@@ -11,12 +11,13 @@
 #include <time.h>
 #include <math.h>
 #include <gui/gui.h>
-#include "bmp.h"
+#include <imaging/image.h>
 #include "progress.h"
 
 using namespace LIBCactusOS;
+using namespace LIBCactusOS::Imaging;
 
-char* path = "B:\\boot.bmp";
+char* path = "B:\\boot.jpg";
 
 int main()
 {
@@ -34,57 +35,8 @@ int main()
     bar->SetValue(0);
 
     Log(Info, "Loading Boot Logo");
-    if(FileExists(path))
-    {
-        uint32_t fileSize = GetFileSize(path);
-        if(fileSize != -1)
-        {
-            uint8_t* fileBuf = new uint8_t[fileSize];
-            ReadFile(path, fileBuf);
-
-            Log(Info, "Parsing bmp image...");
-
-            BMPFileHeader* h = (BMPFileHeader*)fileBuf;
-
-            BMPInfoHeader* info = (BMPInfoHeader*)(fileBuf + sizeof(BMPFileHeader));
-
-            Print("BMP Format: w=%d h=%d bpp=%d\n", info->biWidth, info->biHeight, info->biBitCount);
-
-            uint8_t* imageData = (uint8_t*)((unsigned int)fileBuf + h->bfOffBits);
-
-            //Display Image
-            int alignment = 0;
-
-            alignment = (info->biWidth * 3) % 4;
-            if (alignment != 0)
-            {
-                alignment = 4 - alignment;
-            }  
-
-            int offset, rowOffset;
-
-            for (int y = 0; y < info->biHeight; y++)
-            {
-                rowOffset = (info->biHeight - y - 1) * (info->biWidth * 3 + alignment);
-
-                for (int x = 0; x < info->biWidth; x++)
-                {
-                    offset = rowOffset + x * 3;
-                    
-                    uint32_t b = imageData[offset + 0];
-                    uint32_t g = imageData[offset + 1];
-                    uint32_t r = imageData[offset + 2];
-
-                    uint32_t argb = 0xFF000000 |
-                                    r << 16 |
-                                    g << 8  |
-                                    b;
-
-                    DirectGUI::SetPixel(x + x_p, y + y_p, argb);
-                }
-            }
-        }
-    }
+    Image logo = Image::CreateFromFile(path);
+    logo.DrawTo(DirectGUI::GetCanvas(), GUI::Width / 2 - logo.GetWidth()/2, GUI::Height / 2 - logo.GetHeight()/2);
 
     bar->SetValue(70);
 

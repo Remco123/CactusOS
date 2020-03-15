@@ -14,9 +14,11 @@
 #include <gui/contextinfo.h>
 #include <math.h>
 #include <gui/contextheap.h>
+#include <imaging/image.h>
 #include "cursor.h"
 
 using namespace LIBCactusOS;
+using namespace LIBCactusOS::Imaging;
 
 //////////////
 // Functions
@@ -27,7 +29,6 @@ void RemovePreviousCursor();
 void DrawCursor();
 void ProcessEvents();
 void ResizeContext(ContextInfo* c, Rectangle newSize);
-extern uint8_t* LoadBackground(char*); //In background.cpp
 extern uint8_t ConvertKeycode(KeypressPacket* packet); //In scancodes.cpp
 
 //////////
@@ -207,10 +208,13 @@ int main()
     backBufferCanvas = new Canvas(backBuffer, GUI::Width, GUI::Height);
 
     DirectGUI::DrawString("Loading Background...", 3, 3, 0xFF000000);
-    Print("Loading Background\n");
-    wallPaperBuffer = new uint8_t[GUI::Width*GUI::Height*4]; //LoadBackground("B:\\wallpap.bmp");
-    memset(wallPaperBuffer, 0x00, GUI::Width*GUI::Height*4);
-    wallPaperCanvas = new Canvas(wallPaperBuffer, GUI::Width, GUI::Height);
+    Image temp = Image::CreateFromFile("B:\\wallpap.jpg");
+
+    DirectGUI::DrawString("Resizing Background...", 3, 16, 0xFF000000);
+    Image wallpaper = Image::Resize(temp, GUI::Width, GUI::Height, Bilinear);
+    
+    wallPaperBuffer = (uint8_t*)(wallpaper.GetBufferPtr());
+    wallPaperCanvas = wallpaper.GetCanvas();
 
     Print("Requesting Systeminfo\n");
     if(!RequestSystemInfo())
