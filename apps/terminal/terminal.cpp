@@ -96,7 +96,7 @@ int ExecCommand(char* cmd)
             termWindow->Write(Convert::IntToString(item->threads));
             termWindow->Write(item->blocked ? (char*)" Blocked" : (char*)" !Blocked");
             termWindow->Write(" Memory ");
-            termWindow->Write(Convert::IntToString(item->heapMemory / 1024));
+            termWindow->Write(Convert::IntToString(item->heapMemory / 1_KB));
             termWindow->Write(" Kb");
             termWindow->Write('\n');
             delete item;

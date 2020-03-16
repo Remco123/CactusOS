@@ -63,7 +63,7 @@ uint32_t PhysicalMemoryManager::FirstFreeSize(uint32_t size)
 void PhysicalMemoryManager::Initialize(uint32_t size, uint32_t bitmap)
 {
     BootConsole::Write("Memory Size: ");
-    BootConsole::Write(Convert::IntToString(size / 1024 / 1024));
+    BootConsole::Write(Convert::IntToString(size / 1_MB));
     BootConsole::WriteLine(" Mb");
     BootConsole::Write("Bitmap: 0x"); Print::printfHex32(bitmap); BootConsole::WriteLine();
 
@@ -75,7 +75,7 @@ void PhysicalMemoryManager::Initialize(uint32_t size, uint32_t bitmap)
     MemoryOperations::memset(memoryArray, 0xFF, usedBlocks / BLOCKS_PER_BYTE);
 
     BootConsole::Write("Bitmap size: ");
-    BootConsole::Write(Convert::IntToString(GetBitmapSize() / 1024));
+    BootConsole::Write(Convert::IntToString(GetBitmapSize() / 1_KB));
     BootConsole::WriteLine(" Kb");
     BootConsole::Write("Bitmap End: 0x"); Print::printfHex32(bitmap + GetBitmapSize()); BootConsole::WriteLine();
 }
@@ -113,7 +113,7 @@ void PhysicalMemoryManager::ParseMemoryMap(const multiboot_info_t* mbi)
     while ((uint32_t)mmap < phys2virt(mbi->mmap_addr) + mbi->mmap_length)
     {
         BootConsole::Write("|->   0x"); Print::printfHex32(mmap->base_addr_low); BootConsole::Write("   ");
-        BootConsole::Write(Convert::IntToString(mmap->length_low / 1024)); BootConsole::Write(" Kb      ");
+        BootConsole::Write(Convert::IntToString(mmap->length_low / 1_KB)); BootConsole::Write(" Kb      ");
         BootConsole::SetX(35);
         BootConsole::Write("Type: "); BootConsole::Write(Convert::IntToString(mmap->type));
 

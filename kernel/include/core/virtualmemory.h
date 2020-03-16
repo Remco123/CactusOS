@@ -6,6 +6,7 @@
 #define __CACTUSOS__CORE__VIRTUALMEMORY_H
 
 #include <core/physicalmemory.h>
+#include <common/types.h>
 #include <system/memory/heap.h>
 
 namespace CactusOS
@@ -20,12 +21,12 @@ namespace CactusOS
             FOUR_MB = 1
         };
 
-        #define KERNEL_VIRT_ADDR 0xC0000000
-        #define USER_STACK_SIZE 0x8000
+        #define KERNEL_VIRT_ADDR 3_GB
+        #define USER_STACK_SIZE 32_KB
         #define USER_STACK_TOP (KERNEL_VIRT_ADDR)
         #define USER_STACK (USER_STACK_TOP - USER_STACK_SIZE)
 
-        #define PAGE_SIZE 4096
+        #define PAGE_SIZE 4_KB
         #define KERNEL_PTNUM 768 //The kernel is in the 768th entry
         #define PAGE_TABLE_ADDRESS 0xFFC00000
         #define PAGE_DIRECTORY_ADDRESS 0xFFFFF000

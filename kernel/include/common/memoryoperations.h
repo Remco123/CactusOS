@@ -7,8 +7,8 @@ namespace CactusOS
 {
     namespace common
     {
-        #define phys2virt(x) ((x) + 0xC0000000)
-        #define virt2phys(x) ((x) - 0xC0000000)
+        #define phys2virt(x) ((x) + 3_GB)
+        #define virt2phys(x) ((x) - 3_GB)
 
         class MemoryOperations
         {

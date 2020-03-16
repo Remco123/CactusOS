@@ -16,7 +16,7 @@ namespace CactusOS
             Active
         };
 
-        #define PROC_USER_HEAP_SIZE 0x100000 //1 MB heap space for processes, and ofcourse more if needed.
+        #define PROC_USER_HEAP_SIZE 1_MB //1 MB heap space for processes, and of course more if needed.
 
         struct Thread;
 

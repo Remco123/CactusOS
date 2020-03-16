@@ -8,11 +8,10 @@ using namespace CactusOS::system;
 
 uint32_t KernelHeap::startAddress = 0;
 uint32_t KernelHeap::endAddress = 0;
-uint32_t KernelHeap::maxAddress = 0;
 MemoryHeader* KernelHeap::firstHeader = 0;
 bool KernelHeap::Enabled = false;
 
-void KernelHeap::Initialize(uint32_t start, uint32_t end, uint32_t max)
+void KernelHeap::Initialize(uint32_t start, uint32_t end)
 {
     if (start % PAGE_SIZE != 0 || end % PAGE_SIZE != 0)
     {
@@ -22,7 +21,6 @@ void KernelHeap::Initialize(uint32_t start, uint32_t end, uint32_t max)
 
     KernelHeap::startAddress = start;
     KernelHeap::endAddress = end;
-    KernelHeap::maxAddress = max;
 
     //Heap should start after initrd, need to look into that in the future. But it works for now.
     //MemoryOperations::memset((void*)start, 0x0, end - start);
@@ -50,9 +48,8 @@ void* KernelHeap::InternalAllocate(uint32_t size)
     
     if(freeBlock == 0)
     {
-        //We need to expand the heap
-        BootConsole::WriteLine("Expanding heap");
-        //TODO: Implement this
+        Log(Error, "Out of Heap space!. This should never happen!");
+        return 0;
     }
 
     if(freeBlock->size >= size + sizeof(MemoryHeader))

@@ -7,9 +7,8 @@ namespace CactusOS
 {
     namespace system
     {
-        #define KERNEL_HEAP_START 0xC0400000
-        #define KERNEL_HEAP_START_SIZE 0x100000
-        #define KERNEL_HEAP_END 0xCFFFF000
+        #define KERNEL_HEAP_START (KERNEL_VIRT_ADDR + 4_MB)
+        #define KERNEL_HEAP_SIZE 4_MB
 
         #define USE_HEAP_MAGIC 1
         
@@ -41,7 +40,6 @@ namespace CactusOS
         private:
             static common::uint32_t startAddress;
             static common::uint32_t endAddress;
-            static common::uint32_t maxAddress;
 
             static MemoryHeader* firstHeader;
 
@@ -49,7 +47,7 @@ namespace CactusOS
             static void InternalFree(void* ptr);
         public:
             static bool Enabled;
-            static void Initialize(common::uint32_t start, common::uint32_t end, common::uint32_t max);
+            static void Initialize(common::uint32_t start, common::uint32_t end);
 
             static void* malloc(common::uint32_t size, common::uint32_t* physReturn = 0);
             static void free(void* ptr);

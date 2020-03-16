@@ -13,7 +13,7 @@ namespace LIBCactusOS
     uint32_t pageRoundUp(uint32_t address);
     uint32_t pageRoundDown(uint32_t address);
 
-    #define HEAP_INCREASE_SIZE 0x100000
+    #define HEAP_INCREASE_SIZE 1_MB
 
     struct MemoryHeader
     {

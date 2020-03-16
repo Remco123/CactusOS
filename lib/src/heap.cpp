@@ -6,7 +6,7 @@ using namespace LIBCactusOS;
 
 uint32_t UserHeap::startAddress = 0;
 uint32_t UserHeap::endAddress = 0;
-uint32_t UserHeap::maxAddress = 0xC0000000 - 0x100000; //1 MB Below the kernel, TODO: Is this safe?
+uint32_t UserHeap::maxAddress = 3_GB - 1_MB; //1 MB Below the kernel
 MemoryHeader* UserHeap::firstHeader = 0;
 
 uint32_t LIBCactusOS::pageRoundUp(uint32_t address)

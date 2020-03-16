@@ -100,7 +100,7 @@ extern "C" void kernelMain(const multiboot_info_t* mbi, unsigned int multiboot_m
     BootConsole::Write("Kernel virtual base: 0x"); Print::printfHex32(_kernel_virtual_base); BootConsole::WriteLine();
     BootConsole::Write("Kernel Base: 0x"); Print::printfHex32(kernel_base); BootConsole::WriteLine();
     BootConsole::Write("Kernel End: 0x"); Print::printfHex32(kernel_end); BootConsole::WriteLine();
-    BootConsole::Write("Kernel Size: "); BootConsole::Write(Convert::IntToString(kernel_size / 1024)); BootConsole::Write(" Kb      ("); BootConsole::Write(Convert::IntToString(kernel_size)); BootConsole::WriteLine(")");
+    BootConsole::Write("Kernel Size: "); BootConsole::Write(Convert::IntToString(kernel_size / 1_KB)); BootConsole::Write(" Kb      ("); BootConsole::Write(Convert::IntToString(kernel_size)); BootConsole::WriteLine(")");
 
     BootConsole::Write("GRUB Command Line Arguments: ");
     BootConsole::WriteLine((char*)phys2virt(mbi->cmdline));
@@ -124,7 +124,7 @@ extern "C" void kernelMain(const multiboot_info_t* mbi, unsigned int multiboot_m
         GDB_BREAK();
     }
 
-    PhysicalMemoryManager::Initialize(mbi->mem_upper * 1024, kernel_end);
+    PhysicalMemoryManager::Initialize(mbi->mem_upper * 1_KB, kernel_end);
     BootConsole::WriteLine("Physical Memory Loaded");
 
     BootConsole::WriteLine("Reading CPU Info");
@@ -140,7 +140,7 @@ extern "C" void kernelMain(const multiboot_info_t* mbi, unsigned int multiboot_m
     //Protect the first 1mb of physical memory + the end of kernel. 
     //We also add the size of the bitmap so that it does not have to be staticly allocated, this makes the kernel way smaller. 
     //Also round it to page bounds.
-    PhysicalMemoryManager::SetRegionUsed(0x0, pageRoundUp(0x100000 + kernel_size + PhysicalMemoryManager::GetBitmapSize()));
+    PhysicalMemoryManager::SetRegionUsed(0x0, pageRoundUp(1_MB + kernel_size + PhysicalMemoryManager::GetBitmapSize()));
     PhysicalMemoryManager::SetRegionUsed(*(uint32_t*)phys2virt(mbi->mods_addr), *(uint32_t*)phys2virt(mbi->mods_addr + 4) - *(uint32_t*)phys2virt(mbi->mods_addr));
 
     InterruptDescriptorTable::EnableInterrupts();
@@ -149,7 +149,7 @@ extern "C" void kernelMain(const multiboot_info_t* mbi, unsigned int multiboot_m
     VirtualMemoryManager::Intialize();
     BootConsole::WriteLine("Virtual Memory Loaded");
 
-    KernelHeap::Initialize(KERNEL_HEAP_START, KERNEL_HEAP_START + KERNEL_HEAP_START_SIZE, KERNEL_HEAP_END);
+    KernelHeap::Initialize(KERNEL_HEAP_START, KERNEL_HEAP_START + KERNEL_HEAP_SIZE);
     BootConsole::WriteLine("Kernel Heap Initialized");
 
     Power::Initialize();

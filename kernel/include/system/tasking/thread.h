@@ -10,7 +10,7 @@ namespace CactusOS
 {
     namespace system
     {
-        #define THREAD_STACK_SIZE 4096
+        #define THREAD_STACK_SIZE 4_KB
         
         #define SEG_USER_DATA 0x23
         #define SEG_USER_CODE 0x1B

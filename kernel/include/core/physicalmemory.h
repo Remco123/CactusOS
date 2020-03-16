@@ -12,7 +12,7 @@ namespace CactusOS
 {
     namespace core
     {
-        #define BLOCK_SIZE 4096
+        #define BLOCK_SIZE 4_KB
         #define BLOCKS_PER_BYTE 8 //Every byte describes 8 blocks
 
         typedef struct multiboot_memory_map {

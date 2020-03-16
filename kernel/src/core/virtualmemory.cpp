@@ -78,7 +78,7 @@ void VirtualMemoryManager::Intialize()
     }
 #endif
     //Here we map some pages for the intial kernel heap
-    for(uint32_t i = KERNEL_HEAP_START; i < KERNEL_HEAP_START + KERNEL_HEAP_START_SIZE; i += PAGE_SIZE)
+    for(uint32_t i = KERNEL_HEAP_START; i < KERNEL_HEAP_START + KERNEL_HEAP_SIZE; i += PAGE_SIZE)
         AllocatePage(GetPageForAddress(i, true), true, true);
         
 
