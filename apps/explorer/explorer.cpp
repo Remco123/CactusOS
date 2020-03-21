@@ -32,7 +32,8 @@ void DirectoryItemButtonCallback(void* sender, MouseButtonArgs arg)
         shoudRefresh = true;
     }
     else if(FileExists(newPath)) {
-
+        if(strcmp(newPath + str_IndexOf(newPath, '.') + 1, "bin"))
+            Process::Run(newPath);
     }
     else
         Log(Error, "File or directory does not exist");

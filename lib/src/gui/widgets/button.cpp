@@ -12,7 +12,9 @@ Button::Button(char* text)
 void Button::DrawTo(Canvas* context, int x_abs, int y_abs)
 {
     context->DrawFillRect(this->backColor, x_abs, y_abs, this->width, this->height - 1);
-    context->DrawRect(this->borderColor, x_abs, y_abs, this->width - 1, this->height - 1);
+    for(uint32_t i = 0; i < 3; i++)
+        context->DrawRect(this->borderColor + i*0x00333333, x_abs + i, y_abs + i, this->width - 1 - i*2, this->height - 1 - i*2);
+    
     if(this->label != 0)
         context->DrawString(this->label, x_abs + 3, y_abs + 6, 0xFF000000);
 
