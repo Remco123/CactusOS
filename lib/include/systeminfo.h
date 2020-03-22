@@ -17,7 +17,11 @@ namespace LIBCactusOS
         bool MouseMiddleButton;
     } __attribute__((packed));
 
-    bool RequestSystemInfo(unsigned int mapTo = 0xBA000000);
+    #define SYSTEM_INFO_ADDR 0xBFFEE000
+
+    // Request System info to be mapped into adress space
+    // Addres is 0xBFFEE000 which is 2 pages below user-stack
+    bool RequestSystemInfo();
 }
 
 #endif

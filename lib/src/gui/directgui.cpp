@@ -4,6 +4,8 @@
 #include <log.h>
 #include <syscall.h>
 #include <string.h>
+#include <heap.h>
+#include <systeminfo.h>
 #include <math.h>
 
 using namespace LIBCactusOS;
@@ -14,9 +16,10 @@ bool DirectGUI::RequestFramebuffer()
 {
     Log(Info, "This process is requesting a direct framebuffer");
 
-    bool ret = DoSyscall(SYSCALL_GUI_GETLFB, DIRECT_GUI_ADDR);
+    uint32_t addr = SYSTEM_INFO_ADDR /* System Info Area */ - pageRoundUp(GUI::Width * GUI::Height * 4) /* Space needed for FB */ - 4_KB /* 1 page margin */;
+    bool ret = DoSyscall(SYSCALL_GUI_GETLFB, addr);
     if(ret)
-        base = new Canvas((void*)DIRECT_GUI_ADDR, GUI::Width, GUI::Height);
+        base = new Canvas((void*)addr, GUI::Width, GUI::Height);
     
     return ret;
 }

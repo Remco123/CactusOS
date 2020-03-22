@@ -411,7 +411,7 @@ void UpdateDesktop()
     DrawCursor();
 
     //Swap buffers
-    memcpy((void*)DIRECT_GUI_ADDR, (void*)backBuffer, GUI::Width*GUI::Height*4);
+    memcpy(DirectGUI::GetCanvas()->bufferPointer, (void*)backBuffer, GUI::Width*GUI::Height*4);
 }
 
 void RemovePreviousCursor()
