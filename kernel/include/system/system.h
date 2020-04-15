@@ -2,6 +2,7 @@
 #define __CACTUSOS__SYSTEM__SYSTEM_H
 
 #define BOCHS_GFX_HACK 0 //Enable or disable the bochs hack
+#define ENABLE_USB 0
 
 #include <system/bootconsole.h>
 #include <system/components/systemcomponent.h>
@@ -98,6 +99,7 @@ namespace CactusOS
 
             static ScreenMode screenMode;
             static bool gdbEnabled; //Is the gdb stub enabled?
+            static bool setupMode; //Are we running the setup program?
             static Stream* keyboardStream;
             static Stream* ProcStandardOut;
             static List<ListingController*>* listings;

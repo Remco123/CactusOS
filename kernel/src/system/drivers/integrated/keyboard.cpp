@@ -92,6 +92,8 @@ uint32_t KeyboardDriver::HandleInterrupt(uint32_t esp)
     if(System::screenMode == ScreenMode::GraphicsMode)
         for(int i = 0; i < sizeof(LIBCactusOS::KeypressPacket); i++)
             this->Write(*((char*)((uint32_t)&packet + i)));
+    else if(System::setupMode == true && (packet.flags & LIBCactusOS::Pressed))
+        this->Write(key); //Make things easier for the setup
 
     return esp;
 }

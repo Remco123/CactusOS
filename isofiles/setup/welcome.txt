@@ -1,0 +1,24 @@
+Welcome to the setup program of CactusOS.
+With this setup you can install the OS on your hard-drive.
+
+CactusOS is a open-source operating system meant for private use.
+It does not have many features yet but it is still in active development.
+The current features include:
+    - Higher Half Kernel
+    - Virtual 8086 Mode 
+    - VESA VBE + EDID Parser via bios instructions
+    - Support for IDE Drives (ATA/ATAPI) 
+    - Very Basic USB support
+      - Only USB Storage Devices at the moment
+    - Support for ISO9660 and FAT32 Filesystems
+
+There are also some basic applications installed by default which include
+    - File Manager
+    - Terminal
+    - Mines Game
+    - Clock Widget
+    - Power manager (For shutting down and restarting)
+
+For more info visit: https://github.com/Remco123/CactusOS
+Press Enter to continue
+

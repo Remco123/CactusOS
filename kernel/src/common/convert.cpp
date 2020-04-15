@@ -40,6 +40,29 @@ char* Convert::IntToString(int n)
     } while (n);
     return ret;
 }
+char* Convert::IntToString32(uint32_t n)
+{
+    static char ret[32];
+    int numChars = 0;
+    // Count how much space we will need for the string
+    int temp = n;
+    do
+    {
+        numChars++;
+        temp /= 10;
+    } while (temp);
+
+    ret[numChars] = 0;
+    
+    // Copy digits to string in reverse order
+    int i = numChars - 1;
+    do
+    {
+        ret[i--] = n % 10 + '0';
+        n /= 10;
+    } while (n);
+    return ret;
+}
 
 char* Convert::IntToHexString(uint8_t w)
 {

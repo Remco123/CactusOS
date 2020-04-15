@@ -7,6 +7,7 @@
 #include <system/drivers/usb/controllers/ehci.h>
 #include <system/drivers/usb/controllers/xhci.h>
 #include <system/drivers/video/vmwaresvga.h>
+#include <system/system.h>
 
 using namespace CactusOS;
 using namespace CactusOS::common;
@@ -57,6 +58,7 @@ void PCIDrivers::AssignDriversFromPCI(PCIController* pci, DriverManager* driverM
                 }
                 break;
             }
+#if ENABLE_USB
             case 0x0C: //Serial Bus Controller 
             {
                 switch(pciDevice->subclassID)
@@ -95,6 +97,7 @@ void PCIDrivers::AssignDriversFromPCI(PCIController* pci, DriverManager* driverM
                 }
                 break;
             }
+#endif
         }
 
 FoundDriver:

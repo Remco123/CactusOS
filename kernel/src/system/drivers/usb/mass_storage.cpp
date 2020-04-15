@@ -11,7 +11,7 @@ using namespace CactusOS::system::drivers;
 
 //Create new driver for a MSD
 USBMassStorageDriver::USBMassStorageDriver(USBDevice* dev)
-: USBDriver(dev, "USB Mass Storage"), Disk(0, 0)
+: USBDriver(dev, "USB Mass Storage"), Disk(0, 0, USBDisk, 0)
 { }
 
 //Called when mass storage device is plugged into system
@@ -132,7 +132,8 @@ bool USBMassStorageDriver::Initialize()
     }
     delete sendBuf;
     Log(Info, "MSD Blocks=%d BlockSize=%d Size=%d Mb", this->numBlocks, this->blockSize, ((uint64_t)this->numBlocks * (uint64_t)this->blockSize) / 1024 / 1024);
-    
+    this->size = this->numBlocks * this->blockSize;
+
     System::diskManager->AddDisk(this);
     
     return true;

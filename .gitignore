@@ -38,3 +38,6 @@
 *.ipch
 
 virtualbox_log.txt
+installerDisk.img
+isofiles/setup/boot.img
+isofiles/setup/core.img

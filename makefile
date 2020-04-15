@@ -24,7 +24,7 @@
 #######################
 
 INCLUDEDIRS := kernel/include
-QEMUOPTIONS := -boot d -device VGA,edid=on -trace events=../qemuTrace.txt
+QEMUOPTIONS := -device VGA,edid=on -trace events=../qemuTrace.txt -drive file=installerDisk.img,format=raw
 
 G++PARAMS := -m32 -g -I $(INCLUDEDIRS) -fno-use-cxa-atexit -nostdlib -fno-builtin -fno-exceptions -fno-rtti -fno-leading-underscore -Wno-write-strings -fpermissive -Wall
 GCCPARAMS := -m32 -g -I $(INCLUDEDIRS) -nostdlib -fno-builtin -Wall -fleading-underscore
@@ -95,12 +95,15 @@ clean:
 	rm -rf isofiles/apps/*.bin
 
 qemu: CactusOS.iso
+	qemu-img create -f raw installerDisk.img 100M
 	qemu-system-i386 -cdrom CactusOS.iso -serial stdio $(QEMUOPTIONS)
 
 qemuDBG: CactusOS.iso
+	qemu-img create -f raw installerDisk.img 100M
 	qemu-system-i386 -cdrom CactusOS.iso -serial stdio $(QEMUOPTIONS) -s -S &
 
 qemuGDB: CactusOS.iso
+	qemu-img create -f raw installerDisk.img 100M
 	qemu-system-i386 -cdrom CactusOS.iso $(QEMUOPTIONS) -serial pty &
 	gdb -ex 'file CactusOS.bin' -ex 'target remote /dev/pts/1' -q
 
@@ -116,6 +119,7 @@ serialDBG:
 	sudo ./tools/serialDebugger/a.out
 
 kdbg: CactusOS.iso
+	qemu-img create -f raw installerDisk.img 100M
 	qemu-system-i386 -cdrom CactusOS.iso $(USBOPTIONS) -serial stdio -s -S &
 	kdbg -r localhost:1234 CactusOS.bin
 

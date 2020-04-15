@@ -4,10 +4,12 @@ using namespace CactusOS;
 using namespace CactusOS::common;
 using namespace CactusOS::system;
 
-Disk::Disk(uint32_t controllerIndex, DiskController* controller)
+Disk::Disk(uint32_t controllerIndex, DiskController* controller, DiskType type, uint32_t size)
 {
     this->controllerIndex = controllerIndex;
     this->controller = controller;
+    this->type = type;
+    this->size = size;
 }
 char Disk::ReadSector(uint32_t lba, uint8_t* buf)
 {

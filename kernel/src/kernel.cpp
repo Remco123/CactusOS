@@ -13,6 +13,7 @@
 #include <core/cpu.h>
 #include <core/fpu.h>
 #include <core/power.h>
+#include <installer/installer.h>
 
 using namespace CactusOS;
 using namespace CactusOS::common;
@@ -171,8 +172,37 @@ extern "C" void kernelMain(const multiboot_info_t* mbi, unsigned int multiboot_m
     kernelProcess->Threads[0]->parent = kernelProcess;
     System::scheduler->AddThread(kernelProcess->Threads[0], false);
 
-    Log(Info, "Loading Init.bin");
+    // Check if kernel is run from HardDisk
+    // If not than ask the user if they would like to run the installer
+    // Otherwise we run the liveCD
+    if(System::vfs->Filesystems->GetAt(System::vfs->bootPartitionID)->disk->type != HardDisk) {
+        //Promt user
+        BootConsole::ForegroundColor = VGA_COLOR_BLUE;
+        System::setupMode = true;
+        BootConsole::WriteLine("Press Enter to run Installer\nStarting LiveCD in 5 seconds....");
 
+        int timeout = 0;
+        while(System::keyboardStream->Availible() == 0 && timeout < 5000) {
+            System::pit->Sleep(100);
+            timeout += 100;
+            BootConsole::Write("#");
+        }
+        BootConsole::WriteLine();
+
+        if(System::keyboardStream->Availible() > 0) { //User pressed key
+            uint8_t keyCode = System::keyboardStream->Read();    
+            
+            if(keyCode == 0x1C) { //Return key
+                BootConsole::WriteLine("Running Installer...");
+                Installer::Run();
+            }
+        }
+        BootConsole::ForegroundColor = VGA_COLOR_BLACK;
+        BootConsole::WriteLine("Running LiveCD....");
+        System::setupMode = false;
+    }
+
+    Log(Info, "Loading Init.bin");
     Process* proc = ProcessHelper::Create("B:\\apps\\init.bin", false);
     if(proc != 0)
     {

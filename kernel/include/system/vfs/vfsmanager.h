@@ -9,7 +9,7 @@ namespace CactusOS
     {
         class VFSManager
         {
-        private:
+        public:
             List<VirtualFileSystem*>* Filesystems;
         public:
             int bootPartitionID = 0;

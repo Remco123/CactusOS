@@ -16,8 +16,9 @@ namespace CactusOS
         class VirtualFileSystem
         {
         friend class VFSManager;
-        protected:
+        public:
             Disk* disk;
+        protected:
             common::uint32_t StartLBA;
             common::uint32_t SizeInSectors;
             

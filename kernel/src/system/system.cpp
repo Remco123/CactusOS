@@ -29,6 +29,7 @@ SharedSystemInfo* System::systemInfo = 0;
 
 ScreenMode System::screenMode = ScreenMode::TextMode;
 bool System::gdbEnabled = false;
+bool System::setupMode = false;
 Stream* System::keyboardStream = 0;
 Stream* System::ProcStandardOut = 0;
 List<ListingController*>* System::listings = 0;

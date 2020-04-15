@@ -12,6 +12,7 @@ namespace CactusOS
         {
         public:
             static char* IntToString(int i);
+            static char* IntToString32(uint32_t i);
 
             static char* IntToHexString(common::uint8_t w);
             static char* IntToHexString(common::uint16_t w);
