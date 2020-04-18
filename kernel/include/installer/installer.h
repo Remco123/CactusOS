@@ -16,8 +16,7 @@ namespace CactusOS
         static void ShowWarningMessage();
         static void ShowDiskSelection();
         static void ShowDiskEraseMenu();
-        static void ShowMBRMenu();
-        static void ShowMBRWriteMenu();
+        static void ShowInstallScreen();
     };
 
     #define KEY_ENTER       0x1C

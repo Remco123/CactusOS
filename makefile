@@ -123,6 +123,9 @@ kdbg: CactusOS.iso
 	qemu-system-i386 -cdrom CactusOS.iso $(USBOPTIONS) -serial stdio -s -S &
 	kdbg -r localhost:1234 CactusOS.bin
 
+grub-core:
+	grub-mkimage -o isofiles/setup/core.img -O i386-pc -p="(hd0,msdos1)/boot/grub" --config=grubcore.cfg -v biosdisk part_msdos fat normal multiboot
+
 # Only rebuild LIBCactusOS and the apps without recompiling the kernel
 fastApps:
 	rm -rf isofiles/apps/*.bin

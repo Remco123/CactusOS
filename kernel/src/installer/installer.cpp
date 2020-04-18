@@ -28,9 +28,6 @@ char* FileList[] = {
 };
 
 Disk* selectedDisk = 0;
-uint32_t startLBA = 0;
-uint32_t endLBA = 0;
-int partitionIndex = 0;
 
 void LBAToCHS(int lba, int *head, int *track, int *sector)
 {
@@ -67,11 +64,8 @@ void Installer::Run()
     // Ask user for disk wipe
     ShowDiskEraseMenu();
 
-    // Configure Master Boot Record
-    ShowMBRMenu();
-
-    // Write Master Boot Record
-    ShowMBRWriteMenu();
+    // Start the installation
+    ShowInstallScreen();
 
     TextGUI::ClearScreen();
     TextGUI::DrawString("Setup is complete, press enter to reboot", 0, 0);
@@ -200,196 +194,94 @@ void Installer::ShowDiskEraseMenu()
     }
 }
 
-void Installer::ShowMBRMenu()
-{
-    TextGUI::ClearScreen(VGA_COLOR_BLUE);
-    TextGUI::DrawString("In this menu you can configure the Master Boot Record of the hard drive", 0, 0);
-    TextGUI::DrawString("This contains the partitions of the disk and the initial boot code", 0, 1);
-    TextGUI::DrawString("WARNING! During this process the boot loader will be overwritten.", 0, 3);
-
-    TextGUI::StatusBar("Reading current MBR", 40);
-    MasterBootRecord currentMBR;
-    selectedDisk->ReadSector(0, (uint8_t*)&currentMBR);
-    
-    TextGUI::DrawString("Select partion entry to use: ", 0, 5);
-    for(int i = 0; i < 4; i++) {
-        TextGUI::DrawString(Convert::IntToString(i), 0, 6 + i);
-        TextGUI::DrawString(": Type: ", 1, 6 + i);
-        TextGUI::DrawString(Convert::IntToHexString(currentMBR.primaryPartitions[i].partition_id), 8, 6 + i);
-        TextGUI::DrawString("Start: ", 12, 6 + i);
-        TextGUI::DrawString(Convert::IntToString32(currentMBR.primaryPartitions[i].start_lba), 19, 6 + i);
-        TextGUI::DrawString("Sectors: ", 30, 6 + i);
-        TextGUI::DrawString(Convert::IntToString32(currentMBR.primaryPartitions[i].length), 39, 6 + i);
-    }
-    TextGUI::StatusBar("Press index of partition [0,1,2,3]", 45);
-    char key = GetKey();
-    while(key != 0x0B && key != 0x02 && key != 0x03 && key != 0x04)
-        key = GetKey();
-    
-    int index = (key == 0x0B) ? 0 : (key - 1);
-    startLBA = currentMBR.primaryPartitions[index].start_lba;
-    endLBA = startLBA + currentMBR.primaryPartitions[index].length;
-    uint32_t scale = 20;
-
-    // Partition start and length need to be given by user
-    if(endLBA == 0) {
-        TextGUI::DrawString("Enter partition start en end address of LBA:", 0, 10);
-        TextGUI::DrawString("Press A to use all of the hard drive", 0, 12);
-
-        ///////////////
-        // START LBA
-        ///////////////
-        uint32_t tmpStartLBA = 0;
-        while(startLBA == 0 && endLBA == 0) {
-            TextGUI::StatusBar("Enter start LBA address... [-/+ for value, </> for scale]", 50);
-
-            TextGUI::DrawString("                                                                               ", 0, 11);
-            TextGUI::DrawString("Start: ", 0, 11);
-            TextGUI::DrawString(Convert::IntToString(tmpStartLBA), 7, 11);
-
-            TextGUI::DrawString("Scale: ", 30, 11);
-            TextGUI::DrawString(Convert::IntToString32(1 << scale), 37, 11);
-            TextGUI::DrawString(Convert::IntToString32((1<<scale)/1_MB), VGA_WIDTH - 10, 11);
-            TextGUI::DrawString(" MB", VGA_WIDTH - 3, 11);
-
-            char key2 = GetKey();
-            switch(key2) {
-                case KEY_LEFT_ARROW:
-                    if(scale > 1)
-                        scale--;
-                    break;
-                case KEY_RIGHT_ARROW:
-                    if(scale < 30)
-                        scale++;
-                    break;
-                case KEY_MINUS:
-                    if((int)(tmpStartLBA - (1<<scale)) > 0)
-                        tmpStartLBA -= 1<<scale;
-                    break;
-                case KEY_PLUS:
-                    tmpStartLBA += 1<<scale;
-                    break;
-                case KEY_ENTER:
-                    startLBA = tmpStartLBA;
-                    break;
-                case KEY_A:
-                    startLBA = 0;
-                    endLBA = selectedDisk->size/512;
-                    break;
-                default:
-                    break;
-            }
-        }
-
-
-        ///////////////
-        // END LBA
-        ///////////////
-        uint32_t tmpEndLBA = startLBA + (10_GB/512);
-        while(endLBA == 0) {
-            TextGUI::StatusBar("Enter End LBA address... [-/+ for value, </> for scale]", 55);
-
-            TextGUI::DrawString("                                                                               ", 0, 11);
-            TextGUI::DrawString("End: ", 0, 11);
-            TextGUI::DrawString(Convert::IntToString(tmpEndLBA), 7, 11);
-
-            TextGUI::DrawString("Scale: ", 30, 11);
-            TextGUI::DrawString(Convert::IntToString32(1 << scale), 37, 11);
-            TextGUI::DrawString(Convert::IntToString32((1<<scale)/1_MB), VGA_WIDTH - 10, 11);
-            TextGUI::DrawString(" MB", VGA_WIDTH - 3, 11);
-
-            char key2 = GetKey();
-            switch(key2) {
-                case KEY_LEFT_ARROW:
-                    if(scale > 1)
-                        scale--;
-                    break;
-                case KEY_RIGHT_ARROW:
-                    if(scale < 30)
-                        scale++;
-                    break;
-                case KEY_MINUS:
-                    if((int)(tmpEndLBA - (1<<scale)) > 0)
-                        tmpEndLBA -= 1<<scale;
-                    break;
-                case KEY_PLUS:
-                    tmpEndLBA += 1<<scale;
-                    break;
-                case KEY_ENTER:
-                    endLBA = tmpEndLBA;
-                    break;
-                case KEY_A:
-                    startLBA = 0;
-                    endLBA = selectedDisk->size/512;
-                    break;
-                default:
-                    break;
-            }
-        }
-    }
-    partitionIndex = index;
-}
-
-void Installer::ShowMBRWriteMenu()
+// Perform the installation
+void Installer::ShowInstallScreen()
 {
     TextGUI::ClearScreen();
-    Log(Info, "You are about to write the following to the disk and MBR:");
-    Log(Info, "    - Partition (%d) from (%x) to (%x)", partitionIndex, startLBA, endLBA);
-    Log(Info, "    - Grub stage1 bootcode");
-    Log(Info, "    - Make the selected partition bootable");
-    Log(Info, "To proceed press the enter key");
+    TextGUI::DrawString("You are about to start the installation of CactusOS to your hard drive", 0, 0);
+    TextGUI::DrawString("The installation process will contain the following:", 0, 1);
+    TextGUI::DrawString("   - Replace the MBR with grub stage1 boot code + partition table", 0, 2);
+    TextGUI::DrawString("   - Copy rest of the bootloader to harddisk", 0, 3);
+    TextGUI::DrawString("   - Create FAT32 partition as main filesystem", 0, 4);
+    TextGUI::DrawString("   - Copy system files to new partition", 0, 5);
 
-    TextGUI::StatusBar("Waiting for enter key....", 70);
+    TextGUI::DrawString("Press enter to start the installation", 0, 7);
+    TextGUI::StatusBar("Waiting for enter key....", 40);
     while(GetKey() != KEY_ENTER)
-        TextGUI::StatusBar("Waiting for enter key.... [Wrong Key]", 70);
+        TextGUI::StatusBar("Waiting for enter key.... [Wrong Key]", 40);
     
-    // Read current MBR again
-    MasterBootRecord currentMBR;
-    selectedDisk->ReadSector(0, (uint8_t*)&currentMBR);
+    /////////////////////////
+    // Start of installation
+    /////////////////////////
 
-    uint8_t zeroBuf[512]; //A buffer containing all zeros
-    MemoryOperations::memset(zeroBuf, 0, 512);
+    /////////////////////////
+    // Create new MBR with bootloader
+    /////////////////////////
+    TextGUI::StatusBar("Creating new MBR in memory....", 45);
+    MasterBootRecord newMBR;
+    MemoryOperations::memset(&newMBR, 0x0, sizeof(MasterBootRecord));
 
-    if(MemoryOperations::memcmp(&currentMBR, zeroBuf, 512) == 0) { //Current MBR is completely zero
-        //Fill in some values for the new MBR
-        char sign[4] = {'C', 'A', System::rtc->GetMonth(), System::rtc->GetYear() - 2000};
-        currentMBR.signature = *(uint32_t*)sign;
-        currentMBR.unused = 0;
-        currentMBR.magicnumber = 0xAA55;
-    }
+    // Fill in some values
+    char sign[4] = {'C', 'A', System::rtc->GetMonth(), System::rtc->GetYear() - 2000};
+    newMBR.signature = *(uint32_t*)sign;
+    newMBR.unused = 0;
+    newMBR.magicnumber = 0xAA55;
+    
+    // Read bootloader stage1 from cdrom
+    uint8_t bootloader[440];
+    TextGUI::StatusBar("Reading bootloader stage1 from CD", 50);
+    if(System::vfs->ReadFile("B:\\setup\\boot.img", bootloader) != 0)
+        SetupError();
+    
+    // Copy it to our MBR
+    MemoryOperations::memcpy(newMBR.bootloader, bootloader, 440);
 
-    // First we fill in the values of the new MBR
-    currentMBR.primaryPartitions[partitionIndex].bootable = (1<<7);
-    currentMBR.primaryPartitions[partitionIndex].start_lba = startLBA;
-    currentMBR.primaryPartitions[partitionIndex].length = endLBA - startLBA;
+    //////////////////////////
+    // Read core.img from cdrom
+    //////////////////////////
+    TextGUI::StatusBar("Reading bootloader from CD to disk", 55);
+    uint32_t coreSize = System::vfs->GetFileSize("B:\\setup\\core.img");
+    if((int)coreSize == -1)
+        SetupError();
+    
+    // Check if size is alligned
+    if(coreSize % 512 != 0)
+        SetupError();
+    
+    // Create memory for core image
+    uint8_t* coreBuffer = new uint8_t[coreSize];
 
-    // Legacy CHS Values
-    { // Begin
-        int head,track,sector;
-        LBAToCHS(startLBA, &head, &track, &sector);
-        currentMBR.primaryPartitions[partitionIndex].start_head = head;
-        currentMBR.primaryPartitions[partitionIndex].start_cylinder = track;
-        currentMBR.primaryPartitions[partitionIndex].start_sector = sector;
-    }
-    { // End
-        int head,track,sector;
-        LBAToCHS(endLBA, &head, &track, &sector);
-        currentMBR.primaryPartitions[partitionIndex].end_head = head;
-        currentMBR.primaryPartitions[partitionIndex].end_cylinder = track;
-        currentMBR.primaryPartitions[partitionIndex].end_sector = sector;
-    }
-
-    // Read boot code from CDROM
-    uint8_t bootCode[440];
-    if(System::vfs->ReadFile("B:\\setup\\boot.img", bootCode) != 0)
+    // And read the file
+    if(System::vfs->ReadFile("B:\\setup\\core.img", coreBuffer) != 0)
         SetupError();
 
-    // Then we copy the boot code used by grub
-    MemoryOperations::memcpy(currentMBR.bootloader, bootCode, 440);
+    //TODO: Create partitions
+    TextGUI::StatusBar("Creating FAT32 Partition", 60);
+    
 
-    // Finally write it back to the disk
-    TextGUI::StatusBar("Updating MBR", 75);
-    selectedDisk->WriteSector(0, (uint8_t*)&currentMBR);
+
+    
+
+
+
+    ////////////////////
+    // Write new MBR to disk
+    ////////////////////
+    TextGUI::StatusBar("Writing new MBR + Bootloader to disk", 65);
+    if(selectedDisk->WriteSector(0, (uint8_t*)&newMBR) != 0)
+        SetupError();
+
+    ////////////////////
+    // Write core.img to disk
+    ////////////////////
+    for(uint32_t sector = 0; sector < (coreSize/512); sector++)
+        if(selectedDisk->WriteSector(sector + 1, coreBuffer + sector*512) != 0)
+            SetupError();
+    
+    TextGUI::StatusBar("Cleaning up....", 70);
+
+    //Free buffer
+    delete coreBuffer;
 }
 
 void Installer::SetupError()
