@@ -42,6 +42,18 @@ namespace CactusOS
             common::uint16_t    BootSignature;
         } __attribute__((packed));
 
+        struct FAT32_FSInfo
+        {
+            common::uint32_t    signature1;
+            common::uint8_t     reserved1[480];
+            common::uint32_t    signature2;
+            common::uint32_t    lastFreeCluster;
+            common::uint32_t    startSearchCluster;
+            common::uint8_t     reserved2[12];
+            common::uint32_t    signature3;
+        } __attribute__((packed));
+        
+
         struct DirectoryEntry
         {
             common::uint8_t     FileName[11];
@@ -69,6 +81,9 @@ namespace CactusOS
         #define FAT_ENDOFDIRS 0x0
         #define FAT_UNUSED 0xE5
         #define FAT_FILENAME_LEN 11
+
+        #define FAT_EOF      0x0ffffff8
+        #define FAT_BAD      0x0ffffff7
         
         #define GET_CLUSTER(e) (e->LowFirstCluster | (e->HighFirstCluster << (16)))
 

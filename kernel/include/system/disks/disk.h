@@ -26,9 +26,9 @@ namespace CactusOS
             common::uint32_t controllerIndex; //The real number for the disk on the controller
             char* identifier = 0; //Disk Identifier
             DiskType type;
-            common::uint32_t size; //Size of disk in bytes
+            common::uint64_t size; //Size of disk in bytes
 
-            Disk(common::uint32_t controllerIndex, DiskController* controller, DiskType type, common::uint32_t size);
+            Disk(common::uint32_t controllerIndex, DiskController* controller, DiskType type, common::uint64_t size);
             
             virtual char ReadSector(common::uint32_t lba, common::uint8_t* buf);          
             virtual char WriteSector(common::uint32_t lba, common::uint8_t* buf);

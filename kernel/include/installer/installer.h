@@ -1,6 +1,8 @@
 #ifndef __CACTUSOS__INSTALLER__INSTALLER_H
 #define __CACTUSOS__INSTALLER__INSTALLER_H
 
+#include <system/disks/partitionmanager.h>
+
 namespace CactusOS
 {
     // Class responsible for installing CactusOS on a hard drive
@@ -17,6 +19,7 @@ namespace CactusOS
         static void ShowDiskSelection();
         static void ShowDiskEraseMenu();
         static void ShowInstallScreen();
+        static void CreateFatPartition(system::PartitionTableEntry* pEntry);
     };
 
     #define KEY_ENTER       0x1C

@@ -4,7 +4,7 @@ using namespace CactusOS;
 using namespace CactusOS::common;
 using namespace CactusOS::system;
 
-Disk::Disk(uint32_t controllerIndex, DiskController* controller, DiskType type, uint32_t size)
+Disk::Disk(uint32_t controllerIndex, DiskController* controller, DiskType type, uint64_t size)
 {
     this->controllerIndex = controllerIndex;
     this->controller = controller;
