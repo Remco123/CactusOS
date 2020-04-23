@@ -13,9 +13,21 @@ uint32_t LIBCactusOS::GetFileSize(char* path)
 {
     return (uint32_t)DoSyscall(SYSCALL_GET_FILESIZE, (uint32_t)path);
 }
-int LIBCactusOS::ReadFile(char* path, uint8_t* buffer)
+int LIBCactusOS::ReadFile(char* path, uint8_t* buffer, uint32_t offset, uint32_t len)
 {
-    return (int)DoSyscall(SYSCALL_READ_FILE, (uint32_t)path, (uint32_t)buffer);
+    return (int)DoSyscall(SYSCALL_READ_FILE, (uint32_t)path, (uint32_t)buffer, offset, len);
+}
+int LIBCactusOS::WriteFile(char* path, uint8_t* buffer, uint32_t len, bool create)
+{
+    return (int)DoSyscall(SYSCALL_WRITE_FILE, (uint32_t)path, (uint32_t)buffer, len, (uint32_t)create);
+}
+int LIBCactusOS::CreateFile(char* path)
+{
+    return (int)DoSyscall(SYSCALL_CREATE_FILE, (uint32_t)path);
+}
+int LIBCactusOS::CreateDirectory(char* path)
+{
+    return (int)DoSyscall(SYSCALL_CREATE_DIRECTORY, (uint32_t)path);
 }
 bool LIBCactusOS::DirectoryExists(char* path)
 {

@@ -7,13 +7,27 @@
 
 namespace LIBCactusOS
 {
-    uint32_t GetFileSize(char* path);
-    int ReadFile(char* path, uint8_t* buffer);
-    bool FileExists(char* path);
-    bool DirectoryExists(char* path);
-    bool EjectDisk(char* path);
+    // Read file contents into buffer
+    int ReadFile(char* filename, uint8_t* buffer, uint32_t offset = 0, uint32_t len = -1);
+    // Write buffer to file, file will be created when create equals true
+    int WriteFile(char* filename, uint8_t* buffer, uint32_t len, bool create = true);
+
+    // Check if file exist
+    bool FileExists(char* filename);
+    // Check if directory exist
+    bool DirectoryExists(char* filename);
+
+    // Create a file at the filepath
+    int CreateFile(char* path);
+    // Create a new directory
+    int CreateDirectory(char* path);
+
+    // Get size of specified file in bytes
+    uint32_t GetFileSize(char* filename);
+
     List<char*> DirectoryListing(char* path);
     List<DiskInfo> DiskListing();
+    bool EjectDisk(char* path);
 }
 
 #endif

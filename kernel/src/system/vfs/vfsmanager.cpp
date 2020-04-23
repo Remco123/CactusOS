@@ -10,7 +10,7 @@ VFSManager::VFSManager()
     this->Filesystems = new List<VirtualFileSystem*>();
 }
 
-int VFSManager::ExtractDiskNumber(char* path, uint8_t* idSizeReturn)
+int VFSManager::ExtractDiskNumber(const char* path, uint8_t* idSizeReturn)
 {
     if(String::Contains(path, ':') && String::Contains(path, PATH_SEPERATOR_C))
     {
@@ -82,7 +82,7 @@ bool VFSManager::SearchBootPartition()
     return false;
 }
 
-List<char*>* VFSManager::DirectoryList(char* path)
+List<char*>* VFSManager::DirectoryList(const char* path)
 {
     uint8_t idSize = 0;
     int disk = ExtractDiskNumber(path, &idSize);
@@ -92,7 +92,7 @@ List<char*>* VFSManager::DirectoryList(char* path)
         return 0;
 }
 
-int VFSManager::GetFileSize(char* path)
+uint32_t VFSManager::GetFileSize(const char* path)
 {
     uint8_t idSize = 0;
     int disk = ExtractDiskNumber(path, &idSize);
@@ -102,7 +102,7 @@ int VFSManager::GetFileSize(char* path)
         return -1;
 }
 
-int VFSManager::ReadFile(char* path, uint8_t* buffer)
+int VFSManager::ReadFile(const char* path, uint8_t* buffer, uint32_t offset, uint32_t len)
 {
     uint8_t idSize = 0;
     int disk = ExtractDiskNumber(path, &idSize);
@@ -113,7 +113,18 @@ int VFSManager::ReadFile(char* path, uint8_t* buffer)
         return -1;
 }
 
-bool VFSManager::FileExists(char* path)
+int VFSManager::WriteFile(const char* path, uint8_t* buffer, uint32_t len, bool create)
+{
+    uint8_t idSize = 0;
+    int disk = ExtractDiskNumber(path, &idSize);
+
+    if(disk != -1 && Filesystems->size() > disk)
+        return Filesystems->GetAt(disk)->WriteFile(path + idSize + 2, buffer, len, create);
+    else
+        return -1;
+}
+
+bool VFSManager::FileExists(const char* path)
 {
     uint8_t idSize = 0;
     int disk = ExtractDiskNumber(path, &idSize);
@@ -124,7 +135,7 @@ bool VFSManager::FileExists(char* path)
         return false;
 }
 
-bool VFSManager::DirectoryExists(char* path)
+bool VFSManager::DirectoryExists(const char* path)
 {
     uint8_t idSize = 0;
     int disk = ExtractDiskNumber(path, &idSize);
@@ -139,7 +150,36 @@ bool VFSManager::DirectoryExists(char* path)
         return false;
 }
 
-bool VFSManager::EjectDrive(char* path)
+int VFSManager::CreateFile(const char* path)
+{
+    uint8_t idSize = 0;
+    int disk = ExtractDiskNumber(path, &idSize);
+
+    if(disk != -1 && Filesystems->size() > disk) {
+        if(String::strlen(path) == idSize + 2) //Only disk part, like 0:\ ofcourse this is a directory as well
+            return true;
+        else
+            return Filesystems->GetAt(disk)->CreateFile(path + idSize + 2);
+    }
+    else
+        return -1;
+}
+int VFSManager::CreateDirectory(const char* path)
+{
+    uint8_t idSize = 0;
+    int disk = ExtractDiskNumber(path, &idSize);
+
+    if(disk != -1 && Filesystems->size() > disk) {
+        if(String::strlen(path) == idSize + 2) //Only disk part, like 0:\ ofcourse this is a directory as well
+            return true;
+        else
+            return Filesystems->GetAt(disk)->CreateDirectory(path + idSize + 2);
+    }
+    else
+        return -1;
+}
+
+bool VFSManager::EjectDrive(const char* path)
 {
     uint8_t idSize = 0;
     int disk = ExtractDiskNumber(path, &idSize);

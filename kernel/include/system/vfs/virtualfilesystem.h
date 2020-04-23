@@ -29,12 +29,27 @@ namespace CactusOS
             
             /////////////
             // VFS Functions (Read, Write, etc.)
-            /////////////     
-            virtual List<char*>* DirectoryList(char* path);
-            virtual int GetFileSize(char* path);
-            virtual int ReadFile(char* path, common::uint8_t* buffer);
-            virtual bool FileExists(char* path);
-            virtual bool DirectoryExists(char* path);
+            ///////////// 
+               
+            // Read file contents into buffer
+            virtual int ReadFile(const char* filename, uint8_t* buffer, uint32_t offset = 0, uint32_t len = -1);
+            // Write buffer to file, file will be created when create equals true
+            virtual int WriteFile(const char* filename, uint8_t* buffer, uint32_t len, bool create = true);
+
+            // Check if file exist
+            virtual bool FileExists(const char* filename);
+            // Check if directory exist
+            virtual bool DirectoryExists(const char* filename);
+
+            // Create a file at the filepath
+            virtual int CreateFile(const char* path);
+            // Create a new directory
+            virtual int CreateDirectory(const char* path);
+
+            // Get size of specified file in bytes
+            virtual uint32_t GetFileSize(const char* filename);
+            // Returns list of context inside a directory
+            virtual List<char*>* DirectoryList(const char* path);
         };
     }
 }

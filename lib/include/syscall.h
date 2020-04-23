@@ -6,44 +6,103 @@ namespace LIBCactusOS
     #define SYSCALL_RET_SUCCES 1
     #define SYSCALL_RET_ERROR 0
 
-    #define SYSCALL_EXIT 0
-    #define SYSCALL_LOG 1
-    #define SYSCALL_GUI_GETLFB 2
-    #define SYSCALL_FILE_EXISTS 3
-    #define SYSCALL_DIR_EXISTS 4
-    #define SYSCALL_GET_FILESIZE 5
-    #define SYSCALL_READ_FILE 6
-    #define SYSCALL_GET_HEAP_START 7
-    #define SYSCALL_GET_HEAP_END 8
-    #define SYSCALL_PRINT 9
-    #define SYSCALL_SET_HEAP_SIZE 10
-    #define SYSCALL_RUN_PROC 11
-    #define SYSCALL_SLEEP_MS 12
-    #define SYSCALL_CREATE_SHARED_MEM 13
-    #define SYSCALL_IPC_SEND 14
-    #define SYSCALL_IPC_RECEIVE 15
-    #define SYSCALL_IPC_AVAILABLE 16
-    #define SYSCALL_START_THREAD 17
-    #define SYSCALL_MAP_SYSINFO 18
-    #define SYSCALL_YIELD 19
-    #define SYSCALL_GET_TICKS 20
-    #define SYSCALL_GET_DATETIME 21
-    #define SYSCALL_SHUTDOWN 22
-    #define SYSCALL_REBOOT 23
-    #define SYSCALL_EJECT_DISK 24
-    #define SYSCALL_READ_STDIO 25
-    #define SYSCALL_WRITE_STDIO 26
-    #define SYSCALL_REDIRECT_STDIO 27
-    #define SYSCALL_STDIO_AVAILABLE 28
-    #define SYSCALL_REMOVE_SHARED_MEM 29
-    #define SYSCALL_PROC_EXIST 30
-    #define SYSCALL_UNBLOCK 31
-    #define SYSCALL_BEGIN_LISTING 32
-    #define SYSCALL_LISTING_ENTRY 33
-    #define SYSCALL_END_LISTING 34
-    #define SYSCALL_SET_SCHEDULER 35
-    #define SYSCALL_GET_SCREEN_PROPERTIES 36
-    #define SYSCALL_SET_CACTUSOS_LIB 0xFFFF
+    enum Systemcalls {
+        SYSCALL_EXIT = 0, // Tells kernel that procces is done and can be removed
+
+        /////////////
+        // Logging
+        /////////////
+    
+        SYSCALL_LOG,
+        SYSCALL_PRINT,
+
+        /////////////
+        // VFS
+        /////////////
+
+        SYSCALL_FILE_EXISTS,
+        SYSCALL_DIR_EXISTS,
+        SYSCALL_GET_FILESIZE,
+        SYSCALL_READ_FILE,
+        SYSCALL_WRITE_FILE,
+        SYSCALL_CREATE_FILE,
+        SYSCALL_CREATE_DIRECTORY,
+        SYSCALL_EJECT_DISK,
+
+        //////////////
+        // GUI
+        //////////////
+        
+        SYSCALL_GUI_GETLFB,
+        SYSCALL_GET_SCREEN_PROPERTIES,
+
+        //////////////
+        // Memory
+        //////////////
+
+        SYSCALL_GET_HEAP_START,
+        SYSCALL_GET_HEAP_END,
+        SYSCALL_SET_HEAP_SIZE,
+        SYSCALL_CREATE_SHARED_MEM,
+        SYSCALL_REMOVE_SHARED_MEM,
+        SYSCALL_MAP_SYSINFO,
+
+        //////////////
+        // Scheduler
+        //////////////
+
+        SYSCALL_RUN_PROC,
+        SYSCALL_SLEEP_MS,
+        SYSCALL_START_THREAD,
+        SYSCALL_YIELD,
+        SYSCALL_PROC_EXIST,
+        SYSCALL_UNBLOCK,
+        SYSCALL_SET_SCHEDULER,
+
+        //////////////
+        // IPC
+        //////////////
+
+        SYSCALL_IPC_SEND,
+        SYSCALL_IPC_RECEIVE,
+        SYSCALL_IPC_AVAILABLE,
+
+        //////////////
+        // Clock
+        //////////////
+
+        SYSCALL_GET_TICKS,
+        SYSCALL_GET_DATETIME,
+
+        //////////////
+        // Power
+        //////////////
+
+        SYSCALL_SHUTDOWN,
+        SYSCALL_REBOOT,
+
+        //////////////
+        // STDIO
+        //////////////
+
+        SYSCALL_READ_STDIO,
+        SYSCALL_WRITE_STDIO,
+        SYSCALL_REDIRECT_STDIO,
+        SYSCALL_STDIO_AVAILABLE,
+
+        //////////////
+        // Listings
+        //////////////
+
+        SYSCALL_BEGIN_LISTING,
+        SYSCALL_LISTING_ENTRY,
+        SYSCALL_END_LISTING,
+
+        //////////////
+        // Other
+        //////////////
+        SYSCALL_SET_CACTUSOS_LIB = 0xFFFF,
+    };
 
     int DoSyscall(unsigned int intNum, unsigned int arg1 = 0, unsigned int arg2 = 0, unsigned int arg3 = 0, unsigned int arg4 = 0, unsigned int arg5 = 0);
 }

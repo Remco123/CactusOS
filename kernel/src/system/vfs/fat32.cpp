@@ -298,7 +298,7 @@ DirectoryEntry FAT32::GetEntry(const char* path)
 
 
 
-List<char*>* FAT32::DirectoryList(char* path)
+List<char*>* FAT32::DirectoryList(const char* path)
 { 
     List<char*>* result = new List<char*>();
 
@@ -317,7 +317,7 @@ List<char*>* FAT32::DirectoryList(char* path)
     delete rawChilds;
     return result;
 }
-int FAT32::GetFileSize(char* path)
+uint32_t FAT32::GetFileSize(const char* path)
 {
     DirectoryEntry entry = GetEntry(path);
     if(entry.FileName[0] == '\0' || entry.Attributes == FAT_DIRECTORY)
@@ -327,7 +327,7 @@ int FAT32::GetFileSize(char* path)
 
     return entry.FileSize;
 }
-int FAT32::ReadFile(char* path, uint8_t* buffer)
+int FAT32::ReadFile(const char* path, uint8_t* buffer, uint32_t offset, uint32_t len)
 { 
     DirectoryEntry entry = GetEntry(path);
     if(entry.FileName[0] == '\0' || entry.Attributes == FAT_DIRECTORY)
@@ -371,7 +371,23 @@ int FAT32::ReadFile(char* path, uint8_t* buffer)
 
     return 0;
 }
-bool FAT32::FileExists(char* path)
+
+int FAT32::WriteFile(const char* path, uint8_t* buffer, uint32_t len, bool create)
+{
+    
+}
+
+int FAT32::CreateFile(const char* path)
+{
+    
+}
+
+int FAT32::CreateDirectory(const char* path)
+{
+    
+}
+
+bool FAT32::FileExists(const char* path)
 { 
     DirectoryEntry entry = GetEntry(path);
     if(entry.FileName[0] == '\0' || entry.Attributes == FAT_DIRECTORY)
@@ -381,7 +397,7 @@ bool FAT32::FileExists(char* path)
 
     return true;
 }
-bool FAT32::DirectoryExists(char* path)
+bool FAT32::DirectoryExists(const char* path)
 { 
     DirectoryEntry entry = GetEntry(path);
     if(entry.FileName[0] == '\0' || entry.Attributes != FAT_DIRECTORY)

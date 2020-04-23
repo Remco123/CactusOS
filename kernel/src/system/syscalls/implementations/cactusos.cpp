@@ -18,53 +18,134 @@ extern PowerRequest powerRequestState; //Defined in kernel.cpp
 
 CPUState* CactusOSSyscalls::HandleSyscall(CPUState* state)
 {
-    uint32_t sysCall = state->EAX;
+    LIBCactusOS::Systemcalls sysCall = (LIBCactusOS::Systemcalls)state->EAX;
     Process* proc = System::scheduler->CurrentProcess();
-    //System::scheduler->Enabled = false;
 
     switch (sysCall)
     {
-        case SYSCALL_EXIT:
+        case LIBCactusOS::SYSCALL_EXIT:
             Log(Info, "Process %d %s exited with code %d", proc->id, proc->fileName, (int)state->EBX);
             ProcessHelper::RemoveProcess(proc);
             state->EAX = SYSCALL_RET_SUCCES;
             break;
-        case SYSCALL_LOG:
+        
+        /////////////
+        // Logging
+        /////////////
+
+        case LIBCactusOS::SYSCALL_LOG:
             Log((LogLevel)state->EBX, (const char* __restrict__)state->ECX);
             state->EAX = SYSCALL_RET_SUCCES;
             break;
-        case SYSCALL_GUI_GETLFB:
+        case LIBCactusOS::SYSCALL_PRINT:
+            Print((const char*)state->EBX, state->ECX);
+            break;
+        
+        /////////////
+        // VFS
+        /////////////
+        
+        case LIBCactusOS::SYSCALL_FILE_EXISTS:
+            state->EAX = System::vfs->FileExists((char*)state->EBX);
+            break;
+        case LIBCactusOS::SYSCALL_DIR_EXISTS:
+            state->EAX = System::vfs->DirectoryExists((char*)state->EBX);
+            break;
+        case LIBCactusOS::SYSCALL_GET_FILESIZE:
+            state->EAX = System::vfs->GetFileSize((char*)state->EBX);
+            break;
+        case LIBCactusOS::SYSCALL_READ_FILE:
+            state->EAX = System::vfs->ReadFile((char*)state->EBX, (uint8_t*)state->ECX);
+            break;
+        case LIBCactusOS::SYSCALL_WRITE_FILE:
+            state->EAX = System::vfs->WriteFile((char*)state->EBX, (uint8_t*)state->ECX, state->EDX, (bool)state->ESI);
+            break;
+        case LIBCactusOS::SYSCALL_CREATE_FILE:
+            state->EAX = System::vfs->CreateFile((char*)state->EBX);
+            break;
+        case LIBCactusOS::SYSCALL_CREATE_DIRECTORY:
+            state->EAX = System::vfs->CreateDirectory((char*)state->EBX);
+            break;
+        case LIBCactusOS::SYSCALL_EJECT_DISK:
+            state->EAX = System::vfs->EjectDrive((char*)state->EBX);
+            break;
+
+        //////////////
+        // GUI
+        //////////////
+        
+        case LIBCactusOS::SYSCALL_GUI_GETLFB:
             VirtualMemoryManager::mapVirtualToPhysical((void*)System::gfxDevice->framebufferPhys, (void*)state->EBX, System::gfxDevice->GetBufferSize(), false, true);
             state->EAX = SYSCALL_RET_SUCCES;
             Log(Info, "Mapped LFB for process %d to virtual address %x", proc->id, state->EBX);
             break;
-        case SYSCALL_FILE_EXISTS:
-            state->EAX = System::vfs->FileExists((char*)state->EBX);
+
+        case LIBCactusOS::SYSCALL_GET_SCREEN_PROPERTIES:
+            if(System::gfxDevice) {
+                *((int*)state->EBX) = System::gfxDevice->width;
+                *((int*)state->ECX) = System::gfxDevice->height;
+
+                state->EAX = SYSCALL_RET_SUCCES;
+            }
+            else
+                state->EAX = SYSCALL_RET_ERROR;
+    
             break;
-        case SYSCALL_DIR_EXISTS:
-            state->EAX = System::vfs->DirectoryExists((char*)state->EBX);
-            break;
-        case SYSCALL_GET_FILESIZE:
-            state->EAX = System::vfs->GetFileSize((char*)state->EBX);
-            break;
-        case SYSCALL_READ_FILE:
-            state->EAX = System::vfs->ReadFile((char*)state->EBX, (uint8_t*)state->ECX);
-            break;
-        case SYSCALL_GET_HEAP_START:
+        
+        //////////////
+        // Memory
+        //////////////
+
+        case LIBCactusOS::SYSCALL_GET_HEAP_START:
             state->EAX = proc->heap.heapStart;
             break;
-        case SYSCALL_GET_HEAP_END:
+        case LIBCactusOS::SYSCALL_GET_HEAP_END:
             state->EAX = proc->heap.heapEnd;
             break;
-        case SYSCALL_PRINT:
-            Print((const char*)state->EBX, state->ECX);
-            break;
-        case SYSCALL_SET_HEAP_SIZE:
+        case LIBCactusOS::SYSCALL_SET_HEAP_SIZE:
             ProcessHelper::UpdateHeap(proc, state->EBX);
             state->EAX = SYSCALL_RET_SUCCES;
             break;
-        case SYSCALL_RUN_PROC:
+        case LIBCactusOS::SYSCALL_CREATE_SHARED_MEM:
             {
+                Process* proc2 = ProcessHelper::ProcessById(state->EBX);
+                if(proc2 == 0) {
+                    state->EAX = SYSCALL_RET_ERROR;
+                    break;
+                }
+                state->EAX = SharedMemory::CreateSharedRegion(proc, proc2, state->ECX, state->EDX, state->ESI);
+            }
+            break;
+        case LIBCactusOS::SYSCALL_REMOVE_SHARED_MEM:
+            {
+                Process* proc2 = ProcessHelper::ProcessById(state->EBX);
+                if(proc2 == 0) {
+                    state->EAX = SYSCALL_RET_ERROR;
+                    break;
+                }
+                state->EAX = SharedMemory::RemoveSharedRegion(proc, proc2, state->ECX, state->EDX, state->ESI);
+            }
+            break;
+        case LIBCactusOS::SYSCALL_MAP_SYSINFO:
+            {
+                //Put systeminfo into address space
+                uint32_t sysInfoPhys = (uint32_t)VirtualMemoryManager::virtualToPhysical((void*)System::systemInfo);
+                PageTableEntry* sysInfoPage = VirtualMemoryManager::GetPageForAddress(state->EBX, true, true, proc->isUserspace);
+                sysInfoPage->readWrite = 1;
+                sysInfoPage->isUser = proc->isUserspace;
+                sysInfoPage->frame = sysInfoPhys / PAGE_SIZE;
+                sysInfoPage->present = 1;
+
+                state->EAX = SYSCALL_RET_SUCCES;
+            }
+            break;
+        
+        //////////////
+        // Scheduler
+        //////////////
+        
+        case LIBCactusOS::SYSCALL_RUN_PROC:
+            {    
                 char* applicationPath = (char*)state->EBX;
                 bool block = (bool)state->ECX;
                 if(System::vfs->FileExists(applicationPath) == false) {
@@ -89,40 +170,15 @@ CPUState* CactusOSSyscalls::HandleSyscall(CPUState* state)
                     state->EAX = SYSCALL_RET_ERROR;
             }
             break;
-        case SYSCALL_SLEEP_MS:
+        case LIBCactusOS::SYSCALL_SLEEP_MS:
             {
                 Thread* currentThread = System::scheduler->CurrentThread();
                 currentThread->timeDelta = state->EBX;
                 System::scheduler->Block(currentThread, BlockedState::SleepMS);
             }
             break;
-        case SYSCALL_CREATE_SHARED_MEM:
-            {
-                Process* proc2 = ProcessHelper::ProcessById(state->EBX);
-                if(proc2 == 0) {
-                    state->EAX = false;
-                    break;
-                }
-                state->EAX = SharedMemory::CreateSharedRegion(proc, proc2, state->ECX, state->EDX, state->ESI);
-            }
-            break;
-        case SYSCALL_IPC_SEND:
-            {
-                IPCManager::HandleSend(state, proc);
-            }
-            break;
-        case SYSCALL_IPC_RECEIVE:
-            {
-                IPCManager::HandleReceive(state, proc);
-            }
-            break;
-        case SYSCALL_IPC_AVAILABLE:
-            {
-                state->EAX = proc->ipcMessages.size();
-            }
-            break;
-        case SYSCALL_START_THREAD:
-            {
+        case LIBCactusOS::SYSCALL_START_THREAD:
+            {     
                 Log(Info, "Creating new thread for proc %d %s, jumps to %x", proc->id, proc->fileName, state->EBX);
                 //Create new thread
                 Thread* newThread = ThreadHelper::CreateFromFunction((void (*)())state->EBX, false, 514, proc);
@@ -144,33 +200,58 @@ CPUState* CactusOSSyscalls::HandleSyscall(CPUState* state)
                     System::scheduler->ForceSwitch();
             }
             break;
-        case SYSCALL_MAP_SYSINFO:
+        case LIBCactusOS::SYSCALL_YIELD:
+            System::scheduler->ForceSwitch();
+            break;
+        case LIBCactusOS::SYSCALL_PROC_EXIST:
             {
-                //Put systeminfo into address space
-                uint32_t sysInfoPhys = (uint32_t)VirtualMemoryManager::virtualToPhysical((void*)System::systemInfo);
-                PageTableEntry* sysInfoPage = VirtualMemoryManager::GetPageForAddress(state->EBX, true, true, proc->isUserspace);
-                sysInfoPage->readWrite = 1;
-                sysInfoPage->isUser = proc->isUserspace;
-                sysInfoPage->frame = sysInfoPhys / PAGE_SIZE;
-                sysInfoPage->present = 1;
+                Process* proc = ProcessHelper::ProcessById(state->EBX);
+                if(proc != 0)
+                    state->EAX = true;
+                else
+                    state->EAX = false;
+            }
+            break;
+        case LIBCactusOS::SYSCALL_UNBLOCK:
+            {
+                Process* proc = ProcessHelper::ProcessById(state->EBX);
+                if(proc != 0 && (int)state->ECX < proc->Threads.size())
+                    proc->Threads[state->ECX]->state = Started;
+            }
+            break;
+        case LIBCactusOS::SYSCALL_SET_SCHEDULER:
+            {
+                bool active = (bool)state->EBX;
+                System::scheduler->Enabled = active;
+            }
+            break;
 
-                state->EAX = SYSCALL_RET_SUCCES;
-            }
+        //////////////
+        // IPC
+        //////////////
+        
+        case LIBCactusOS::SYSCALL_IPC_SEND:
+            IPCManager::HandleSend(state, proc);
             break;
-        case SYSCALL_YIELD:
+        case LIBCactusOS::SYSCALL_IPC_RECEIVE:
+            IPCManager::HandleReceive(state, proc);
+            break;
+        case LIBCactusOS::SYSCALL_IPC_AVAILABLE:
+            state->EAX = proc->ipcMessages.size();
+            break;
+
+        //////////////
+        // Clock
+        //////////////
+
+        case LIBCactusOS::SYSCALL_GET_TICKS:
             {
-                System::scheduler->ForceSwitch();
+                uint64_t* ticksPtr = (uint64_t*)state->EBX;
+                *ticksPtr = System::pit->Ticks();
                 state->EAX = SYSCALL_RET_SUCCES;
             }
             break;
-        case SYSCALL_GET_TICKS:
-            {
-                uint64_t* resultPtr = (uint64_t*)state->EBX;
-                *resultPtr = System::pit->Ticks();
-                state->EAX = SYSCALL_RET_SUCCES;
-            }
-            break;
-        case SYSCALL_GET_DATETIME:
+        case LIBCactusOS::SYSCALL_GET_DATETIME:
             {
                 LIBCactusOS::DateTime* resultPtr = (LIBCactusOS::DateTime*)state->EBX;
                 resultPtr->Day = System::rtc->GetDay();
@@ -182,62 +263,61 @@ CPUState* CactusOSSyscalls::HandleSyscall(CPUState* state)
                 state->EAX = SYSCALL_RET_SUCCES;
             }
             break;
-        case SYSCALL_SHUTDOWN:
+        
+        //////////////
+        // Power
+        //////////////
+
+        case LIBCactusOS::SYSCALL_SHUTDOWN:
+            Log(Info, "Process requested shutdown");
+            powerRequestState = Shutdown; //Tell kernel process to shutdown on next schedule
+            
+            state->EAX = SYSCALL_RET_SUCCES;
+            break;
+        case LIBCactusOS::SYSCALL_REBOOT:
+            Log(Info, "Process requested reboot");
+            powerRequestState = Reboot; //Tell kernel process to reboot on next schedule
+
+            state->EAX = SYSCALL_RET_SUCCES;
+            break;
+        
+        //////////////
+        // STDIO
+        //////////////        
+
+        case LIBCactusOS::SYSCALL_READ_STDIO:
+            if(proc->stdInput != 0)
             {
-                Log(Info, "Process requested shutdown");
-                powerRequestState = Shutdown; //Tell kernel process to shutdown on next schedule
+                while (proc->stdInput->Availible() <= 0) //TODO: Use blocking here
+                    System::scheduler->ForceSwitch();
+                state->EAX = proc->stdInput->Read();
+            }
+            else
+                Log(Warning, "StdIn is zero for process %s", proc->fileName);
+
+            break;
+        case LIBCactusOS::SYSCALL_WRITE_STDIO:
+            if(proc->stdOutput != 0) {
+                char* data = (char*)state->EBX;
+                if(data == 0 || state->ECX <= 0)
+                    break;
                 
-                state->EAX = SYSCALL_RET_SUCCES;
-            }
-            break;
-        case SYSCALL_REBOOT:
-            {
-                Log(Info, "Process requested reboot");
-                powerRequestState = Reboot; //Tell kernel process to reboot on next schedule
+                //This makes sure output text does not get mixed up when interrupted during writing.
+                if(proc->stdOutput == System::ProcStandardOut)
+                    LOCK(stdOutStream);
 
-                state->EAX = SYSCALL_RET_SUCCES;
-            }
-            break;
-        case SYSCALL_EJECT_DISK:
-            {
-                state->EAX = System::vfs->EjectDrive((char*)state->EBX);
-            }
-            break;
-        case SYSCALL_READ_STDIO:
-            {
-                if(proc->stdInput != 0)
-                {
-                    while (proc->stdInput->Availible() <= 0) //TODO: Use blocking here
-                        System::scheduler->ForceSwitch();
-                    state->EAX = proc->stdInput->Read();
-                }
-                else
-                    Log(Warning, "StdIn is zero for process %s", proc->fileName);
-            }
-            break;
-        case SYSCALL_WRITE_STDIO:
-            {
-                if(proc->stdOutput != 0) {
-                    char* data = (char*)state->EBX;
-                    if(data == 0 || state->ECX <= 0)
-                        break;
-                    
-                    //This makes sure output text does not get mixed up when interrupted during writing.
-                    if(proc->stdOutput == System::ProcStandardOut)
-                        LOCK(stdOutStream);
+                for(int d = 0; d < state->ECX; d++)
+                    proc->stdOutput->Write(data[d]);
 
-                    for(int d = 0; d < state->ECX; d++)
-                        proc->stdOutput->Write(data[d]);
-
-                    //Don't forget to unlock
-                    if(proc->stdOutput == System::ProcStandardOut)
-                        UNLOCK(stdOutStream);
-                }
-                else
-                    Log(Warning, "StdOut is zero for process %s", proc->fileName);
+                //Don't forget to unlock
+                if(proc->stdOutput == System::ProcStandardOut)
+                    UNLOCK(stdOutStream);
             }
+            else
+                Log(Warning, "StdOut is zero for process %s", proc->fileName);
+            
             break;
-        case SYSCALL_REDIRECT_STDIO:
+        case LIBCactusOS::SYSCALL_REDIRECT_STDIO:
             {
                 int fromID = state->EBX;
                 int toID = state->ECX;
@@ -264,52 +344,30 @@ CPUState* CactusOSSyscalls::HandleSyscall(CPUState* state)
                 fromProc->stdOutput = toProc->stdInput;
             }
             break;
-        case SYSCALL_STDIO_AVAILABLE:
-            {
-                if(proc->stdInput != 0)
-                    state->EAX = proc->stdInput->Availible();
-                else
-                    state->EAX = 0;
-            }
+        case LIBCactusOS::SYSCALL_STDIO_AVAILABLE:
+            if(proc->stdInput != 0)
+                state->EAX = proc->stdInput->Availible();
+            else
+                state->EAX = 0;
+            
             break;
-        case SYSCALL_REMOVE_SHARED_MEM:
-            {
-                Process* proc2 = ProcessHelper::ProcessById(state->EBX);
-                if(proc2 == 0) {
-                    state->EAX = false;
-                    break;
-                }
-                state->EAX = SharedMemory::RemoveSharedRegion(proc, proc2, state->ECX, state->EDX, state->ESI);
-            }
-            break;
-        case SYSCALL_PROC_EXIST:
-            {
-                Process* proc = ProcessHelper::ProcessById(state->EBX);
-                if(proc != 0)
-                    state->EAX = true;
-                else
-                    state->EAX = false;                
-            }
-            break;
-        case SYSCALL_UNBLOCK:
-            {
-                Process* proc = ProcessHelper::ProcessById(state->EBX);
-                if(proc != 0 && (int)state->ECX < proc->Threads.size())
-                    proc->Threads[state->ECX]->state = Started;
-            }
-            break;
-        case SYSCALL_BEGIN_LISTING:
+
+        //////////////
+        // Listings
+        //////////////        
+
+        case LIBCactusOS::SYSCALL_BEGIN_LISTING:
             {
                 int type = state->EBX;
                 if(!(System::listings->size() > type)) {
                     state->EAX = 0;
                     break;
                 }
-                
+                    
                 state->EAX = System::listings->GetAt(type)->BeginListing(System::scheduler->CurrentThread(), state->ECX);
             }
             break;
-        case SYSCALL_LISTING_ENTRY:
+        case LIBCactusOS::SYSCALL_LISTING_ENTRY:
             {
                 int type = state->EBX;
                 if(!(System::listings->size() > type)) {
@@ -320,7 +378,7 @@ CPUState* CactusOSSyscalls::HandleSyscall(CPUState* state)
                 state->EAX = System::listings->GetAt(type)->GetEntry(System::scheduler->CurrentThread(), (int)state->ECX, state->EDX);
             }
             break;
-        case SYSCALL_END_LISTING:
+        case LIBCactusOS::SYSCALL_END_LISTING:
             {
                 int type = state->EBX;
                 if(!(System::listings->size() > type)) {
@@ -331,31 +389,11 @@ CPUState* CactusOSSyscalls::HandleSyscall(CPUState* state)
                 System::listings->GetAt(type)->EndListing(System::scheduler->CurrentThread());
             }
             break;
-        case SYSCALL_SET_SCHEDULER:
-            {
-                bool active = (bool)state->EBX;
-                System::scheduler->Enabled = active;
-            }
-            break;
-        case SYSCALL_GET_SCREEN_PROPERTIES:
-            {
-                if(System::gfxDevice) {
-                    *((int*)state->EBX) = System::gfxDevice->width;
-                    *((int*)state->ECX) = System::gfxDevice->height;
-
-                    state->EAX = SYSCALL_RET_SUCCES;
-                }
-                else
-                    state->EAX = SYSCALL_RET_ERROR;
-            }
-            break;
         default:
             Log(Warning, "Got unkown syscall %d from process %d", sysCall, proc->id);
             state->EAX = SYSCALL_RET_ERROR;
             break;
     }
-
-    //System::scheduler->Enabled = true;
 
     return state;
 }

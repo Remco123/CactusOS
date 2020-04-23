@@ -161,7 +161,7 @@ DirectoryRecord* ISO9660::GetEntry(const char* path)
     return 0;
 }
 
-List<char*>* ISO9660::DirectoryList(char* path)
+List<char*>* ISO9660::DirectoryList(const char* path)
 {
     List<char*>* result = new List<char*>();
     DirectoryRecord* parent = String::strlen(path) > 0 ? GetEntry(path) : rootDirectory;
@@ -217,7 +217,7 @@ List<char*>* ISO9660::DirectoryList(char* path)
 
     return result;
 }
-int ISO9660::GetFileSize(char* path)
+uint32_t ISO9660::GetFileSize(const char* path)
 {
     DirectoryRecord* entry = GetEntry(path);
     if(entry == 0 || GetEntryType(entry) == Iso_Directory)
@@ -227,7 +227,7 @@ int ISO9660::GetFileSize(char* path)
 
     return entry->data_length;
 }
-int ISO9660::ReadFile(char* path, uint8_t* buffer)
+int ISO9660::ReadFile(const char* path, uint8_t* buffer, uint32_t len, uint32_t offset)
 {
     DirectoryRecord* entry = GetEntry(path);
 
@@ -251,8 +251,20 @@ int ISO9660::ReadFile(char* path, uint8_t* buffer)
     
     return 0;
 }
+int ISO9660::WriteFile(const char* path, uint8_t* buffer, uint32_t len, bool create)
+{
+    return -1; // ISO9660 is readonly
+}
+int ISO9660::CreateFile(const char* path)
+{
+    return -1;
+}
+int ISO9660::CreateDirectory(const char* path)
+{
+    return -1;
+}
 
-bool ISO9660::FileExists(char* path)
+bool ISO9660::FileExists(const char* path)
 {
     DirectoryRecord* entry = GetEntry(path);
     if(entry == 0 || GetEntryType(entry) == Iso_Directory)
@@ -263,7 +275,7 @@ bool ISO9660::FileExists(char* path)
     return true;
 }
 
-bool ISO9660::DirectoryExists(char* path)
+bool ISO9660::DirectoryExists(const char* path)
 {
     DirectoryRecord* entry = GetEntry(path);
     if(entry == 0 || GetEntryType(entry) == Iso_File)
