@@ -166,6 +166,9 @@ extern "C" void kernelMain(const multiboot_info_t* mbi, unsigned int multiboot_m
     //Further intialisation is done in the system class
     System::Start();
 
+    System::vfs->CreateDirectory("0:\\TESTDIR");
+    System::vfs->CreateFile("0:\\newFile.txt");
+
     Log(Info, "Loading Kernel Process");
     Process* kernelProcess = ProcessHelper::CreateKernelProcess();
     kernelProcess->Threads.push_back(ThreadHelper::CreateFromFunction(IdleThread, true));

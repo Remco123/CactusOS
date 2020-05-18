@@ -152,9 +152,9 @@ bool IDEController::Initialize()
         if (ideDevices[i].Reserved == 1) {            
             BootConsole::Write("Found "); BootConsole::Write(ideDevices[i].Type == 0 ? (char*)"ATA" : (char*)"ATAPI");
             BootConsole::Write(" Drive "); BootConsole::Write(Convert::IntToString(ideDevices[i].Size / 1024 / 2));
-            BootConsole::Write("MB - "); BootConsole::WriteLine((char*)ideDevices[i].Model);
+            BootConsole::Write(" MB - "); BootConsole::WriteLine((char*)ideDevices[i].Model);
 
-            Disk* disk = new Disk(i, this, ideDevices[i].Type == 0 ? HardDisk : CDROM, (ideDevices[i].Size / 2) * 1024);
+            Disk* disk = new Disk(i, this, ideDevices[i].Type == 0 ? HardDisk : CDROM, (uint64_t)(ideDevices[i].Size / 2U) * (uint64_t)1024);
             
             //////////
             // Create Identifier

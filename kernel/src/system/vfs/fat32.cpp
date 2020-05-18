@@ -1,10 +1,22 @@
 #include <system/vfs/fat32.h>
 
 #include <common/print.h>
+#include <system/log.h>
+#include <system/system.h>
+
+#define DECLARE_LOCK(name) volatile int name ## Locked
+#define LOCK(name) \
+    while (name ## Locked == 1) asm("pause"); \
+    __sync_synchronize();
+#define UNLOCK(name) \
+    __sync_synchronize(); \
+    name ## Locked = 0;
 
 using namespace CactusOS::common;
 using namespace CactusOS::core;
 using namespace CactusOS::system;
+
+DECLARE_LOCK(readBuffer);
 
 FAT32::FAT32(Disk* disk, uint32_t start, uint32_t size)
 : VirtualFileSystem(disk, start, size) 
@@ -16,8 +28,6 @@ bool FAT32::Initialize()
 {
     BootConsole::WriteLine();
     BootConsole::WriteLine("Initializing FAT Filesystem");
-
-    uint8_t readBuffer[512];
     MemoryOperations::memset(readBuffer, 0, 512);
 
     if(disk->ReadSector(this->StartLBA, readBuffer) != 0)
@@ -78,42 +88,126 @@ bool FAT32::Initialize()
     return true;
 }
 
-uint32_t FAT32::ClusterToSector(uint32_t cluster)
+FAT_DATE FAT32::CurrentDate()
 {
-    return ((cluster - 2) * sectorsPerCluster) + firstDataSector;
+    FAT_DATE ret;
+    ret.day = System::rtc->GetDay();
+    ret.mon = System::rtc->GetMonth();
+    ret.year = System::rtc->GetYear() - 1980;
+    return ret;
 }
 
-List<DirectoryEntry>* FAT32::ReadDir(uint32_t cluster)
+FAT_TIME FAT32::CurrentTime()
+{
+    FAT_TIME ret;
+    ret.hour = System::rtc->GetHour();
+    ret.min = System::rtc->GetMinute();
+    ret.sec = System::rtc->GetSecond() / 2;
+}
+
+////////////////
+// Table Functions
+////////////////
+
+uint32_t FAT32::ReadFATTable(uint32_t cluster)
+{
+    if(cluster < 2 || cluster >= totalClusters) {
+        Log(Error, "Cluster number is out of range 2 < %d < %d", cluster, totalClusters);
+        return 0;
+    }
+
+    uint32_t cluster_size = bytesPerSector * sectorsPerCluster;
+	uint32_t fatOffset = cluster * 4;
+	uint32_t fatSector = firstFatSector + (fatOffset / cluster_size);
+	uint32_t entOffset = fatOffset % cluster_size;
+
+    LOCK(readBuffer);
+    if(this->disk->ReadSector(this->StartLBA + fatSector, readBuffer) != 0) {
+        UNLOCK(readBuffer);
+        return 0;
+    }
+    
+    uint32_t value = *(uint32_t*)&readBuffer[entOffset] & 0x0FFFFFFF;
+
+    UNLOCK(readBuffer);
+    return value;
+}
+
+int FAT32::WriteFATTable(uint32_t cluster, uint32_t value)
+{
+    if(cluster < 2 || cluster >= totalClusters) {
+        Log(Error, "Cluster number is out of range 2 < %d < %d", cluster, totalClusters);
+        return -1;
+    }
+
+    uint32_t cluster_size = bytesPerSector * sectorsPerCluster;
+	uint32_t fatOffset = cluster * 4;
+	uint32_t fatSector = firstFatSector + (fatOffset / cluster_size);
+	uint32_t entOffset = fatOffset % cluster_size;
+
+    LOCK(readBuffer);
+    if(this->disk->ReadSector(this->StartLBA + fatSector, readBuffer) != 0) {
+        UNLOCK(readBuffer);
+        return -1;
+    }
+
+    *(uint32_t*)&readBuffer[entOffset] = value;
+
+    if(this->disk->WriteSector(this->StartLBA + fatSector, readBuffer) != 0) {
+        UNLOCK(readBuffer);
+        return -1;
+    }
+
+    UNLOCK(readBuffer);
+    return 0;
+}
+
+uint32_t FAT32::AllocateNewCluster()
+{
+    uint32_t cluster = 2;
+    while (cluster < totalClusters) {
+        uint32_t value = ReadFATTable(cluster);
+        if(value == FAT_CLUSTER_FREE) {
+            // Allocate cluster
+            WriteFATTable(cluster, FAT_CLUSTER_END);
+
+            return cluster;
+        }
+        else if((int)value < 0) {
+            Log(Error, "Error getting status of cluster %d", cluster);
+            return 0;
+        }
+        cluster++;
+    }
+}
+
+List<DirectoryEntry> FAT32::ReadDir(uint32_t cluster)
 { 
 	// Get the cluster chain of the directory. This contains the directory entries themselves.
 	uint64_t numclus = 0;	
-	List<uint32_t>* clusters = this->GetClusterChain(cluster, &numclus);
+	List<uint32_t> clusters = this->GetClusterChain(cluster, &numclus);
+    List<DirectoryEntry> result;
  
 	// allocate a buffer, rounding up the size to a page.
 	uint8_t* buf = new uint8_t[numclus * this->sectorsPerCluster * 512];
 	uint8_t* obuf = buf;
     
     //Loop through the clusters and load them into buf
-	for (int i = 0; i < clusters->size(); i++)
-	{
-        uint32_t cluster = clusters->GetAt(i);
-		
+	for (uint32_t cluster : clusters) {
 		for(uint32_t s = 0; s < this->sectorsPerCluster; s++)
         {
-            uint32_t sectorToRead = ClusterToSector(cluster) + s;
+            uint32_t sectorToRead = CLUSTER_TO_SECTOR(cluster) + s;
             if(this->disk->ReadSector(this->StartLBA + sectorToRead, buf) != 0) {
                 delete buf;
-                return 0;
+                return result;
             }
 
             buf += this->bytesPerSector;
         }
-	}
+    }
 	buf = obuf;
  
 	uint64_t numDirEntries = (numclus * this->sectorsPerCluster * 512) / sizeof(DirectoryEntry);
-    List<DirectoryEntry>* Result = new List<DirectoryEntry>();
-
     for(uint64_t i = 1; i < numDirEntries; i++)
     {
         DirectoryEntry* dirEntry = (DirectoryEntry*)(buf + i*sizeof(DirectoryEntry));
@@ -129,44 +223,27 @@ List<DirectoryEntry>* FAT32::ReadDir(uint32_t cluster)
         
         //It is a valid entry
         //BootConsole::Write("Found entry: "); BootConsole::WriteLine((char*)dirEntry->FileName);
-        Result->push_back(*dirEntry);
+        result.push_back(*dirEntry);
     }
-
-    delete clusters;
-
-    return Result;
+    return result;
 }
 
-List<uint32_t>* FAT32::GetClusterChain(uint32_t firstcluster, uint64_t* numclus)
+List<uint32_t> FAT32::GetClusterChain(uint32_t firstcluster, uint64_t* numclus)
 {
 	// setup some stuff.
 	uint32_t Cluster = firstcluster;
 	uint32_t cchain = 0;
-	List<uint32_t>* ret = new List<uint32_t>();
+	List<uint32_t> ret;
  
 	// here we assume your 'ReadFromDisk' only does 512 bytes at a time or something.
-	uint8_t buf[512];
 	do
-	{
-		// these formulas are gotten from the 'fatgen103' document.
-		// 'FatSector' is the LBA of the disk at which the FAT entry you want is located.
-		// 'FatOffset' is the offset in bytes from the beginning of 'FatSector' to the cluster.
-		uint32_t FatSector = (uint32_t) this->StartLBA + this->reservedSectors + ((Cluster * 4) / 512);
-		uint32_t FatOffset = (Cluster * 4) % 512;
- 
-		// read 512 bytes into buf.
-		if(this->disk->ReadSector(FatSector, buf) != 0)
-            return 0;
- 
-		// cast to an array so we get an easier time.
-		uint8_t* clusterchain = (uint8_t*) buf;
- 
+	{ 
 		// using FatOffset, we just index into the array to get the value we want.
-		cchain = *((uint32_t*)&clusterchain[FatOffset]) & 0x0FFFFFFF;
+		cchain = ReadFATTable(Cluster);
  
 		// the value of 'Cluster' will change by the next iteration.
 		// Because we're nice people, we need to include the first cluster in the list of clusters we return.
-		ret->push_back(Cluster);
+		ret.push_back(Cluster);
  
 		// since cchain is the next cluster in the list, we just modify the things, shouldn't be too hard to grasp.
 		Cluster = cchain;
@@ -184,81 +261,18 @@ List<uint32_t>* FAT32::GetClusterChain(uint32_t firstcluster, uint64_t* numclus)
 
 DirectoryEntry FAT32::SearchInDirectory(uint32_t cluster, const char* name)
 {
-    List<DirectoryEntry>* childs = ReadDir(cluster);
+    List<DirectoryEntry> childs = ReadDir(cluster);
 
     DirectoryEntry result;
     MemoryOperations::memset(&result, 0, sizeof(DirectoryEntry));
 
-    for(int i = 0; i < childs->size(); i++)
-    {
-        if(String::strncmp((char*)childs->GetAt(i).FileName, name, FAT_FILENAME_LEN)) {
-            result = childs->GetAt(i);
+    for(int i = 0; i < childs.size(); i++)
+        if(String::strncmp((char*)childs[i].FileName, name, FAT_FILENAME_LEN)) {
+            result = childs[i];
             break;
         }
-    }
-
-    delete childs;
 
     return result;
-}
-
-DirectoryEntry FAT32::SearchInDirectory(DirectoryEntry* searchIn, const char* name)
-{
-    return SearchInDirectory(GET_CLUSTER(searchIn), name);
-}
-
-uint8_t toupper(uint8_t c)
-{
-    return (c >= 'a' && c <= 'z') ? c - 'a' + 'A' : c;
-}
-
-char* FAT32::ToFatFormat(char* str)
-{
-    char* outFileName = new char[12];
-
-    uint32_t i = 0;
-    uint32_t j = 0;
-
-    for ( i = 0; str[i] && str[i] != '.'; i++ )
-        outFileName[i] = toupper(str[i]);
-
-    j = i;
-
-    for (; i < 8; i++ )
-        outFileName[i] = ' ';
-
-    if ( str[j] == '.' )
-        for ( j++; str[j]; i++, j++ )
-            outFileName[i] = toupper(str[j]);
-
-    for (; i < 11; i++ )
-        outFileName[i] = ' ';
-
-    outFileName[i] = 0;
-
-    return outFileName;
-}
-
-char* FAT32::ToNormalFormat(char* str)
-{
-    char* outFileName = new char[12];
-    MemoryOperations::memset(outFileName, 0, 12);
-
-    int mainEnd, extEnd;
-	for(mainEnd = 8; mainEnd > 0 && str[mainEnd - 1] == ' '; mainEnd--);
-
-	MemoryOperations::memcpy(outFileName, str, mainEnd);
-
-	for(extEnd = 3; extEnd > 0 && str[extEnd - 1 + 8] == ' '; extEnd--);
-
-	if(extEnd == 0){
-		return String::Lowercase(outFileName);
-	}
-
-	outFileName[mainEnd] = '.';
-	MemoryOperations::memcpy(outFileName + mainEnd + 1, (const char*)str + 8, extEnd);
-    
-    return String::Lowercase(outFileName);
 }
 
 DirectoryEntry FAT32::GetEntry(const char* path)
@@ -296,6 +310,84 @@ DirectoryEntry FAT32::GetEntry(const char* path)
     return err;
 }
 
+int FAT32::CreateEntry(const char* path, char type)
+{
+    uint32_t parentDirectoryCluster = 0;
+    List<char*> pathList = String::Split(path, PATH_SEPERATOR_C);
+    char* dirName = (pathList.size() > 0) ? pathList[pathList.size() - 1] : (char*)path;
+    dirName = ToFatFormat(dirName);
+
+    if(pathList.size() == 0)
+        parentDirectoryCluster = this->rootCluster;
+    else {
+        char* directoryString = new char[String::strlen(path)];
+        int i = String::IndexOf(path, PATH_SEPERATOR_C, pathList.size() - 2);
+        MemoryOperations::memcpy(directoryString, path, i);
+
+        DirectoryEntry entry = GetEntry(directoryString);
+        if(entry.FileName[0] == '\0' || entry.Attributes != FAT_DIRECTORY)
+            return -1;
+        
+        parentDirectoryCluster = GET_CLUSTER((&entry));
+    }
+
+    LOCK(readBuffer);
+    if(this->disk->ReadSector(this->StartLBA + CLUSTER_TO_SECTOR(parentDirectoryCluster), readBuffer) != 0) {
+        UNLOCK(readBuffer);
+        return -1;
+    }
+    
+    DirectoryEntry* entryPtr = (DirectoryEntry*)readBuffer;
+    while(1) {
+        if(entryPtr->FileName[0] != FAT_ENDOFDIRS && entryPtr->FileName[0] != FAT_UNUSED) // This slot is not free
+            if(((uint32_t)entryPtr + sizeof(DirectoryEntry)) > ((uint32_t)readBuffer + 512)) { // We should read the next cluster here. TODO: Implement
+                BootConsole::WriteLine("FAT Error");
+                UNLOCK(readBuffer);
+                return -1;
+            }
+            else
+                entryPtr++;
+        else {
+            // Create new entry
+            DirectoryEntry newDirectory;
+            MemoryOperations::memset(&newDirectory, 0, sizeof(DirectoryEntry));
+
+            newDirectory.Attributes = type;
+            newDirectory.FileSize = 0;
+            newDirectory.CDate = CurrentDate().intValue;
+            newDirectory.CTime = CurrentTime().intValue;
+            newDirectory.CTimeTenthSecs = 0;
+            newDirectory.ADate = newDirectory.CDate;
+            newDirectory.MDate = newDirectory.CDate;
+            newDirectory.MTime = newDirectory.CTime;
+
+            MemoryOperations::memcpy(newDirectory.FileName, dirName, FAT_FILENAME_LEN);
+
+            uint32_t newCluster = AllocateNewCluster();
+            if(newCluster == 0) {
+                Log(Error, "Could not allocate a new cluster for directory");
+                UNLOCK(readBuffer);
+                return 0;
+            }
+
+            newDirectory.LowFirstCluster = newCluster & 0xFF;
+            newDirectory.HighFirstCluster = newCluster >> 16;
+
+            // Copy directory back to readbuffer
+            MemoryOperations::memcpy((void*)((uint32_t)entryPtr), &newDirectory, sizeof(DirectoryEntry));
+
+            // And write it back to the disk
+            if(this->disk->WriteSector(this->StartLBA + CLUSTER_TO_SECTOR(parentDirectoryCluster), readBuffer) != 0) {
+                UNLOCK(readBuffer);
+                return -1;
+            }             
+            
+            UNLOCK(readBuffer);
+            return 0;
+        }
+    }
+}
+
 
 
 List<char*>* FAT32::DirectoryList(const char* path)
@@ -310,11 +402,10 @@ List<char*>* FAT32::DirectoryList(const char* path)
         targetCluster = GET_CLUSTER((&entry));
     }
 
-    List<DirectoryEntry>* rawChilds = ReadDir(targetCluster);
-    for(int i = 0; i < rawChilds->size(); i++)
-        result->push_back(ToNormalFormat((char*)(rawChilds->GetAt(i)).FileName));
+    List<DirectoryEntry> rawChilds = ReadDir(targetCluster);
+    for(DirectoryEntry entry : rawChilds)
+        result->push_back(ToNormalFormat((char*)entry.FileName));
 
-    delete rawChilds;
     return result;
 }
 uint32_t FAT32::GetFileSize(const char* path)
@@ -329,39 +420,40 @@ uint32_t FAT32::GetFileSize(const char* path)
 }
 int FAT32::ReadFile(const char* path, uint8_t* buffer, uint32_t offset, uint32_t len)
 { 
+    uint8_t* bufferPtr = buffer;
+
     DirectoryEntry entry = GetEntry(path);
     if(entry.FileName[0] == '\0' || entry.Attributes == FAT_DIRECTORY)
     {
         return -1;
     }
 
-    uint32_t fileSize = GetFileSize(path);
     uint32_t bytesRead = 0;
 
     uint32_t beginCluster = GET_CLUSTER((&entry));
 
     uint64_t numclus = 0;	
-	List<uint32_t>* clusters = this->GetClusterChain(beginCluster, &numclus);
+	List<uint32_t> clusters = this->GetClusterChain(beginCluster, &numclus);
 
     uint8_t* obuf = buffer;
     
     //Loop through the clusters and load them into buf
-	for (int i = 0; i < clusters->size(); i++)
-	{
-        uint32_t cluster = clusters->GetAt(i);
+	for (int i = 0; i < clusters.size(); i++) {
+        uint32_t cluster = clusters[i];
 		
-		for(uint32_t s = 0; s < this->sectorsPerCluster && (i*sectorsPerCluster*bytesPerSector + s*bytesPerSector) < fileSize; s++)
-        {
-            uint8_t sectorBuf[512];
-            uint32_t sectorToRead = ClusterToSector(cluster) + s;
-            if(this->disk->ReadSector(this->StartLBA + sectorToRead, sectorBuf) != 0) {
+		for(uint32_t s = 0; s < this->sectorsPerCluster && (i*sectorsPerCluster*bytesPerSector + s*bytesPerSector) < entry.FileSize; s++) {
+            uint32_t sectorToRead = CLUSTER_TO_SECTOR(cluster) + s;
+            LOCK(readBuffer);
+            if(this->disk->ReadSector(this->StartLBA + sectorToRead, readBuffer) != 0) {
+                UNLOCK(readBuffer);
                 return -1;
             }
 
-            uint32_t remaingBytes = fileSize - bytesRead;
+            uint32_t remaingBytes = entry.FileSize - bytesRead;
 
             //Copy the required part of the buffer
-            MemoryOperations::memcpy(buffer, sectorBuf, remaingBytes <= 512 ? remaingBytes : 512);
+            MemoryOperations::memcpy(buffer, readBuffer, remaingBytes <= 512 ? remaingBytes : 512);
+            UNLOCK(readBuffer);
 
             bytesRead += 512;
             buffer += this->bytesPerSector;
@@ -379,12 +471,12 @@ int FAT32::WriteFile(const char* path, uint8_t* buffer, uint32_t len, bool creat
 
 int FAT32::CreateFile(const char* path)
 {
-    
+    return CreateEntry(path, 0);
 }
 
 int FAT32::CreateDirectory(const char* path)
 {
-    
+    return CreateEntry(path, FAT_DIRECTORY);
 }
 
 bool FAT32::FileExists(const char* path)
@@ -406,4 +498,63 @@ bool FAT32::DirectoryExists(const char* path)
     }
 
     return true;
+}
+
+////////////
+// Filename Conversion
+////////////
+
+
+inline uint8_t toupper(uint8_t c)
+{
+    return (c >= 'a' && c <= 'z') ? c - 'a' + 'A' : c;
+}
+
+char* FAT32::ToFatFormat(char* str)
+{
+    char* outFileName = new char[12];
+
+    uint32_t i = 0;
+    uint32_t j = 0;
+
+    for ( i = 0; str[i] && str[i] != '.'; i++ )
+        outFileName[i] = toupper(str[i]);
+
+    j = i;
+
+    for (; i < 8; i++ )
+        outFileName[i] = ' ';
+
+    if ( str[j] == '.' )
+        for ( j++; str[j]; i++, j++ )
+            outFileName[i] = toupper(str[j]);
+
+    for (; i < FAT_FILENAME_LEN; i++ )
+        outFileName[i] = ' ';
+
+    outFileName[i] = 0;
+
+    return outFileName;
+}
+
+char* FAT32::ToNormalFormat(char* str)
+{
+    char* outFileName = new char[12];
+    MemoryOperations::memset(outFileName, 0, 12);
+
+    int mainEnd, extEnd;
+	for(mainEnd = 8; mainEnd > 0 && str[mainEnd - 1] == ' '; mainEnd--);
+
+	MemoryOperations::memcpy(outFileName, str, mainEnd);
+
+	for(extEnd = 3; extEnd > 0 && str[extEnd - 1 + 8] == ' '; extEnd--);
+
+	if(extEnd == 0){
+		return String::Lowercase(outFileName);
+	}
+
+	outFileName[mainEnd] = '.';
+	MemoryOperations::memcpy(outFileName + mainEnd + 1, (const char*)str + 8, extEnd);
+    
+    return String::Lowercase(outFileName);
 }

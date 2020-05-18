@@ -134,7 +134,7 @@ void Installer::ShowDiskSelection()
         
         char* nameString = d->identifier ? d->identifier : (char*)"Unnamed Hard Disk";
         TextGUI::DrawString(nameString, 3, optionStart + count);
-        TextGUI::DrawString(Convert::IntToString(divide64(d->size, 1_MB)), VGA_WIDTH - 8, optionStart + count);
+        TextGUI::DrawString(Convert::IntToString32(divide64(d->size, 1_MB)), VGA_WIDTH - 8, optionStart + count);
         TextGUI::DrawString("MB", VGA_WIDTH - 2, optionStart + count);
 
         count++;
@@ -183,15 +183,17 @@ void Installer::ShowDiskEraseMenu()
     uint8_t buf[512];
     MemoryOperations::memset(buf, 0, 512);
 
-    TextGUI::StatusBar("Cleaning Disk....", 30);
+    TextGUI::StatusBar("Cleaning Disk....   [Press any key to cancel]", 30);
     for(uint32_t s = 0; s < sectors; s++) {
         selectedDisk->WriteSector(s, buf);
-        if(s % 10 == 0) {
+        if(s % 100 == 0) {
             TextGUI::DrawString(Convert::IntToString32(sectors), 0, VGA_HEIGHT - 3);
             TextGUI::DrawString("/", 10, VGA_HEIGHT - 3);
             TextGUI::DrawString(Convert::IntToString32(s), 13, VGA_HEIGHT - 3);
             TextGUI::SetPixel(((double)s/(double)sectors) * (double)VGA_WIDTH, VGA_HEIGHT - 2, TEXT_COLOR, '#', VGA_COLOR_GREEN);
         }
+        if(System::keyboardStream->Availible() > 0)
+            break;
     }
 }
 
@@ -314,7 +316,7 @@ void Installer::CreateFatPartition(PartitionTableEntry* pEntry)
     // First fill in the new values for partition entry
     pEntry->bootable = (1<<7);
     pEntry->start_lba = 2048;
-    pEntry->length = (selectedDisk->size / 512) - pEntry->start_lba - (1_MB / 512);
+    pEntry->length = divide64(selectedDisk->size, 512) - pEntry->start_lba - (1_MB / 512);
     pEntry->partition_id = 0x0B;
     // Legacy CHS Values
     { // Begin
@@ -406,7 +408,7 @@ void Installer::CreateFatPartition(PartitionTableEntry* pEntry)
     setClusterValue(fatTable, 0, 0xFFFFFFFF);
     setClusterValue(fatTable, 1, 0xFFFFFFFF);
     fatTable[0] = (uint8_t)biosParameterBlock.MediaDescriptorType; // Not sure why this is needed
-    setClusterValue(fatTable, 2, FAT_EOF);
+    setClusterValue(fatTable, 2, FAT_CLUSTER_END);
 
     uint32_t rootDirSize = biosParameterBlock.SectorsPerCluster * biosParameterBlock.bytesPerSector;
     DirectoryEntry rootDir;

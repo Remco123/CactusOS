@@ -227,12 +227,52 @@ uint32_t ISO9660::GetFileSize(const char* path)
 
     return entry->data_length;
 }
-int ISO9660::ReadFile(const char* path, uint8_t* buffer, uint32_t len, uint32_t offset)
+int ISO9660::ReadFile(const char* path, uint8_t* buffer, uint32_t offset, uint32_t len)
 {
     DirectoryRecord* entry = GetEntry(path);
 
     if(entry == 0 || GetEntryType(entry) == Iso_Directory)
         return -1;
+
+    if(len == (uint32_t)-1)
+        len = entry->data_length;
+    
+    /*
+    if(len > entry->data_length || (offset + len) > entry->data_length) // File is not this big
+        return -1;
+
+    uint8_t* bufPtr = buffer;
+    uint32_t startSector = offset / CDROM_SECTOR_SIZE;
+    uint32_t startOffset = offset % CDROM_SECTOR_SIZE;
+    uint32_t endSector = (offset + len) / CDROM_SECTOR_SIZE;
+
+    if(startOffset != 0) { // There is a partial sector at the beginning that needs to be read
+        if(disk->ReadSector(entry->extent_location + startSector, readBuffer) != 0)
+            return -1;
+        
+        // Copy partial data from readBuffer into target buffer
+        uint32_t len = CDROM_SECTOR_SIZE - (CDROM_SECTOR_SIZE - startOffset);
+        MemoryOperations::memcpy(bufPtr, readBuffer + (CDROM_SECTOR_SIZE - startOffset), len);
+
+        bufPtr += len;
+        startSector++;
+    }
+
+    for(; startSector < endSector; startSector++) { // Read whole sectors containing file data
+        if(disk->ReadSector(entry->extent_location + startSector, bufPtr) != 0)
+            return -1;
+        
+        bufPtr += CDROM_SECTOR_SIZE;
+    }
+
+    uint32_t endOffset = (offset + len) % CDROM_SECTOR_SIZE;
+    if(endOffset != 0) { // There is a partial sector at the end that needs to be read
+        if(disk->ReadSector(entry->extent_location + startSector, readBuffer) != 0)
+            return -1;
+
+        MemoryOperations::memcpy(bufPtr, readBuffer, endOffset);
+    }
+    */
 
     //TODO: Actually implement partial file reading, for now we read the whole file
     int sectorCount = entry->data_length / CDROM_SECTOR_SIZE;
