@@ -32,7 +32,7 @@ namespace CactusOS
         #define APM_FUNC_CPU_IDLE                           0x05
         #define APM_FUNC_CPU_BUSY                           0x06
         #define APM_FUNC_SET_POWER_STATE                    0x07
-        #define APM_FUNT_ENABLE_POWER_MANAGEMENT            0x08
+        #define APM_FUNC_ENABLE_POWER_MANAGEMENT            0x08
         #define APM_FUNC_RESTORE_DEFAULTS                   0x09
         #define APM_FUNC_GET_POWER_STATUS                   0x0A
         #define APM_FUNC_GET_PM_EVENT                       0x0B

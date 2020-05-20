@@ -48,7 +48,7 @@ APMController::APMController()
 
     // Enable power management for all devices
     MemoryOperations::memset(&args, 0, sizeof(VM86Arguments));
-    args.AX = (uint16_t)0x5300 | (uint16_t)APM_FUNT_ENABLE_POWER_MANAGEMENT;
+    args.AX = (uint16_t)0x5300 | (uint16_t)APM_FUNC_ENABLE_POWER_MANAGEMENT;
     args.BX = APM_ALL_DEVICE; //All Devices
     args.CX = 0x1; //Enable power control by APM BIOS
     System::vm86Manager->CallInterrupt(0x15, &args);
