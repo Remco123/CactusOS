@@ -24,10 +24,10 @@
 #######################
 
 INCLUDEDIRS := kernel/include
-QEMUOPTIONS := -boot d -device VGA,edid=on -trace events=../qemuTrace.txt -drive file=/dev/sdc,format=raw
+QEMUOPTIONS := -boot d -device VGA,edid=on -trace events=../qemuTrace.txt -drive file=installerDisk.img,format=raw
 
 G++PARAMS := -m32 -g -I $(INCLUDEDIRS) -fno-use-cxa-atexit -nostdlib -fno-builtin -fno-exceptions -fno-rtti -fno-leading-underscore -Wno-write-strings -fpermissive -Wall
-GCCPARAMS := -m32 -g -I $(INCLUDEDIRS) -nostdlib -fno-builtin -Wall -fleading-underscore
+GCCPARAMS := -m32 -g -I $(INCLUDEDIRS) -nostdlib -fno-builtin -Wall
 ASPARAMS := --32
 LDPARAMS := -m elf_i386
 
@@ -52,6 +52,13 @@ $(KRNLOBJDIR)/%.o: $(KRNLSRCDIR)/%.cpp
 $(KRNLOBJDIR)/%.o: $(KRNLSRCDIR)/%.c
 	mkdir -p $(@D)
 	i686-elf-gcc $(GCCPARAMS) -c -o $@ $<
+
+####################################
+#GDB Stub
+####################################
+$(KRNLOBJDIR)/gdb/i386-stub.o: $(KRNLSRCDIR)/gdb/i386-stub.c
+	mkdir -p $(@D)
+	i686-elf-gcc $(GCCPARAMS) -fleading-underscore -c -o $@ $<
 
 ####################################
 #GAS assembly files
@@ -95,11 +102,11 @@ clean:
 	rm -rf isofiles/apps/*.bin
 
 qemu: CactusOS.iso
-	#qemu-img create -f raw installerDisk.img 100M
+	qemu-img create -f raw installerDisk.img 100M
 	qemu-system-i386 -cdrom CactusOS.iso -serial stdio $(QEMUOPTIONS)
 
 qemuDBG: CactusOS.iso
-	#qemu-img create -f raw installerDisk.img 100M
+	qemu-img create -f raw installerDisk.img 100M
 	qemu-system-i386 -cdrom CactusOS.iso -serial stdio $(QEMUOPTIONS) -s -S &
 
 qemuGDB: CactusOS.iso
@@ -124,7 +131,7 @@ kdbg: CactusOS.iso
 	kdbg -r localhost:1234 CactusOS.bin
 
 grub-core:
-	grub-mkimage -o isofiles/setup/core.img -O i386-pc -p="(hd0,msdos1)/boot/grub" --config=grubcore.cfg -v configfile biosdisk part_msdos fat normal multiboot
+	grub-mkimage -o isofiles/setup/core.img -O i386-pc -p="(hd0,msdos1)/boot/grub" --config=grubcore.cfg -v configfile biosdisk part_msdos fat normal multiboot echo
 
 # Only rebuild LIBCactusOS and the apps without recompiling the kernel
 fastApps:

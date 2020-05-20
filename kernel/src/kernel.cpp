@@ -106,6 +106,9 @@ extern "C" void kernelMain(const multiboot_info_t* mbi, unsigned int multiboot_m
     BootConsole::Write("GRUB Command Line Arguments: ");
     BootConsole::WriteLine((char*)phys2virt(mbi->cmdline));
 
+    BootConsole::Write("Boot Device: "); Print::printfHex((mbi->boot_device & 0xFF000000) >> 24);
+    BootConsole::WriteLine();
+
     GlobalDescriptorTable::Init();
     BootConsole::WriteLine("GDT Loaded");
 
@@ -166,9 +169,6 @@ extern "C" void kernelMain(const multiboot_info_t* mbi, unsigned int multiboot_m
     //Further intialisation is done in the system class
     System::Start();
 
-    System::vfs->CreateDirectory("0:\\TESTDIR");
-    System::vfs->CreateFile("0:\\newFile.txt");
-
     Log(Info, "Loading Kernel Process");
     Process* kernelProcess = ProcessHelper::CreateKernelProcess();
     kernelProcess->Threads.push_back(ThreadHelper::CreateFromFunction(IdleThread, true));
@@ -195,7 +195,7 @@ extern "C" void kernelMain(const multiboot_info_t* mbi, unsigned int multiboot_m
         if(System::keyboardStream->Availible() > 0) { //User pressed key
             uint8_t keyCode = System::keyboardStream->Read();    
             
-            if(keyCode == 0x1C) { //Return key
+            if(keyCode == KEY_ENTER) { //Return key
                 BootConsole::WriteLine("Running Installer...");
                 Installer::Run();
             }

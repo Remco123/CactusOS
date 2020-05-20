@@ -23,7 +23,7 @@ namespace CactusOS
             common::uint16_t vol_seq_number;
             common::uint16_t vol_seq_number_be; // big-endian, unused
             common::uint8_t name_length;
-            char name[0];
+            char name[222];
         } __attribute__((packed));
 
         struct PVDTimeFormat
@@ -112,6 +112,8 @@ namespace CactusOS
             DirectoryRecord* SearchInDirectory(DirectoryRecord* searchIn, const char* name);
             Iso_EntryType GetEntryType(DirectoryRecord* entry);
             DirectoryRecord* GetEntry(const char* path);
+
+            char* GetRecordName(DirectoryRecord* record);
         public:
             ISO9660(Disk* disk, common::uint32_t start, common::uint32_t size);
 

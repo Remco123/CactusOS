@@ -5,6 +5,6 @@ This file is parsed by the desktop application on startup
 
 "Calculator" file="B:\apps\calc.bin" icon="B:\desktop\calc.bmp"
 "Terminal" file="B:\apps\terminal.bin" icon="B:\desktop\term.bmp"
-"Power Manager" file="B:\apps\powerman.bin" icon="B:\desktop\power.bmp"
+"Power Manager" file="B:\apps\powermanager.bin" icon="B:\desktop\power.bmp"
 "Mines" file="B:\apps\mines.bin" icon="B:\desktop\mine.bmp"
 "Explorer" file="B:\apps\explorer.bin" icon="B:\desktop\explorer.bmp"

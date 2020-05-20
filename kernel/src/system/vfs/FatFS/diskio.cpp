@@ -17,7 +17,7 @@ using namespace CactusOS::system;
 /* Get Drive Status                                                      */
 /*-----------------------------------------------------------------------*/
 
-DSTATUS _disk_status (
+DSTATUS disk_status (
 	BYTE pdrv		/* Physical drive nmuber to identify the drive */
 )
 {
@@ -30,7 +30,7 @@ DSTATUS _disk_status (
 /* Inidialize a Drive                                                    */
 /*-----------------------------------------------------------------------*/
 
-DSTATUS _disk_initialize (
+DSTATUS disk_initialize (
 	BYTE pdrv				/* Physical drive nmuber to identify the drive */
 )
 {
@@ -43,7 +43,7 @@ DSTATUS _disk_initialize (
 /* Read Sector(s)                                                        */
 /*-----------------------------------------------------------------------*/
 
-DRESULT _disk_read (
+DRESULT disk_read (
 	BYTE pdrv,		/* Physical drive nmuber to identify the drive */
 	BYTE *buff,		/* Data buffer to store read data */
 	LBA_t sector,	/* Start sector in LBA */
@@ -66,7 +66,7 @@ DRESULT _disk_read (
 
 #if FF_FS_READONLY == 0
 
-DRESULT _disk_write (
+DRESULT disk_write (
 	BYTE pdrv,			/* Physical drive nmuber to identify the drive */
 	const BYTE *buff,	/* Data to be written */
 	LBA_t sector,		/* Start sector in LBA */
@@ -88,13 +88,13 @@ DRESULT _disk_write (
 /* Miscellaneous Functions                                               */
 /*-----------------------------------------------------------------------*/
 
-DRESULT _disk_ioctl (
+DRESULT disk_ioctl (
 	BYTE pdrv,		/* Physical drive nmuber (0..) */
 	BYTE cmd,		/* Control code */
 	void *buff		/* Buffer to send/receive control data */
 )
 {
-	Log(Info, "Disk Command %b for drive %d", cmd, pdrv);
+	//Log(Info, "Disk Command %b for drive %d", cmd, pdrv);
 	return RES_OK;
 }
 

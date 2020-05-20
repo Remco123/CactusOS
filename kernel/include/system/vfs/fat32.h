@@ -2,6 +2,7 @@
 #define __CACTUSOS__SYSTEM__VFS__FAT32_H
 
 #include <system/vfs/virtualfilesystem.h>
+#include <../src/system/vfs/FatFS/ff.h>
 
 namespace CactusOS
 {
@@ -52,24 +53,6 @@ namespace CactusOS
             common::uint8_t     reserved2[12];
             common::uint32_t    signature3;
         } __attribute__((packed));
-        
-        typedef union {
-            struct {
-                uint16_t day : 5;  // Day of month, 1 - 31
-                uint16_t mon : 4;   // Month, 1 - 12
-                uint16_t year : 7;  // Year, counting from 1980.
-            };
-            uint16_t intValue;
-        } FAT_DATE;
-
-        typedef union {
-            struct {
-                uint16_t sec : 5;   // Seconds divided by 2.
-                uint16_t min : 6;   // Minutes, 0 - 59
-                uint16_t hour : 5;  // Hour, 0 - 23
-            };
-            uint16_t intValue;
-        } FAT_TIME;
 
         struct DirectoryEntry
         {
@@ -87,62 +70,13 @@ namespace CactusOS
             common::uint32_t    FileSize;
         } __attribute__((packed));
 
-        #define FAT_READ_ONLY   0x01
-        #define FAT_HIDDEN      0x02
-        #define FAT_SYSTEM      0x04
         #define FAT_VOLUME_ID   0x08
-        #define FAT_DIRECTORY   0x10
-        #define FAT_ARCHIVE     0x20
-        #define FAT_LFN (FAT_READ_ONLY|FAT_HIDDEN|FAT_SYSTEM|FAT_VOLUME_ID)
-
-        #define FAT_ENDOFDIRS       0x0
-        #define FAT_UNUSED          0xE5
-        #define FAT_FILENAME_LEN    11
-
         #define FAT_CLUSTER_END         0x0FFFFFF8
-        #define FAT_CLUSTER_BAD         0x0FFFFFF7
-        #define FAT_CLUSTER_FREE        0x00000000
         
-        #define GET_CLUSTER(e) (e->LowFirstCluster | (e->HighFirstCluster << (16)))
-        #define CLUSTER_TO_SECTOR(x) (((x - 2) * sectorsPerCluster) + firstDataSector)
-
         class FAT32 : public VirtualFileSystem
         {
-        private: // Variables
-            common::uint32_t bytesPerSector = 0;
-            common::uint32_t totalClusters = 0;
-            common::uint32_t sectorsPerCluster = 0;
-            common::uint32_t firstFatSector = 0;
-            common::uint32_t firstDataSector = 0;
-            common::uint32_t reservedSectors = 0;
-            common::uint32_t rootCluster;
-
-            uint8_t readBuffer[512];        
-        private: // Functions
-            
-            // Table Functions
-            common::uint32_t ReadFATTable(common::uint32_t cluster);
-            int WriteFATTable(common::uint32_t cluster, common::uint32_t value);
-            common::uint32_t AllocateNewCluster();
-
-            // Internal directory parsing functions
-            List<DirectoryEntry> ReadDir(common::uint32_t cluster);
-            List<common::uint32_t> GetClusterChain(common::uint32_t firstcluster, common::uint64_t* numclus);
-            
-            // Internal search functions
-            DirectoryEntry SearchInDirectory(common::uint32_t cluster, const char* name);
-            DirectoryEntry GetEntry(const char* path);
-
-            // Filename convertion
-            char* ToFatFormat(char* str);
-            char* ToNormalFormat(char* str);
-
-            // Date and time functions
-            FAT_DATE CurrentDate();
-            FAT_TIME CurrentTime();
-
-            // Create a new FAT entry of type type
-            int CreateEntry(const char* path, char type);
+        private:
+            FATFS baseFS;
         public:
             FAT32(Disk* disk, common::uint32_t start, common::uint32_t size);
 

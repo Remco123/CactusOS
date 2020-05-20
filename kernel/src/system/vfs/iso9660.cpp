@@ -79,6 +79,56 @@ bool ISO9660::Initialize()
     return true;
 }
 
+char* ISO9660::GetRecordName(DirectoryRecord* record)
+{
+    if(record->name[0] == '\0' || record->name[0] == '\1') // . and .. entries
+        return 0;
+
+    // Search for Rockridge extension first
+    if(record->name[record->name_length + 1] != 0) {
+        int offset = record->name_length + 1;
+        if(offset % 2 == 0) // Even number
+            offset -= 1;
+        
+        while (1)
+        {
+            int len = record->name[offset + 2];
+            if(String::strncmp(record->name + offset, "NM", 2)) // Name field
+            {
+                int strLen = len - 5;
+                char* entry = new char[strLen + 1];
+                MemoryOperations::memcpy(entry, record->name + offset + 5, strLen);
+                entry[strLen] = '\0';
+                
+                return entry;
+            }
+            else
+                if(record->name[offset] == 0)
+                    break;
+                else
+                    offset += len;
+        }
+    }
+    
+    // Return short name, could be enough
+    if(GetEntryType(record) == Iso_File)
+    {
+        char* entry = new char[record->name_length];
+        MemoryOperations::memcpy(entry, record->name, record->name_length - 2);
+        entry[record->name_length - 2] = '\0';
+        
+        return entry;
+    }
+    else //Directories do not have version numbers
+    {
+        char* entry = new char[record->name_length + 1];
+        MemoryOperations::memcpy(entry, record->name, record->name_length);
+        entry[record->name_length] = '\0';
+        
+        return entry;
+    }
+}
+
 Iso_EntryType ISO9660::GetEntryType(DirectoryRecord* entry)
 {
     return ((entry->flags >> 1) & 1) ? Iso_Directory : Iso_File;
@@ -109,25 +159,23 @@ DirectoryRecord* ISO9660::SearchInDirectory(DirectoryRecord* searchIn, const cha
         }
         else
         {
-            char nameBuffer[222];
-            int nameLength = record->name_length;
+            char* entryName = GetRecordName(record);
 
-            MemoryOperations::memcpy(nameBuffer, record->name, nameLength);
-
-            if(GetEntryType(record) == Iso_File)
-                nameBuffer[nameLength - 2] = '\0'; //Ignore Version
-            else
-                nameBuffer[nameLength] = '\0';
-
-            if(String::strcmp(nameBuffer, name))
+            if(entryName != 0 && String::strcmp(entryName, name))
             {
-                DirectoryRecord* result = (DirectoryRecord*)KernelHeap::malloc(sizeof(DirectoryRecord) + nameLength + 1);
-                MemoryOperations::memcpy(result, record, sizeof(DirectoryRecord) + nameLength);
+                DirectoryRecord* result = new DirectoryRecord();
+                MemoryOperations::memcpy(result, record, sizeof(DirectoryRecord));
 
                 //Terminate string
-                result->name[nameLength] = '\0';
+                result->name[record->name_length] = '\0';
+
+                //Free memory
+                delete entryName;
+                
                 return result;
             }
+            if(entryName != 0)
+                delete entryName;
         }
 
         Offset += record->length;
@@ -188,33 +236,21 @@ List<char*>* ISO9660::DirectoryList(const char* path)
 
         DirectoryRecord* record = (DirectoryRecord*)(readBuffer + Offset);
         if(record->length == 0) //We reached the end of the entry's
-        {
             break;
-        }
         else
-        {
             if(record->name[0] != '\0' && record->name[0] != '\1') //We ignore the . and .. directories
             {
-                if(GetEntryType(record) == Iso_File)
-                {
-                    char* entry = (char*)KernelHeap::malloc(record->name_length);
-                    MemoryOperations::memcpy(entry, record->name, record->name_length - 2);
-                    entry[record->name_length - 2] = '\0';
+                char* entry = GetRecordName(record);
+                if(entry != 0)
                     result->push_back(entry);
-                }
-                else //Directories do not have version numbers
-                {
-                    char* entry = (char*)KernelHeap::malloc(record->name_length + 1);
-                    MemoryOperations::memcpy(entry, record->name, record->name_length);
-                    entry[record->name_length] = '\0';
-                    result->push_back(entry);
-                }
             }
-        }
 
         Offset += record->length;
     }
 
+    if(parent != 0 && parent != this->rootDirectory)
+        delete parent;
+        
     return result;
 }
 uint32_t ISO9660::GetFileSize(const char* path)
@@ -222,17 +258,22 @@ uint32_t ISO9660::GetFileSize(const char* path)
     DirectoryRecord* entry = GetEntry(path);
     if(entry == 0 || GetEntryType(entry) == Iso_Directory)
     {
+        if(entry != 0) delete entry;
         return -1;
     }
+    uint32_t len = entry->data_length;
 
-    return entry->data_length;
+    delete entry;
+    return len;
 }
 int ISO9660::ReadFile(const char* path, uint8_t* buffer, uint32_t offset, uint32_t len)
 {
     DirectoryRecord* entry = GetEntry(path);
 
-    if(entry == 0 || GetEntryType(entry) == Iso_Directory)
+    if(entry == 0 || GetEntryType(entry) == Iso_Directory) {
+        if(entry != 0) delete entry;
         return -1;
+    }
 
     if(len == (uint32_t)-1)
         len = entry->data_length;
@@ -289,6 +330,7 @@ int ISO9660::ReadFile(const char* path, uint8_t* buffer, uint32_t offset, uint32
         MemoryOperations::memcpy(buffer + (sectorCount*CDROM_SECTOR_SIZE), readBuffer, dataRemainder);
     }
     
+    delete entry;
     return 0;
 }
 int ISO9660::WriteFile(const char* path, uint8_t* buffer, uint32_t len, bool create)
@@ -309,9 +351,11 @@ bool ISO9660::FileExists(const char* path)
     DirectoryRecord* entry = GetEntry(path);
     if(entry == 0 || GetEntryType(entry) == Iso_Directory)
     {
+        if(entry != 0) delete entry;
         return false;
     }
 
+    delete entry;
     return true;
 }
 
@@ -320,8 +364,10 @@ bool ISO9660::DirectoryExists(const char* path)
     DirectoryRecord* entry = GetEntry(path);
     if(entry == 0 || GetEntryType(entry) == Iso_File)
     {
+        if(entry != 0) delete entry;
         return false;
     }
 
+    delete entry;
     return true;
 }

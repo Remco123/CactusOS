@@ -22,10 +22,38 @@ char* AsciiLogo[] = {
 "    ######  ##     ##  ######     ##     #######   ######   #######   ######   "
 };
 
+// Files required for setup
 char* FileList[] = {
     "B:\\setup\\boot.img",
     "B:\\setup\\welcome.txt",
     "B:\\setup\\warning.txt",
+};
+
+// Modules required by grub in order to boot CactusOS
+char* GrubModules[] = {
+    "B:\\boot\\grub\\i386-pc\\bufio.mod",
+    "B:\\boot\\grub\\i386-pc\\gettext.mod",
+    "B:\\boot\\grub\\i386-pc\\terminal.mod",
+    "B:\\boot\\grub\\i386-pc\\crypto.mod",
+    "B:\\boot\\grub\\i386-pc\\extcmd.mod",
+    "B:\\boot\\grub\\i386-pc\\boot.mod",
+    "B:\\boot\\grub\\i386-pc\\normal.mod",
+    "B:\\boot\\grub\\i386-pc\\configfile.mod",
+    "B:\\boot\\grub\\i386-pc\\biosdisk.mod",
+    "B:\\boot\\grub\\i386-pc\\part_msdos.mod",
+    "B:\\boot\\grub\\i386-pc\\fshelp.mod",
+    "B:\\boot\\grub\\i386-pc\\fat.mod",
+    "B:\\boot\\grub\\i386-pc\\video_fb.mod",
+    "B:\\boot\\grub\\i386-pc\\video.mod",
+    "B:\\boot\\grub\\i386-pc\\vbe.mod",
+    "B:\\boot\\grub\\i386-pc\\lsapm.mod",
+    "B:\\boot\\grub\\i386-pc\\mmap.mod",
+    "B:\\boot\\grub\\i386-pc\\relocator.mod",
+    "B:\\boot\\grub\\i386-pc\\datetime.mod",
+    "B:\\boot\\grub\\i386-pc\\priority_queue.mod",
+    "B:\\boot\\grub\\i386-pc\\net.mod",
+    "B:\\boot\\grub\\i386-pc\\multiboot.mod",
+    "B:\\boot\\grub\\i386-pc\\echo.mod",
 };
 
 Disk* selectedDisk = 0;
@@ -53,6 +81,14 @@ void Installer::Run()
         if(System::vfs->FileExists(FileList[i]) == false)
             SetupError();
     }
+
+    TextGUI::StatusBar("Checking Grub Modules...", 5);
+    for(int i = 0; i < sizeof(GrubModules) / sizeof(char*); i++) {
+        TextGUI::StatusBar(GrubModules[i], 5);
+        if(System::vfs->FileExists(GrubModules[i]) == false)
+            SetupError();
+    }
+
     // Display welcome at start of setup
     ShowWelcomeMessage();
 
@@ -69,7 +105,8 @@ void Installer::Run()
     ShowInstallScreen();
 
     TextGUI::ClearScreen();
-    TextGUI::DrawString("Setup is complete, press enter to reboot", 0, 0);
+    TextGUI::DrawString("Remove installation media.", 0, 0);
+    TextGUI::DrawString("Setup is complete, press enter to reboot", 0, 1);
 
     TextGUI::StatusBar("Waiting for enter key....", 60);
     while(GetKey() != KEY_ENTER)
@@ -284,12 +321,108 @@ void Installer::ShowInstallScreen()
 
     //Free buffer
     delete coreBuffer;
+
+    // Create new FAT32 filesystem module
+    FAT32* fatFS = new FAT32(selectedDisk, newMBR.primaryPartitions[0].start_lba, newMBR.primaryPartitions[0].length);
+    if(fatFS->Initialize() == false)
+        SetupError();
+
+    BootConsole::WriteLine();
+    
+    // Start the file copying
+    ShowSystemCopyScreen(fatFS);
+
+    // We don't need this anymore
+    delete fatFS;
+}
+
+void CopyFile(VirtualFileSystem* src, VirtualFileSystem* dest, char* path)
+{
+    if(src->FileExists(path) == false)
+        Installer::SetupError();
+    
+    uint32_t fileSize = src->GetFileSize(path);
+    
+    uint8_t* buffer = new uint8_t[fileSize];
+    if(src->ReadFile(path, buffer) != 0)
+        Installer::SetupError();
+    
+    if(dest->CreateFile(path) != 0)
+        Installer::SetupError();
+    
+    if(dest->WriteFile(path, buffer, fileSize) != 0)
+        Installer::SetupError();
+
+    delete buffer;
+}
+
+void CopyDirectory(VirtualFileSystem* src, VirtualFileSystem* dest, char* path)
+{
+    auto content = src->DirectoryList(path);
+    for(char* item : *content)
+    {
+        char itemPath[255];
+        MemoryOperations::memset(itemPath, 0, 255);
+
+        int i1 = String::strlen(path);
+        int i2 = String::strlen(item);
+
+        if(i1 != 0) { // Not in the root directory
+            MemoryOperations::memcpy(itemPath, path, i1);
+            itemPath[i1] = '\\';
+            MemoryOperations::memcpy(itemPath + i1 + 1, item, i2);
+        }
+        else
+            MemoryOperations::memcpy(itemPath + i1, item, i2);
+
+        if(src->FileExists(itemPath)) {
+            if(String::strncmp(itemPath, "boot\\grub\\i386-pc\\", 17) == true) // We only need a couple of grub modules, not all from the liveCD
+            {
+                bool shouldCopy = false;
+                for(int i = 0; i < sizeof(GrubModules) / sizeof(char*); i++)
+                    if(String::strcmp(GrubModules[i] + 3 /* Skip B:\ */, itemPath)) // Check if we need to copy this module
+                        shouldCopy = true;
+                
+                if(!shouldCopy) {
+                    Log(Info, "Skipping File: %s", itemPath);
+                    continue;
+                }
+            }
+
+            Log(Info, "Copying File: %s", itemPath);
+
+            CopyFile(src, dest, itemPath);
+        }
+        else if(src->DirectoryExists(itemPath)) {
+            if(String::strncmp(itemPath, "setup", 5) == false) { // No need to copy the setup directory
+                dest->CreateDirectory(itemPath);
+                
+                CopyDirectory(src, dest, itemPath);
+            }
+        }
+        else {
+            Installer::SetupError();
+        }
+
+        delete item;
+    }
+
+    delete content;
+}
+
+void Installer::ShowSystemCopyScreen(FAT32* fatFS)
+{
+    TextGUI::ClearScreen();
+    TextGUI::DrawString("Copying system files to new filesystem", 0, 0);
+
+    CopyDirectory(System::vfs->Filesystems->GetAt(System::vfs->bootPartitionID), fatFS, "");
 }
 
 void Installer::SetupError()
 {
     //TextGUI::ClearScreen(VGA_COLOR_BLUE);
     TextGUI::DrawString("Error while installing", 0, 0);
+    while(1);
 }
 
 uint32_t alignSector(uint32_t sectors, uint32_t clusterSize)
