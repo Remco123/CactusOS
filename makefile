@@ -127,7 +127,7 @@ serialDBG:
 
 kdbg: CactusOS.iso
 	qemu-img create -f raw installerDisk.img 100M
-	qemu-system-i386 -cdrom CactusOS.iso $(USBOPTIONS) -serial stdio -s -S &
+	qemu-system-i386 $(QEMUOPTIONS) -serial stdio -s -S &
 	kdbg -r localhost:1234 CactusOS.bin
 
 grub-core:

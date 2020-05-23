@@ -51,7 +51,6 @@ void EDID::AcquireEDID()
 
     args.AX = 0x4F15;
     args.BX = 0x0001;
-    args.ES = 0;
     args.DI = 0x7500;
 
     Log(Info, "Reading EDID via BIOS/VBE");

@@ -15,7 +15,6 @@ namespace CactusOS
             common::uint16_t DX;
 
             common::uint16_t DI;
-            common::uint16_t ES;
         } __attribute__((packed));
     }
 }

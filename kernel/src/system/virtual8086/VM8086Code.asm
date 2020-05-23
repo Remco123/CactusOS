@@ -19,7 +19,6 @@ Int86:
     mov dx, word [0x8006]
 
     mov di, word [0x8008]
-    mov es, word [0x8010]
     ; do the int n instruction
 .doInt:
     int 0x0	; dummy int instruction
@@ -35,7 +34,6 @@ Int86:
     mov word [0x8006], dx
 
     mov word [0x8008], di
-    mov word [0x8010], es
 
     ; return to kernel
     int 0xFE

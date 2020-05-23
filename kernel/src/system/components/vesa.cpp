@@ -31,7 +31,6 @@ VESAModeInfo* VESA::GetModeInfo(uint16_t mode)
 
 	regs.AX = 0x4F01;
 	regs.CX = mode;
-	regs.ES = 0;
 	regs.DI = (uint16_t)info;
 	virtual8086Manager->CallInterrupt(0x10, &regs);	
 	
