@@ -4,9 +4,7 @@ CactusOS is a simple operating system that is aimed to not be anything like linu
 # Current Features
 - Remake Core of CactusOS [Done]
 - Higher Half Kernel [Done]
-- Physical Memory Manager [Done]
-- Virtual Memory Manager [Done]
-- Paging [Done]
+- Physical/Virtual Memory Manager [Done]
 - PCI Device Enumeration [Done]
 - SMBios Parsing [Done]
 - Virtual 8086 Mode [Done]
@@ -14,7 +12,7 @@ CactusOS is a simple operating system that is aimed to not be anything like linu
 - IDE support (ATA/ATAPI) [Done]
 - ISO9660 filesystem [Basic]
 - Multitasking [Basic]
-- Usermode [Basic]
+- Usermode [Done]
 - Boot Screen [Done]
 - Graphics Desktop [Basic]
 - Applications
@@ -27,6 +25,9 @@ CactusOS is a simple operating system that is aimed to not be anything like linu
   - OHCI
   - EHCI
   - xHCI Not supported yet
+- Installer [Basic]
+  - FAT Filesystem creation
+  - Complete system install on hard drive
 
 # Planned Features
 - More complete custom build api for apps
@@ -45,6 +46,9 @@ A i686-elf cross compiler is also required, see [Osdev wiki](https://wiki.osdev.
 
 ## Bochs
 By default the os does not have graphics when running on bochs, to bypass this set the value BOCHS_GFX_HACK to 1 in kernel/include/system/system.h.
+
+## Installing
+You can install the operating system onto a hard-drive using the setup program. This program is built into the kernel and can be launched by pressing enter during the "Press Enter to run Installer" prompt. This option is only availible in the liveCD.
 
 # Screenshots
 <img src="images/Screenshot Bootscreen.png" alt="Bootscreen" width="700">
