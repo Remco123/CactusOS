@@ -2,7 +2,7 @@
 #include <installer/textgui.h>
 #include <system/system.h>
 #include <core/power.h>
-#include <system/vfs/fat32.h>
+#include <system/vfs/fat.h>
 
 using namespace CactusOS;
 using namespace CactusOS::common;
@@ -323,7 +323,7 @@ void Installer::ShowInstallScreen()
     delete coreBuffer;
 
     // Create new FAT32 filesystem module
-    FAT32* fatFS = new FAT32(selectedDisk, newMBR.primaryPartitions[0].start_lba, newMBR.primaryPartitions[0].length);
+    FAT* fatFS = new FAT(selectedDisk, newMBR.primaryPartitions[0].start_lba, newMBR.primaryPartitions[0].length);
     if(fatFS->Initialize() == false)
         SetupError();
 
@@ -410,7 +410,7 @@ void CopyDirectory(VirtualFileSystem* src, VirtualFileSystem* dest, char* path)
     delete content;
 }
 
-void Installer::ShowSystemCopyScreen(FAT32* fatFS)
+void Installer::ShowSystemCopyScreen(FAT* fatFS)
 {
     TextGUI::ClearScreen();
     TextGUI::DrawString("Copying system files to new filesystem", 0, 0);

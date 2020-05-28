@@ -10,7 +10,7 @@ The current features include:
     - Support for IDE Drives (ATA/ATAPI) 
     - Very Basic USB support
       - Only USB Storage Devices at the moment
-    - Support for ISO9660 and FAT32 Filesystems
+    - Support for ISO9660 and FAT Filesystems
 
 There are also some basic applications installed by default which include
     - File Manager

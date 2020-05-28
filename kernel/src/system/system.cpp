@@ -13,6 +13,7 @@ using namespace LIBCactusOS;
 multiboot_info_t* System::mbi = 0;
 PIT* System::pit = 0;
 RTC* System::rtc = 0;
+DMAController* System::dma = 0;
 SMBIOS* System::smbios = 0;
 Virtual8086Manager* System::vm86Manager = 0;
 Virtual8086Monitor* System::vm86Monitor = 0;
@@ -52,6 +53,9 @@ void System::Start()
     System::pit = new PIT();
     InterruptDescriptorTable::EnableInterrupts();
     BootConsole::WriteLine(" [Done]");
+
+    BootConsole::WriteLine("DMA [Done]");
+    System::dma = new DMAController();
 
     BootConsole::WriteLine("SMBIOS [Done]");
     System::smbios = new SMBIOS(true);
@@ -111,6 +115,7 @@ void System::Start()
     BootConsole::WriteLine("Added drivers for integrated devices");
     System::driverManager->AddDriver(new MouseDriver());
     System::driverManager->AddDriver(new KeyboardDriver());
+    System::driverManager->AddDriver(new FloppyDriver());
     
     BootConsole::WriteLine("Activating Drivers");
     System::driverManager->ActivateAll();

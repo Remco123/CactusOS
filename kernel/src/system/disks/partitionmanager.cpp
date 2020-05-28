@@ -1,7 +1,7 @@
 #include <system/disks/partitionmanager.h>
 
 #include <system/vfs/iso9660.h>
-#include <system/vfs/fat32.h>
+#include <system/vfs/fat.h>
 #include <system/system.h>
 
 using namespace CactusOS;
@@ -26,26 +26,40 @@ void PartitionManager::DetectAndLoadFilesystem(Disk* disk)
             delete Readbuf;
             return;
         }
-        //Loop trough partitions
-        for(int p = 0; p < 4; p++)
+
+        if(disk->type == DiskType::Floppy) // Floppy don't contain partitions
         {
-            if(mbr->primaryPartitions[p].partition_id == 0x00)
-                continue;
-
-            BootConsole::Write("- Disk "); BootConsole::Write(diskIdentifier);                
-            BootConsole::Write(" Partition: "); BootConsole::Write(Convert::IntToString(p));
-
-            if(mbr->primaryPartitions[p].bootable == 0x80)
-                BootConsole::Write(" Bootable ID: 0x");
+            FAT* fatFS = new FAT(disk, 0, disk->size / BYTES_PER_SECT);
+            if(fatFS->Initialize())
+                System::vfs->Mount(fatFS); //Mount the filesystem
             else
-                BootConsole::Write(" ID: 0x");
-            
-            Print::printfHex(mbr->primaryPartitions[p].partition_id);
-            BootConsole::Write(" Sectors: "); BootConsole::Write(Convert::IntToString(mbr->primaryPartitions[p].length));
-
-            AssignVFS(mbr->primaryPartitions[p], disk);
+                delete fatFS;
 
             BootConsole::WriteLine();
+        }
+        else // Regular partition scheme 
+        {
+            //Loop trough partitions
+            for(int p = 0; p < 4; p++)
+            {
+                if(mbr->primaryPartitions[p].partition_id == 0x00)
+                    continue;
+
+                BootConsole::Write("- Disk "); BootConsole::Write(diskIdentifier);
+                BootConsole::Write(" Partition: "); BootConsole::Write(Convert::IntToString(p));
+
+                if(mbr->primaryPartitions[p].bootable == 0x80)
+                    BootConsole::Write(" Bootable ID: 0x");
+                else
+                    BootConsole::Write(" ID: 0x");
+                
+                Print::printfHex(mbr->primaryPartitions[p].partition_id);
+                BootConsole::Write(" Sectors: "); BootConsole::Write(Convert::IntToString(mbr->primaryPartitions[p].length));
+
+                AssignVFS(mbr->primaryPartitions[p], disk);
+
+                BootConsole::WriteLine();
+            }
         }
     }
     else {
@@ -65,13 +79,13 @@ void PartitionManager::AssignVFS(PartitionTableEntry partition, Disk* disk)
         else
             delete isoVFS;
     }
-    else if(partition.partition_id == 0x0B || partition.partition_id == 0x0C)
+    else if(partition.partition_id == 0x0B || partition.partition_id == 0x0C || partition.partition_id == 0x01 || partition.partition_id == 0x04 || partition.partition_id == 0x06)
     {
-        BootConsole::Write(" [FAT32]");
-        FAT32* isoVFS = new FAT32(disk, partition.start_lba, partition.length);
-        if(isoVFS->Initialize())
-            System::vfs->Mount(isoVFS); //Mount the filesystem
+        BootConsole::Write(" [FAT(12/16/32)]");
+        FAT* fatFS = new FAT(disk, partition.start_lba, partition.length);
+        if(fatFS->Initialize())
+            System::vfs->Mount(fatFS); //Mount the filesystem
         else
-            delete isoVFS;
+            delete fatFS;
     }
 }

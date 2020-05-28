@@ -1,4 +1,4 @@
-#include <system/vfs/fat32.h>
+#include <system/vfs/fat.h>
 
 #include <common/print.h>
 #include <system/log.h>
@@ -8,13 +8,13 @@ using namespace CactusOS::common;
 using namespace CactusOS::core;
 using namespace CactusOS::system;
 
-FAT32::FAT32(Disk* disk, uint32_t start, uint32_t size)
+FAT::FAT(Disk* disk, uint32_t start, uint32_t size)
 : VirtualFileSystem(disk, start, size) 
 {
-    this->Name = "FAT32 Filesystem";
+    this->Name = "FAT Filesystem";
 }
 
-bool FAT32::Initialize()
+bool FAT::Initialize()
 {
     BootConsole::WriteLine();
     BootConsole::WriteLine("Initializing FAT Filesystem");
@@ -25,7 +25,7 @@ bool FAT32::Initialize()
     if(f_mount(&this->baseFS, str, 0) == FR_OK) {
         uint8_t oldColor = BootConsole::ForegroundColor;
         BootConsole::ForegroundColor = VGA_COLOR_GREEN;
-        BootConsole::Write("FAT32 Filesystem Intialized");
+        BootConsole::Write("FAT Filesystem Intialized");
         BootConsole::ForegroundColor = oldColor;
         return true;
     }
@@ -57,18 +57,17 @@ FRESULT scan_files (const char* path, List<char*>** target)
     return res;
 }
 
-List<char*>* FAT32::DirectoryList(const char* path)
+List<char*>* FAT::DirectoryList(const char* path)
 { 
     List<char*>* ret = new List<char*>();
     FRESULT res = scan_files(path, &ret);
     if(res == FR_OK)
         return ret;
     
-    delete ret;
-    return 0;
+    return ret;
 }
 
-uint32_t FAT32::GetFileSize(const char* path)
+uint32_t FAT::GetFileSize(const char* path)
 {
     FIL fp;
     if(f_open(&fp, path, FA_OPEN_EXISTING) != FR_OK)
@@ -79,7 +78,7 @@ uint32_t FAT32::GetFileSize(const char* path)
 
     return ret;
 }
-int FAT32::ReadFile(const char* path, uint8_t* buffer, uint32_t offset, uint32_t len)
+int FAT::ReadFile(const char* path, uint8_t* buffer, uint32_t offset, uint32_t len)
 { 
     if(len == -1)
         len = GetFileSize(path);
@@ -96,7 +95,7 @@ int FAT32::ReadFile(const char* path, uint8_t* buffer, uint32_t offset, uint32_t
     return 0;
 }
 
-int FAT32::WriteFile(const char* path, uint8_t* buffer, uint32_t len, bool create)
+int FAT::WriteFile(const char* path, uint8_t* buffer, uint32_t len, bool create)
 {
     FIL fp;
     if(f_open(&fp, path, FA_WRITE | FA_CREATE_ALWAYS) != FR_OK)
@@ -108,7 +107,7 @@ int FAT32::WriteFile(const char* path, uint8_t* buffer, uint32_t len, bool creat
     return 0;
 }
 
-int FAT32::CreateFile(const char* path)
+int FAT::CreateFile(const char* path)
 {
     FIL fp;
     FRESULT ret;
@@ -118,12 +117,12 @@ int FAT32::CreateFile(const char* path)
     return (ret != FR_OK);
 }
 
-int FAT32::CreateDirectory(const char* path)
+int FAT::CreateDirectory(const char* path)
 {
     return (f_mkdir(path) == FR_OK);
 }
 
-bool FAT32::FileExists(const char* path)
+bool FAT::FileExists(const char* path)
 { 
     FILINFO info;
     FRESULT fr;
@@ -135,7 +134,7 @@ bool FAT32::FileExists(const char* path)
 
     return false;
 }
-bool FAT32::DirectoryExists(const char* path)
+bool FAT::DirectoryExists(const char* path)
 { 
     FILINFO info;
     FRESULT fr;

@@ -24,7 +24,7 @@
 #######################
 
 INCLUDEDIRS := kernel/include
-QEMUOPTIONS := -boot d -device VGA,edid=on -trace events=../qemuTrace.txt
+QEMUOPTIONS := -boot d -device VGA,edid=on -trace events=../qemuTrace.txt -fda ./floppydisk.img
 
 G++PARAMS := -m32 -g -I $(INCLUDEDIRS) -fno-use-cxa-atexit -nostdlib -fno-builtin -fno-exceptions -fno-rtti -fno-leading-underscore -Wno-write-strings -fpermissive -Wall
 GCCPARAMS := -m32 -g -I $(INCLUDEDIRS) -nostdlib -fno-builtin -Wall
@@ -123,7 +123,7 @@ serialDBG:
 	sudo ./tools/serialDebugger/a.out
 
 kdbg: CactusOS.iso
-	qemu-system-i386 $(QEMUOPTIONS) -serial stdio -s -S &
+	qemu-system-i386 $(QEMUOPTIONS) -cdrom CactusOS.iso -serial stdio -s -S &
 	kdbg -r localhost:1234 CactusOS.bin
 
 grub-core:

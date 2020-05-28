@@ -73,12 +73,12 @@ namespace CactusOS
         #define FAT_VOLUME_ID   0x08
         #define FAT_CLUSTER_END         0x0FFFFFF8
         
-        class FAT32 : public VirtualFileSystem
+        class FAT : public VirtualFileSystem
         {
         private:
             FATFS baseFS;
         public:
-            FAT32(Disk* disk, common::uint32_t start, common::uint32_t size);
+            FAT(Disk* disk, common::uint32_t start, common::uint32_t size);
 
             bool Initialize();
 

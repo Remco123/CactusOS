@@ -2,7 +2,7 @@
 #define __CACTUSOS__INSTALLER__INSTALLER_H
 
 #include <system/disks/partitionmanager.h>
-#include <system/vfs/fat32.h>
+#include <system/vfs/fat.h>
 
 namespace CactusOS
 {
@@ -20,7 +20,7 @@ namespace CactusOS
         static void ShowDiskSelection();
         static void ShowDiskEraseMenu();
         static void ShowInstallScreen();
-        static void ShowSystemCopyScreen(system::FAT32* fatFS);
+        static void ShowSystemCopyScreen(system::FAT* fatFS);
         static void CreateFatPartition(system::PartitionTableEntry* pEntry);
     };
 

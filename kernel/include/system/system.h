@@ -14,6 +14,7 @@
 #include <system/components/edid.h>
 #include <system/components/pci.h>
 #include <system/components/apm.h>
+#include <system/components/dma.h>
 #include <system/virtual8086/VM86Manager.h>
 #include <system/virtual8086/VM86Monitor.h>
 
@@ -22,6 +23,7 @@
 #include <system/drivers/pcidrivers.h>
 #include <system/drivers/integrated/mouse.h>
 #include <system/drivers/integrated/keyboard.h>
+#include <system/drivers/integrated/floppy.h>
 #include <system/disks/diskmanager.h>
 #include <system/disks/partitionmanager.h>
 #include <system/vfs/vfsmanager.h>
@@ -84,6 +86,7 @@ namespace CactusOS
             static PIT* pit;
             static RTC* rtc;
             static SMBIOS* smbios;
+            static DMAController* dma;
             static Virtual8086Manager* vm86Manager;
             static Virtual8086Monitor* vm86Monitor;
             static GraphicsDevice* gfxDevice;
