@@ -2,7 +2,6 @@
 #define __CACTUSOS__SYSTEM__VFS__FAT32_H
 
 #include <system/vfs/virtualfilesystem.h>
-#include <../src/system/vfs/FatFS/ff.h>
 
 namespace CactusOS
 {
@@ -75,8 +74,6 @@ namespace CactusOS
         
         class FAT : public VirtualFileSystem
         {
-        private:
-            FATFS baseFS;
         public:
             FAT(Disk* disk, common::uint32_t start, common::uint32_t size);
 

@@ -166,16 +166,12 @@ void FloppyDriver::CheckIntStatus(uint32_t* st0, uint32_t* cyl)
 }
 
 //! turns the current floppy drives motor on/off
-void FloppyDriver::ControlMotor(bool on)
+void FloppyDriver::ControlMotor(uint8_t drive, bool on)
 {
-	//! sanity check: invalid drive
-	if (currentDrive > 3)
-		return;
-
 	uint8_t motor = 0;
 
 	//! select the correct mask based on current drive
-	switch (currentDrive) {
+	switch (drive) {
 
 		case 0:
 			motor = FLPYDSK_DOR_MASK_DRIVE0_MOTOR;
@@ -193,7 +189,7 @@ void FloppyDriver::ControlMotor(bool on)
 
 	//! turn on or off the motor of that drive
 	if (on)
-		WriteDOR(uint8_t(currentDrive | motor | FLPYDSK_DOR_MASK_RESET | FLPYDSK_DOR_MASK_DMA));
+		WriteDOR(uint8_t(drive | motor | FLPYDSK_DOR_MASK_RESET | FLPYDSK_DOR_MASK_DMA));
 	else
 		WriteDOR(FLPYDSK_DOR_MASK_RESET);
 
@@ -224,7 +220,7 @@ int FloppyDriver::Calibrate(uint8_t drive)
 		return -2;
 
 	//! turn on the motor
-	ControlMotor(true);
+	ControlMotor(drive, true);
 
 	for (int i = 0; i < 10; i++) {
 
@@ -236,28 +232,25 @@ int FloppyDriver::Calibrate(uint8_t drive)
 
 		//! did we find cylinder 0? if so, we are done
 		if (!cyl) {
-			ControlMotor(false);
+			ControlMotor(drive, false);
 			return 0;
 		}
 	}
 
-	ControlMotor(false);
+	ControlMotor(drive, false);
 	return -1;
 }
 
 //! seek to given track/cylinder
-int FloppyDriver::Seek(uint8_t cyl, uint8_t head) 
+int FloppyDriver::Seek(uint8_t drive, uint8_t cyl, uint8_t head) 
 {
 	uint32_t st0, cyl0;
-
-	if (currentDrive >= 4)
-		return -1;
 
 	for (int i = 0; i < 10; i++ ) {
 
 		//! send the command
 		SendCommand(FDC_CMD_SEEK);
-		SendCommand((head) << 2 | currentDrive);
+		SendCommand((head) << 2 | drive);
 		SendCommand(cyl);
 
 		//! wait for the results phase IRQ
@@ -304,11 +297,14 @@ void FloppyDriver::ResetController()
 	//! pass mechanical drive info. steprate=3ms, unload time=240ms, load time=16ms
 	ConfigureDrive(3, 16, 240, true);
 
-	//! calibrate the disk
-	Calibrate(currentDrive);
+	//! calibrate the disks
+	if(this->flpy1)
+		Calibrate(0);
+	if(this->flpy2)
+		Calibrate(1);
 }
 
-int FloppyDriver::TransferSectorCHS(FloppyDirection dir, uint8_t head, uint8_t track, uint8_t sector)
+int FloppyDriver::TransferSectorCHS(uint8_t drive, FloppyDirection dir, uint8_t head, uint8_t track, uint8_t sector)
 { 
 	uint32_t s_st0, s_cyl;
  
@@ -319,7 +315,7 @@ int FloppyDriver::TransferSectorCHS(FloppyDirection dir, uint8_t head, uint8_t t
  
 	//! read in a sector
 	SendCommand((dir == FloppyDirectionRead ? FDC_CMD_READ_SECT : FDC_CMD_WRITE_SECT) | FDC_CMD_EXT_MULTITRACK | FDC_CMD_EXT_SKIP | FDC_CMD_EXT_DENSITY);
-	SendCommand(head << 2 | currentDrive );
+	SendCommand(head << 2 | drive);
 	SendCommand(track);
 	SendCommand(head);
 	SendCommand(sector);
@@ -348,7 +344,7 @@ int FloppyDriver::TransferSectorCHS(FloppyDirection dir, uint8_t head, uint8_t t
     bps = ReadData();
 
 	//! let FDC know we handled interrupt
-	CheckIntStatus(&s_st0, &s_cyl);
+	//CheckIntStatus(&s_st0, &s_cyl);
 
     int error = 0;
 
@@ -412,20 +408,18 @@ int FloppyDriver::TransferSectorCHS(FloppyDirection dir, uint8_t head, uint8_t t
     }
 
     if(!error) {
-        ControlMotor(false);
+        ControlMotor(drive, false);
         return 0;
     }
     if(error > 1) {
         Log(Error, "Floppy Transfer Error: not retrying..");
-        ControlMotor(false);
+        ControlMotor(drive, false);
         return -2;
     }
 
-	ControlMotor(false);
+	ControlMotor(drive, false);
 	return 0;
 }
-
-
 
 //! convert LBA to CHS
 void FloppyLBAToCHS(int lba,int *head,int *track,int *sector)
@@ -446,7 +440,7 @@ void FloppyLBAToCHS(int lba,int *head,int *track,int *sector)
 
 char FloppyDriver::ReadSector(uint16_t drive, uint32_t lba, uint8_t* buf)
 {
-    if (currentDrive >= 4)
+    if (drive >= 2)
 		return 1;
 
 	//! convert LBA sector to CHS
@@ -454,20 +448,20 @@ char FloppyDriver::ReadSector(uint16_t drive, uint32_t lba, uint8_t* buf)
 	FloppyLBAToCHS(lba, &head, &track, &sector);
 
 	//! turn motor on and seek to track
-	ControlMotor(true);
-	if (Seek((uint8_t)track, (uint8_t)head) != 0)
+	ControlMotor(drive, true);
+	if (Seek(drive, (uint8_t)track, (uint8_t)head) != 0)
 		return 1;
 
 	//! read sector and turn motor off
-	int ret = TransferSectorCHS(FloppyDirectionRead, (uint8_t)head, (uint8_t)track, (uint8_t)sector);
-	ControlMotor(false);
+	int ret = TransferSectorCHS(drive, FloppyDirectionRead, (uint8_t)head, (uint8_t)track, (uint8_t)sector);
+	ControlMotor(drive, false);
 
 	MemoryOperations::memcpy(buf, this->bufferVirt, BYTES_PER_SECT);
 	return ret;
 }
 char FloppyDriver::WriteSector(uint16_t drive, uint32_t lba, uint8_t* buf)
 {
-    if (currentDrive >= 4)
+    if (drive >= 2)
 		return 1;
 
 	//! convert LBA sector to CHS
@@ -475,16 +469,16 @@ char FloppyDriver::WriteSector(uint16_t drive, uint32_t lba, uint8_t* buf)
 	FloppyLBAToCHS(lba, &head, &track, &sector);
 
 	//! turn motor on and seek to track
-	ControlMotor(true);
-	if (Seek((uint8_t)track, (uint8_t)head) != 0)
+	ControlMotor(drive, true);
+	if (Seek(drive, (uint8_t)track, (uint8_t)head) != 0)
 		return 1;
 	
 	// Copy buffer to DMA address
 	MemoryOperations::memcpy(this->bufferVirt, buf, BYTES_PER_SECT);
 
 	//! write sector and turn motor off
-	int ret = TransferSectorCHS(FloppyDirectionRead, (uint8_t)head, (uint8_t)track, (uint8_t)sector);
-	ControlMotor(false);
+	int ret = TransferSectorCHS(drive, FloppyDirectionRead, (uint8_t)head, (uint8_t)track, (uint8_t)sector);
+	ControlMotor(drive, false);
 
 	return ret;
 }

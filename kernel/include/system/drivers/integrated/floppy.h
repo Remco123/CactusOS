@@ -157,9 +157,6 @@ namespace CactusOS
                 // Used for waiting for command completion
                 volatile bool IrqHasFired = false;
 
-                // Which drive are we currenlty sending commands and stuff to
-                uint8_t	currentDrive = 0;
-
                 // Buffer used by the DMA Controller, must be bellow 16MB
                 uint32_t bufferPhys = 0;
 
@@ -195,7 +192,7 @@ namespace CactusOS
                 common::uint8_t ReadData();
 
                 // Turn motor on or off for currentDrive
-                void ControlMotor(bool on);
+                void ControlMotor(common::uint8_t drive, bool on);
 
                 // Set drive parameters
                 void ConfigureDrive(common::uint8_t stepr, common::uint8_t loadt, common::uint8_t unloadt, bool dma);
@@ -204,7 +201,7 @@ namespace CactusOS
                 int Calibrate(common::uint8_t drive);
 
                 // Seek current drive
-                int Seek(common::uint8_t cyl, common::uint8_t head);
+                int Seek(common::uint8_t drive, common::uint8_t cyl, common::uint8_t head);
 
                 // Disable Controller
                 void DisableController();
@@ -216,7 +213,7 @@ namespace CactusOS
                 void ResetController();
 
                 // Core function to read sector
-                int TransferSectorCHS(FloppyDirection dir, common::uint8_t head, common::uint8_t track, common::uint8_t sector);
+                int TransferSectorCHS(common::uint8_t drive, FloppyDirection dir, common::uint8_t head, common::uint8_t track, common::uint8_t sector);
             public:
                 FloppyDriver();
 
