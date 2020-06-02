@@ -309,7 +309,7 @@ int FloppyDriver::TransferSectorCHS(uint8_t drive, FloppyDirection dir, uint8_t 
 	uint32_t s_st0, s_cyl;
  
 	//! set the DMA for read transfer
-	InitializeDMA(FloppyDirectionRead);
+	InitializeDMA(dir);
 
 	System::pit->Sleep(100);
  
@@ -477,7 +477,7 @@ char FloppyDriver::WriteSector(uint16_t drive, uint32_t lba, uint8_t* buf)
 	MemoryOperations::memcpy(this->bufferVirt, buf, BYTES_PER_SECT);
 
 	//! write sector and turn motor off
-	int ret = TransferSectorCHS(drive, FloppyDirectionRead, (uint8_t)head, (uint8_t)track, (uint8_t)sector);
+	int ret = TransferSectorCHS(drive, FloppyDirectionWrite, (uint8_t)head, (uint8_t)track, (uint8_t)sector);
 	ControlMotor(drive, false);
 
 	return ret;

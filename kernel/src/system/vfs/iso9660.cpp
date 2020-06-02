@@ -74,7 +74,7 @@ bool ISO9660::Initialize()
 
     uint8_t oldColor = BootConsole::ForegroundColor;
     BootConsole::ForegroundColor = VGA_COLOR_GREEN;
-    BootConsole::Write("ISO9660 Filesystem Intialized");
+    BootConsole::WriteLine("ISO9660 Filesystem Intialized");
     BootConsole::ForegroundColor = oldColor;
     return true;
 }

@@ -34,8 +34,6 @@ void PartitionManager::DetectAndLoadFilesystem(Disk* disk)
                 System::vfs->Mount(fatFS); //Mount the filesystem
             else
                 delete fatFS;
-
-            BootConsole::WriteLine();
         }
         else // Regular partition scheme 
         {
@@ -57,8 +55,6 @@ void PartitionManager::DetectAndLoadFilesystem(Disk* disk)
                 BootConsole::Write(" Sectors: "); BootConsole::Write(Convert::IntToString(mbr->primaryPartitions[p].length));
 
                 AssignVFS(mbr->primaryPartitions[p], disk);
-
-                BootConsole::WriteLine();
             }
         }
     }

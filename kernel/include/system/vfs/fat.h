@@ -69,11 +69,64 @@ namespace CactusOS
             common::uint32_t    FileSize;
         } __attribute__((packed));
 
-        #define FAT_VOLUME_ID   0x08
-        #define FAT_CLUSTER_END         0x0FFFFFF8
+        // Cluster Special Values
+        #define CLUSTER_END_32  0x0FFFFFF8
+        #define CLUSTER_BAD_32  0x0FFFFFF7
+        #define CLUSTER_FREE_32 0x00000000
+        
+        #define CLUSTER_END_16  0xFFF8
+        #define CLUSTER_BAD_16  0xFFF7
+        #define CLUSTER_FREE_16 0x0000
+        
+        #define CLUSTER_END_12  0xFF8
+        #define CLUSTER_BAD_12  0xFF7
+        #define CLUSTER_FREE_12 0x000
+
+        #define ATTR_READ_ONLY  0x01
+        #define ATTR_HIDDEN 	0x02
+        #define ATTR_SYSTEM     0x04
+        #define ATTR_VOLUME_ID  0x08
+        #define ATTR_DIRECTORY	0x10
+        #define ATTR_ARCHIVE    0x20
+        #define ATTR_LONG_NAME 	(ATTR_READ_ONLY | ATTR_HIDDEN | ATTR_SYSTEM | ATTR_VOLUME_ID)
+
+        enum FATType
+        {
+            FAT12,
+            FAT16,
+            FAT32
+        };
         
         class FAT : public VirtualFileSystem
         {
+        private: // Variables
+            FATType FatType;                    // What type of filesystem is this?
+            char* FatTypeString = 0;            // String describing the filesystem type
+
+            uint16_t bytesPerSector = 0;        // Bytes per sector, usually 512
+            uint32_t rootDirSectors = 0;        // How many sectors does the root directory use?
+            uint8_t sectorsPerCluster = 0;      // How many sectors does one cluster contain?
+            uint32_t clusterSize = 0;           // Size of one cluster in bytes
+
+            uint32_t firstDataSector = 0;       // LBA Address of first sector of the data region
+            uint32_t firstFatSector = 0;        // The first sector in the File Allocation Table
+            uint32_t rootDirCluster = 0;        // Cluster of the root directory
+            uint32_t totalClusters = 0;         // Total amount of clusters used by data region
+
+            uint8_t* readBuffer = 0;            // Buffer used for reading the disk
+            
+        private: // Helper functions
+            // Convert a cluster number to its corresponding start sector
+            common::uint32_t ClusterToSector(common::uint32_t cluster);
+
+            // Reads the FAT table and returns the value for the specific cluster
+            common::uint32_t ReadTable(common::uint32_t cluster);
+
+            // Writes a new value into the FAT table for the cluster
+            void WriteTable(common::uint32_t cluster, common::uint32_t value);
+
+            // Allocate a new cluster in the FAT Table
+            common::uint32_t AllocateCluster();
         public:
             FAT(Disk* disk, common::uint32_t start, common::uint32_t size);
 

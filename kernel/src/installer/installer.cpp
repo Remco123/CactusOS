@@ -541,14 +541,14 @@ void Installer::CreateFatPartition(PartitionTableEntry* pEntry)
     setClusterValue(fatTable, 0, 0xFFFFFFFF);
     setClusterValue(fatTable, 1, 0xFFFFFFFF);
     fatTable[0] = (uint8_t)biosParameterBlock.MediaDescriptorType; // Not sure why this is needed
-    setClusterValue(fatTable, 2, FAT_CLUSTER_END);
+    setClusterValue(fatTable, 2, CLUSTER_END_32);
 
     uint32_t rootDirSize = biosParameterBlock.SectorsPerCluster * biosParameterBlock.bytesPerSector;
     DirectoryEntry rootDir;
     MemoryOperations::memset(&rootDir, 0, sizeof(DirectoryEntry));
 
     // Fill in root dir values
-    rootDir.Attributes = FAT_VOLUME_ID;
+    rootDir.Attributes = ATTR_VOLUME_ID;
 
     ///////////////////////
     // Write changes to disk
