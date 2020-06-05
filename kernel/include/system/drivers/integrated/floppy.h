@@ -143,7 +143,7 @@ namespace CactusOS
             } FloppyDirection;
 
             //! sectors per track
-            #define FLPY_SECTORS_PER_TRACK 80
+            #define FLPY_SECTORS_PER_TRACK 18
 
             //! FDC uses DMA channel 2
             #define FDC_DMA_CHANNEL 2

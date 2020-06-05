@@ -73,8 +73,10 @@ bool FAT::Initialize()
 #endif
 
 #if 1
-    for(int i = 0; i < 5; i++)
-        Log(Info, "%d", AllocateCluster());
+    auto rootEntries = this->GetDirectoryEntries(this->rootDirCluster, true);
+    for(FATEntryInfo e : rootEntries) {
+        Log(Info, (char*)e.filename);
+    }
 #endif
 
     return true;
@@ -197,8 +199,8 @@ void FAT::WriteTable(uint32_t cluster, uint32_t value)
 // This could be optimized a lot, perhaps using the FSInfo Structure
 uint32_t FAT::AllocateCluster()
 {
-	uint32_t freeCluster = this->FatType == FAT12 ? CLUSTER_FREE_12 : (this->FatType == FAT16 ? CLUSTER_FREE_16 : CLUSTER_FREE_32);
-	uint32_t endCluster = this->FatType == FAT12 ? CLUSTER_END_12 : (this->FatType == FAT16 ? CLUSTER_END_16 : CLUSTER_END_32);
+	uint32_t freeCluster = CLUSTER_FREE;
+	uint32_t endCluster = CLUSTER_END;
 
 	uint32_t cluster = 2; // Start at offset 2
 
@@ -218,10 +220,172 @@ uint32_t FAT::AllocateCluster()
 	return 0;
 }
 
+// Parse a directory and return its entries
+List<FATEntryInfo> FAT::GetDirectoryEntries(uint32_t dirCluster, bool rootDirectory)
+{
+    List<FATEntryInfo> results;
 
+    uint32_t sector = 0;    
+    uint32_t cluster = dirCluster;
 
+    while ((cluster != CLUSTER_FREE) && (cluster < CLUSTER_END))
+    {
+        /*
+        With FAT12 and FAT16 the root directory is positioned after the File Allocation Table
+        This is calculated below
+        FAT32 does not use this technique
+        */
 
+        if(rootDirectory && this->FatType != FAT32)
+            sector = this->firstDataSector - this->rootDirSectors;
+        else
+            sector = ClusterToSector(dirCluster);
 
+        List<LFNEntry> lfnEntries;
+        for(uint16_t i = 0; i < this->sectorsPerCluster; i++) // Loop through sectors in this cluster
+        {
+            if(this->disk->ReadSector(this->StartLBA + sector + i, this->readBuffer) != 0) {
+                Log(Error, "Error reading disk at lba %d", this->StartLBA + sector + i);
+                return results;
+            }
+
+            for(uint8_t entryIndex = 0; entryIndex < (this->bytesPerSector / sizeof(DirectoryEntry)); entryIndex++) // Loop through entries in this sector
+            {
+                DirectoryEntry* entry = (DirectoryEntry*)(this->readBuffer + entryIndex * sizeof(DirectoryEntry));
+
+                if(entry->FileName[0] == ENTRY_END) // End of entries
+                    return results;
+                
+                if(entry->FileName[0] == ENTRY_UNUSED) // Unused entry, probably deleted or something
+                    continue; // Just skip this entry
+
+                if(entry->FileName[0] == 0x2E) // . or .. entry
+                    continue;
+
+                if(entry->FileName[0] == 0x05) // Pending file to delete apparently
+                    continue;
+
+                if(entry->Attributes == ATTR_VOLUME_ID) // Volume ID of filesystem
+                    continue;
+                
+                if(entry->Attributes == ATTR_LONG_NAME) { // Long file name entry
+                    LFNEntry* lfn = (LFNEntry*)entry; // Turn the directory entry into a LFNEntry using the magic of pointers
+                    lfnEntries.push_back(*lfn); // Add it to our buffer
+                    continue;
+                }
+
+                // This is a valid entry, so add it to our list
+                FATEntryInfo item;
+                item.entry = *entry;
+                if(lfnEntries.size() > 0) { // We have some LFN entries in our list that belong to this entry
+                    item.filename = ParseLFNEntries(lfnEntries, *entry);
+                    lfnEntries.Clear();
+                }
+                else
+                    item.filename = ParseShortFilename((char*)entry->FileName);
+                
+                results.push_back(item);
+            }
+        }
+
+        if(rootDirectory && this->FatType != FAT32) {
+            Log(Error, "FAT Root directory has more than 224 entries, this should not be possible!");
+            return results;
+        }
+
+        cluster = ReadTable(cluster);
+        Log(Info, "Next cluster is %x", cluster);
+    }
+    Log(Error, "This should not be reached %s %d", __FILE__, __LINE__);
+    return results;
+}
+
+#pragma region Filename Conversion
+
+// Calculate checksum for 8.3 filename
+uint8_t FAT::Checksum(char* filename)
+{
+	uint8_t Sum = 0;
+	for (uint8_t len = 11; len != 0; len--) {
+		// NOTE: The operation is an unsigned char rotate right
+		Sum = ((Sum & 1) ? 0x80 : 0) + (Sum >> 1) + *filename++;
+	}
+	return Sum;
+}
+
+// Parse a list of long file name entries, also pass the 8.3 entry for the checksum
+char* FAT::ParseLFNEntries(List<LFNEntry> entries, DirectoryEntry sfnEntry)
+{
+    // Calculate checksum of short file name
+    uint8_t shortChecksum = Checksum((char*)sfnEntry.FileName);
+
+    // Allocate space for complete name
+    char* longName = new char[entries.size() * 13 + 1]; // Each LFN holds 13 characters + one for termination
+    MemoryOperations::memset(longName, 0, entries.size() * 13 + 1);
+
+    for(LFNEntry item : entries)
+    {
+        if(item.checksum != shortChecksum) {
+            Log(Error, "Checksum of LFN entry is incorrect");
+            return 0;
+        }
+
+        uint8_t index = item.entryIndex & 0x0F;
+        char* namePtr = longName + ((index - 1) * 13);
+
+        // First part of filename
+        for(int i = 0; i < 9; i+=2) {
+            if(item.namePart1[i] >= 32 && item.namePart1[i] <= 127) // Valid character
+                *namePtr = item.namePart1[i];
+            else
+                *namePtr = 0;
+            namePtr++;
+        }
+
+        // Second part of filename
+        for(int i = 0; i < 11; i+=2) {
+            if(item.namePart2[i] >= 32 && item.namePart2[i] <= 127) // Valid character
+                *namePtr = item.namePart2[i];
+            else
+                *namePtr = 0;
+            namePtr++;
+        }
+
+        // Third part of filename
+        for(int i = 0; i < 3; i+=2) {
+            if(item.namePart3[i] >= 32 && item.namePart3[i] <= 127) // Valid character
+                *namePtr = item.namePart3[i];
+            else
+                *namePtr = 0;
+            namePtr++;
+        }
+    }
+    return longName;
+}
+
+// Turn a FAT filename into a readable one
+char* FAT::ParseShortFilename(char* str)
+{
+    char* outFileName = new char[12];
+    MemoryOperations::memset(outFileName, 0, 12);
+
+    int mainEnd, extEnd;
+	for(mainEnd = 8; mainEnd > 0 && str[mainEnd - 1] == ' '; mainEnd--);
+
+	MemoryOperations::memcpy(outFileName, str, mainEnd);
+
+	for(extEnd = 3; extEnd > 0 && str[extEnd - 1 + 8] == ' '; extEnd--);
+
+	if(extEnd == 0)
+		return String::Lowercase(outFileName);
+
+	outFileName[mainEnd] = '.';
+	MemoryOperations::memcpy(outFileName + mainEnd + 1, (const char*)str + 8, extEnd);
+    
+    return String::Lowercase(outFileName);
+}
+
+#pragma endregion
 
 
 
