@@ -294,7 +294,7 @@ List<FATEntryInfo> FAT::GetDirectoryEntries(uint32_t dirCluster, bool rootDirect
         }
 
         cluster = ReadTable(cluster);
-        Log(Info, "Next cluster is %x", cluster);
+        //Log(Info, "Next cluster is %x", cluster);
     }
     Log(Error, "This should not be reached %s %d", __FILE__, __LINE__);
     return results;
@@ -507,6 +507,47 @@ int FAT::ReadFile(const char* path, uint8_t* buffer, uint32_t offset, uint32_t l
 { 
     if(len == -1)
         len = GetFileSize(path);
+
+    FATEntryInfo* entry = GetEntryByPath((char*)path);
+    if(entry == 0)
+        return -1;
+    
+    if(entry->entry.Attributes & ATTR_DIRECTORY) {
+        delete entry->filename;
+        delete entry;
+        return -1;
+    }
+
+    uint32_t cluster = GET_CLUSTER(entry->entry);
+    uint8_t* bufferPointer = buffer;
+    uint32_t bytesRead = 0;
+
+    // Not needed anymore
+    delete entry->filename;
+    delete entry;
+    
+    while ((cluster != CLUSTER_FREE) && (cluster < CLUSTER_END))
+    {
+        uint32_t sector = ClusterToSector(cluster);
+
+        for(uint16_t i = 0; i < this->sectorsPerCluster; i++) // Loop through sectors in this cluster
+        {
+            if(this->disk->ReadSector(this->StartLBA + sector + i, this->readBuffer) != 0) {
+                Log(Error, "Error reading disk at lba %d", this->StartLBA + sector + i);
+                return -1;
+            }
+
+            uint32_t remaingBytes = len - bytesRead;
+
+            //Copy the required part of the buffer
+            MemoryOperations::memcpy(bufferPointer, this->readBuffer, remaingBytes <= this->bytesPerSector ? remaingBytes : this->bytesPerSector);
+
+            bytesRead += this->bytesPerSector;
+            bufferPointer += this->bytesPerSector;
+        }
+        cluster = ReadTable(cluster);
+        //Log(Info, "Next cluster is %x", cluster);
+    }
 
     return 0;
 }
