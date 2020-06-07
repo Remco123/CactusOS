@@ -77,7 +77,7 @@ namespace CactusOS
             common::uint8_t reserved_1;             // Long entry type. Zero for name entries. 
             common::uint8_t checksum;               // Checksum generated of the short file name when the file was created. 
             common::uint8_t namePart2[12];          // The next 6, 2-byte characters of this entry. 
-            common::uint8_t reserved_2;             // Always Zero
+            common::uint16_t reserved_2;            // Always Zero
             common::uint8_t namePart3[4];           // The final 2, 2-byte characters of this entry. 
         } __attribute__((packed));
 
@@ -115,6 +115,9 @@ namespace CactusOS
 
         #define ENTRY_END       0x00
         #define ENTRY_UNUSED    0xE5
+
+        // Extract cluster from directory entry
+	    #define GET_CLUSTER(e) (e.LowFirstCluster | (e.HighFirstCluster << (16)))
 
         enum FATType
         {
@@ -155,7 +158,7 @@ namespace CactusOS
             common::uint32_t AllocateCluster();
 
             // Parse a list of long file name entries, also pass the 8.3 entry for the checksum
-            char* ParseLFNEntries(List<LFNEntry> entries, DirectoryEntry sfnEntry);
+            char* ParseLFNEntries(List<LFNEntry>* entries, DirectoryEntry sfnEntry);
 
             // Turn a FAT filename into a readable one
             char* ParseShortFilename(char* fatName);
@@ -167,6 +170,7 @@ namespace CactusOS
             List<FATEntryInfo> GetDirectoryEntries(common::uint32_t dirCluster, bool rootDirectory = false);
         public:
             FAT(Disk* disk, common::uint32_t start, common::uint32_t size);
+            ~FAT();
 
             bool Initialize();
 

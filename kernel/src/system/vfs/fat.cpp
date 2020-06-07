@@ -14,6 +14,11 @@ FAT::FAT(Disk* disk, uint32_t start, uint32_t size)
     this->Name = "FAT Filesystem";
 }
 
+FAT::~FAT()
+{
+    delete this->readBuffer;
+}
+
 bool FAT::Initialize()
 {
     Log(Info, "Initializing FAT Filesystem");
@@ -75,7 +80,9 @@ bool FAT::Initialize()
 #if 1
     auto rootEntries = this->GetDirectoryEntries(this->rootDirCluster, true);
     for(FATEntryInfo e : rootEntries) {
-        Log(Info, (char*)e.filename);
+        Log(Info, e.filename);
+
+        delete e.filename;
     }
 #endif
 
@@ -224,6 +231,7 @@ uint32_t FAT::AllocateCluster()
 List<FATEntryInfo> FAT::GetDirectoryEntries(uint32_t dirCluster, bool rootDirectory)
 {
     List<FATEntryInfo> results;
+    List<LFNEntry> lfnEntries;
 
     uint32_t sector = 0;    
     uint32_t cluster = dirCluster;
@@ -236,12 +244,12 @@ List<FATEntryInfo> FAT::GetDirectoryEntries(uint32_t dirCluster, bool rootDirect
         FAT32 does not use this technique
         */
 
-        if(rootDirectory && this->FatType != FAT32)
+        if(rootDirectory && this->FatType != FAT32 && sector == 0)
             sector = this->firstDataSector - this->rootDirSectors;
-        else
-            sector = ClusterToSector(dirCluster);
+        
+        else if(this->FatType == FAT32 || !rootDirectory)
+            sector = ClusterToSector(cluster);
 
-        List<LFNEntry> lfnEntries;
         for(uint16_t i = 0; i < this->sectorsPerCluster; i++) // Loop through sectors in this cluster
         {
             if(this->disk->ReadSector(this->StartLBA + sector + i, this->readBuffer) != 0) {
@@ -268,9 +276,9 @@ List<FATEntryInfo> FAT::GetDirectoryEntries(uint32_t dirCluster, bool rootDirect
                 if(entry->Attributes == ATTR_VOLUME_ID) // Volume ID of filesystem
                     continue;
                 
-                if(entry->Attributes == ATTR_LONG_NAME) { // Long file name entry
-                    LFNEntry* lfn = (LFNEntry*)entry; // Turn the directory entry into a LFNEntry using the magic of pointers
-                    lfnEntries.push_back(*lfn); // Add it to our buffer
+                if(entry->Attributes == ATTR_LONG_NAME) {   // Long file name entry
+                    LFNEntry* lfn = (LFNEntry*)entry;       // Turn the directory entry into a LFNEntry using the magic of pointers
+                    lfnEntries.push_back(*lfn);             // Add it to our buffer
                     continue;
                 }
 
@@ -278,7 +286,7 @@ List<FATEntryInfo> FAT::GetDirectoryEntries(uint32_t dirCluster, bool rootDirect
                 FATEntryInfo item;
                 item.entry = *entry;
                 if(lfnEntries.size() > 0) { // We have some LFN entries in our list that belong to this entry
-                    item.filename = ParseLFNEntries(lfnEntries, *entry);
+                    item.filename = ParseLFNEntries(&lfnEntries, *entry);
                     lfnEntries.Clear();
                 }
                 else
@@ -289,8 +297,9 @@ List<FATEntryInfo> FAT::GetDirectoryEntries(uint32_t dirCluster, bool rootDirect
         }
 
         if(rootDirectory && this->FatType != FAT32) {
-            Log(Error, "FAT Root directory has more than 224 entries, this should not be possible!");
-            return results;
+            Log(Info, "FAT Root directory has more than 16 entries, reading next sector");
+            sector++;
+            continue; // No need to calculate the next cluster
         }
 
         cluster = ReadTable(cluster);
@@ -314,16 +323,16 @@ uint8_t FAT::Checksum(char* filename)
 }
 
 // Parse a list of long file name entries, also pass the 8.3 entry for the checksum
-char* FAT::ParseLFNEntries(List<LFNEntry> entries, DirectoryEntry sfnEntry)
+char* FAT::ParseLFNEntries(List<LFNEntry>* entries, DirectoryEntry sfnEntry)
 {
     // Calculate checksum of short file name
     uint8_t shortChecksum = Checksum((char*)sfnEntry.FileName);
 
     // Allocate space for complete name
-    char* longName = new char[entries.size() * 13 + 1]; // Each LFN holds 13 characters + one for termination
-    MemoryOperations::memset(longName, 0, entries.size() * 13 + 1);
+    char* longName = new char[entries->size() * 13 + 1]; // Each LFN holds 13 characters + one for termination
+    MemoryOperations::memset(longName, 0, entries->size() * 13 + 1);
 
-    for(LFNEntry item : entries)
+    for(LFNEntry item : *entries)
     {
         if(item.checksum != shortChecksum) {
             Log(Error, "Checksum of LFN entry is incorrect");
