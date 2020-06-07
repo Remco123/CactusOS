@@ -166,8 +166,16 @@ namespace CactusOS
             // Calculate checksum for 8.3 filename
             common::uint8_t Checksum(char* filename);
 
+
+
             // Parse a directory and return its entries, rootDirectory is handled different on fat12/fat16
             List<FATEntryInfo> GetDirectoryEntries(common::uint32_t dirCluster, bool rootDirectory = false);
+
+            // Search in a directory for a specific entry and return this entry if found
+            FATEntryInfo* SeachInDirectory(char* name, common::uint32_t dirCluster, bool rootDirectory = false);
+
+            // Return the entry specified by a complete filename path
+            FATEntryInfo* GetEntryByPath(char* path);
         public:
             FAT(Disk* disk, common::uint32_t start, common::uint32_t size);
             ~FAT();

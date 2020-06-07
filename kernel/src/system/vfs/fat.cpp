@@ -77,15 +77,6 @@ bool FAT::Initialize()
     Log(Info, "      Reserved Sectors: %d", bpb.ReservedSectors);
 #endif
 
-#if 1
-    auto rootEntries = this->GetDirectoryEntries(this->rootDirCluster, true);
-    for(FATEntryInfo e : rootEntries) {
-        Log(Info, e.filename);
-
-        delete e.filename;
-    }
-#endif
-
     return true;
 }
 
@@ -309,6 +300,72 @@ List<FATEntryInfo> FAT::GetDirectoryEntries(uint32_t dirCluster, bool rootDirect
     return results;
 }
 
+FATEntryInfo* FAT::SeachInDirectory(char* name, uint32_t dirCluster, bool rootDirectory)
+{
+    List<FATEntryInfo> childs = GetDirectoryEntries(dirCluster, rootDirectory);
+    FATEntryInfo* ret = 0;
+
+    for(FATEntryInfo item : childs) {
+        bool match = String::strcmp(name, item.filename);
+        if(!ret && match) {
+            ret = new FATEntryInfo();
+            MemoryOperations::memcpy(ret, &item, sizeof(FATEntryInfo));
+        }
+        if(!match) // We can not delete the string that is returned as result
+            delete item.filename;
+    }
+
+    childs.Clear();
+    return ret;
+}
+
+FATEntryInfo* FAT::GetEntryByPath(char* path)
+{
+    uint32_t searchCluster = this->rootDirCluster;
+    List<char*> pathList = String::Split(path, PATH_SEPERATOR_C);
+    FATEntryInfo* ret = 0;
+
+    // The path represents a entry in the root directory, for example just: "test.txt"
+    if(pathList.size() == 0)
+        return SeachInDirectory(path, searchCluster, true);
+    
+    // Loop through each part in the filename
+    for(int i = 0; i < pathList.size(); i++)
+    {
+        FATEntryInfo* entry = SeachInDirectory(pathList[i], searchCluster, i == 0);
+        if(entry == 0) { // Error while getting entry in directory
+            ret = 0;
+            goto end;
+        }
+        
+        if(i == pathList.size() - 1) {
+            ret = entry; // This is the last entry in the list, so this is the correct one
+            goto end;
+        }
+
+        if(entry->entry.Attributes & ATTR_DIRECTORY) {
+            // Search next sub-directory
+            searchCluster = GET_CLUSTER(entry->entry);
+        }
+
+        delete entry->filename;
+        delete entry;
+        
+        if(!(entry->entry.Attributes & ATTR_DIRECTORY)) { // Item found is not a directory 
+            ret = 0;
+            goto end;
+        }
+    }
+    // Entry not found
+    ret = 0;
+
+end:
+    for(char* str : pathList)
+        delete str;
+    
+    return ret;
+}
+
 #pragma region Filename Conversion
 
 // Calculate checksum for 8.3 filename
@@ -408,13 +465,43 @@ char* FAT::ParseShortFilename(char* str)
 
 List<char*>* FAT::DirectoryList(const char* path)
 { 
-    List<char*>* ret = new List<char*>();    
+    List<char*>* ret = new List<char*>();
+    uint32_t parentCluster = this->rootDirCluster;
+    bool rootdir = String::strlen(path) == 0;
+
+    if(!rootdir) // Not the Root directory
+    {
+        FATEntryInfo* parent = GetEntryByPath((char*)path);
+        parentCluster = GET_CLUSTER(parent->entry);
+        
+        delete parent->filename;
+        delete parent;
+    }
+
+    List<FATEntryInfo> childs = GetDirectoryEntries(parentCluster, rootdir);
+    for(FATEntryInfo item : childs) {
+        ret->push_back(item.filename);
+    }
+
     return ret;
 }
 
 uint32_t FAT::GetFileSize(const char* path)
 {
-    return -1;
+    FATEntryInfo* entry = GetEntryByPath((char*)path);
+    uint32_t fileSize = 0;
+    if(entry == 0)
+        return 0;
+    
+    if(entry->entry.Attributes & ATTR_DIRECTORY)
+       fileSize = -1; 
+    else
+        fileSize = entry->entry.FileSize;
+
+    delete entry->filename;
+    delete entry;
+
+    return fileSize;
 }
 int FAT::ReadFile(const char* path, uint8_t* buffer, uint32_t offset, uint32_t len)
 { 
@@ -443,11 +530,29 @@ int FAT::CreateDirectory(const char* path)
 
 bool FAT::FileExists(const char* path)
 {
+    FATEntryInfo* entry = GetEntryByPath((char*)path);
+    bool exists = false;
+    if(entry == 0)
+        return false;
+    
+    exists = !(entry->entry.Attributes & ATTR_DIRECTORY);
 
-    return false;
+    delete entry->filename;
+    delete entry;
+
+    return exists;
 }
 bool FAT::DirectoryExists(const char* path)
 {
+    FATEntryInfo* entry = GetEntryByPath((char*)path);
+    bool exists = false;
+    if(entry == 0)
+        return false;
+    
+    exists = (entry->entry.Attributes & ATTR_DIRECTORY);
 
-    return false;
+    delete entry->filename;
+    delete entry;
+
+    return exists;
 }

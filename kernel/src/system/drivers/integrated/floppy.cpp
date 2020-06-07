@@ -46,9 +46,12 @@ bool FloppyDriver::Initialize()
 	}
 
     // Use address below 1MB for buffer, should be possible until 16MB but this does not seem to work
-    this->bufferVirt = (uint8_t*)0x8000;
+    this->bufferVirt = (uint8_t*)KernelHeap::allignedMalloc(PAGE_SIZE, PAGE_SIZE);
 	this->bufferPhys = 0x8000;
+	VirtualMemoryManager::mapVirtualToPhysical((void*)this->bufferPhys, this->bufferVirt, true, true);
 	MemoryOperations::memset(this->bufferVirt, 0, BYTES_PER_SECT);
+
+	Log(Info, "Using buffer for floppy at: virt -> %x  phys -> %x", (uint32_t)this->bufferVirt, this->bufferPhys);
 
     //! reset the fdc
 	ResetController();

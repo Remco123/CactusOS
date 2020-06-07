@@ -21,11 +21,14 @@ void DirectoryItemButtonCallback(void* sender, MouseButtonArgs arg)
 {
     Button* source = (Button*)sender;
     
+    if(workingDirectory[strlen(workingDirectory)-1] != '\\')
+        workingDirectory = str_Combine(workingDirectory, "\\");
+    
     char* newPath = str_Combine(workingDirectory, source->label);
 
     Print("Loading %s\n", newPath);
     if(DirectoryExists(newPath)) {
-        newPath = str_Combine(newPath, "\\");
+        
         workingDirectory = newPath;
         Print("%s\n", workingDirectory);
         
