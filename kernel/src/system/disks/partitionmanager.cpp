@@ -77,7 +77,7 @@ void PartitionManager::AssignVFS(PartitionTableEntry partition, Disk* disk)
     }
     else if(partition.partition_id == 0x0B || partition.partition_id == 0x0C || partition.partition_id == 0x01 || partition.partition_id == 0x04 || partition.partition_id == 0x06)
     {
-        BootConsole::Write(" [FAT(12/16/32)]");
+        BootConsole::WriteLine(" [FAT(12/16/32)]");
         FAT* fatFS = new FAT(disk, partition.start_lba, partition.length);
         if(fatFS->Initialize())
             System::vfs->Mount(fatFS); //Mount the filesystem

@@ -24,7 +24,7 @@
 #######################
 
 INCLUDEDIRS := kernel/include
-QEMUOPTIONS := -boot d -device VGA,edid=on -trace events=../qemuTrace.txt -fda ./floppydisk.img
+QEMUOPTIONS := -boot d -device VGA,edid=on -trace events=../qemuTrace.txt -hda disk.img
 
 G++PARAMS := -m32 -g -I $(INCLUDEDIRS) -fno-use-cxa-atexit -nostdlib -fno-builtin -fno-exceptions -fno-rtti -fno-leading-underscore -Wno-write-strings -fpermissive -Wall
 GCCPARAMS := -m32 -g -I $(INCLUDEDIRS) -nostdlib -fno-builtin -Wall
@@ -141,3 +141,6 @@ filelist:
 	@echo -$(KRNLFILES)
 	@echo "Object Files:"
 	@echo -$(KRNLOBJS)
+
+testdisk:
+	cp disk1.img disk.img

@@ -115,6 +115,7 @@ namespace CactusOS
 
         #define ENTRY_END       0x00
         #define ENTRY_UNUSED    0xE5
+        #define LFN_ENTRY_END   0x40
 
         // Extract cluster from directory entry
 	    #define GET_CLUSTER(e) (e.LowFirstCluster | (e.HighFirstCluster << (16)))
@@ -157,6 +158,9 @@ namespace CactusOS
             // Allocate a new cluster in the FAT Table
             common::uint32_t AllocateCluster();
 
+            // Clear the data of a cluster
+            void ClearCluster(common::uint32_t cluster);
+
             // Parse a list of long file name entries, also pass the 8.3 entry for the checksum
             char* ParseLFNEntries(List<LFNEntry>* entries, DirectoryEntry sfnEntry);
 
@@ -176,6 +180,36 @@ namespace CactusOS
 
             // Return the entry specified by a complete filename path
             FATEntryInfo* GetEntryByPath(char* path);
+
+
+
+            // Create a list of LFN entries from a filename
+            List<LFNEntry> FAT::CreateLFNEntriesFromName(char* name, common::uint32_t num, common::uint8_t checksum);
+
+            // Create a 8.3 filename from a regular filename
+            char* CreateShortFilename(char* name);
+
+            // Write a series of LFN entries to the disk
+            bool WriteLongFilenameEntries(List<LFNEntry>* entries, common::uint32_t targetCluster, common::uint32_t targetSector, common::uint32_t sectorOffset, bool rootDirectory);
+
+            // Write a regulair Directory entry to the disk
+            bool WriteDirectoryEntry(DirectoryEntry entry, common::uint32_t targetSector, common::uint32_t sectorOffset, bool rootDirectory);
+
+            // Find a starting point for entries in a directory. Returns cluster and sector offset inside cluster.
+            bool FAT::FindEntryStartpoint(common::uint32_t cluster, common::uint32_t entryCount, bool rootdir, common::uint32_t* targetCluster, common::uint32_t* targetSector, common::uint32_t* sectorOffset);
+
+            // Create a entry in the directory specified by parentCluster
+            // Returns pointer to created entry present in readbuffer
+            DirectoryEntry* CreateEntry(common::uint32_t parentCluster, char* name, common::uint8_t attr, bool rootdir, common::uint32_t targetCluster, common::uint32_t* sectorPlaced);
+
+            // Easy way to create a new file or directory by path, is almost the same for file/directory creation
+            int CreateNewDirFileEntry(const char* path, common::uint8_t attributes);
+
+            // Returns current time in fat format
+            common::uint16_t FatTime();
+
+            // Returns current date in fat format
+            common::uint16_t FatDate();
         public:
             FAT(Disk* disk, common::uint32_t start, common::uint32_t size);
             ~FAT();

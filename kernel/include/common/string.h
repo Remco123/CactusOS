@@ -22,6 +22,8 @@ namespace CactusOS
             static List<char*> Split(const char* str, char d);
             static char* Uppercase(char* str);
             static char* Lowercase(char* str);
+            static char Uppercase(char c);
+            static char Lowercase(char c);
             static char* strcpy(char *s1, const char *s2);
             static char* strncpy(char *s1, const char *s2, unsigned int n);
         };

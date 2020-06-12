@@ -38,7 +38,4 @@
 *.ipch
 
 virtualbox_log.txt
-installerDisk.img
-floppydisk.img
-#isofiles/setup/boot.img
-#isofiles/setup/core.img
+*.img

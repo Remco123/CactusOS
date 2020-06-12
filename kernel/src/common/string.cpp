@@ -117,6 +117,20 @@ char* String::Lowercase(char* str)
 	}
     return str;
 }
+char String::Uppercase(char c)
+{
+    if (c >= 97 && c <= 122)
+		return c - 32;
+    
+    return c;
+}
+char String::Lowercase(char c)
+{
+	if (c >= 65 && c <= 90)
+		return c + 32;
+    
+    return c;
+}
 
 char* String::strcpy(char *s1, const char *s2)
 {
