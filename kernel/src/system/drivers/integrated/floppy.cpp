@@ -51,7 +51,7 @@ bool FloppyDriver::Initialize()
 	VirtualMemoryManager::mapVirtualToPhysical((void*)this->bufferPhys, this->bufferVirt, true, true);
 	MemoryOperations::memset(this->bufferVirt, 0, BYTES_PER_SECT);
 
-	Log(Info, "Using buffer for floppy at: virt -> %x  phys -> %x", (uint32_t)this->bufferVirt, this->bufferPhys);
+	//Log(Info, "Using floppy buffer at: virt -> %x  phys -> %x", (uint32_t)this->bufferVirt, this->bufferPhys);
 
     //! reset the fdc
 	ResetController();

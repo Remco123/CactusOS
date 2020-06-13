@@ -347,10 +347,7 @@ void CopyFile(VirtualFileSystem* src, VirtualFileSystem* dest, char* path)
     if(src->ReadFile(path, buffer) != 0)
         Installer::SetupError();
     
-    if(dest->CreateFile(path) != 0)
-        Installer::SetupError();
-    
-    if(dest->WriteFile(path, buffer, fileSize) != 0)
+    if(dest->WriteFile(path, buffer, fileSize, true) != 0)
         Installer::SetupError();
 
     delete buffer;

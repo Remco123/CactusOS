@@ -12,6 +12,7 @@ FAT::FAT(Disk* disk, uint32_t start, uint32_t size)
 : VirtualFileSystem(disk, start, size) 
 {
     this->Name = "FAT Filesystem";
+    MemoryOperations::memset(&this->fsInfo, 0, sizeof(FAT32_FSInfo));
 }
 
 FAT::~FAT()
@@ -68,6 +69,12 @@ bool FAT::Initialize()
     else
         this->rootDirCluster = bpb.RootDirCluster;
 
+    // Check for FSInfo structure and read it into this->fsInfo
+    if(this->FatType == FAT32 && bpb.FSInfoSector > 0) {
+        if(this->disk->ReadSector(this->StartLBA + bpb.FSInfoSector, (uint8_t*)&this->fsInfo) != 0)
+            return false;
+    }
+
 #if 1
     Log(Info, "%s Filesystem Summary: ", this->FatTypeString);
     Log(Info, "      Bytes Per Sector: %d", this->bytesPerSector);
@@ -75,9 +82,17 @@ bool FAT::Initialize()
     Log(Info, "       Sectors/Cluster: %d", this->sectorsPerCluster);
     Log(Info, "     First Data Sector: %d", this->firstDataSector);
     Log(Info, "      Reserved Sectors: %d", bpb.ReservedSectors);
+    if(this->FatType == FAT32) {
+        Log(Info, "  FSInfo Free Clusters: %x", this->fsInfo.lastFreeCluster);
+        Log(Info, "   FSInfo Start Search: %x", this->fsInfo.startSearchCluster);
+    }
 #endif
 
-    WriteFile("Testbestand1.txt", (uint8_t*)"Hallo dit is een testbestand", 29, true);
+    if(this->fsInfo.startSearchCluster == 0xFFFFFFFF)   // Unkown
+            this->fsInfo.startSearchCluster = 2;        // Then we use the default value
+
+    else if(this->FatType == FAT12 || this->FatType == FAT16)
+        this->fsInfo.startSearchCluster = 2; // Might as well still use this variable for FAT12/FAT16
 
     return true;
 }
@@ -196,27 +211,24 @@ void FAT::WriteTable(uint32_t cluster, uint32_t value)
     }
 }
 
-// This could be optimized a lot, perhaps using the FSInfo Structure
 uint32_t FAT::AllocateCluster()
 {
-	uint32_t freeCluster = CLUSTER_FREE;
-	uint32_t endCluster = CLUSTER_END;
-
-	uint32_t cluster = 2; // Start at offset 2
+    // Use start cluster from fsInfo, this is also valid for FAT12/FAT16 thanks to some magic.
+	uint32_t cluster = this->fsInfo.startSearchCluster;
 
 	//Iterate through the clusters, looking for a free cluster
 	while (cluster < this->totalClusters)
 	{
 	    uint32_t value = ReadTable(cluster);
 
-		if (value == freeCluster) { //cluster found, allocate it.
-			WriteTable(cluster, endCluster);
+		if (value == CLUSTER_FREE) {                    // Cluster found, allocate it.
+            this->fsInfo.startSearchCluster = cluster;  // Update fsInfo structure
+			WriteTable(cluster, CLUSTER_END);           // Write EOC to the cluster
 			return cluster;
         }
 
 		cluster++; //cluster is taken, check the next one
 	}
-
 	return 0;
 }
 
@@ -291,6 +303,8 @@ List<FATEntryInfo> FAT::GetDirectoryEntries(uint32_t dirCluster, bool rootDirect
                 // This is a valid entry, so add it to our list
                 FATEntryInfo item;
                 item.entry = *entry;
+                item.sector = sector + i;
+                item.offsetInSector = entryIndex * sizeof(DirectoryEntry);
                 if(lfnEntries.size() > 0) { // We have some LFN entries in our list that belong to this entry
                     item.filename = ParseLFNEntries(&lfnEntries, *entry);
                     lfnEntries.Clear();
@@ -303,7 +317,7 @@ List<FATEntryInfo> FAT::GetDirectoryEntries(uint32_t dirCluster, bool rootDirect
         }
 
         if(rootDirectory && this->FatType != FAT32) {
-            Log(Info, "FAT Root directory has more than 16 entries, reading next sector");
+            //FAT_DEBUG("FAT Root directory has more than 16 entries, reading next sector", 0);
             sector++;
             continue; // No need to calculate the next cluster
         }
@@ -518,7 +532,7 @@ bool FAT::FindEntryStartpoint(uint32_t cluster, uint32_t entryCount, bool rootDi
         }
 
         if(rootDirectory && this->FatType != FAT32) {
-            Log(Info, "FAT Root directory has more than 16 entries, reading next sector");
+            //FAT_DEBUG("FAT Root directory has more than 16 entries, reading next sector", 0);
             sector++;
 
             uint32_t rootDirLastSector = this->firstDataSector - this->rootDirSectors + (224 * sizeof(DirectoryEntry) / this->bytesPerSector);
@@ -530,9 +544,15 @@ bool FAT::FindEntryStartpoint(uint32_t cluster, uint32_t entryCount, bool rootDi
             continue; // No need to calculate the next cluster
         }
 
-        cluster = ReadTable(cluster);
-        if(cluster >= CLUSTER_END)          // No more clusters in this row
-            cluster = AllocateCluster();    // Just allocate a new one for this directory
+        uint32_t next = ReadTable(cluster);             // Read next cluster in list
+        if(next >= CLUSTER_END) {                       // No more clusters in this row
+            uint32_t newCluster = AllocateCluster();    // Just allocate a new one for this directory
+            ClearCluster(newCluster);                   // Empty cluster
+            WriteTable(cluster, newCluster);            // Add to the clusterchain
+            cluster = newCluster;
+        }
+        else
+            cluster = next;
     }
     return false;
 }
@@ -654,14 +674,14 @@ bool FAT::WriteLongFilenameEntries(List<LFNEntry>* entries, uint32_t targetClust
         else if(this->FatType == FAT32 || !rootDirectory)
             sector = ClusterToSector(targetCluster);
         
-        if(this->disk->ReadSector(this->StartLBA + sector, this->readBuffer) != 0)
+        if(this->disk->ReadSector(this->StartLBA + sector + targetSector, this->readBuffer) != 0)
             return false;
 
         // Copy entry to free spot
         MemoryOperations::memcpy(this->readBuffer + entryOffset, &entries->GetAt(i), sizeof(LFNEntry));
 
         // And copy back to the disk
-        if(this->disk->WriteSector(this->StartLBA + sector, this->readBuffer) != 0)
+        if(this->disk->WriteSector(this->StartLBA + sector + targetSector, this->readBuffer) != 0)
             return false;
 
         if(entryOffset + sizeof(DirectoryEntry) >= this->bytesPerSector) // Check if we get outside of sector border for next write
@@ -714,12 +734,12 @@ DirectoryEntry* FAT::CreateEntry(uint32_t parentCluster, char* name, uint8_t att
     if(FindEntryStartpoint(parentCluster, requiredEntries, rootDirectory, &entryCluster, &entrySector, &sectorOffset) == false)
         return 0;
     
-    Log(Info, "Placing new chain of entries at %d:%d:%d", entryCluster, entrySector, sectorOffset);
+    //FAT_DEBUG("Placing new chain of entries at %d:%d:%d", entryCluster, entrySector, sectorOffset);
 
     char* shortName = CreateShortFilename(name);
     List<LFNEntry> lfnEntries = CreateLFNEntriesFromName(name, requiredLFNEntries, Checksum(shortName));
 
-    Log(Info, "Writing %d of LFN Entries to disk", lfnEntries.size());
+    //FAT_DEBUG"Writing %d LFN Entries to disk", lfnEntries.size());
     if(WriteLongFilenameEntries(&lfnEntries, entryCluster, entrySector, sectorOffset, rootDirectory) == false) {
         delete shortName;
         return 0;
@@ -746,8 +766,12 @@ DirectoryEntry* FAT::CreateEntry(uint32_t parentCluster, char* name, uint8_t att
                 entrySector = 0;
                 //sectorOffset = sectorOffset % this->bytesPerSector;
 
-                if(entryCluster >= CLUSTER_END)
-                    entryCluster = AllocateCluster();
+                if(entryCluster >= CLUSTER_END) {
+                    uint32_t tmp = AllocateCluster();
+                    ClearCluster(tmp);
+                    WriteTable(entryCluster, tmp);
+                    entryCluster = tmp;
+                }
             }
         }
 
@@ -806,10 +830,16 @@ int FAT::CreateNewDirFileEntry(const char* path, uint8_t attributes)
     {
         char* parentDirectory = (char*)path;
         int i = String::IndexOf(path, PATH_SEPERATOR_C, pathParts.size() - 2);
+
+        // Kinda stupid way to split filename and filepath, but it works!
+        char tmp = parentDirectory[i];
         parentDirectory[i] = '\0';
         
         char* name = (char*)(path + i + 1);
         FATEntryInfo* parentEntry = GetEntryByPath(parentDirectory);
+
+        // Place seperator back into filepath
+        parentDirectory[i] = tmp;
 
         if(parentEntry != 0) 
         {
@@ -885,6 +915,31 @@ int FAT::CreateNewDirFileEntry(const char* path, uint8_t attributes)
     }
     
     return -1;
+}
+
+bool FAT::ModifyEntry(FATEntryInfo* entry, DirectoryEntry newVersion)
+{
+    if(entry == 0)
+        return false;
+
+    if(this->disk->ReadSector(this->StartLBA + entry->sector, this->readBuffer) != 0)
+        return false;
+    
+    // Create pointer to entry for easy access
+    DirectoryEntry* entryPtr = (DirectoryEntry*)(this->readBuffer + entry->offsetInSector);
+
+    // Check if this is indeed the correct item, just to be sure
+    if(MemoryOperations::memcmp(&entry->entry, entryPtr, sizeof(DirectoryEntry)) != 0)
+        return false;
+    
+    // Overwrite old entry
+    MemoryOperations::memcpy(entryPtr, &newVersion, sizeof(DirectoryEntry));
+
+    // And finaly write sector back to disk
+    if(this->disk->WriteSector(this->StartLBA + entry->sector, this->readBuffer) != 0)
+        return false;
+
+    return true;
 }
 #pragma endregion
 
@@ -1009,26 +1064,56 @@ int FAT::WriteFile(const char* path, uint8_t* buffer, uint32_t len, bool create)
         reqClusters++;
 
     uint32_t bytesWritten = 0;
+
+    // File should have first cluster allocated already
+    uint32_t cluster = GET_CLUSTER(entry->entry);
     for(uint32_t i = 0; i < reqClusters; i++) {
-        // File should have first cluster allocated already
-        uint32_t cluster = (i == 0 ? GET_CLUSTER(entry->entry) : AllocateCluster());
         uint32_t sector = ClusterToSector(cluster);
         for(uint32_t s = 0; s < this->sectorsPerCluster; s++) {
-            MemoryOperations::memset(this->readBuffer, 0, this->bytesPerSector);
-
             uint32_t bytesLeft = len - bytesWritten;
-            MemoryOperations::memcpy(this->readBuffer, buffer + i*this->clusterSize + s*this->bytesPerSector, bytesLeft > this->bytesPerSector ? this->bytesPerSector : bytesLeft);
 
-            // Write sector with data to the disk
-            if(this->disk->WriteSector(this->StartLBA + sector + s, this->readBuffer) != 0) {
-                delete entry->filename;
-                delete entry;
-                return -1;
+            // Use readbuffer for partial writing when there is not a complete sector left
+            if(bytesLeft < this->bytesPerSector) {
+                MemoryOperations::memset(this->readBuffer, 0, this->bytesPerSector);        
+                MemoryOperations::memcpy(this->readBuffer, buffer + i*this->clusterSize + s*this->bytesPerSector, bytesLeft > this->bytesPerSector ? this->bytesPerSector : bytesLeft);
+
+                // Write sector with data to the disk
+                if(this->disk->WriteSector(this->StartLBA + sector + s, this->readBuffer) != 0) {
+                    delete entry->filename;
+                    delete entry;
+                    return -1;
+                }
+            }
+            else // Much faster routine for complete sectors (Much might be a overstatement, specialy for floppies)
+            {
+                if(this->disk->WriteSector(this->StartLBA + sector + s, buffer + i*this->clusterSize + s*this->bytesPerSector) != 0) {
+                    delete entry->filename;
+                    delete entry;
+                    return -1;
+                }
             }
 
             // And update variables
             bytesWritten += this->bytesPerSector;
         }
+        
+        // No need to clear cluster, will get overwritten
+        uint32_t newCluster = AllocateCluster();
+        WriteTable(cluster, newCluster);
+        cluster = newCluster;
+    }
+
+    // Now we need to modify some variables in the entry
+    DirectoryEntry newEntry = entry->entry;
+    newEntry.FileSize = len;
+    newEntry.ModifyDate = FatDate();
+    newEntry.ModifyTime = FatTime();
+    
+    // Modify entry
+    if(ModifyEntry(entry, newEntry) == false) {
+        delete entry->filename;
+        delete entry;
+        return -1;
     }
 
     delete entry->filename;

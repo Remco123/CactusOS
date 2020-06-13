@@ -85,6 +85,8 @@ namespace CactusOS
         {
             DirectoryEntry entry;                   // 8.3 Entry of this file/directory
             char* filename;                         // Name of this file, could be LFN
+            common::uint32_t sector;                // Sector in which this entry is present (the 8.3 entry)
+            common::uint32_t offsetInSector;        // Offset of the main entry in the sector pointed by this->sector
         } __attribute__((packed));
 
         // Cluster Special Values
@@ -144,8 +146,12 @@ namespace CactusOS
             uint32_t totalClusters = 0;         // Total amount of clusters used by data region
 
             uint8_t* readBuffer = 0;            // Buffer used for reading the disk
-            
-        private: // Helper functions
+            FAT32_FSInfo fsInfo;                // Structure used by FAT32 for extra info
+        private:
+            ///////////////////////
+            /// Helper Functions
+            ///////////////////////
+
             // Convert a cluster number to its corresponding start sector
             common::uint32_t ClusterToSector(common::uint32_t cluster);
 
@@ -170,7 +176,9 @@ namespace CactusOS
             // Calculate checksum for 8.3 filename
             common::uint8_t Checksum(char* filename);
 
-
+            ///////////////////////
+            /// Read Functions
+            ///////////////////////
 
             // Parse a directory and return its entries, rootDirectory is handled different on fat12/fat16
             List<FATEntryInfo> GetDirectoryEntries(common::uint32_t dirCluster, bool rootDirectory = false);
@@ -181,7 +189,9 @@ namespace CactusOS
             // Return the entry specified by a complete filename path
             FATEntryInfo* GetEntryByPath(char* path);
 
-
+            ///////////////////////
+            /// Write Functions
+            ///////////////////////
 
             // Create a list of LFN entries from a filename
             List<LFNEntry> FAT::CreateLFNEntriesFromName(char* name, common::uint32_t num, common::uint8_t checksum);
@@ -205,6 +215,15 @@ namespace CactusOS
             // Easy way to create a new file or directory by path, is almost the same for file/directory creation
             int CreateNewDirFileEntry(const char* path, common::uint8_t attributes);
 
+            // Modify a existing entry on disk by applying the variables from newVersion
+            // Be Carefoul when using this to change cluster numbers and filenames
+            // You should get the original entry, modify some stuff, and then pass it as newVersion
+            bool ModifyEntry(FATEntryInfo* entry, DirectoryEntry newVersion);
+
+            ///////////////////////
+            /// Time/Date Functions
+            ///////////////////////
+            
             // Returns current time in fat format
             common::uint16_t FatTime();
 
