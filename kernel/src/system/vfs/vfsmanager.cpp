@@ -1,4 +1,5 @@
 #include <system/vfs/vfsmanager.h>
+#include <system/system.h>
 
 using namespace CactusOS;
 using namespace CactusOS::common;
@@ -65,9 +66,46 @@ void VFSManager::UnmountByDisk(Disk* disk)
 
 bool VFSManager::SearchBootPartition()
 {
+    List<Disk*> posibleDisks;
     char* pathString = "####:\\boot\\CactusOS.bin";
+
+    // First we create a collection of disks which may be the boot disk
+    // Could be more then one when there are more than 1 cd drives installed
+
+    uint8_t bootDevice = (System::mbi->boot_device & 0xFF000000) >> 24;
+    BiosDriveParameters* diskInfo = System::diskManager->GetDriveInfoBios(bootDevice);
+    if(diskInfo->bufLen > 0) // Valid structure
+    {
+        DiskType bootDiskType = HardDisk;
+        if(diskInfo->bytesPerSector == 2048) // Probably a cdrom
+            bootDiskType = CDROM;
+        if(String::strncmp("USB", diskInfo->interfaceName, 3)) // Is a usb-device
+            bootDiskType = USBDisk;
+        
+        for(Disk* disk : System::diskManager->allDisks)
+            if(disk->type == bootDiskType) 
+            {
+                if(bootDiskType == HardDisk) { // Do a sector count check
+                    if(divide64(disk->size, diskInfo->bytesPerSector) == diskInfo->totalSectors)
+                        posibleDisks.push_back(disk);
+                }
+                else
+                    posibleDisks.push_back(disk);
+            }
+    }
+    else { // Include all disks in the search
+        for(Disk* disk : System::diskManager->allDisks)
+            posibleDisks.push_back(disk);
+    }
+
+    // Now loop though all the filesystems mounted and check if the disk can be the booted one
+    // If that is the case check for the kernel file
+    // At this point we can assume this is the boot disk
     for(int i = 0; i < Filesystems->size(); i++)
     {
+        if(posibleDisks.IndexOf(Filesystems->GetAt(i)->disk) == -1)
+            continue; // This partition is not present on the posible disks we booted from
+        
         char* idStr = Convert::IntToString(i);
         int idStrLen = String::strlen(idStr);
 

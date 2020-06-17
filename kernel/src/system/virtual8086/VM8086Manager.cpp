@@ -51,9 +51,14 @@ void vm86Enter(uint16_t ss, uint16_t sp, uint16_t cs, uint16_t ip, uint32_t arg)
     cpuEnterV86Int(0, ss, sp, cs, ip, arg);
 }
 
-void Virtual8086Manager::CallInterrupt(common::uint8_t intNumber, VM86Arguments* regs)
+void Virtual8086Manager::CallInterrupt(uint8_t intNumber, VM86Arguments* regs)
 {
     MemoryOperations::memcpy((uint8_t*)((codeSegment << 4) + 0x8000), (uint8_t*)regs, sizeof(VM86Arguments));
     vm86Enter(stackSegment, 0x0000, codeSegment, &Int86 - &VM86CodeStart, intNumber);
     MemoryOperations::memcpy((uint8_t*)regs, (uint8_t*)((codeSegment << 4) + 0x8000), sizeof(VM86Arguments));
+}
+
+void Virtual8086Manager::ExcecuteCode(uint32_t instructionStart, uint32_t args)
+{
+    vm86Enter(stackSegment, 0x0000, codeSegment, instructionStart - (uint32_t)&VM86CodeStart, args);
 }

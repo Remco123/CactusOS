@@ -8,6 +8,10 @@ using namespace CactusOS::common;
 using namespace CactusOS::system;
 using namespace CactusOS::system::drivers;
 
+// VM86 Function to get info about a specific disk device
+// We must do it this way because the DS:SI gets used by the CallInterrupt() method
+extern "C" uint8_t diskInfo;
+
 DiskManager::DiskManager()
 { 
     allDisks.Clear();
@@ -38,4 +42,10 @@ void DiskManager::RemoveDisk(Disk* disk)
 {
     allDisks.Remove(disk); //Remove from list
     System::vfs->UnmountByDisk(disk); //And unmount all filesystems using that disk
+}
+
+BiosDriveParameters* DiskManager::GetDriveInfoBios(uint8_t drive)
+{
+    System::vm86Manager->ExcecuteCode((uint32_t)&diskInfo, drive);
+    return (BiosDriveParameters*)0x7000;
 }

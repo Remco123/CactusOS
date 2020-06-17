@@ -17,7 +17,12 @@ namespace CactusOS
             Virtual8086Manager();
             common::uint32_t HandleInterrupt(common::uint32_t esp);
             
+            // Call a bios interrupt while passing multiple arguments via the regs variable
             void CallInterrupt(common::uint8_t intNumber, VM86Arguments* regs);
+            
+            // Excecute a specific function defined in VM8086Code.asm
+            // Sometimes things can't be done using the CallInterrupt function
+            void ExcecuteCode(common::uint32_t instructionStart, common::uint32_t args);
         };
     }
 }

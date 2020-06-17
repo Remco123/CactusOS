@@ -38,5 +38,25 @@ Int86:
     ; return to kernel
     int 0xFE
 
+global diskInfo
+diskInfo:
+    mov dl, al      ; Drive
+    mov ax, 0x4800  ; Function 0x48
+
+    ; Setup buffer
+    mov word [0x7000], 0x42
+    mov si, 0x7000
+
+    int 0x13        ; Call Interupt
+    jc diskInfoError
+
+    ; return to kernel
+    int 0xFE
+
+diskInfoError:
+    mov word [0x7000], 0 ; Indicate error in buffer
+    ; return to kernel
+    int 0xFE
+
 global VM86CodeEnd
 VM86CodeEnd:

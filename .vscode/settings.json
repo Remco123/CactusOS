@@ -44,7 +44,9 @@
         "string": "cpp",
         "algorithm": "cpp",
         "memory": "cpp",
-        "memory_resource": "cpp"
+        "memory_resource": "cpp",
+        "hash_map": "cpp",
+        "list": "cpp"
     },
     "C_Cpp.clang_format_fallbackStyle": "{ BasedOnStyle: WebKit, PointerAlignment: Left}"
 }
