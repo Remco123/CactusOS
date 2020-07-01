@@ -34,11 +34,6 @@ namespace LIBCactusOS
          * Create a new context by a framebuffer and dimensions
         */
         Context(uint32_t framebufferAddr, int width = 0, int height = 0);
-        
-        /**
-         * Destructor, warning: does also delete canvas
-        */
-        ~Context();
 
         /**
          * Draw all the gui components to this context

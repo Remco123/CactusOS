@@ -37,12 +37,12 @@ public:
 
     void Opened()
     {
-        this->backColor = 0xFFDDDDDD;
+        this->SetBackColor(0xFFDDDDDD);
     }
 
     void Flagged(bool flag)
     {
-        this->backColor = flag ? 0xFF88FFAA : 0xFF898989;
+        this->SetBackColor(flag ? 0xFF88FFAA : 0xFF898989);
     }
 };
 

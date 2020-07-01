@@ -7,6 +7,7 @@
 #include <gui/canvas.h>
 #include <gui/events.h>
 #include <gui/contextinfo.h>
+#include <gui/properties.h>
 
 namespace LIBCactusOS
 {
@@ -15,6 +16,8 @@ namespace LIBCactusOS
     */
     class Control : public EventObject, public Rectangle
     {
+    protected:
+        bool needsRefresh = false;
     public:
         // All controls that are present on this control.
         List<Control*> childs;
@@ -24,9 +27,10 @@ namespace LIBCactusOS
 
         // If we are a child of some control this will point to our parent.
         Control* parent;
-
-        uint32_t backColor = 0xFFCACDD1;
-        uint32_t borderColor = 0xFF333333;
+        
+        // Public properties for this control
+        GUI_PROPERTY_DEC(BackColor, uint32_t, 0xFF919191, true);
+        GUI_PROPERTY_DEC(BorderColor, uint32_t, 0xFF333333, true);
 
         // Anchor of this control
         Direction anchor = Direction::None;

@@ -29,6 +29,7 @@ int main()
     window1->titleString = "Calculator";
 
     Control* labelBox = new Control(130, 30, 5, 5);
+    labelBox->SetBackColor(0xFFBBBBBB);
     window1->AddChild(labelBox);
 
     char* label = new char[2];

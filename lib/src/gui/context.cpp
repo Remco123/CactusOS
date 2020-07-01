@@ -15,12 +15,6 @@ Context::Context(uint32_t framebufferAddr, int width, int height)
     this->sharedContextInfo = 0;
 }
 
-Context::~Context()
-{
-    if(this->canvas != 0)
-        delete this->canvas;
-}
-
 void Context::DrawGUI()
 {
     if(this->Window)
@@ -48,6 +42,8 @@ void Context::CloseContext()
 {
     ContextHeap::FreeArea(this->sharedContextInfo->virtAddrClient - sizeof(ContextInfo), pageRoundUp(this->sharedContextInfo->bytes) / 0x1000);
     GUI::contextList->Remove(this);
+    if(this->canvas != 0)
+        delete this->canvas;
 
     IPCSend(GUI::compositorPID, IPC_TYPE_GUI, COMPOSITOR_CONTEXTCLOSE, this->sharedContextInfo->id);
     if(ICPReceive(GUI::compositorPID, 0, IPC_TYPE_GUI).arg1 != 1)

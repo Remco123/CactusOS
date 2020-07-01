@@ -9,8 +9,8 @@ Inputbox::Inputbox()
     this->text = new char[1];
     this->text[0] = '\0';
 
-    this->backColor = 0xFFFFFFFF;
-    this->borderColor = 0xFF000000;
+    this->SetBackColor(0xFFFFFFFF);
+    this->SetBorderColor(0xFF000000);
 }
 Inputbox::~Inputbox()
 {
@@ -20,10 +20,10 @@ Inputbox::~Inputbox()
 
 void Inputbox::DrawTo(Canvas* context, int x_abs, int y_abs)
 {
-    context->DrawFillRect(this->backColor, x_abs, y_abs, this->width, this->height - 1);
+    context->DrawFillRect(this->pBackColor, x_abs, y_abs, this->width, this->height - 1);
 
     if(this->Focused() == false) {
-        context->DrawRect(this->borderColor, x_abs, y_abs, this->width - 1, this->height - 1);   
+        context->DrawRect(this->pBorderColor, x_abs, y_abs, this->width - 1, this->height - 1);   
     }
     else {
         context->DrawRect(0xFF0000FF, x_abs, y_abs, this->width - 1, this->height - 1);
