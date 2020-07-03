@@ -127,6 +127,8 @@ void GUILoop()
         memcpy((void*)backBuffer, (void*)wallPaperBuffer, GUI::Width*GUI::Height*4);
     
     while(true) {
+        //uint32_t t = Time::Ticks();
+
         ////////
         // Update mouse positions
         ////////
@@ -142,6 +144,8 @@ void GUILoop()
         // Draw a new version of the desktop
         ////////
         UpdateDesktop();
+
+        //Print("Frametime = %d ms\n", Time::Ticks() - t);
 
         ////////
         // Switch processes after drawing desktop
@@ -383,7 +387,7 @@ void UpdateDesktop()
         if(info->supportsTransparency) {
             for(int y = 0; y < contextRectangle.height; y++)
                 for(int x = 0; x < contextRectangle.width; x++)
-                    backBufferCanvas->SetPixel(contextRectangle.x + x, contextRectangle.y + y, Colors::AlphaBlend(wallPaperCanvas->GetPixel(contextRectangle.x + x, contextRectangle.y + y), *(uint32_t*)(info->virtAddrServer + (topOffset+y)*info->width*4 + (leftOffset+x)*4)));
+                    *(uint32_t*)(backBuffer + (contextRectangle.y + y)*GUI::Width*4 + (contextRectangle.x + x)*4) = Colors::AlphaBlend(*(uint32_t*)(wallPaperBuffer + (contextRectangle.y + y)*GUI::Width*4 + (contextRectangle.x + x)*4), *(uint32_t*)(info->virtAddrServer + (topOffset+y)*info->width*4 + (leftOffset+x)*4));
         }
         else {
             for(int hOffset = 0; hOffset < contextRectangle.height; hOffset++)

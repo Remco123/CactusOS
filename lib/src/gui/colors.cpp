@@ -8,7 +8,7 @@ static const int GMASK = 0x0000FF00;
 static const int AGMASK = AMASK | GMASK;
 static const int ONEALPHA = 0x01000000;
 
-uint32_t Colors::AlphaBlend(uint32_t color1, uint32_t color2)
+const uint32_t Colors::AlphaBlend(uint32_t color1, uint32_t color2)
 {
     uint32_t a = (color2 & AMASK) >> 24;
 

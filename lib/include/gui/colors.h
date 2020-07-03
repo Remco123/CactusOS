@@ -13,7 +13,7 @@ namespace LIBCactusOS
          * Color1 is background
          * Color2 is foreground
         */
-        static uint32_t AlphaBlend(uint32_t color1, uint32_t color2);
+        static const uint32_t AlphaBlend(uint32_t color1, uint32_t color2);
     };
 }
 
