@@ -1,4 +1,5 @@
 #include <core/virtualmemory.h>
+#include <system/log.h>
 
 using namespace CactusOS;
 using namespace CactusOS::common;
@@ -178,8 +179,10 @@ void VirtualMemoryManager::mapVirtualToPhysical(void* physAddress, void* virtAdd
 
 void VirtualMemoryManager::mapVirtualToPhysical(void* physAddress, void* virtAddress, uint32_t size, bool kernel, bool writeable)
 {
-    if(size % PAGE_SIZE != 0)
+    if(size % PAGE_SIZE != 0) {
+        Log(Error, "mapVirtualToPhysical(): Size is not devisible by PAGE_SIZE. Size = %d.", size);
         return;
+    }
     
     for(uint32_t i = 0; i < size; i += PAGE_SIZE)
     {

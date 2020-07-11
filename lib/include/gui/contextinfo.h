@@ -20,11 +20,11 @@ inline Direction operator|(Direction a, Direction b)
 
 struct ContextInfo
 {
-    // To which memory address is the framebuffer mapped on the server side
+    // To which memory address is the framebuffer mapped on the server side (ContextInfo is placed just before this address)
     LIBCactusOS::uint32_t virtAddrServer;
-    // To which memory address is the framebuffer mapped on the client side
+    // To which memory address is the framebuffer mapped on the client side (ContextInfo is placed just before this address)
     LIBCactusOS::uint32_t virtAddrClient;
-    // How many bytes does this context use?
+    // How many bytes does this context use? This includes the memory used by this struct
     LIBCactusOS::uint32_t bytes;
     // The width of this context
     LIBCactusOS::uint32_t width;
@@ -41,10 +41,6 @@ struct ContextInfo
     bool supportsTransparency;
     // Can this context be moved to the front using a mouse click in it? (this will be done automatically when set to false)
     bool background;
-    // Can this context be resized in the defined directions?
-    bool allowResize;
-    // In which direction can this context be resized?
-    Direction resizeDirections;
     // Each context gets it own uniqe id, this way the compositor can find the right context for each message. For example when a keypress occurs.
     int id;
 };
