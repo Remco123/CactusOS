@@ -7,7 +7,7 @@
 #include <gui/canvas.h>
 #include <gui/events.h>
 #include <gui/contextinfo.h>
-#include <gui/properties.h>
+#include <gui/property.h>
 
 namespace LIBCactusOS
 {
@@ -29,8 +29,8 @@ namespace LIBCactusOS
         Control* parent;
         
         // Public properties for this control
-        GUI_PROPERTY_DEC(BackColor, uint32_t, 0xFF919191, true);
-        GUI_PROPERTY_DEC(BorderColor, uint32_t, 0xFF333333, true);
+        GUIProperty<uint32_t> backColor = GUIProperty<uint32_t>(this, 0xFF919191);
+        GUIProperty<uint32_t> borderColor = GUIProperty<uint32_t>(this, 0xFF333333);
 
         // Anchor of this control
         Direction anchor = Direction::None;

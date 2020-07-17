@@ -4,15 +4,15 @@
 #include <gui/widgets/control.h>
 #include <gui/widgets/button.h>
 #include <gui/context.h>
-#include <gui/properties.h>
+#include <gui/property.h>
 
 namespace LIBCactusOS
 {
     class Window : public Control
     {
     private:
-        GUI_PROPERTY_DEC(TitleBarColor, uint32_t, 0xFF1E9AFF, true);
-        GUI_PROPERTY_DEC(TitleBarHeight, uint16_t, 30, true);
+        GUIProperty<uint32_t> titleBarColor = GUIProperty<uint32_t>(this, 0xFF1E9AFF);
+        GUIProperty<uint16_t> titleBarHeight = GUIProperty<uint16_t>(this, 30);
 
         // Is the mouse down on the title bar?
         bool titleBarMouseDown = false;
