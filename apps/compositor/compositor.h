@@ -7,10 +7,14 @@
 #include <ipc.h>
 #include <imaging/image.h>
 #include "contextmanager.h"
+#include "debugger.h"
+
+class CompositorDebugger;
 
 // Main class of the compositor software
 class Compositor
 {
+friend class CompositorDebugger;
 public:
 #pragma region Mouse Specifics
 
@@ -32,7 +36,7 @@ public:
     */
     int32_t prevMouseY = -1;
 
-private:
+protected:
     /**
      * Holds if the left mouse button was previously pressed
     */
@@ -83,6 +87,9 @@ private:
 
     // The contextmanager we are using for this compositor
     ContextManager* contextManager = 0;
+
+    // The debugger used by this compositor
+    CompositorDebugger* debugger = 0;
     
     // List of dirty rectangles
     List<Rectangle> dirtyRectList;
@@ -92,7 +99,7 @@ private:
     */
     int nextContextID = 1;
 
-private:
+protected:
     // Makes rectangle fit into desktop rectangle
     void ApplyDesktopBounds(Rectangle* rect);
 

@@ -33,6 +33,9 @@ Compositor::Compositor()
     Print("[Compositor] Starting Context Manager\n");
     this->contextManager = new ContextManager();
 
+    Print("[Compositor] Loading debugger\n");
+    this->debugger = new CompositorDebugger(this);
+
     Print("[Compositor] Allocating Backbuffer of %f Mb\n", (double)(GUI::Width*GUI::Height*4) / (double)1_MB);
     this->backBuffer = new uint8_t[GUI::Width*GUI::Height*4];
     this->backBufferCanvas = new Canvas(backBuffer, GUI::Width, GUI::Height);
@@ -174,7 +177,14 @@ void Compositor::DrawFrame()
             for(int hOffset = 0; hOffset < contextRectangle.height; hOffset++)
                 memcpy((this->backBuffer + (contextRectangle.y+hOffset)*GUI::Width*4 + contextRectangle.x*4), (void*)(context->virtAddrServer + leftOffset*4 + (topOffset + hOffset)*context->width*4), contextRectangle.width * 4);
         }
+
+        // Draw debug info for this context when we should
+        if(this->debugger->enabled)
+            this->debugger->ProcessContext(context);
     }
+    // Draw debug info when enabled
+    if(this->debugger->enabled)
+        this->debugger->ProcessGeneral();
 
     // Finally draw the cursor to the backbuffer
     DrawCursor();
@@ -258,8 +268,15 @@ void Compositor::ProcessEvents()
         }
 
         // Debug mode key (Ctrl + d)
-        if(key == 'd' && (packet.flags & LeftControl) && (packet.flags & Pressed))
-            Print("[Compositor] Switching debug mode\n");
+        if(key == 'd' && (packet.flags & LeftControl) && (packet.flags & Pressed)) {
+            Print("[Compositor] Switching debug mode to %b\n", !this->debugger->enabled);
+            this->debugger->enabled = !this->debugger->enabled;
+
+            if(this->debugger->enabled == false) // Cleanup mess left by debugger
+                this->dirtyRectList.push_back(Rectangle(GUI::Width, GUI::Height));
+
+            continue;
+        }
 
         // No context present to send the key to
         if(this->contextManager->contextList.size() == 0)

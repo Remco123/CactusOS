@@ -136,6 +136,11 @@ fastApps:
 	cd apps/ && $(MAKE) clean && $(MAKE)
 	rm CactusOS.iso
 
+turboApps:
+	rm -rf isofiles/apps/*.bin
+	cd apps/ && $(MAKE) clean && $(MAKE)
+	rm CactusOS.iso
+
 filelist:
 	@echo "Source Files:"
 	@echo -$(KRNLFILES)

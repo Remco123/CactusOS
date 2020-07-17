@@ -194,7 +194,7 @@ namespace CactusOS
             ///////////////////////
 
             // Create a list of LFN entries from a filename
-            List<LFNEntry> FAT::CreateLFNEntriesFromName(char* name, common::uint32_t num, common::uint8_t checksum);
+            List<LFNEntry> CreateLFNEntriesFromName(char* name, common::uint32_t num, common::uint8_t checksum);
 
             // Create a 8.3 filename from a regular filename
             char* CreateShortFilename(char* name);
@@ -206,7 +206,7 @@ namespace CactusOS
             bool WriteDirectoryEntry(DirectoryEntry entry, common::uint32_t targetSector, common::uint32_t sectorOffset, bool rootDirectory);
 
             // Find a starting point for entries in a directory. Returns cluster and sector offset inside cluster.
-            bool FAT::FindEntryStartpoint(common::uint32_t cluster, common::uint32_t entryCount, bool rootdir, common::uint32_t* targetCluster, common::uint32_t* targetSector, common::uint32_t* sectorOffset);
+            bool FindEntryStartpoint(common::uint32_t cluster, common::uint32_t entryCount, bool rootdir, common::uint32_t* targetCluster, common::uint32_t* targetSector, common::uint32_t* sectorOffset);
 
             // Create a entry in the directory specified by parentCluster
             // Returns pointer to created entry present in readbuffer
