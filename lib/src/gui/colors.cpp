@@ -25,3 +25,8 @@ const uint32_t Colors::AlphaBlend(uint32_t color1, uint32_t color2)
         return ((rb & RBMASK) | (ag & AGMASK));
     }
 }
+
+const uint32_t Colors::FromARGB(uint8_t a, uint8_t r, uint8_t g, uint8_t b)
+{
+    return ((uint32_t)a << 24) | ((uint32_t)r << 16) | ((uint32_t)g << 8) | (uint32_t)b;
+}

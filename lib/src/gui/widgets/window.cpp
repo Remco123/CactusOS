@@ -46,7 +46,7 @@ void Window::DrawTo(Canvas* context, int x_abs, int y_abs)
     context->DrawLine(this->backColor, x_abs + 1, y_abs + this->titleBarHeight, x_abs + this->width, y_abs + titleBarHeight);
 
     if(this->titleString)
-        context->DrawString(this->titleString, x_abs + 3, y_abs + 10, 0xFF000000);
+        context->DrawString(this->font, this->titleString, x_abs + 3, y_abs + 6, 0xFF000000);
 
     for(Control* c : this->childs)
         c->DrawTo(context, x_abs + c->x, y_abs + c->y + titleBarHeight);

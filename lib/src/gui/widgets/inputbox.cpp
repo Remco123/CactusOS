@@ -29,7 +29,7 @@ void Inputbox::DrawTo(Canvas* context, int x_abs, int y_abs)
         context->DrawRect(0xFF0000FF, x_abs, y_abs, this->width - 1, this->height - 1);
     }
     
-    context->DrawString(this->text, x_abs + 2, y_abs + 5, 0xFF000000);
+    context->DrawString(this->font, this->text, x_abs + 2, y_abs + 5, 0xFF000000);
 }
 
 void Inputbox::OnKeyDown(uint8_t key, KEYPACKET_FLAGS modifiers)

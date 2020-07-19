@@ -2,6 +2,7 @@
 #define __LIBCACTUSOS__GUI__CANVAS_H
 
 #include <types.h>
+#include <gui/fonts/font.h>
 
 namespace LIBCactusOS
 {
@@ -29,8 +30,7 @@ namespace LIBCactusOS
         void DrawFillCircle(uint32_t color, int x_center, int y_center, int radius);
         void DrawEllipse(uint32_t color, int x_center, int y_center, int x_radius, int y_radius);
 
-        void DrawChar(char character, int x, int y, uint32_t color);
-        void DrawString(char* string, int x, int y, uint32_t color);
+        void DrawString(Font* font, char* string, int x, int y, uint32_t color);
     };
 }
 

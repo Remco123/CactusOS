@@ -41,6 +41,11 @@ namespace LIBCactusOS
          * The list of all contexts in this application
         */
         static List<Context*>* contextList;
+        
+        /**
+         * System default font
+        */
+        static Font* defaultFont;
 
         /**
          * Initalize the gui for this process

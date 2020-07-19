@@ -8,6 +8,7 @@
 #include <gui/events.h>
 #include <gui/contextinfo.h>
 #include <gui/property.h>
+#include <gui/fonts/font.h>
 
 namespace LIBCactusOS
 {
@@ -31,6 +32,7 @@ namespace LIBCactusOS
         // Public properties for this control
         GUIProperty<uint32_t> backColor = GUIProperty<uint32_t>(this, 0xFF919191);
         GUIProperty<uint32_t> borderColor = GUIProperty<uint32_t>(this, 0xFF333333);
+        GUIProperty<Font*>    font = GUIProperty<Font*>(this, 0);
 
         // Anchor of this control
         Direction anchor = Direction::None;

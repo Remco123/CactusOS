@@ -12,37 +12,38 @@
 #include <math.h>
 #include <gui/gui.h>
 #include <imaging/image.h>
+#include <gui/fonts/fontparser.h>
+#include <gui/colors.h>
 
 using namespace LIBCactusOS;
 using namespace LIBCactusOS::Imaging;
 
+char* msg = "Hello World!\nNewline is placed here\nSpecial characters: !@#$%^&*()-_=+,`~?<>";
+
 int main()
 {
-    Context* screen = GUI::RequestContext(GUI::Width - 50, GUI::Height - 50, 25, 25);
+    Context* screen = GUI::RequestContext(900, 300, 25, 25);
     if(screen == 0)
             return -1;
+        
+    screen->canvas->Clear(0xFFFFFFFF);
+
+    Font* ubuntu = FontParser::FromFile("B:\\fonts\\Ubuntu14.cff");
+
+    uint64_t t = Time::Ticks();
+    
+    screen->canvas->DrawString(ubuntu, msg, 5, 5, 0xFF000000);
+
+    Print("Drawing strings took %f ms\n", Time::Ticks() - t);
+
+    // Draw bounding box
+    int w,h;
+    ubuntu->BoundingBox(msg, &w, &h);
+    screen->canvas->DrawRect(0xFF00FF00, 5, 5, w, h);
 
     while(GUI::HasItems()) {
-        unsigned int rgbColour[3];
-        // Start off with red.
-        rgbColour[0] = 255;
-        rgbColour[1] = 0;
-        rgbColour[2] = 0;  
-        // Choose the colours to increment and decrement.
-        for (int decColour = 0; decColour < 3; decColour += 1) {
-            int incColour = decColour == 2 ? 0 : decColour + 1;
-            // cross-fade the two colours.
-            for(int i = 0; i < 255; i += 1) {
-                rgbColour[decColour] -= 1;
-                rgbColour[incColour] += 1;
-
-                uint32_t col = 0xFF000000 | rgbColour[0] << 24 | rgbColour[1] << 8 | rgbColour[2];
-                screen->canvas->Clear(col);
-                Time::Sleep(5);
-            }
-        }
-
-        Process::Yield();
+        GUI::ProcessEvents();
+        GUI::DrawGUI();
     }
     
     return 0;

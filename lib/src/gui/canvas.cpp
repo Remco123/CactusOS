@@ -1,7 +1,7 @@
 #include <gui/canvas.h>
 #include <string.h>
 #include <math.h>
-#include <gui/font.h>
+#include <gui/colors.h>
 
 using namespace LIBCactusOS;
 
@@ -219,33 +219,56 @@ void Canvas::DrawEllipse(uint32_t color, int x_center, int y_center, int x_radiu
     }
 }
 
-void Canvas::DrawChar(char character, int x, int y, uint32_t color)
+void Canvas::DrawString(Font* font, char* string, int x, int y, uint32_t color)
 {
-    int font_x, font_y;
-    int count_x = 8;
-    int count_y = 12; 
-    uint8_t shift_line;
+    if(font == 0 || string == 0 || color == 0x00000000)
+        return;
+    
+    int xOffset = x;
+    int yOffset = y;
+    while(*string)
+    {
+        // Get the character we need to draw for this string
+        char c = *string++;
 
-    character &= 0x7F;
+        // Check for newline
+        if(c == '\n') {
+            xOffset = x;
 
-    for(font_y = 0; font_y < count_y; font_y++) {
-        shift_line = font_array[font_y * 128 + character];
-        for(font_x = 0; font_x < count_x; font_x++) {
-            if(shift_line & 0x80)
-                SetPixel(font_x + x, font_y + y, color);
- 
-            shift_line <<= 1; 
+            // Add the height of the space character. TODO: Update this!
+            yOffset += ((uint8_t*)(font->data + font->offsetTable[0]))[1];
+            continue;
         }
-    }
-}
-void Canvas::DrawString(char* string, int x, int y, uint32_t color)
-{
-    int dx = x;
-    for( ; *string; dx += 8) {
-        if(*(string) == '\n') {
-            dx = x-8; y += 14; string++; 
+
+        // Load data for this char from the font
+        const uint8_t* charData = (uint8_t*)(font->data + font->offsetTable[(int)c - 32]);
+        const uint8_t width = charData[0];
+        const uint8_t height = charData[1];
+
+        // Loop through the complete bitmap and draw the character
+        for(uint8_t px = 0; px < width; px++) {
+            for(uint8_t py = 0; py < height; py++) {
+                // Can be any value between 0 and 255
+                uint8_t d = charData[py * width + px + 2];
+                
+                // This pixel does not need to be drawn
+                if(d == 0)
+                    continue;
+
+                // This is a full color pixel
+                if(d == 255)
+                    this->SetPixel(px + xOffset, py + yOffset, color);
+                // We need to blend this pixel with the background
+                else {
+                    Color4 realColor;
+                    realColor.c = color;
+                    realColor.argb.a = d; // Adjust the alpha component of the color. TODO: Also support full transparent text drawing in the future!
+
+                    this->SetPixel(px + xOffset, py + yOffset, Colors::AlphaBlend(this->GetPixel(px + xOffset, py + yOffset), realColor.c));
+                }  
+            }
         }
-        else
-            DrawChar(*(string++), dx, y, color);
+
+        xOffset += width;
     }
 }

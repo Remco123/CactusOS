@@ -165,7 +165,7 @@ void TerminalControl::DrawTo(Canvas* context, int x_abs, int y_abs)
         for(int yp = 0; yp < TERM_HEIGH; yp++)
         {
             tmpStr[0] = textBuffer[yp * TERM_WIDTH + xp];
-            context->DrawString(tmpStr, x_abs + xp*8 + 2, y_abs + 1 + yp*14, textColor);
+            context->DrawString(this->font, tmpStr, x_abs + xp*8 + 2, y_abs + 1 + yp*14, textColor);
         }
 }
 

@@ -1,4 +1,5 @@
 #include <gui/widgets/control.h>
+#include <gui/gui.h>
 #include <log.h>
 
 using namespace LIBCactusOS;
@@ -10,6 +11,7 @@ Control::Control(int w, int h, int x, int y)
     this->focusedChild = 0;
     this->parent = 0;
     this->anchor = Top | Left;
+    this->font = GUI::defaultFont;
 }
 
 Control::~Control()

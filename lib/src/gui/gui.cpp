@@ -8,6 +8,7 @@
 #include <gui/contextinfo.h>
 #include <gui/contextheap.h>
 #include <gui/directgui.h>
+#include <gui/fonts/fontparser.h>
 
 using namespace LIBCactusOS;
 
@@ -16,6 +17,7 @@ int GUI::Height = 0;
 
 List<Context*>* GUI::contextList = 0;
 int GUI::compositorPID = 3;
+Font* GUI::defaultFont = 0;
 
 void GUI::Initialize()
 {
@@ -24,6 +26,8 @@ void GUI::Initialize()
 
     if(DoSyscall(SYSCALL_GET_SCREEN_PROPERTIES, (uint32_t)&GUI::Width, (uint32_t)&GUI::Height) == 0)
         Log(Error, "Error while requesting screen info");
+
+    GUI::defaultFont = FontParser::FromFile("B:\\fonts\\Ubuntu14.cff");
 }
 
 void GUI::CleanUp()

@@ -16,7 +16,7 @@ void Button::DrawTo(Canvas* context, int x_abs, int y_abs)
         context->DrawRect(this->borderColor, x_abs + i, y_abs + i, this->width - 1 - i*2, this->height - 1 - i*2);
     
     if(this->label != 0)
-        context->DrawString(this->label, x_abs + 3, y_abs + 6, 0xFF479BFF);
+        context->DrawString(this->font, this->label, x_abs + 3, y_abs + 6, 0xFF479BFF);
 
     for(Control* c : this->childs)
         c->DrawTo(context, x_abs + c->x, y_abs + c->y);

@@ -11,7 +11,7 @@ Label::Label(char* text)
 void Label::DrawTo(Canvas* context, int x_abs, int y_abs)
 {
     if(this->text)
-        context->DrawString(this->text, x_abs + 2, y_abs + 2, 0xFF000000);
+        context->DrawString(this->font, this->text, x_abs + 2, y_abs + 2, 0xFF000000);
 
     for(Control* c : this->childs)
         c->DrawTo(context, x_abs + c->x, y_abs + c->y);

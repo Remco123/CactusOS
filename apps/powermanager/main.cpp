@@ -14,25 +14,25 @@ void PoweroffAndEjectButtonCallback(void* sender, MouseButtonArgs arg);
 
 int main()
 {
-    Window* mainWindow = new Window(150, 100, GUI::Width/2 - 75, GUI::Width/2 - 50);
+    Window* mainWindow = new Window(300, 100 + 30, GUI::Width/2 - 150, GUI::Height/2 - 65);
     mainWindow->titleString = "Power Options";
 
     Button* shutdownButton = new Button("Poweroff");
-    shutdownButton->width = 75;
-    shutdownButton->height = 40;
+    shutdownButton->width = 150;
+    shutdownButton->height = 50;
     shutdownButton->MouseClick += PoweroffButtonCallback;
 
-    Button* shutdownAndEjectButton = new Button("Eject CD+Shutdown");
-    shutdownAndEjectButton->width = 150;
-    shutdownAndEjectButton->height = 30;
-    shutdownAndEjectButton->y = 40;
-    shutdownAndEjectButton->MouseClick += PoweroffAndEjectButtonCallback;
-
     Button* rebootButton = new Button("Reboot");
-    rebootButton->width = 75;
-    rebootButton->height = 40;
-    rebootButton->x = 75;
+    rebootButton->width = 150;
+    rebootButton->height = 50;
+    rebootButton->x = 150;
     rebootButton->MouseClick += RebootButtonCallback;
+
+    Button* shutdownAndEjectButton = new Button("Eject CD+Shutdown");
+    shutdownAndEjectButton->width = 300;
+    shutdownAndEjectButton->height = 50;
+    shutdownAndEjectButton->y = 50;
+    shutdownAndEjectButton->MouseClick += PoweroffAndEjectButtonCallback;
 
     mainWindow->AddChild(shutdownButton);
     mainWindow->AddChild(shutdownAndEjectButton);

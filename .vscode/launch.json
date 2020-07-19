@@ -5,6 +5,14 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "Python: Current file",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            "args": ["20"]
+        },
+        {
             "name": "Launch with GDB",
             "type": "cppdbg",
             "request": "launch",
