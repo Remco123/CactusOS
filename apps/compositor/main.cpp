@@ -13,8 +13,6 @@ int main()
     Compositor* mainCompositor = new Compositor();
     while(1) 
     {
-        uint32_t startTime = Time::Ticks();
-
         // Update cursor position with the value stored in SysInfo
         mainCompositor->curMouseX = Process::systemInfo->MouseX;
         mainCompositor->curMouseY = Process::systemInfo->MouseY;
@@ -37,8 +35,6 @@ int main()
         // Update cursor variables for next run
         mainCompositor->prevMouseX = mainCompositor->curMouseX;
         mainCompositor->prevMouseY = mainCompositor->curMouseY;
-
-        //Print("Frametime = %d ms\n", Time::Ticks() - startTime);
 
         // Switch processes after drawing desktop
         // It is useless to draw it like 30 times in a couple milliseconds.

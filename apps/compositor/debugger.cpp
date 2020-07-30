@@ -63,6 +63,6 @@ void CompositorDebugger::ProcessGeneral()
         frameCount = 0;
     }
 
-    this->target->backBufferCanvas->DrawFillRect(0xFFAAAAAA, 0, 0, 25, 25);
+    this->target->backBufferCanvas->DrawFillRect(0xFFAAAAAA, 0, 0, 50, 25);
     this->target->backBufferCanvas->DrawString(GUI::defaultFont, Convert::IntToString(fps), 5, 5, 0xFF0000FF);
 }

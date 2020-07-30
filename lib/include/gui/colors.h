@@ -22,6 +22,13 @@ namespace LIBCactusOS
     class Colors
     {
     public:
+        static const uint32_t Black = 0xFF000000;
+        static const uint32_t White = 0xFFFFFFFF;
+        static const uint32_t Red   = 0xFFFF0000;
+        static const uint32_t Green = 0xFF00FF00;
+        static const uint32_t Blue  = 0xFF0000FF;
+        static const uint32_t Transparent = 0x00000000;
+    public:
         /**
          * Blend to colors using alpha blending
          * Color1 is background

@@ -50,6 +50,11 @@ namespace LIBCactusOS
         */
         void CloseContext();
 
+        /**
+         * Function to draw a peice of text aligned within a boundry
+        */
+        static void DrawStringAligned(Canvas* target, Font* font, char* string, uint32_t color, Rectangle bounds, Alignment align, int xoff = 0, int yoff = 0);
+
     /*///////////////
     // Events called by GUI class
     *////////////////

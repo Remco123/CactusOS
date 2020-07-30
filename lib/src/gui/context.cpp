@@ -21,6 +21,40 @@ void Context::DrawGUI()
         this->Window->DrawTo(this->canvas, 0, 0);
 }
 
+void Context::DrawStringAligned(Canvas* target, Font* font, char* string, uint32_t color, Rectangle bounds, Alignment align, int xoff, int yoff)
+{
+    Rectangle textBounds;
+    font->BoundingBox(string, &textBounds.width, &textBounds.height);
+
+    int x = 0;
+    int y = 0;
+    
+    switch(align.x) {
+        case Alignment::Horizontal::Left:
+            x = 0;
+            break;
+        case Alignment::Horizontal::Center:
+            x = bounds.width/2 - textBounds.width/2;
+            break;
+        case Alignment::Horizontal::Right:
+            x = bounds.width - textBounds.width;
+            break;
+    }
+    switch(align.y) {
+        case Alignment::Vertical::Top:
+            y = 0;
+            break;
+        case Alignment::Vertical::Center:
+            y = bounds.height/2 - textBounds.height/2;
+            break;
+        case Alignment::Vertical::Bottom:
+            y = bounds.height - textBounds.height;
+            break;
+    }
+
+    target->DrawString(font, string, x + xoff, y + yoff, color);
+}
+
 void Context::MoveToPosition(int newX, int newY)
 {
     int oldX = this->sharedContextInfo->x;

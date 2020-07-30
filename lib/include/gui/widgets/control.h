@@ -12,6 +12,30 @@
 
 namespace LIBCactusOS
 {
+    // Defines the alignment of a specific entry
+    // This is for the x and the y direction
+    struct Alignment
+    {
+        // Possible options for the alignment on the x-axis
+        enum class Horizontal
+        {
+            Left,
+            Center,
+            Right
+        };
+
+        // Possible options for the alignment on the y-axis
+        enum class Vertical
+        {
+            Top,
+            Center,
+            Bottom
+        };
+
+        Horizontal x; // X-Axis
+        Vertical y; // Y-Axis
+    };
+
     /**
      * A class describing a gui object with possible children
     */
@@ -24,15 +48,16 @@ namespace LIBCactusOS
         List<Control*> childs;
 
         // Which control currently is focused?
-        Control* focusedChild;
+        Control* focusedChild = 0;
 
         // If we are a child of some control this will point to our parent.
-        Control* parent;
+        Control* parent = 0;
         
         // Public properties for this control
-        GUIProperty<uint32_t> backColor = GUIProperty<uint32_t>(this, 0xFF919191);
-        GUIProperty<uint32_t> borderColor = GUIProperty<uint32_t>(this, 0xFF333333);
-        GUIProperty<Font*>    font = GUIProperty<Font*>(this, 0);
+        GUIProperty<uint32_t>   backColor       = GUIProperty<uint32_t>(this, 0xFF919191);
+        GUIProperty<uint32_t>   borderColor     = GUIProperty<uint32_t>(this, 0xFF333333);
+        GUIProperty<Font*>      font            = GUIProperty<Font*>(this, 0);
+        GUIProperty<Alignment>  textAlignment   = GUIProperty<Alignment>(this, { Alignment::Horizontal::Left, Alignment::Vertical::Top });
 
         // Anchor of this control
         Direction anchor = Direction::None;

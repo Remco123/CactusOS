@@ -8,6 +8,9 @@ namespace LIBCactusOS
 {
     class Canvas
     {
+    private:
+        void DrawCircleHelper(int x, int y, int radius, uint32_t corner, uint32_t color);
+        void FillCircleHelper(int x, int y, int radius, uint32_t corner, int delta, uint32_t color);
     public:
         void* bufferPointer;
         int Width;
@@ -25,6 +28,8 @@ namespace LIBCactusOS
         void DrawLine(uint32_t color, int x1, int y1, int x2, int y2);
         void DrawDiagonalLine(uint32_t color, int dx, int dy, int x1, int y1);
         void DrawRect(uint32_t color, int x, int y, int width, int height);
+        void DrawRoundedRect(uint32_t color, int x, int y, int width, int height, int radius);
+        void DrawFillRoundedRect(uint32_t color, int x, int y, int width, int height, int radius);
         void DrawFillRect(uint32_t color, int x_start, int y_start, int width, int height);
         void DrawCircle(uint32_t color, int x_center, int y_center, int radius);
         void DrawFillCircle(uint32_t color, int x_center, int y_center, int radius);

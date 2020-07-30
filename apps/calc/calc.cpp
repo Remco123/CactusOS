@@ -67,7 +67,7 @@ int main()
     window1->AddChild(minButton);
 
     Button* calcButton = new Button("Calculate");
-    calcButton->width = 90;
+    calcButton->width = 80;
     calcButton->height = 30;
     calcButton->x = 5;
     calcButton->y = 190;
@@ -75,8 +75,9 @@ int main()
     window1->AddChild(calcButton);
 
     Button* newButton = new Button("New");
-    newButton->width = newButton->height = 30;
-    newButton->x = 105;
+    newButton->width = 45;
+    newButton->height = 30;
+    newButton->x = 90;
     newButton->y = 190;
     newButton->MouseClick += NewClickHandler;
     window1->AddChild(newButton);

@@ -1,6 +1,7 @@
 #include <gui/widgets/window.h>
 #include <gui/gui.h>
 #include <log.h>
+#include <gui/colors.h>
 
 using namespace LIBCactusOS;
 
@@ -28,7 +29,9 @@ Window::Window(int width, int height, int x, int y)
 
 void Window::CreateButtons()
 {
-    Button* b1 = new Button("+");
+    Button* b1 = new Button("*");
+    b1->backColor = 0xFFFCBA03;
+    b1->borderColor = Colors::Black;
     b1->width = b1->height = this->titleBarHeight - 10;
     b1->y = 5;
     b1->x = width - this->titleBarHeight + 5;
@@ -39,11 +42,11 @@ void Window::CreateButtons()
 void Window::DrawTo(Canvas* context, int x_abs, int y_abs)
 {
     context->DrawFillRect(this->backColor, x_abs, y_abs + titleBarHeight, this->width, this->height - titleBarHeight - 1);
-    context->DrawRect(this->backColor, x_abs, y_abs, this->width - 1, this->height - 1);
+    context->DrawRect(this->borderColor, x_abs, y_abs, this->width - 1, this->height - 1);
 
     //Draw title bar
     context->DrawFillRect(this->titleBarColor, x_abs + 1, y_abs + 1, this->width - 1, this->titleBarHeight);
-    context->DrawLine(this->backColor, x_abs + 1, y_abs + this->titleBarHeight, x_abs + this->width, y_abs + titleBarHeight);
+    //context->DrawLine(this->borderColor, x_abs + 1, y_abs + this->titleBarHeight, x_abs + this->width, y_abs + titleBarHeight);
 
     if(this->titleString)
         context->DrawString(this->font, this->titleString, x_abs + 3, y_abs + 6, 0xFF000000);

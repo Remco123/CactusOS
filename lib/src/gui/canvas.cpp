@@ -36,9 +36,9 @@ void Canvas::DrawHorizontalLine(uint32_t color, int dx, int x1, int y1)
     for (int i = 0; i < dx; i++)
         SetPixel(x1 + i, y1, color);
 }
-void Canvas::DrawVerticalLine(uint32_t color, int dx, int x1, int y1)
+void Canvas::DrawVerticalLine(uint32_t color, int dy, int x1, int y1)
 {
-    for(int i = 0; i < dx; i++)
+    for(int i = 0; i < dy; i++)
         SetPixel(x1, y1 + i, color);
 }
 void Canvas::DrawDiagonalLine(uint32_t color, int dx, int dy, int x1, int y1)
@@ -142,6 +142,32 @@ void Canvas::DrawRect(uint32_t color, int x, int y, int width, int height)
     /* Draw a line between C and D */
     DrawLine(color, xc, yc, xd, yd);
 }
+
+void Canvas::DrawRoundedRect(uint32_t color, int x, int y, int width, int height, int radius)
+{
+    // Draw the four lines
+    DrawHorizontalLine(color, width - 2 * radius, x + radius, y);               // Top
+    DrawHorizontalLine(color, width - 2 * radius, x + radius, y + height - 1);  // Bottom
+    DrawVerticalLine(color, height - 2 * radius, x, y + radius);                // Left
+    DrawVerticalLine(color, height - 2 * radius, x + width - 1, y + radius);    // Right
+ 
+    // Draw the four corners
+    DrawCircleHelper(x + radius, y + radius, radius, 1, color);
+    DrawCircleHelper(x + width - radius - 1, y + radius, radius, 2, color);
+    DrawCircleHelper(x + width - radius - 1, y + height - radius - 1, radius, 4, color);
+    DrawCircleHelper(x + radius, y + height - radius - 1, radius, 8, color);
+}
+
+void Canvas::DrawFillRoundedRect(uint32_t color, int x, int y, int width, int height, int radius)
+{
+    // Draw the body
+    DrawFillRect(color, x + radius, y, width - 2 * radius + 1, height);
+ 
+    // Draw the four corners
+    FillCircleHelper(x + width - radius - 1, y + radius, radius, 1, height - 2 * radius - 1, color);
+    FillCircleHelper(x + radius, y + radius, radius, 2, height - 2 * radius - 1, color);
+}
+
 void Canvas::DrawFillRect(uint32_t color, int x_start, int y_start, int width, int height)
 {
     for (int y = y_start; y < y_start + height; y++)
@@ -149,49 +175,42 @@ void Canvas::DrawFillRect(uint32_t color, int x_start, int y_start, int width, i
         DrawLine(color, x_start, y, x_start + width - 1, y);
     }
 }
-void Canvas::DrawCircle(uint32_t color, int x_center, int y_center, int radius)
+void Canvas::DrawCircle(uint32_t color, int x, int y, int radius)
 {
-    int x = radius;
-    int y = 0;
-    int e = 0;
-
-    while (x >= y)
-    {
-        SetPixel(x_center + x, y_center + y, color);
-        SetPixel(x_center + y, y_center + x, color);
-        SetPixel(x_center - y, y_center + x, color);
-        SetPixel(x_center - x, y_center + y, color);
-        SetPixel(x_center - x, y_center - y, color);
-        SetPixel(x_center - y, y_center - x, color);
-        SetPixel(x_center + y, y_center - x, color);
-        SetPixel(x_center + x, y_center - y, color);
-
-        y++;
-        if (e <= 0)
-        {
-            e += 2 * y + 1;
+    int f = 1 - radius;
+    int ddF_x = 1;
+    int ddF_y = -2 * radius;
+    int i = 0;
+    int j = radius;
+ 
+    SetPixel(x, y + radius, color);
+    SetPixel(x, y - radius, color);
+    SetPixel(x + radius, y, color);
+    SetPixel(x - radius, y, color);
+ 
+    while(i < j) {
+        if(f >= 0) {
+            j--;
+            ddF_y += 2;
+            f += ddF_y;
         }
-        if (e > 0)
-        {
-            x--;
-            e -= 2 * x + 1;
-        }
+        i++;
+        ddF_x += 2;
+        f += ddF_x;
+        SetPixel(x + i, y + j, color);
+        SetPixel(x - i, y + j, color);
+        SetPixel(x + i, y - j, color);
+        SetPixel(x - i, y - j, color);
+        SetPixel(x + j, y + i, color);
+        SetPixel(x - j, y + i, color);
+        SetPixel(x + j, y - i, color);
+        SetPixel(x - j, y - i, color);
     }
 }
-void Canvas::DrawFillCircle(uint32_t color, int x_center, int y_center, int radius)
+void Canvas::DrawFillCircle(uint32_t color, int x, int y, int radius)
 {
-    int r2 = radius * radius;
-    int area = r2 << 2;
-    int rr = radius << 1;
-
-    for (int i = 0; i < area; i++)
-    {
-    int tx = (i % rr) - radius;
-    int ty = (i / rr) - radius;
-
-    if (tx * tx + ty * ty <= r2)
-        SetPixel(x_center + tx, y_center + ty, color);
-    }
+    this->DrawVerticalLine(color, 2 * radius + 1, x, y - radius);
+    this->FillCircleHelper(x, y, radius, 3, 0, color);
 }
 void Canvas::DrawEllipse(uint32_t color, int x_center, int y_center, int x_radius, int y_radius)
 {
@@ -270,5 +289,69 @@ void Canvas::DrawString(Font* font, char* string, int x, int y, uint32_t color)
         }
 
         xOffset += width;
+    }
+}
+void Canvas::DrawCircleHelper(int x, int y, int radius, uint32_t corner, uint32_t color)
+{
+    int f = 1 - radius;
+    int ddF_x = 1;
+    int ddF_y = -2 * radius;
+    int i = 0;
+    int j = radius;
+ 
+    while (i < j) {
+        if (f >= 0) {
+            j--;
+            ddF_y += 2;
+            f += ddF_y;
+        }
+        i++;
+        ddF_x += 2;
+        f += ddF_x;
+        if (corner & 0x4) {
+            SetPixel(x + i, y + j, color);
+            SetPixel(x + j, y + i, color);
+        }
+        if (corner & 0x2) {
+            SetPixel(x + i, y - j, color);
+            SetPixel(x + j, y - i, color);
+        }
+        if (corner & 0x8) {
+            SetPixel(x - j, y + i, color);
+            SetPixel(x - i, y + j, color);
+        }
+        if (corner & 0x1) {
+            SetPixel(x - j, y - i, color);
+            SetPixel(x - i, y - j, color);
+        }
+    }
+}
+ 
+void Canvas::FillCircleHelper(int x, int y, int radius, uint32_t corner, int delta, uint32_t color)
+{
+    int f = 1 - radius;
+    int ddF_x = 1;
+    int ddF_y = -2 * radius;
+    int i = 0;
+    int j = radius;
+ 
+    while (i < j) {
+        if (f >= 0) {
+            j--;
+            ddF_y += 2;
+            f += ddF_y;
+        }
+        i++;
+        ddF_x += 2;
+        f += ddF_x;
+ 
+        if (corner & 0x1) {
+            DrawVerticalLine(color, 2 * j + 1 + delta, x + i, y - j);
+            DrawVerticalLine(color, 2 * i + 1 + delta, x + j, y - i);
+        }
+        if (corner & 0x2) {
+            DrawVerticalLine(color, 2 * j + 1 + delta, x - i, y - j);
+            DrawVerticalLine(color, 2 * i + 1 + delta, x - j, y - i);
+        }
     }
 }
