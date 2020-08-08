@@ -22,21 +22,21 @@ int main()
 
     Button* shutdownButton = new Button("Poweroff");
     shutdownButton->width = 150 - 2;
-    shutdownButton->height = 48;
+    shutdownButton->height = 47;
     shutdownButton->x = 1;
     shutdownButton->y = 2;
     shutdownButton->MouseClick += PoweroffButtonCallback;
 
     Button* rebootButton = new Button("Reboot");
     rebootButton->width = 150 - 2;
-    rebootButton->height = 48;
+    rebootButton->height = 47;
     rebootButton->x = 150 + 1;
     rebootButton->y = 2;
     rebootButton->MouseClick += RebootButtonCallback;
 
     Button* shutdownAndEjectButton = new Button("Eject CD+Shutdown");
     shutdownAndEjectButton->width = 300 - 2;
-    shutdownAndEjectButton->height = 50;
+    shutdownAndEjectButton->height = 49;
     shutdownAndEjectButton->y = 50;
     shutdownAndEjectButton->x = 1;
     shutdownAndEjectButton->MouseClick += PoweroffAndEjectButtonCallback;

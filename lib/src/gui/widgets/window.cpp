@@ -29,10 +29,10 @@ Window::Window(int width, int height, int x, int y)
 
 void Window::CreateButtons()
 {
-    Button* b1 = new Button("*");
+    Button* b1 = new Button("");
     b1->backColor = 0xFFF56642;
     b1->textColor = Colors::Black;
-    b1->borderColor = Colors::Black;
+    b1->borderColor = this->titleBarColor;
     b1->width = b1->height = this->titleBarHeight - 10;
     b1->y = 5;
     b1->x = width - this->titleBarHeight + 5;
