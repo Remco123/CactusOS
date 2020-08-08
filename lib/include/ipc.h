@@ -3,19 +3,21 @@
 
 namespace LIBCactusOS
 {
-    #define IPC_MAX_ARGS 5
-
-    #define IPC_TYPE_GUI 1
-    #define IPC_TYPE_GUI_EVENT 2
+    enum IPCMessageType : int
+    {
+        None = 0,
+        GUIRequest = 1,
+        GUIEvent = 2
+    };
 
     struct IPCMessage
     {
-        int source; //Who has sended this message?
-        int dest; //Who is it for
+        int source; // Who has sended this message?
+        int dest;   // Who is it for
         
-        int type; //What type of message is it?
+        int type; // What type of message is it?
 
-        //Arguments
+        // Arguments
         unsigned int arg1;
         unsigned int arg2;
         unsigned int arg3;
@@ -27,7 +29,7 @@ namespace LIBCactusOS
     /**
      * Send a message to a other process
     */
-    int IPCSend(int dest, int type, unsigned int arg1 = 0, unsigned int arg2 = 0, unsigned int arg3 = 0, unsigned int arg4 = 0, unsigned int arg5 = 0, unsigned int arg6 = 0);
+    int IPCSend(int dest, int type = IPCMessageType::None, unsigned int arg1 = 0, unsigned int arg2 = 0, unsigned int arg3 = 0, unsigned int arg4 = 0, unsigned int arg5 = 0, unsigned int arg6 = 0);
     /**
      * Send a message to a other process
     */

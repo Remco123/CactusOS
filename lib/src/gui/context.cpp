@@ -23,6 +23,9 @@ void Context::DrawGUI()
 
 void Context::DrawStringAligned(Canvas* target, Font* font, char* string, uint32_t color, Rectangle bounds, Alignment align, int xoff, int yoff)
 {
+    if(target == 0 || font == 0 || string == 0)
+        return;
+    
     Rectangle textBounds;
     font->BoundingBox(string, &textBounds.width, &textBounds.height);
 
@@ -69,7 +72,7 @@ void Context::MoveToPosition(int newX, int newY)
         this->Window->y = newY;
     }
 
-    IPCSend(GUI::compositorPID, IPC_TYPE_GUI, COMPOSITOR_CONTEXTMOVED, oldX, oldY, this->sharedContextInfo->width, this->sharedContextInfo->height);
+    IPCSend(GUI::compositorPID, IPCMessageType::GUIRequest, GUICommunction::CONTEXT_MOVED, oldX, oldY, this->sharedContextInfo->width, this->sharedContextInfo->height);
 }
 
 void Context::CloseContext()
@@ -79,8 +82,8 @@ void Context::CloseContext()
     if(this->canvas != 0)
         delete this->canvas;
 
-    IPCSend(GUI::compositorPID, IPC_TYPE_GUI, COMPOSITOR_CONTEXTCLOSE, this->sharedContextInfo->id);
-    if(ICPReceive(GUI::compositorPID, 0, IPC_TYPE_GUI).arg1 != 1)
+    IPCSend(GUI::compositorPID, IPCMessageType::GUIRequest, GUICommunction::REQUEST_CLOSE, this->sharedContextInfo->id);
+    if(ICPReceive(GUI::compositorPID, 0, IPCMessageType::GUIRequest).arg1 != 1)
         Log(Error, "Did not receive ack from compositor when removing context");
 }
 

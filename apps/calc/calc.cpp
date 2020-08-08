@@ -24,6 +24,7 @@ bool calculated = true;
 int main()
 {
     Print("Starting Calculator\n");
+    GUI::SetDefaultFont();
 
     Window* window1 = new Window(140, 260, GUI::Width/2 - 140/2, GUI::Width/2 - 260/2);
     window1->titleString = "Calculator";

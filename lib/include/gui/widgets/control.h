@@ -9,6 +9,7 @@
 #include <gui/contextinfo.h>
 #include <gui/property.h>
 #include <gui/fonts/font.h>
+#include <gui/colors.h>
 
 namespace LIBCactusOS
 {
@@ -36,6 +37,13 @@ namespace LIBCactusOS
         Vertical y; // Y-Axis
     };
 
+    // Possible style options for corners of controls
+    enum CornerStyle
+    {
+        Sharp,
+        Rounded
+    };
+
     /**
      * A class describing a gui object with possible children
     */
@@ -54,10 +62,13 @@ namespace LIBCactusOS
         Control* parent = 0;
         
         // Public properties for this control
-        GUIProperty<uint32_t>   backColor       = GUIProperty<uint32_t>(this, 0xFF919191);
-        GUIProperty<uint32_t>   borderColor     = GUIProperty<uint32_t>(this, 0xFF333333);
-        GUIProperty<Font*>      font            = GUIProperty<Font*>(this, 0);
-        GUIProperty<Alignment>  textAlignment   = GUIProperty<Alignment>(this, { Alignment::Horizontal::Left, Alignment::Vertical::Top });
+        GUIProperty<uint32_t>       backColor       = GUIProperty<uint32_t>(this, 0xFF919191);
+        GUIProperty<uint32_t>       borderColor     = GUIProperty<uint32_t>(this, 0xFF333333);
+        GUIProperty<Font*>          font            = GUIProperty<Font*>(this, 0);
+        GUIProperty<Alignment>      textAlignment   = GUIProperty<Alignment>(this, { Alignment::Horizontal::Left, Alignment::Vertical::Top });
+        GUIProperty<uint32_t>       textColor       = GUIProperty<uint32_t>(this, Colors::Black);
+        GUIProperty<CornerStyle>    cornerStyle     = GUIProperty<CornerStyle>(this, CornerStyle::Sharp);
+        GUIProperty<uint16_t>       cornerRadius    = GUIProperty<uint16_t>(this, 5);
 
         // Anchor of this control
         Direction anchor = Direction::None;

@@ -14,6 +14,8 @@ void PoweroffAndEjectButtonCallback(void* sender, MouseButtonArgs arg);
 
 int main()
 {
+    GUI::SetDefaultFont();
+    
     Window* mainWindow = new Window(300, 100 + 30, GUI::Width/2 - 150, GUI::Height/2 - 65);
     mainWindow->titleString = "Power Options";
     mainWindow->backColor = 0xFF150534;

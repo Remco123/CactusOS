@@ -216,7 +216,7 @@ void Compositor::ProcessEvents()
         if(info != 0) {
             // Check if the mouse has been held down or up
             bool mouseDown = changedButton == 0 ? mouseLeft : (changedButton == 1 ? mouseMiddle : (changedButton == 2 ? mouseRight : 0));
-            IPCSend(info->clientID, IPC_TYPE_GUI_EVENT, mouseDown ? EVENT_TYPE_MOUSEDOWN : EVENT_TYPE_MOUSEUP, this->curMouseX, this->curMouseY, changedButton);
+            IPCSend(info->clientID, IPCMessageType::GUIEvent, mouseDown ? GUIEvents::MouseDown : GUIEvents::MouseUp, this->curMouseX, this->curMouseY, changedButton);
 
             // If the mouse is held down on this context and it is not supposed to be in the background
             // Then we move the context to the front
@@ -235,10 +235,10 @@ void Compositor::ProcessEvents()
         ContextInfo* curMouseInfo = this->contextManager->FindTargetContext(this->curMouseX, this->curMouseY);
         
         if(prevMouseInfo != 0)
-            IPCSend(prevMouseInfo->clientID, IPC_TYPE_GUI_EVENT, EVENT_TYPE_MOUSEMOVE, this->prevMouseX, this->prevMouseY, this->curMouseX, this->curMouseY);
+            IPCSend(prevMouseInfo->clientID, IPCMessageType::GUIEvent, GUIEvents::MouseMove, this->prevMouseX, this->prevMouseY, this->curMouseX, this->curMouseY);
         
         if(curMouseInfo != 0 && curMouseInfo != prevMouseInfo)
-            IPCSend(curMouseInfo->clientID, IPC_TYPE_GUI_EVENT, EVENT_TYPE_MOUSEMOVE, this->prevMouseX, this->prevMouseY, this->curMouseX, this->curMouseY);
+            IPCSend(curMouseInfo->clientID, IPCMessageType::GUIEvent, GUIEvents::MouseMove, this->prevMouseX, this->prevMouseY, this->curMouseX, this->curMouseY);
     }
 
     // Update variables for next iteration
@@ -283,7 +283,7 @@ void Compositor::ProcessEvents()
             continue; // Use continue instead of break so that all keys will get processed and not remain in the buffer
         
         ContextInfo* sendTo = this->contextManager->contextList.GetAt(0); //Send key to the context currenly in focus
-        IPCSend(sendTo->clientID, IPC_TYPE_GUI_EVENT, EVENT_TYPE_KEYPRESS, (uint32_t)key, (uint32_t)packet.flags, (uint32_t)sendTo->id);
+        IPCSend(sendTo->clientID, IPCMessageType::GUIEvent, GUIEvents::Keypress, (uint32_t)key, (uint32_t)packet.flags, (uint32_t)sendTo->id);
     }
 }
 
@@ -296,7 +296,7 @@ void Compositor::ProcessRequests()
         IPCMessage message;
 
         // Receive message via IPC bus
-        message = ICPReceive(-1, &msgError, IPC_TYPE_GUI);
+        message = ICPReceive(-1, &msgError, IPCMessageType::GUIRequest);
 
         // Check if message is received properly
         if(msgError == SYSCALL_RET_ERROR) {
@@ -316,7 +316,7 @@ void Compositor::HandleClientRequest(IPCMessage msg)
     switch (msg.arg1)
     {
         // A process is requesting a new context to draw to
-        case COMPOSITOR_REQUESTCONTEXT:
+        case GUICommunction::REQUEST_CONTEXT:
         {
             // Gather parameters from message
             uint32_t width = msg.arg3;
@@ -338,7 +338,7 @@ void Compositor::HandleClientRequest(IPCMessage msg)
             // Virtual memory is managed in blocks of 4Kb so it must be page aligned
             if(Process::CreateSharedMemory(msg.source, contextAddress, memAddressClient, pageRoundUp(bytesRequired)) == false) {
                 Print("[Compositor] Error creating shared memory\n");
-                IPCSend(msg.source, IPC_TYPE_GUI, 0);
+                IPCSend(msg.source, IPCMessageType::GUIRequest, 0);
                 break;
             }
 
@@ -359,18 +359,18 @@ void Compositor::HandleClientRequest(IPCMessage msg)
             this->contextManager->contextList.push_front(info);
 
             // Send response to client
-            IPCSend(msg.source, IPC_TYPE_GUI, 1);
+            IPCSend(msg.source, IPCMessageType::GUIRequest, 1);
             break;
         }
         // A process is sending us a message that one of its contexts has moved
-        case COMPOSITOR_CONTEXTMOVED:
+        case GUICommunction::CONTEXT_MOVED:
         {
             Rectangle dirtyRect(msg.arg4, msg.arg5, msg.arg2, msg.arg3);
             this->dirtyRectList.push_back(dirtyRect);
             break;
         }
         // A process requested a close of context
-        case COMPOSITOR_CONTEXTCLOSE:
+        case GUICommunction::REQUEST_CLOSE:
         {
             int contextID = msg.arg2;
             for(int i = 0; i < this->contextManager->contextList.size(); i++)
@@ -396,7 +396,7 @@ void Compositor::HandleClientRequest(IPCMessage msg)
                         Print("[Compositor] Error! Could not remove shared memory\n");
                 }
             }
-            IPCSend(msg.source, IPC_TYPE_GUI, 1);
+            IPCSend(msg.source, IPCMessageType::GUIRequest, 1);
             break;
         }
 

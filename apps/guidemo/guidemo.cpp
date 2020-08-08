@@ -40,7 +40,6 @@ void TextAlignDemo(Window* win, char* str)
     win->AddChild(but3);
 
 
-
     Button* but4 = new Button(str);
     but4->width = 100; but4->height = 40;
     but4->x = 10; but4->y = 60;
@@ -94,6 +93,8 @@ void DrawShapesDemo(Canvas* canv)
 
 int main()
 {
+    GUI::SetDefaultFont();
+    
     Window* mainWindow = new Window(600, 400, 300, 300);
     mainWindow->titleString = "CactusOS GUI Demo";
     
@@ -102,6 +103,7 @@ int main()
     while (GUI::HasItems()) {
         GUI::DrawGUI();
         DrawShapesDemo(mainWindow->contextBase->canvas);
+        mainWindow->textColor = Time::Ticks() * 100;
         GUI::ProcessEvents();
     }
     

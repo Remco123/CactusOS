@@ -21,13 +21,17 @@ Font* GUI::defaultFont = 0;
 
 void GUI::Initialize()
 {
+    GUI::defaultFont = 0;
     GUI::contextList = new List<Context*>();
     ContextHeap::Init();
 
     if(DoSyscall(SYSCALL_GET_SCREEN_PROPERTIES, (uint32_t)&GUI::Width, (uint32_t)&GUI::Height) == 0)
         Log(Error, "Error while requesting screen info");
+}
 
-    GUI::defaultFont = FontParser::FromFile("B:\\fonts\\Ubuntu14.cff");
+void GUI::SetDefaultFont(const char* filename)
+{
+    GUI::defaultFont = FontParser::FromFile((char*)filename);
 }
 
 void GUI::CleanUp()
@@ -57,11 +61,11 @@ void GUI::ProcessEvents()
     +--------+--------------------+
     */
 
-    IPCMessage guiEvent = ICPReceive(compositorPID, 0, IPC_TYPE_GUI_EVENT);
+    IPCMessage guiEvent = ICPReceive(compositorPID, 0, IPCMessageType::GUIEvent);
     //Print("GUI: Got event from compositor type=%d\n", guiEvent.arg1);
     
     int guiEventType = guiEvent.arg1;
-    if(guiEventType == EVENT_TYPE_MOUSEDOWN)
+    if(guiEventType == GUIEvents::MouseDown)
     {
         Context* targetControl = FindTargetContext((int)guiEvent.arg2, (int)guiEvent.arg3);
         if(targetControl == 0)
@@ -70,7 +74,7 @@ void GUI::ProcessEvents()
         //Print("Sending Mousedown to context %x\n", (uint32_t)targetControl);
         targetControl->OnMouseDown(guiEvent.arg2 - targetControl->sharedContextInfo->x, guiEvent.arg3 - targetControl->sharedContextInfo->y, guiEvent.arg4);
     }
-    else if(guiEventType == EVENT_TYPE_MOUSEUP)
+    else if(guiEventType == GUIEvents::MouseUp)
     {
         Context* targetControl = FindTargetContext((int)guiEvent.arg2, (int)guiEvent.arg3);
         if(targetControl == 0)
@@ -79,7 +83,7 @@ void GUI::ProcessEvents()
         //Print("Sending Mouseup to context %x\n", (uint32_t)targetControl);
         targetControl->OnMouseUp(guiEvent.arg2 - targetControl->sharedContextInfo->x, guiEvent.arg3 - targetControl->sharedContextInfo->y, guiEvent.arg4);
     }
-    else if(guiEventType == EVENT_TYPE_MOUSEMOVE)
+    else if(guiEventType == GUIEvents::MouseMove)
     {
         int prevX = guiEvent.arg2;
         int prevY = guiEvent.arg3;
@@ -95,7 +99,7 @@ void GUI::ProcessEvents()
         if(newTargetControl != 0 && newTargetControl != prevTargetControl)
             newTargetControl->OnMouseMove(prevX - newTargetControl->sharedContextInfo->x, prevY - newTargetControl->sharedContextInfo->y, curX - newTargetControl->sharedContextInfo->x, curY - newTargetControl->sharedContextInfo->y);
     }
-    else if(guiEventType == EVENT_TYPE_KEYPRESS)
+    else if(guiEventType == GUIEvents::Keypress)
     {
         // Find context that is currently focused and where the key should be send to.
         // TODO: Find a faster way for this, should be possible.
@@ -116,6 +120,7 @@ void GUI::ProcessEvents()
             }
         }
     }
+    /*
     else if(guiEventType == EVENT_TYPE_RESIZE)
     {
         for(int i = 0; i < contextList->size(); i++) {
@@ -129,6 +134,7 @@ void GUI::ProcessEvents()
             }
         }
     }
+    */
 }
 
 void GUI::DrawGUI()
@@ -158,17 +164,17 @@ Context* GUI::FindTargetContext(int mouseX, int mouseY)
 Context* GUI::RequestContext(int width, int height, int x, int y)
 {
     uint32_t contextAddress = ContextHeap::AllocateArea(pageRoundUp(GUI::Width * GUI::Height * 4 + sizeof(ContextInfo)) / 0x1000);
-    if(IPCSend(compositorPID, IPC_TYPE_GUI, COMPOSITOR_REQUESTCONTEXT, contextAddress, width, height, x, y) != SYSCALL_RET_SUCCES)
+    if(IPCSend(compositorPID, IPCMessageType::GUIRequest, GUICommunction::REQUEST_CONTEXT, contextAddress, width, height, x, y) != SYSCALL_RET_SUCCES)
         return 0;
 
-    //Wait for response from server
-    IPCMessage response = ICPReceive(compositorPID, 0, IPC_TYPE_GUI);
+    // Wait for response from server
+    IPCMessage response = ICPReceive(compositorPID, 0, IPCMessageType::GUIRequest);
     if(response.arg1 == 1) {
-        //Create context struct
+        // Create context struct
         Context* ret = new Context(contextAddress + sizeof(ContextInfo), width, height);
         ret->sharedContextInfo = (ContextInfo*)contextAddress;
 
-        //Add it to our list
+        // Add it to our list
         contextList->push_front(ret);
 
         return ret;

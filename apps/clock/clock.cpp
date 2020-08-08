@@ -11,6 +11,7 @@
 
 int main()
 {
+    GUI::SetDefaultFont();
     Context* mainScreen = GUI::RequestContext(160, 160, GUI::Width-160, 0);
     if(mainScreen == 0)
         return -1;

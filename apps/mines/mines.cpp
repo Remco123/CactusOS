@@ -42,7 +42,7 @@ public:
 
     void Flagged(bool flag)
     {
-        this->backColor = flag ? 0xFF88FFAA : 0xFF898989;
+        this->backColor = flag ? 0xFF88FFAA : 0xFF190A39;
     }
 };
 
@@ -203,14 +203,14 @@ void BlockClickHandler(void* sender, MouseButtonArgs args)
     else
         block->Flagged(block->flaged);
     
-    if(firstClick && args.button == MOUSE_LEFT) {
+    if(firstClick && args.button == MouseButtons::Left) {
         HandleFirstClick(block);
         firstClick = false;
         Open(block);
     }
     else if(firstClick == false)
     {
-        if(args.button == MOUSE_LEFT)
+        if(args.button == MouseButtons::Left)
         {
             Open(block);
 
@@ -222,13 +222,15 @@ void BlockClickHandler(void* sender, MouseButtonArgs args)
             if(openBlocks == ((fieldWidth*fieldHeight) - numOfMines))
                 gameStatus = Won;
         }
-        else if(args.button == MOUSE_RIGHT && block->open == false)
+        else if(args.button == MouseButtons::Right && block->open == false)
             ToggleFlag(block);
     }
 }
 
 int main()
 {
+    GUI::SetDefaultFont();
+
     Print("Starting New Mines Game...\n");
     BlockList = new Block*[fieldWidth*fieldHeight];
     firstClick = true;

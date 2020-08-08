@@ -30,7 +30,8 @@ Window::Window(int width, int height, int x, int y)
 void Window::CreateButtons()
 {
     Button* b1 = new Button("*");
-    b1->backColor = 0xFFFCBA03;
+    b1->backColor = 0xFFF56642;
+    b1->textColor = Colors::Black;
     b1->borderColor = Colors::Black;
     b1->width = b1->height = this->titleBarHeight - 10;
     b1->y = 5;
@@ -49,7 +50,7 @@ void Window::DrawTo(Canvas* context, int x_abs, int y_abs)
     //context->DrawLine(this->borderColor, x_abs + 1, y_abs + this->titleBarHeight, x_abs + this->width, y_abs + titleBarHeight);
 
     if(this->titleString)
-        context->DrawString(this->font, this->titleString, x_abs + 3, y_abs + 6, 0xFF000000);
+        context->DrawString(this->font, this->titleString, x_abs + 3, y_abs + 6, this->textColor);
 
     for(Control* c : this->childs)
         c->DrawTo(context, x_abs + c->x, y_abs + c->y + titleBarHeight);

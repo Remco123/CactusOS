@@ -240,7 +240,7 @@ void Canvas::DrawEllipse(uint32_t color, int x_center, int y_center, int x_radiu
 
 void Canvas::DrawString(Font* font, char* string, int x, int y, uint32_t color)
 {
-    if(font == 0 || string == 0 || color == 0x00000000)
+    if(font == 0 || string == 0 || color == Colors::Transparent)
         return;
     
     int xOffset = x;
