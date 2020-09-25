@@ -29,9 +29,9 @@ Window::Window(int width, int height, int x, int y)
 
 void Window::CreateButtons()
 {
-    Button* b1 = new Button("");
+    Button* b1 = new Button("X");
     b1->backColor = 0xFFF56642;
-    b1->textColor = Colors::Black;
+    b1->textColor = Colors::White;
     b1->borderColor = this->titleBarColor;
     b1->width = b1->height = this->titleBarHeight - 10;
     b1->y = 5;

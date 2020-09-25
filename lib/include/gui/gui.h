@@ -65,7 +65,7 @@ namespace LIBCactusOS
         /**
          * Initialize the text rendering by loading the default font file from disk
         */
-        static void SetDefaultFont(const char* filename = "B:\\fonts\\Ubuntu14.cff");
+        static void SetDefaultFont(const char* filename = "B:\\fonts\\Ubuntu15.cff");
         
         /**
          * Remove all gui elements created by this process
