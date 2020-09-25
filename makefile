@@ -24,7 +24,7 @@
 #######################
 
 INCLUDEDIRS := kernel/include
-QEMUOPTIONS := -boot d -device VGA,edid=on -trace events=../qemuTrace.txt
+QEMUOPTIONS := -boot d -device VGA,edid=on,xres=1024,yres=768 -trace events=../qemuTrace.txt
 
 G++PARAMS := -m32 -g -I $(INCLUDEDIRS) -fno-use-cxa-atexit -nostdlib -fno-builtin -fno-exceptions -fno-rtti -fno-leading-underscore -Wno-write-strings -fpermissive -Wall
 GCCPARAMS := -m32 -g -I $(INCLUDEDIRS) -nostdlib -fno-builtin -Wall
@@ -133,6 +133,11 @@ grub-core:
 fastApps:
 	rm -rf isofiles/apps/*.bin
 	cd lib/ && $(MAKE) clean && $(MAKE)
+	cd apps/ && $(MAKE) clean && $(MAKE)
+	rm CactusOS.iso
+
+turboApps:
+	rm -rf isofiles/apps/*.bin
 	cd apps/ && $(MAKE) clean && $(MAKE)
 	rm CactusOS.iso
 

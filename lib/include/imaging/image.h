@@ -32,7 +32,7 @@ namespace LIBCactusOS
             ~Image();
 
             // Generate a canvas for this image and return it
-            // It will only get generated once for each image and will get destroid automaticly
+            // It will only get generated once for each image and will get destroyed automatically
             Canvas* GetCanvas();
 
             // Get width of image

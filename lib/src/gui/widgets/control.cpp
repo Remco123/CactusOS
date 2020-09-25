@@ -1,4 +1,5 @@
 #include <gui/widgets/control.h>
+#include <gui/gui.h>
 #include <log.h>
 
 using namespace LIBCactusOS;
@@ -10,6 +11,7 @@ Control::Control(int w, int h, int x, int y)
     this->focusedChild = 0;
     this->parent = 0;
     this->anchor = Top | Left;
+    this->font = GUI::defaultFont;
 }
 
 Control::~Control()
@@ -22,8 +24,14 @@ Control::~Control()
 
 void Control::DrawTo(Canvas* context, int x_abs, int y_abs)
 {
-    context->DrawFillRect(this->backColor, x_abs, y_abs, this->width, this->height - 1);
-    context->DrawRect(this->borderColor, x_abs, y_abs, this->width - 1, this->height - 1);
+    if(this->cornerStyle == CornerStyle::Rounded) {
+        context->DrawFillRoundedRect(this->backColor, x_abs, y_abs, this->width, this->height, this->cornerRadius);
+        context->DrawRoundedRect(this->borderColor, x_abs, y_abs, this->width, this->height, this->cornerRadius);
+    }
+    else if(this->cornerStyle == CornerStyle::Sharp) {
+        context->DrawFillRect(this->backColor, x_abs, y_abs, this->width, this->height);
+        context->DrawRect(this->borderColor, x_abs, y_abs, this->width, this->height);
+    }
 
     for(Control* c : this->childs)
         c->DrawTo(context, x_abs + c->x, y_abs + c->y);

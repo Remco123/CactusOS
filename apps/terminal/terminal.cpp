@@ -2,7 +2,6 @@
 #include <gui/gui.h>
 #include <gui/widgets/window.h>
 #include <gui/widgets/label.h>
-#include <gui/widgets/inputbox.h>
 #include <gui/directgui.h>
 #include <string.h>
 #include <log.h>
@@ -17,6 +16,8 @@ TerminalControl* termWindow = 0;
 int ExecCommand(char* cmd);
 int main()
 {
+    GUI::SetDefaultFont();
+    
     Window* mainWindow = new Window(600, 400, GUI::Width/2 - 300, GUI::Width/2 - 200);
     mainWindow->titleString = "CactusOS Terminal";
 

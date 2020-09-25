@@ -34,11 +34,6 @@ namespace LIBCactusOS
          * Create a new context by a framebuffer and dimensions
         */
         Context(uint32_t framebufferAddr, int width = 0, int height = 0);
-        
-        /**
-         * Destructor, warning: does also delete canvas
-        */
-        ~Context();
 
         /**
          * Draw all the gui components to this context
@@ -54,6 +49,11 @@ namespace LIBCactusOS
          * Remove this context from the screen and free all the used memory 
         */
         void CloseContext();
+
+        /**
+         * Function to draw a peice of text aligned within a boundry
+        */
+        static void DrawStringAligned(Canvas* target, Font* font, char* string, uint32_t color, Rectangle bounds, Alignment align, int xoff = 0, int yoff = 0);
 
     /*///////////////
     // Events called by GUI class

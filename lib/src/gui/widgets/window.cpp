@@ -1,6 +1,7 @@
 #include <gui/widgets/window.h>
 #include <gui/gui.h>
 #include <log.h>
+#include <gui/colors.h>
 
 using namespace LIBCactusOS;
 
@@ -28,7 +29,10 @@ Window::Window(int width, int height, int x, int y)
 
 void Window::CreateButtons()
 {
-    Button* b1 = new Button("+");
+    Button* b1 = new Button("X");
+    b1->backColor = 0xFFF56642;
+    b1->textColor = Colors::White;
+    b1->borderColor = this->titleBarColor;
     b1->width = b1->height = this->titleBarHeight - 10;
     b1->y = 5;
     b1->x = width - this->titleBarHeight + 5;
@@ -43,10 +47,10 @@ void Window::DrawTo(Canvas* context, int x_abs, int y_abs)
 
     //Draw title bar
     context->DrawFillRect(this->titleBarColor, x_abs + 1, y_abs + 1, this->width - 1, this->titleBarHeight);
-    context->DrawLine(this->borderColor, x_abs + 1, y_abs + this->titleBarHeight, x_abs + this->width, y_abs + titleBarHeight);
+    //context->DrawLine(this->borderColor, x_abs + 1, y_abs + this->titleBarHeight, x_abs + this->width, y_abs + titleBarHeight);
 
     if(this->titleString)
-        context->DrawString(this->titleString, x_abs + 3, y_abs + 10, 0xFF000000);
+        context->DrawString(this->font, this->titleString, x_abs + 3, y_abs + 6, this->textColor);
 
     for(Control* c : this->childs)
         c->DrawTo(context, x_abs + c->x, y_abs + c->y + titleBarHeight);
@@ -66,7 +70,7 @@ void Window::OnMouseDown(int x_abs, int y_abs, uint8_t button)
             titleBarMouseDown = true;
             mouseDownX = x_abs;
             mouseDownY = y_abs;
-            this->titleBarColor = 0xFF1A7868;
+            this->titleBarColor = 0xFF1773BF;
         }
     }
 
@@ -81,7 +85,7 @@ void Window::OnMouseUp(int x_abs, int y_abs, uint8_t button)
         
         else {
             titleBarMouseDown = false;
-            this->titleBarColor = 0xFF4CB272;
+            this->titleBarColor = 0xFF1E9AFF;
         }
     }
 

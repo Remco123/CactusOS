@@ -7,26 +7,68 @@
 #include <gui/canvas.h>
 #include <gui/events.h>
 #include <gui/contextinfo.h>
+#include <gui/property.h>
+#include <gui/fonts/font.h>
+#include <gui/colors.h>
 
 namespace LIBCactusOS
 {
+    // Defines the alignment of a specific entry
+    // This is for the x and the y direction
+    struct Alignment
+    {
+        // Possible options for the alignment on the x-axis
+        enum class Horizontal
+        {
+            Left,
+            Center,
+            Right
+        };
+
+        // Possible options for the alignment on the y-axis
+        enum class Vertical
+        {
+            Top,
+            Center,
+            Bottom
+        };
+
+        Horizontal x; // X-Axis
+        Vertical y; // Y-Axis
+    };
+
+    // Possible style options for corners of controls
+    enum CornerStyle
+    {
+        Sharp,
+        Rounded
+    };
+
     /**
      * A class describing a gui object with possible children
     */
     class Control : public EventObject, public Rectangle
     {
+    protected:
+        bool needsRefresh = false;
     public:
         // All controls that are present on this control.
         List<Control*> childs;
 
         // Which control currently is focused?
-        Control* focusedChild;
+        Control* focusedChild = 0;
 
         // If we are a child of some control this will point to our parent.
-        Control* parent;
-
-        uint32_t backColor = 0xFFCACDD1;
-        uint32_t borderColor = 0xFF333333;
+        Control* parent = 0;
+        
+        // Public properties for this control
+        GUIProperty<uint32_t>       backColor       = GUIProperty<uint32_t>(this, 0xFF919191);
+        GUIProperty<uint32_t>       borderColor     = GUIProperty<uint32_t>(this, 0xFF333333);
+        GUIProperty<Font*>          font            = GUIProperty<Font*>(this, 0);
+        GUIProperty<Alignment>      textAlignment   = GUIProperty<Alignment>(this, { Alignment::Horizontal::Left, Alignment::Vertical::Top });
+        GUIProperty<uint32_t>       textColor       = GUIProperty<uint32_t>(this, Colors::Black);
+        GUIProperty<CornerStyle>    cornerStyle     = GUIProperty<CornerStyle>(this, CornerStyle::Sharp);
+        GUIProperty<uint16_t>       cornerRadius    = GUIProperty<uint16_t>(this, 5);
 
         // Anchor of this control
         Direction anchor = Direction::None;

@@ -202,11 +202,19 @@ void MouseDriver::ProcessPacket()
     System::systemInfo->MouseRightButton = packet->RightBTN;
     System::systemInfo->MouseZ = (this->MouseID == 3 ? packet->ZMovement : 0);
 
-    unsigned int newX = (System::systemInfo->MouseX + realX);
+    int newX = (System::systemInfo->MouseX + realX);
     if(newX >= 0 && newX < System::gfxDevice->width)
         System::systemInfo->MouseX = newX;
+    else if(newX < 0)
+        System::systemInfo->MouseX = 0;
+    else if(newX >= System::gfxDevice->width)
+        System::systemInfo->MouseX = System::gfxDevice->width - 1;
     
-    unsigned int newY = (System::systemInfo->MouseY - realY);
+    int newY = (System::systemInfo->MouseY - realY);
     if(newY >= 0 && newY < System::gfxDevice->height)
         System::systemInfo->MouseY = newY;
+    else if(newY < 0)
+        System::systemInfo->MouseY = 0;
+    else if(newY >= System::gfxDevice->height)
+        System::systemInfo->MouseY = System::gfxDevice->height - 1;
 }

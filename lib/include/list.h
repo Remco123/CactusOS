@@ -170,6 +170,8 @@ void List<T>::Clear()
         current = next;
     }
     size_ = 0; //Reset the size to 0
+    head_ = 0;
+    tail_ = 0;
 }
 
 template <typename T>

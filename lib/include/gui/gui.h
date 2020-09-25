@@ -6,30 +6,40 @@
 
 namespace LIBCactusOS
 {
-    //Event definitions
-    #define EVENT_TYPE_MOUSEDOWN 0
-    #define EVENT_TYPE_MOUSEUP 1
-    #define EVENT_TYPE_MOUSEMOVE 2
-    #define EVENT_TYPE_KEYPRESS 3
-    #define EVENT_TYPE_RESIZE 4
+    // Event definitions
+    enum GUIEvents
+    {
+        MouseDown,
+        MouseUp,
+        MouseMove,
+        Keypress,
+    };
     
-    //Communication to the compositor definitions
-    #define COMPOSITOR_REQUESTCONTEXT 1
-    #define COMPOSITOR_CONTEXTMOVED 2
-    #define COMPOSITOR_CONTEXTCLOSE 3
+    // Communication to the compositor definitions
+    enum GUICommunction
+    {
+        REQUEST_CONTEXT,
+        REQUEST_CLOSE,
+        CONTEXT_MOVED
+    };
 
-    #define MOUSE_LEFT 0
-    #define MOUSE_MIDDLE 1
-    #define MOUSE_RIGHT 2
+    // Buttons present on a regular mouse
+    enum MouseButtons
+    {
+        Left,
+        Middle,
+        Right
+    };
 
     class GUI
     {
     private:
         static Context* FindTargetContext(int m_x, int m_y);
     public:
-        //Current Width of video mode
+        // Current Width of video mode
         static int Width;
-        //Current Height of video mode
+
+        // Current Height of video mode
         static int Height;
     public:
         /**
@@ -41,11 +51,22 @@ namespace LIBCactusOS
          * The list of all contexts in this application
         */
         static List<Context*>* contextList;
+        
+        /**
+         * System default font
+        */
+        static Font* defaultFont;
 
         /**
          * Initalize the gui for this process
         */
         static void Initialize();
+
+        /**
+         * Initialize the text rendering by loading the default font file from disk
+        */
+        static void SetDefaultFont(const char* filename = "B:\\fonts\\Ubuntu15.cff");
+        
         /**
          * Remove all gui elements created by this process
         */

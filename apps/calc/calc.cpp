@@ -24,11 +24,13 @@ bool calculated = true;
 int main()
 {
     Print("Starting Calculator\n");
+    GUI::SetDefaultFont();
 
     Window* window1 = new Window(140, 260, GUI::Width/2 - 140/2, GUI::Width/2 - 260/2);
     window1->titleString = "Calculator";
 
     Control* labelBox = new Control(130, 30, 5, 5);
+    labelBox->backColor = 0xFFBBBBBB;
     window1->AddChild(labelBox);
 
     char* label = new char[2];
@@ -66,7 +68,7 @@ int main()
     window1->AddChild(minButton);
 
     Button* calcButton = new Button("Calculate");
-    calcButton->width = 90;
+    calcButton->width = 80;
     calcButton->height = 30;
     calcButton->x = 5;
     calcButton->y = 190;
@@ -74,8 +76,9 @@ int main()
     window1->AddChild(calcButton);
 
     Button* newButton = new Button("New");
-    newButton->width = newButton->height = 30;
-    newButton->x = 105;
+    newButton->width = 45;
+    newButton->height = 30;
+    newButton->x = 90;
     newButton->y = 190;
     newButton->MouseClick += NewClickHandler;
     window1->AddChild(newButton);

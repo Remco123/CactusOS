@@ -1,9 +1,10 @@
 LIBINCLUDE := ../lib/include
 LIBDIR := ../lib
 LIBFILE := ../lib/libcactusos.a
+DEBUG := -g
 
-G++PARAMS := -m32 -g -I $(LIBINCLUDE) -O3 -msse2 -fno-use-cxa-atexit -nostdlib -fno-builtin -fno-exceptions -fno-rtti -fno-leading-underscore -Wno-write-strings -fpermissive -Wall
-GCCPARAMS := -m32 -g -I $(LIBINCLUDE) -O3 -msse2 -nostdlib -fno-builtin -Wall -fleading-underscore
+G++PARAMS := -m32 $(DEBUG) -I $(LIBINCLUDE) -O3 -msse2 -fno-use-cxa-atexit -nostdlib -fno-builtin -fno-exceptions -fno-rtti -fno-leading-underscore -Wno-write-strings -fpermissive -Wall -Wunknown-pragmas
+GCCPARAMS := -m32 $(DEBUG) -I $(LIBINCLUDE) -O3 -msse2 -nostdlib -fno-builtin -Wall -fleading-underscore
 LDPARAMS := -m elf_i386
 
 APPS := $(shell find * -type d)

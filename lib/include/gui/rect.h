@@ -66,6 +66,11 @@ namespace LIBCactusOS
          * Insert this rectangle into the clip list, splitting all existing rectangles against it to prevent overlap 
         */
         void PushToClipList(List<Rectangle>* targetList);
+
+        bool operator==(const Rectangle& right)
+        {
+            return (this->width == right.width && this->height == right.height && this->x == right.x && this->y == right.y);
+        }
     };
 }
 

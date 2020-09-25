@@ -4,30 +4,27 @@
 #include <gui/widgets/control.h>
 #include <gui/widgets/button.h>
 #include <gui/context.h>
+#include <gui/property.h>
 
 namespace LIBCactusOS
 {
     class Window : public Control
     {
     private:
-        uint32_t titleBarColor = 0xFF4CB272;
-        uint16_t titleBarHeight = 30;
+        GUIProperty<uint32_t> titleBarColor = GUIProperty<uint32_t>(this, 0xFF1E9AFF);
+        GUIProperty<uint16_t> titleBarHeight = GUIProperty<uint16_t>(this, 30);
 
-        /**
-         * Is the mouse down on the title bar?
-        */
+        // Is the mouse down on the title bar?
         bool titleBarMouseDown = false;
 
-        //Remember where the mouse was held down for a smooth window drag
+        // Remember where the mouse was held down for a smooth window drag
         int mouseDownX = 0;
         int mouseDownY = 0;
 
         // Window Control Buttons
         Button* closeButton = 0;
 
-        /*
-         * Create the close button for this window
-        */
+        // Create the close button for this window
         void CreateButtons();
     public:
         char* titleString = 0;
