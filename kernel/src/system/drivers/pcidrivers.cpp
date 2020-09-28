@@ -73,6 +73,7 @@ void PCIDrivers::AssignDriversFromPCI(PCIController* pci, DriverManager* driverM
                                 goto FoundDriver;
                                 break;
                             }
+                            /*
                             case 0x10: //OHCI
                             {
                                 driverManager->AddDriver(new OHCIController(pciDevice));
@@ -90,6 +91,12 @@ void PCIDrivers::AssignDriversFromPCI(PCIController* pci, DriverManager* driverM
                                 BootConsole::WriteLine("xHCI Controller found, no support for this controller (yet)");
                                 //driverManager->AddDriver(new XHCIController(pciDevice));
                                 //goto FoundDriver;
+                                break;
+                            }
+                            */
+                            default:
+                            {
+                                Log(Warning, "Unknown USB controller found of type %b", pciDevice->programmingInterfaceID);
                                 break;
                             }
                         }   

@@ -15,6 +15,51 @@ UHCIController::UHCIController(PCIDevice* device)
     this->numRootPorts = 0;
 }
 
+void UHCIController::InsertQueue(uhci_queue_head_t* queue, uint32_t queuePhys, const int queueIndex)
+{
+    uhci_queue_head_t* curQueue = &this->queueStackList[queueIndex];
+
+    if((curQueue->vert_ptr & QUEUE_HEAD_T) == QUEUE_HEAD_T) { // First time a queue is added to this chain
+        curQueue->vert_ptr = queuePhys | QUEUE_HEAD_Q;
+        curQueue->nextQueuePointer = queue;
+
+        queue->horz_ptr = QUEUE_HEAD_T; // Should be set already, just to be sure
+        queue->parentQueuePointer = curQueue;
+    }
+    else // Queue can be added horizontaly to existing entries
+    {
+        while(curQueue->nextQueuePointer != 0)
+            curQueue = (uhci_queue_head_t*)curQueue->nextQueuePointer;
+
+        queue->horz_ptr = curQueue->horz_ptr;
+        curQueue->horz_ptr = queuePhys | QUEUE_HEAD_Q;
+
+        queue->nextQueuePointer = curQueue->nextQueuePointer;
+
+        curQueue->nextQueuePointer = queue;
+        queue->parentQueuePointer = curQueue;
+    }
+}
+
+void UHCIController::RemoveQueue(uhci_queue_head_t* queue, const int queueIndex)
+{
+    uhci_queue_head_t* parent = (uhci_queue_head_t*)queue->parentQueuePointer;
+    uhci_queue_head_t* child = (uhci_queue_head_t*)queue->nextQueuePointer;
+
+    if(parent == &this->queueStackList[queueIndex]) { // Queue is Below first Queue head of skeleton 
+        parent->vert_ptr = queue->horz_ptr;
+        if(child)
+            child->parentQueuePointer = parent;
+    }
+    else { // Queue is not the first entry in the chain
+        parent->horz_ptr = queue->horz_ptr;
+        parent->nextQueuePointer = child;
+
+        if(child)
+            child->parentQueuePointer = parent;
+    }
+}
+
 bool UHCIController::Initialize()
 {
     // We do not want memory mapped controllers
@@ -29,17 +74,17 @@ bool UHCIController::Initialize()
         System::pit->Sleep(11);
         outportw(base + UHCI_COMMAND, 0x0000);
     }
-    /*
+
     //Check if command register has default value
     if(inportw(base+UHCI_COMMAND) != 0x0000) return false;
     //Check if status register has default value
     if(inportw(base+UHCI_STATUS) != 0x0020) return false;
-    */
+
     //Clear status register
     outportw(base+UHCI_STATUS, 0x00FF);
 
     //Is the SOF register its default value?
-    //if(inportw(base+UHCI_SOF_MOD) != 0x40) return false;
+    if(inportw(base+UHCI_SOF_MOD) != 0x40) return false;
 
     //Set bit 1 in command register, should be reset automaticly
     outportw(base+UHCI_COMMAND, 0x0002);
@@ -70,9 +115,36 @@ void UHCIController::Setup()
     this->frameList = (uint32_t*)KernelHeap::allignedMalloc(1024 * sizeof(uint32_t), 4096, &this->frameListPhys);
     MemoryOperations::memset(this->frameList, 0x0, 1024 * sizeof(uint32_t));
 
-    //And set all entries to point to the main queue
-    for(int i = 0; i < 1024; i++)
-        this->frameList[i] = QUEUE_HEAD_T;
+    //Allocate queue stack list
+    uint32_t queuePhysStart = 0;
+    this->queueStackList = (uhci_queue_head_t*)KernelHeap::allignedMalloc(sizeof(uhci_queue_head_t) * NUM_UHCI_QUEUES, 16, &queuePhysStart);
+    MemoryOperations::memset(this->queueStackList, 0x0, sizeof(uhci_queue_head_t) * NUM_UHCI_QUEUES);
+
+    //Set all queue entries to invalid
+    for(int i = 0; i < NUM_UHCI_QUEUES; i++) {
+        this->queueStackList[i].horz_ptr = QUEUE_HEAD_T;
+        this->queueStackList[i].vert_ptr = QUEUE_HEAD_T;
+    }
+
+    //Setup queue entries to point to each other
+    //128 -> 64 -> 32 -> 16 -> 8 -> 4 -> 2 -> 1 -> QControl -> QBulk
+    for(int i = 0; i < NUM_UHCI_QUEUES - 1; i++) {
+        this->queueStackList[i].horz_ptr = (queuePhysStart + (i + 1) * sizeof(uhci_queue_head_t)) | QUEUE_HEAD_Q;
+    }
+
+    //Setup UHCI stack frame
+    for(int i = 0; i < 1024; i++) {
+        int queueStart = QUEUE_Q1;
+        if((i + 1) % 2 == 0) queueStart--;
+        if((i + 1) % 4 == 0) queueStart--;
+        if((i + 1) % 8 == 0) queueStart--;
+        if((i + 1) % 16 == 0) queueStart--;
+        if((i + 1) % 32 == 0) queueStart--;
+        if((i + 1) % 64 == 0) queueStart--;
+        if((i + 1) % 128 == 0) queueStart--;
+
+        this->frameList[i] = (queuePhysStart + queueStart * sizeof(uhci_queue_head_t)) | QUEUE_HEAD_Q;
+    }
 
     //Set stack frame address
     outportl(pciDevice->portBase + UHCI_FRAME_BASE, frameListPhys);
@@ -238,9 +310,10 @@ bool UHCIController::ControlIn(void* targ, const bool lsDevice, const int devAdd
 
     //Allocate queue head
     uint32_t queuePhys;
-    u_queueHead_t* queue = (u_queueHead_t*)KernelHeap::allignedMalloc(sizeof(u_queueHead_t), 16, &queuePhys);
-    queue->vert_ptr = tdPhys;
+    uhci_queue_head_t* queue = (uhci_queue_head_t*)KernelHeap::allignedMalloc(sizeof(uhci_queue_head_t), 16, &queuePhys);
+    MemoryOperations::memset(queue, 0, sizeof(uhci_queue_head_t));
     queue->horz_ptr = QUEUE_HEAD_T;
+    queue->vert_ptr = tdPhys;
 
     //Setup Transfer Descriptor
     td[0].link_ptr = ((tdPhys & ~0xF) + sizeof(u_transferDescriptor_t));
@@ -271,9 +344,9 @@ bool UHCIController::ControlIn(void* targ, const bool lsDevice, const int devAdd
     
     // make sure status:int bit is clear
     outportw(pciDevice->portBase + UHCI_STATUS, 1);
-    
-    //Instert queue into list
-    frameList[0] = queuePhys | QUEUE_HEAD_Q;
+
+    //Instert queue into QControl list
+    InsertQueue(queue, queuePhys, QUEUE_QControl);
     
     // wait for the IOC to happen
     int timeout = 10000; // 10 seconds
@@ -283,14 +356,14 @@ bool UHCIController::ControlIn(void* targ, const bool lsDevice, const int devAdd
     }
     if (timeout == 0) {
         Log(Warning, "UHCI timed out.");
-        frameList[0] = QUEUE_HEAD_T;
+        RemoveQueue(queue, QUEUE_QControl);
         return false;
     }
 
-    Log(Info, "Frame: %d - USB transaction completed", inportw(pciDevice->portBase + UHCI_FRAME_NUM) & 0b1111111111);
+    //Log(Info, "Frame: %d - USB transaction completed", inportw(pciDevice->portBase + UHCI_FRAME_NUM) & 0b1111111111);
     outportw(pciDevice->portBase + UHCI_STATUS, 1);  // acknowledge the interrupt
     
-    frameList[0] = QUEUE_HEAD_T;
+    RemoveQueue(queue, QUEUE_QControl);
     
     bool ret = true;
     // check the TD's for error
@@ -337,9 +410,10 @@ bool UHCIController::ControlOut(const bool lsDevice, const int devAddress, const
 
     //Allocate queue head
     uint32_t queuePhys;
-    u_queueHead_t* queue = (u_queueHead_t*)KernelHeap::allignedMalloc(sizeof(u_queueHead_t), 16, &queuePhys);
-    queue->vert_ptr = tdPhys;
+    uhci_queue_head_t* queue = (uhci_queue_head_t*)KernelHeap::allignedMalloc(sizeof(uhci_queue_head_t), 16, &queuePhys);
+    MemoryOperations::memset(queue, 0, sizeof(uhci_queue_head_t));
     queue->horz_ptr = QUEUE_HEAD_T;
+    queue->vert_ptr = tdPhys;
     
     //Create set address td
     td[0].link_ptr = ((tdPhys & ~0xF) + sizeof(u_transferDescriptor_t));
@@ -356,8 +430,8 @@ bool UHCIController::ControlOut(const bool lsDevice, const int devAddress, const
     //Make sure status:int bit is clear
     outportw(pciDevice->portBase + UHCI_STATUS, 1);
    
-    //Mark the first stack frame pointer
-    frameList[0] = queuePhys | QUEUE_HEAD_Q;
+    //Instert queue into QControl list
+    InsertQueue(queue, queuePhys, QUEUE_QControl);
     
     //Wait for the IOC to happen
     int timeout = 10000; // 10 seconds
@@ -367,12 +441,12 @@ bool UHCIController::ControlOut(const bool lsDevice, const int devAddress, const
     }
     if (timeout == 0) {
         Log(Warning, "UHCI timed out.");
-        frameList[0] = QUEUE_HEAD_T; // mark the first stack frame pointer invalid
+        RemoveQueue(queue, QUEUE_QControl);
         return false;
     }
     outportw(pciDevice->portBase + UHCI_STATUS, 1);  // acknowledge the interrupt
     
-    frameList[0] = QUEUE_HEAD_T; // mark the first stack frame pointer invalid
+    RemoveQueue(queue, QUEUE_QControl);
    
     //Check the TD's for error
     bool ret = true;
@@ -403,9 +477,10 @@ bool UHCIController::BulkOut(const bool lsDevice, const int devAddress, const in
 
     //Allocate queue head
     uint32_t queuePhys;
-    u_queueHead_t* queue = (u_queueHead_t*)KernelHeap::allignedMalloc(sizeof(u_queueHead_t), 16, &queuePhys);
-    queue->vert_ptr = tdPhys;
+    uhci_queue_head_t* queue = (uhci_queue_head_t*)KernelHeap::allignedMalloc(sizeof(uhci_queue_head_t), 16, &queuePhys);
+    MemoryOperations::memset(queue, 0, sizeof(uhci_queue_head_t));
     queue->horz_ptr = QUEUE_HEAD_T;
+    queue->vert_ptr = tdPhys;
     
     int i = 0;
     int sz = len;
@@ -424,8 +499,8 @@ bool UHCIController::BulkOut(const bool lsDevice, const int devAddress, const in
     // make sure status:int bit is clear
     outportw(pciDevice->portBase + UHCI_STATUS, 1);
     
-    //Instert queue into list
-    frameList[0] = queuePhys | QUEUE_HEAD_Q;
+    //Instert queue into Bulk list
+    InsertQueue(queue, queuePhys, QUEUE_QBulk);
     
     // wait for the IOC to happen
     int timeout = 10000; // 10 seconds
@@ -435,14 +510,14 @@ bool UHCIController::BulkOut(const bool lsDevice, const int devAddress, const in
     }
     if (timeout == 0) {
         Log(Warning, "UHCI timed out.");
-        frameList[0] = QUEUE_HEAD_T;
+        RemoveQueue(queue, QUEUE_QBulk);
         return false;
     }
 
     Log(Info, "Frame: %d - USB transaction completed", inportw(pciDevice->portBase + UHCI_FRAME_NUM) & 0b1111111111);
     outportw(pciDevice->portBase + UHCI_STATUS, 1);  // acknowledge the interrupt
     
-    frameList[0] = QUEUE_HEAD_T;
+    RemoveQueue(queue, QUEUE_QBulk);
     
     bool ret = true;
     // check the TD's for error
@@ -474,9 +549,10 @@ bool UHCIController::BulkIn(const bool lsDevice, const int devAddress, const int
 
     //Allocate queue head
     uint32_t queuePhys;
-    u_queueHead_t* queue = (u_queueHead_t*)KernelHeap::allignedMalloc(sizeof(u_queueHead_t), 16, &queuePhys);
-    queue->vert_ptr = tdPhys;
+    uhci_queue_head_t* queue = (uhci_queue_head_t*)KernelHeap::allignedMalloc(sizeof(uhci_queue_head_t), 16, &queuePhys);
+    MemoryOperations::memset(queue, 0, sizeof(uhci_queue_head_t));
     queue->horz_ptr = QUEUE_HEAD_T;
+    queue->vert_ptr = tdPhys;
     
     int i = 0;
     int sz = len;
@@ -496,7 +572,7 @@ bool UHCIController::BulkIn(const bool lsDevice, const int devAddress, const int
     outportw(pciDevice->portBase + UHCI_STATUS, 1);
     
     //Instert queue into list
-    frameList[0] = queuePhys | QUEUE_HEAD_Q;
+    InsertQueue(queue, queuePhys, QUEUE_QBulk);
     
     // wait for the IOC to happen
     int timeout = 10000; // 10 seconds
@@ -506,14 +582,14 @@ bool UHCIController::BulkIn(const bool lsDevice, const int devAddress, const int
     }
     if (timeout == 0) {
         Log(Warning, "UHCI timed out.");
-        frameList[0] = QUEUE_HEAD_T;
+        RemoveQueue(queue, QUEUE_QBulk);
         return false;
     }
 
     Log(Info, "Frame: %d - USB transaction completed", inportw(pciDevice->portBase + UHCI_FRAME_NUM) & 0b1111111111);
     outportw(pciDevice->portBase + UHCI_STATUS, 1);  // acknowledge the interrupt
     
-    frameList[0] = QUEUE_HEAD_T;
+    RemoveQueue(queue, QUEUE_QBulk);
     
     bool ret = true;
     // check the TD's for error

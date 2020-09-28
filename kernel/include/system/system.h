@@ -2,7 +2,7 @@
 #define __CACTUSOS__SYSTEM__SYSTEM_H
 
 #define BOCHS_GFX_HACK 0 //Enable or disable the bochs hack
-#define ENABLE_USB 0
+#define ENABLE_USB 1
 
 #include <system/bootconsole.h>
 #include <system/components/systemcomponent.h>

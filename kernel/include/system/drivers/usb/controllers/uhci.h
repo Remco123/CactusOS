@@ -42,11 +42,15 @@ namespace CactusOS
             #define QUEUE_HEAD_Q         0x00000002
             #define QUEUE_HEAD_T         0x00000001
 
-            typedef struct UHCI_QUEUE_HEAD {
-                uint32_t   horz_ptr;
-                uint32_t   vert_ptr;
-                uint32_t   resv0[2];   // to make it 16 bytes in length
-            } u_queueHead_t;
+            typedef struct uhci_queue_head uhci_queue_head_t;
+
+            struct uhci_queue_head {
+                uint32_t horz_ptr;
+                uint32_t vert_ptr;
+
+                uhci_queue_head_t* nextQueuePointer;
+                uhci_queue_head_t* parentQueuePointer;
+            } __attribute__((packed));
 
 
             #define TD_PTR_MASK  0xFFFFFFF0
@@ -78,7 +82,22 @@ namespace CactusOS
             #define TD_INFO_ADDR_SHFT     8
             #define TD_INFO_PID           0x000000FF
 
-            typedef struct UHCI_TRANSFER_DESCRIPTOR { 
+
+            #define QUEUE_Q128      0
+            #define QUEUE_Q64       1
+            #define QUEUE_Q32       2
+            #define QUEUE_Q16       3
+            #define QUEUE_Q8        4
+            #define QUEUE_Q4        5
+            #define QUEUE_Q2        6
+            #define QUEUE_Q1        7
+            #define QUEUE_QControl  8
+            #define QUEUE_QBulk     9
+
+            #define NUM_UHCI_QUEUES 10
+
+            
+            typedef struct __attribute__((packed)) { 
                 uint32_t   link_ptr;
                 uint32_t   reply;
                 uint32_t   info;
@@ -90,6 +109,8 @@ namespace CactusOS
             {
             private:
                 PCIDevice* pciDevice;
+
+                uhci_queue_head_t* queueStackList = 0;
 
                 uint32_t* frameList = 0;
                 uint32_t frameListPhys = 0;
@@ -103,6 +124,9 @@ namespace CactusOS
                 //Check if this port is present on the controller
                 bool PortPresent(uint8_t port);
                 void SetupNewDevice(uint8_t port);
+
+                void InsertQueue(uhci_queue_head_t* queue, uint32_t queuePhys, const int queueIndex);
+                void RemoveQueue(uhci_queue_head_t* queue, const int queueIndex);
 
                 bool ControlOut(const bool lsDevice, const int devAddress, const int packetSize, const int len = 0, const uint8_t requestType = 0, const uint8_t request = 0, const uint16_t valueHigh = 0, const uint16_t valueLow = 0, const uint16_t index = 0);
                 bool ControlIn(void* targ, const bool lsDevice, const int devAddress, const int packetSize, const int len = 0, const uint8_t requestType = 0, const uint8_t request = 0, const uint16_t valueHigh = 0, const uint16_t valueLow = 0, const uint16_t index = 0);
