@@ -662,46 +662,7 @@ uint32_t UHCIController::HandleInterrupt(uint32_t esp)
 /////////
 // USB Controller Functions
 /////////
-bool UHCIController::GetDeviceDescriptor(struct DEVICE_DESC* dev_desc, USBDevice* device)
-{
-    return ControlIn(dev_desc, device->uhciProperties.lowSpeedDevice, device->devAddress, device->uhciProperties.maxPacketSize, sizeof(struct DEVICE_DESC), STDRD_GET_REQUEST, DeviceRequest::GET_DESCRIPTOR, DescriptorTypes::DEVICE);
-}
-bool UHCIController::GetStringDescriptor(struct STRING_DESC* stringDesc, USBDevice* device, uint16_t index, uint16_t lang)
-{
-    if(!ControlIn(stringDesc, device->uhciProperties.lowSpeedDevice, device->devAddress, device->uhciProperties.maxPacketSize, 2, STDRD_GET_REQUEST, DeviceRequest::GET_DESCRIPTOR, DescriptorTypes::STRING, index, lang))
-        return false;
-        
-    int totalSize = stringDesc->len;
-    return ControlIn(stringDesc, device->uhciProperties.lowSpeedDevice, device->devAddress, device->uhciProperties.maxPacketSize, totalSize, STDRD_GET_REQUEST, DeviceRequest::GET_DESCRIPTOR, DescriptorTypes::STRING, index, lang);
-}
-uint8_t* UHCIController::GetConfigDescriptor(USBDevice* device)
-{
-    struct CONFIG_DESC confDesc;
-    MemoryOperations::memset(&confDesc, 0, sizeof(struct CONFIG_DESC));
 
-    if(!ControlIn(&confDesc, device->uhciProperties.lowSpeedDevice, device->devAddress, device->uhciProperties.maxPacketSize, sizeof(struct CONFIG_DESC), STDRD_GET_REQUEST, GET_DESCRIPTOR, CONFIG))
-        return 0;
-    
-    int totalSize = confDesc.tot_len;
-    uint8_t* buffer = new uint8_t[totalSize];
-    MemoryOperations::memset(buffer, 0, totalSize);
-
-    if(!ControlIn(buffer, device->uhciProperties.lowSpeedDevice, device->devAddress, device->uhciProperties.maxPacketSize, totalSize, STDRD_GET_REQUEST, GET_DESCRIPTOR, CONFIG))
-        return 0;
-    
-    return buffer;
-}
-bool UHCIController::SetConfiguration(USBDevice* device, uint8_t config)
-{
-    return ControlOut(device->uhciProperties.lowSpeedDevice, device->devAddress, device->uhciProperties.maxPacketSize, 0, STDRD_SET_REQUEST, SET_CONFIGURATION, 0, config);
-}
-int UHCIController::GetMaxLuns(USBDevice* device)
-{
-    uint8_t ret;
-    if(ControlIn(&ret, device->uhciProperties.lowSpeedDevice, device->devAddress, device->uhciProperties.maxPacketSize, 1, DEV_TO_HOST | REQ_TYPE_CLASS | RECPT_INTERFACE, GET_MAX_LUNS))
-        return ret;
-    return 0;
-}
 bool UHCIController::BulkIn(USBDevice* device, void* retBuffer, int len, int endP)
 {
     return BulkIn(device->uhciProperties.lowSpeedDevice, device->devAddress, device->endpoints[endP-1]->max_packet_size, endP, retBuffer, len);
@@ -709,4 +670,13 @@ bool UHCIController::BulkIn(USBDevice* device, void* retBuffer, int len, int end
 bool UHCIController::BulkOut(USBDevice* device, void* sendBuffer, int len, int endP)
 {
     return BulkOut(device->uhciProperties.lowSpeedDevice, device->devAddress, device->endpoints[endP-1]->max_packet_size, endP, sendBuffer, len);
+}
+
+bool UHCIController::ControlIn(USBDevice* device, void* target, const int len, const uint8_t requestType, const uint8_t request, const uint16_t valueHigh, const uint16_t valueLow, const uint16_t index)
+{
+    return ControlIn(target, device->uhciProperties.lowSpeedDevice, device->devAddress, device->uhciProperties.maxPacketSize, len, requestType, request, valueHigh, valueLow, index);
+}
+bool UHCIController::ControlOut(USBDevice* device, void* target, const int len, const uint8_t requestType, const uint8_t request, const uint16_t valueHigh, const uint16_t valueLow, const uint16_t index)
+{
+    return ControlOut(device->uhciProperties.lowSpeedDevice, device->devAddress, device->uhciProperties.maxPacketSize, len, requestType, request, valueHigh, valueLow, index);
 }

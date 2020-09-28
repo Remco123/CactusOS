@@ -1,3 +1,4 @@
+/*
 #include <system/drivers/usb/controllers/ohci.h>
 #include <system/system.h>
 #include <system/drivers/usb/usbdefs.h>
@@ -420,7 +421,7 @@ bool OHCIController::BulkOut(const bool lsDevice, const int devAddress, const in
     int i = 0; int p = 0; int toggle = 1;
     int cnt = len;
     while (cnt > 0) {
-        td[i].flags = (14<<28) | (0 << 26) | ((2 | (toggle & 1)) << 24) | (7<<21) | (0 << 19) /*Dir from ED*/;
+        td[i].flags = (14<<28) | (0 << 26) | ((2 | (toggle & 1)) << 24) | (7<<21) | (0 << 19);
         td[i].curBufPtr = bufPhys + p;
         td[i].nextTd = ((i > 0) ? td[i-1].nextTd : tdPhys) + sizeof(o_transferDescriptor_t);
         td[i].bufEnd = td[i].curBufPtr + ((cnt > packetSize) ? (packetSize - 1) : (cnt - 1));
@@ -485,7 +486,7 @@ bool OHCIController::BulkIn(const bool lsDevice, const int devAddress, const int
     int i = 0; int p = 0; int t = 1;
     int cnt = len;
     while (cnt > 0) {
-        td[i].flags = (14<<28) | (0 << 26) | ((2 | (t & 1)) << 24) | (7<<21) | (0 << 19) /*Dir from ED*/  | (1<<18) /*Buffer Rounding*/;
+        td[i].flags = (14<<28) | (0 << 26) | ((2 | (t & 1)) << 24) | (7<<21) | (0 << 19) | (1<<18);
         td[i].curBufPtr = returnBufPhys + p;
         td[i].nextTd = ((i > 0) ? td[i-1].nextTd : tdPhys) + sizeof(o_transferDescriptor_t);
         td[i].bufEnd = td[i].curBufPtr + ((cnt > packetSize) ? (packetSize - 1) : (cnt - 1));
@@ -640,3 +641,4 @@ bool OHCIController::BulkOut(USBDevice* device, void* sendBuffer, int len, int e
 {
     return BulkOut(device->ohciProperties.ls_device, device->devAddress, device->endpoints[endP-1]->max_packet_size, endP, sendBuffer, len);
 }
+*/

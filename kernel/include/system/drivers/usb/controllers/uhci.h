@@ -123,6 +123,7 @@ namespace CactusOS
 
                 //Check if this port is present on the controller
                 bool PortPresent(uint8_t port);
+                bool ResetPort(uint8_t port);
                 void SetupNewDevice(uint8_t port);
 
                 void InsertQueue(uhci_queue_head_t* queue, uint32_t queuePhys, const int queueIndex);
@@ -140,25 +141,18 @@ namespace CactusOS
                 // USB Controller Common Functions
                 //////////
                 
-                //Function that will get called on a periodic interval in which the controller can perform specific kinds of things.
+                // Function that will get called on a periodic interval in which the controller can perform specific kinds of things.
                 void ControllerChecksThread() override;
-                //Reset port of this controller, returns true when succesfull
-                bool ResetPort(uint8_t port) override;
-                //Receive descriptor from device, returns true when succesfull
-                bool GetDeviceDescriptor(struct DEVICE_DESC* dev_desc, USBDevice* device) override;
-                //Receive descriptor from device, returns true when succesfull
-                bool GetStringDescriptor(struct STRING_DESC* stringDesc, USBDevice* device, uint16_t index, uint16_t lang = 0) override;
-                //Get String descriptor of specific device
-                //Returns buffer with Configuration header and additional data            
-                uint8_t* GetConfigDescriptor(USBDevice* device) override;
-                //Set configuration for device
-                bool SetConfiguration(USBDevice* device, uint8_t config) override;
-                //Get maximum of Logical unit numbers, Only for Mass Storage Devices!
-                int GetMaxLuns(USBDevice* device) override;
-                //Perform a bulk in operation
+
+                // Perform a bulk in operation
                 bool BulkIn(USBDevice* device, void* retBuffer, int len, int endP) override;
-                //Perform a bulk out operation
+                // Perform a bulk out operation
                 bool BulkOut(USBDevice* device, void* sendBuffer, int len, int endP) override;
+
+                // Perform a control in operation
+                bool ControlIn(USBDevice* device, void* target = 0, const int len = 0, const uint8_t requestType = 0, const uint8_t request = 0, const uint16_t valueHigh = 0, const uint16_t valueLow = 0, const uint16_t index = 0) override;
+                // Perform a control out operation
+                bool ControlOut(USBDevice* device, void* target = 0, const int len = 0, const uint8_t requestType = 0, const uint8_t request = 0, const uint16_t valueHigh = 0, const uint16_t valueLow = 0, const uint16_t index = 0) override;
             };
         }
     }

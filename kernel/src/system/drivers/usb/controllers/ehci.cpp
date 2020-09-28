@@ -1,3 +1,4 @@
+/*
 #include <system/drivers/usb/controllers/ehci.h>
 #include <system/drivers/usb/usbdefs.h>
 #include <system/system.h>
@@ -47,7 +48,7 @@ bool EHCIController::Initialize()
         if (--timeout == 0)
             return false;
     }
-    /*
+    
     if((readMemReg(this->regBase + EHC_CAPS_HCCParams) & (1<<2)) && (ReadOpReg(EHC_OPS_USBCommand) != 0x0080B00))
         return false;
     if(!(readMemReg(this->regBase + EHC_CAPS_HCCParams) & (1<<2)) && (ReadOpReg(EHC_OPS_USBCommand) != 0x0080000))
@@ -64,7 +65,7 @@ bool EHCIController::Initialize()
         return false;
     if(ReadOpReg(EHC_OPS_ConfigFlag) != 0)
         return false;
-    */
+    
     
     //Valid Controller if we get here.
 
@@ -284,10 +285,9 @@ bool EHCIController::ResetPort(uint8_t port)
     }
     return false;
 }
-/* This routine waits for the value read at (base, reg) and'ed by mask to equal result.
- * It returns true if this happens before the alloted time expires
- * returns false if this does not happen
- */
+//This routine waits for the value read at (base, reg) and'ed by mask to equal result.
+//It returns true if this happens before the alloted time expires
+//returns false if this does not happen
 bool EHCIController::ehciHandshake(const uint32_t reg, const uint32_t mask, const uint32_t result, unsigned ms) {
     do {
         if ((ReadOpReg(reg) & mask) == result)
@@ -302,12 +302,12 @@ bool EHCIController::SetupNewDevice(const int port) {
   
     struct DEVICE_DESC dev_desc;
     
-    /*
-    * Since most high-speed devices will only work with a max packet size of 64,
-    *  we don't request the first 8 bytes, then set the address, and request
-    *  the all 18 bytes like the uhci/ohci controllers.  However, I have included
-    *  the code below just to show how it could be done.
-    */
+    //
+    // Since most high-speed devices will only work with a max packet size of 64,
+    // we don't request the first 8 bytes, then set the address, and request
+    // the all 18 bytes like the uhci/ohci controllers.  However, I have included
+    // the code below just to show how it could be done.
+    //
     
     uint8_t max_packet = 64;
     
@@ -357,19 +357,19 @@ bool EHCIController::EnableAsycnList(const bool enable) {
     return false;
 }
 
-/* Release BIOS ownership of controller
- * On Entry:
- *      pci: pointer to the pci config space we read in
- *   params: the dword value of the capability register
- * On Return:
- *   true if ownership released
- *
- * Set bit 24 to indicate to the BIOS to release ownership
- * The BIOS should clear bit 16 indicating that it has successfully done so
- * Ownership is released when bit 24 is set *and* bit 16 is clear.
- * This will wait EHC_LEGACY_TIMEOUT ms for the BIOS to release ownership.
- *   (It is unknown the exact time limit that the BIOS has to release ownership.)
- */
+// Release BIOS ownership of controller
+// On Entry:
+//      pci: pointer to the pci config space we read in
+//   params: the dword value of the capability register
+// On Return:
+//   true if ownership released
+// 
+// Set bit 24 to indicate to the BIOS to release ownership
+// The BIOS should clear bit 16 indicating that it has successfully done so
+// Ownership is released when bit 24 is set *and* bit 16 is clear.
+// This will wait EHC_LEGACY_TIMEOUT ms for the BIOS to release ownership.
+//   (It is unknown the exact time limit that the BIOS has to release ownership.)
+// 
 bool EHCIController::StopLegacy(const uint32_t params) {
     const uint8_t eecp = (uint8_t) ((params & 0x0000FF00) >> 8);
     
@@ -753,3 +753,4 @@ bool EHCIController::BulkOut(USBDevice* device, void* sendBuffer, int len, int e
     
     return (ret == 1);
 }
+*/
