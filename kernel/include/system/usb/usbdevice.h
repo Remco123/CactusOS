@@ -47,6 +47,10 @@ namespace CactusOS
 
             //List of all endpoints of device
             List<struct ENDPOINT_DESC*> endpoints;
+
+            //Pointer to HID descriptor found in interface
+            //Only valid for mouse or keyboard
+            uint8_t* hidDescriptor = 0;
         public:
             //Create new USBDevice, only called by controllers
             USBDevice();

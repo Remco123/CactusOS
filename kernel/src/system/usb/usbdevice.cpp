@@ -4,6 +4,7 @@
 #include <system/drivers/usb/usbdriver.h>
 
 #include <system/drivers/usb/mass_storage.h>
+#include <system/drivers/usb/usbmouse.h>
 
 using namespace CactusOS;
 using namespace CactusOS::common;
@@ -168,6 +169,19 @@ bool USBDevice::AssignDriver()
                 MemoryOperations::memcpy(endP, c, sizeof(struct ENDPOINT_DESC));
                 this->endpoints.push_back(endP);
             }
+            else if (type == HID) // HID descriptor
+            {
+                struct IF_HID_DESC* c = (struct IF_HID_DESC*)startByte;
+                Log(Info, "USBDevice HID Desc: Release = %w CountryCode = %d NumDescriptors = %d", c->release, c->countryCode, c->numDescriptors);
+
+                this->hidDescriptor = new uint8_t[c->len];
+                MemoryOperations::memcpy(this->hidDescriptor, c, c->len);
+            }
+            else if (length == 0) // Unvallid entry
+            {
+                Log(Warning, "Found descriptor entry of size 0, assuming remaining data is invalid");
+                break;
+            }
             else
                 Log(Warning, "Unknown part of ConfigDescriptor: length: %d type: %d", length, type);
 
@@ -196,6 +210,9 @@ bool USBDevice::AssignDriver()
     ////////////
     if(this->classID == 0x08 && this->subclassID == 0x06 && this->protocol == 0x50) {
         this->driver = new USBMassStorageDriver(this);
+    }
+    else if(this->classID == 0x03 && this->protocol == 0x02) {
+        this->driver = new USBMouse(this);
     }
 
     ////////////

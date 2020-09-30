@@ -32,7 +32,7 @@ namespace CactusOS
             common::uint8_t  prod_indx;    // index value
             common::uint8_t  serial_indx;  // index value
             common::uint8_t  configs;      // Number of configurations
-        };
+        } __attribute__((packed));
 
         struct REQUEST_PACKET {
             common::uint8_t  request_type;
@@ -40,7 +40,7 @@ namespace CactusOS
             common::uint16_t value;
             common::uint16_t index;
             common::uint16_t length;
-        };
+        } __attribute__((packed));
 
         // config descriptor
         struct CONFIG_DESC {
@@ -52,13 +52,13 @@ namespace CactusOS
             common::uint8_t  config_indx;
             common::uint8_t  bm_attrbs;
             common::uint8_t  max_power;
-        };
+        } __attribute__((packed));
 
         struct STRING_DESC {
             common::uint8_t  len;         // length of whole desc in bytes
             common::uint8_t  type;
             common::uint16_t string[127];
-        };
+        } __attribute__((packed));
 
         struct INTERFACE_ASSOSIATION_DESC {
             common::uint8_t  len;             // len of this desc (8)
@@ -69,7 +69,7 @@ namespace CactusOS
             common::uint8_t  subclass;        //
             common::uint8_t  protocol;        //
             common::uint8_t  function_indx;   // string id of this association
-        };
+        } __attribute__((packed));
 
         // interface descriptor
         struct INTERFACE_DESC {
@@ -82,7 +82,7 @@ namespace CactusOS
             common::uint8_t  interface_sub_class;
             common::uint8_t  interface_protocol;
             common::uint8_t  interface_indx;
-        };
+        } __attribute__((packed));
 
         // endpoint descriptor
         struct ENDPOINT_DESC {
@@ -92,7 +92,16 @@ namespace CactusOS
             common::uint8_t  bm_attrbs;        // 
             common::uint16_t max_packet_size;  // 10:0 = max_size, 12:11 = max transactions, 15:13 = reserved
             common::uint8_t  interval;
-        };
+        } __attribute__((packed));
+
+        struct IF_HID_DESC {
+            common::uint8_t  len;
+            common::uint8_t  type;
+            common::uint16_t release;
+            common::uint8_t  countryCode;
+            common::uint8_t  numDescriptors;
+            // Types and lenght folowing below 
+        } __attribute__((packed));
 
         // setup packets
         #define DEV_TO_HOST     0x80

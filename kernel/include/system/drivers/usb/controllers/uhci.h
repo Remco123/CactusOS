@@ -129,11 +129,20 @@ namespace CactusOS
                 void InsertQueue(uhci_queue_head_t* queue, uint32_t queuePhys, const int queueIndex);
                 void RemoveQueue(uhci_queue_head_t* queue, const int queueIndex);
 
+                // Check if a set of transfer descriptors is done executing
+                // Returns:
+                // 0 -> No Errors and Done
+                // 1 -> Generic Error
+                // 2 -> NAK
+                int CheckTransferDone(u_transferDescriptor_t* td, int numTDs);
+
                 bool ControlOut(const bool lsDevice, const int devAddress, const int packetSize, const int len = 0, const uint8_t requestType = 0, const uint8_t request = 0, const uint16_t valueHigh = 0, const uint16_t valueLow = 0, const uint16_t index = 0);
                 bool ControlIn(void* targ, const bool lsDevice, const int devAddress, const int packetSize, const int len = 0, const uint8_t requestType = 0, const uint8_t request = 0, const uint16_t valueHigh = 0, const uint16_t valueLow = 0, const uint16_t index = 0);
                 
                 bool BulkOut(const bool lsDevice, const int devAddress, const int packetSize, const int endP, void* bufPtr, const int len = 0);
                 bool BulkIn(const bool lsDevice, const int devAddress, const int packetSize, const int endP, void* bufPtr, const int len = 0);
+
+                bool InterruptIn(const bool lsDevice, const int devAddress, const int packetSize, const int endP, void* bufPtr, const int len = 0);
 
                 uint32_t HandleInterrupt(uint32_t esp);
 
@@ -153,6 +162,9 @@ namespace CactusOS
                 bool ControlIn(USBDevice* device, void* target = 0, const int len = 0, const uint8_t requestType = 0, const uint8_t request = 0, const uint16_t valueHigh = 0, const uint16_t valueLow = 0, const uint16_t index = 0) override;
                 // Perform a control out operation
                 bool ControlOut(USBDevice* device, void* target = 0, const int len = 0, const uint8_t requestType = 0, const uint8_t request = 0, const uint16_t valueHigh = 0, const uint16_t valueLow = 0, const uint16_t index = 0) override;
+            
+                // Perform a Interrupt in operation
+                bool InterruptIn(USBDevice* device, void* retBuffer, int len, int endP) override;
             };
         }
     }

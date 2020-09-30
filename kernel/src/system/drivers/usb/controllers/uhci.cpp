@@ -285,6 +285,25 @@ bool UHCIController::ResetPort(uint8_t port)
     return ret;
 }
 
+int UHCIController::CheckTransferDone(u_transferDescriptor_t* td, int numTDs)
+{
+    bool noError = true;
+
+    // Check if any TD has a error or a NAK is received. If not then the transfer is complete.
+    for (int i = 0; i < numTDs; i++) {
+        uint8_t status = td[i].reply & (0xFF << 16);
+        if (status != 0) { // Check if any error bit is set or not done
+            if(status & (1<<3) == (1<<3))
+                return 2; // (Only) NAK bit set
+            
+            noError = false;
+            break;
+        }
+    }
+
+    return noError ? 0 : 1;
+}
+
 // set up a queue, and enough TD's to get 'size' bytes
 bool UHCIController::ControlIn(void* targ, const bool lsDevice, const int devAddress, const int packetSize, const int len, const uint8_t requestType, const uint8_t request, const uint16_t valueHigh, const uint16_t valueLow, const uint16_t index) {
     //Create Request Packet
@@ -614,6 +633,73 @@ bool UHCIController::BulkIn(const bool lsDevice, const int devAddress, const int
 
     return ret;
 }
+bool UHCIController::InterruptIn(const bool lsDevice, const int devAddress, const int packetSize, const int endP, void* bufPtr, const int len)
+{    
+    //Allocate Transfer Descriptors
+    uint32_t tdPhys;
+    u_transferDescriptor_t* td = (u_transferDescriptor_t*)KernelHeap::allignedMalloc(sizeof(u_transferDescriptor_t) * 10, 16, &tdPhys);
+    MemoryOperations::memset(td, 0, sizeof(u_transferDescriptor_t) * 10);
+
+    //Allocate queue head
+    uint32_t queuePhys;
+    uhci_queue_head_t* queue = (uhci_queue_head_t*)KernelHeap::allignedMalloc(sizeof(uhci_queue_head_t), 16, &queuePhys);
+    MemoryOperations::memset(queue, 0, sizeof(uhci_queue_head_t));
+    queue->horz_ptr = QUEUE_HEAD_T;
+    queue->vert_ptr = tdPhys;
+    
+    int i = 0;
+    int sz = len;
+    //Transfer Descriptors depending on size of request
+    while ((sz > 0) && (i<9)) {
+        td[i].link_ptr = (i > 0 ? (td[i-1].link_ptr & ~0xF) : tdPhys) + sizeof(u_transferDescriptor_t);
+        td[i].reply = (lsDevice ? (1<<26) : 0) | (3<<27) | (0x80 << 16);
+        int t = ((sz <= packetSize) ? sz : packetSize);
+        td[i].info = ((t-1)<<21) | ((i & 1) ? (1<<19) : 0)  | (endP<<15) | ((devAddress & 0x7F)<<8) | TOKEN_IN;
+        td[i].buff_ptr = 0; //returnBufPhys + (packetSize*i);
+        sz -= t;
+        i++;
+    }
+    td[i-1].reply |= (1<<24); //Enable IOC
+    
+    // make sure status:int bit is clear
+    outportw(pciDevice->portBase + UHCI_STATUS, 1);
+    
+    //Instert queue into list
+    InsertQueue(queue, queuePhys, QUEUE_Q8);
+    
+    // wait for the IOC to happen
+    int timeout = 10000; // 10 seconds
+    while (!(inportw(pciDevice->portBase + UHCI_STATUS) & 1) && (timeout > 0)) {
+        timeout--;
+        System::pit->Sleep(1);
+    }
+    if (timeout == 0) {
+        Log(Warning, "UHCI timed out.");
+        RemoveQueue(queue, QUEUE_Q8);
+        return false;
+    }
+
+    Log(Info, "Frame: %d - USB transaction completed", inportw(pciDevice->portBase + UHCI_FRAME_NUM) & 0b1111111111);
+    outportw(pciDevice->portBase + UHCI_STATUS, 1);  // acknowledge the interrupt
+    
+    RemoveQueue(queue, QUEUE_Q8);
+    
+    bool ret = true;
+    // check the TD's for error
+    for (int t = 0; t < i; t++) {
+        if (((td[t].reply & (0xFF << 16)) != 0)) { //Check if any error bit is set
+            ret = false;
+            break;
+        }
+    }
+    
+    //Free td's
+    KernelHeap::allignedFree(td);
+    //Free queue head
+    KernelHeap::allignedFree(queue);
+
+    return ret;
+}
 uint32_t UHCIController::HandleInterrupt(uint32_t esp)
 {
     uint16_t val = inportw(pciDevice->portBase + UHCI_STATUS);
@@ -622,6 +708,12 @@ uint32_t UHCIController::HandleInterrupt(uint32_t esp)
     {
         //Log(Info, "Interrupt came from another UHCI device!");
         return esp;
+    }
+
+    if (val & UHCI_STS_USBINT)
+    {
+        Log(Info, "UHCI: Transfer complete!");
+        outportw(pciDevice->portBase + UHCI_STATUS, UHCI_STS_RESUME_DETECT); // reset interrupt
     }
 
     if (val & UHCI_STS_RESUME_DETECT)
@@ -679,4 +771,9 @@ bool UHCIController::ControlIn(USBDevice* device, void* target, const int len, c
 bool UHCIController::ControlOut(USBDevice* device, void* target, const int len, const uint8_t requestType, const uint8_t request, const uint16_t valueHigh, const uint16_t valueLow, const uint16_t index)
 {
     return ControlOut(device->uhciProperties.lowSpeedDevice, device->devAddress, device->uhciProperties.maxPacketSize, len, requestType, request, valueHigh, valueLow, index);
+}
+
+bool UHCIController::InterruptIn(USBDevice* device, void* retBuffer, int len, int endP)
+{
+    return InterruptIn(device->uhciProperties.lowSpeedDevice, device->devAddress, device->endpoints[endP-1]->max_packet_size, endP, retBuffer, len);
 }

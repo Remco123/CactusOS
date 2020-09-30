@@ -46,6 +46,11 @@ bool USBController::ControlOut(USBDevice* device, void* target, const int len, c
     Log(Error, "Virtual function called directly %s:%d", __FILE__, __LINE__);
     return false;
 }
+bool USBController::InterruptIn(USBDevice* device, void* retBuffer, int len, int endP)
+{
+    Log(Error, "Virtual function called directly %s:%d", __FILE__, __LINE__);
+    return false;
+}
 
 
 /////////////
