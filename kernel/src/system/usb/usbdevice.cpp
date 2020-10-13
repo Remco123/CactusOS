@@ -89,6 +89,8 @@ bool USBDevice::AssignDriver()
     this->classID = dev_desc._class;
     this->subclassID = dev_desc.subclass;
     this->protocol = dev_desc.protocol;
+    this->vendorID = dev_desc.vendorid;
+    this->productID = dev_desc.productid;
     
     struct STRING_DESC stringLangDesc;
     MemoryOperations::memset(&stringLangDesc, 0, sizeof(struct STRING_DESC));

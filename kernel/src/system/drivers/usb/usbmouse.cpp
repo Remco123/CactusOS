@@ -24,8 +24,6 @@ bool USBMouse::GetHIDProperty(struct HID_DATA* target, uint8_t* buffer, int bufL
     target->path.node[1].usage = HID_USAGE::POINTER;
     target->path.node[2].u_page = HID_PAGE_USAGE::GEN_DESKTOP;
     target->path.node[2].usage = item;
-    //data.path.node[2].usage = USAGE_POINTER_Y;     // to get the Y Coordinate, comment X above and uncomment this line
-    //data.path.node[2].usage = USAGE_POINTER_WHEEL; // to get the Wheel Coordinate, comment X above and uncomment this line
     target->path.size = 3;
     
     this->hidParser.report_desc = (const uint8_t*)buffer;
@@ -42,8 +40,10 @@ bool USBMouse::Initialize()
     // Find Interrupt Endpoint
     for(ENDPOINT_DESC* ep : this->device->endpoints) {
         if((ep->bm_attrbs & 0b11) == 0b11) { // Interrupt Endpoint
-            if((ep->end_point & (1<<7)) == (1<<7)) // In
+            if((ep->end_point & (1<<7)) == (1<<7)) { // In
                 this->InInterruptEndpoint = ep->end_point & 0b1111;
+                break;
+            }
         }
     }
 
@@ -52,7 +52,7 @@ bool USBMouse::Initialize()
         return false;
 
     // Send set-idle request to device
-    if(!this->device->controller->ControlOut(this->device, 0, 0, HOST_TO_DEV | REQ_TYPE_CLASS | RECPT_INTERFACE, REQUEST_SET_IDLE));
+    if(!this->device->controller->ControlOut(this->device, 0, 0, HOST_TO_DEV | REQ_TYPE_CLASS | RECPT_INTERFACE, REQUEST_SET_IDLE))
         Log(Warning, "USBMouse not reacting to SetIdle request");
     
     // Get length of HID report from Interface HID Descriptor
@@ -69,7 +69,7 @@ bool USBMouse::Initialize()
     bool b1 = GetHIDProperty(&this->hidX, reportDescriptorBuffer, reportDescriptorLength, HID_USAGE::POINTER_X);
     bool b2 = GetHIDProperty(&this->hidY, reportDescriptorBuffer, reportDescriptorLength, HID_USAGE::POINTER_Y);
     bool b3 = GetHIDProperty(&this->hidZ, reportDescriptorBuffer, reportDescriptorLength, HID_USAGE::POINTER_WHEEL);
-
+    
     // Since all required data is present from the discriptor we can use the custom protocol
     if(b1 && b2 && b3)
         this->useCustomReport = true;
@@ -78,8 +78,8 @@ bool USBMouse::Initialize()
     if(!this->device->controller->ControlOut(this->device, 0, 0, HOST_TO_DEV | REQ_TYPE_CLASS | RECPT_INTERFACE, REQUEST_SET_PROTOCOL, 0, this->useCustomReport ? 1 : 0))
         return false;
 
-    uint8_t buf[4];
-    bool suc = this->device->controller->InterruptIn(this->device, buf, 4, this->InInterruptEndpoint);
+    // Start recieving interrupt packets from device
+    this->device->controller->InterruptIn(this->device, 4, this->InInterruptEndpoint);
 
     return true;
 }
@@ -87,4 +87,50 @@ bool USBMouse::Initialize()
 void USBMouse::DeInitialize()
 {
 
+}
+
+bool USBMouse::HandleInterruptPacket(InterruptTransfer_t* transfer)
+{
+    uint8_t* packet = transfer->bufferPointer;
+    //Log(Info, "Received mouse packet! %d %d %d %d", packet[0], (int8_t)packet[1], (int8_t)packet[2], packet[3]);
+    
+    // Process buttons first, this is the same (we assume) for all mouse devices
+    System::systemInfo->MouseLeftButton = packet[0] & (1<<0);
+    System::systemInfo->MouseRightButton = packet[0] & (1<<1);
+    System::systemInfo->MouseMiddleButton = packet[0] & (1<<2);
+
+    int realX = 0;
+    int realY = 0;
+    
+    // Then process XYZ information
+    if(this->useCustomReport) {
+        realX = (int8_t)(packet[this->hidX.offset / 8]);
+        realY = (int8_t)(packet[this->hidY.offset / 8]);
+        System::systemInfo->MouseZ += (int8_t)(packet[this->hidZ.offset / 8]);
+    }
+    else {
+        realX = (int8_t)(packet[1]);
+        realY = (int8_t)(packet[2]);
+        System::systemInfo->MouseZ += (int8_t)(packet[3]);
+    }
+
+    // Boundry checking for desktop
+
+    int newX = (System::systemInfo->MouseX + realX);
+    if(newX >= 0 && newX < System::gfxDevice->width)
+        System::systemInfo->MouseX = newX;
+    else if(newX < 0)
+        System::systemInfo->MouseX = 0;
+    else if(newX >= System::gfxDevice->width)
+        System::systemInfo->MouseX = System::gfxDevice->width - 1;
+    
+    int newY = (System::systemInfo->MouseY + realY);
+    if(newY >= 0 && newY < System::gfxDevice->height)
+        System::systemInfo->MouseY = newY;
+    else if(newY < 0)
+        System::systemInfo->MouseY = 0;
+    else if(newY >= System::gfxDevice->height)
+        System::systemInfo->MouseY = System::gfxDevice->height - 1;
+    
+    return true; // Rescedule
 }

@@ -1,7 +1,7 @@
-/*
 #include <system/drivers/usb/controllers/ohci.h>
 #include <system/system.h>
 #include <system/drivers/usb/usbdefs.h>
+#include <system/drivers/usb/usbdriver.h>
 
 using namespace CactusOS;
 using namespace CactusOS::common;
@@ -107,6 +107,27 @@ void OHCIController::Setup()
         bulkEndpoints[i]->flags = (1<<14); // sKip bit, should be 14 right? Not 13
     }
 
+    /////////////////
+    // Create Interrupt list
+    /////////////////
+    uint32_t interruptPhysical = 0;
+    this->interruptEndpoints = (o_endpointDescriptor_t*)KernelHeap::allignedMalloc(sizeof(o_endpointDescriptor_t) * 32, 16, &interruptPhysical);
+    uint8_t  routingTable[16] = { 0, 8, 4, 12, 2, 10, 6, 14, 1, 9, 5, 13, 3, 11, 7, 15 };
+    for(int i = 0; i < 16; i++) {
+        hcca->HccaInterruptTable[i] = hcca->HccaInterruptTable[i+16] = interruptPhysical + sizeof(o_endpointDescriptor_t) * routingTable[i];
+    }
+
+    int j = 16;
+    for(int i = 0; i < 30; i+=2, j++) {
+        this->interruptEndpoints[i].nextED = this->interruptEndpoints[i+1].nextED = interruptPhysical + sizeof(o_endpointDescriptor_t) * j;
+    }
+    this->interruptEndpoints[30].nextED = 0;
+
+    for(int i = 0; i < 32; i++) {
+        this->interruptEndpoints[i].flags = (1<<14);
+        this->interruptEndpoints[i].headp = (1<<0);
+    }
+
 
     //Reset the root hub
     writeMemReg(regBase + OHCControl, 0x00000000);
@@ -132,10 +153,10 @@ void OHCIController::Setup()
 
     //Disallow interrupts (we poll the DoneHeadWrite bit instead)
     //writeMemReg(regBase + OHCInterruptDisable, (1<<31));
-    writeMemReg(regBase + OHCInterruptEnable, (1<<0) | (0<<1) | (0<<2) | (1<<3) | (1<<4)| (0<<5) | (1<<6) | (1<<30) | (1<<31));
+    writeMemReg(regBase + OHCInterruptEnable, (1<<0) | (1<<1) | (1<<2) | (1<<3) | (1<<4)| (0<<5) | (1<<6) | (1<<30) | (1<<31));
     
     // Start the controller  
-    writeMemReg(regBase + OHCControl, (1<<4) | (1<<5) | (1<<7) | (1<<9) | (1<<10));  // CLE & operational
+    writeMemReg(regBase + OHCControl, (1<<2) | (1<<4) | (1<<5) | (1<<7) | (1<<9) | (1<<10));  // CLE & operational
     
     //Set port power switching
     uint32_t val = readMemReg(regBase + OHCRhDescriptorA);
@@ -217,7 +238,7 @@ void OHCIController::ControllerChecksThread()
     }
 }
 bool OHCIController::ResetPort(uint8_t port) {
-    int timeout = 30;
+    int timeout = 300;
     writeMemReg(regBase + OHCRhPortStatus + (port * 4), (1<<4)); // reset port
     while ((readMemReg(regBase + OHCRhPortStatus + (port * 4)) & (1<<20)) == 0) {
         System::pit->Sleep(1);
@@ -305,7 +326,6 @@ bool OHCIController::ControlOut(const bool lsDevice, const int devAddress, const
 
     return ret;
 }
-
 bool OHCIController::ControlIn(void* targ, const bool lsDevice, const int devAddress, const int packetSize, const int len, const uint8_t requestType, const uint8_t request, const uint16_t valueHigh, const uint16_t valueLow, const uint16_t index) {
     //Create Request Packet
     uint32_t requestPacketPhys;
@@ -542,6 +562,83 @@ bool OHCIController::BulkIn(const bool lsDevice, const int devAddress, const int
     
     return ret;
 }
+void OHCIController::InterruptIn(const bool lsDevice, const int devAddress, const int packetSize, const int endP, int interval, USBDriver* handler, const int len)
+{
+    // Create temporary buffer and clear it
+    uint32_t returnBufPhys;
+    uint8_t* returnBuf = (uint8_t*)KernelHeap::malloc(len, &returnBufPhys);
+    MemoryOperations::memset(returnBuf, 0, len);
+    
+    // Allocate Transfer Descriptors
+    uint32_t tdPhys;
+    o_transferDescriptor_t* td = (o_transferDescriptor_t*)KernelHeap::allignedMalloc(sizeof(o_transferDescriptor_t) * 10, 16, &tdPhys);
+    MemoryOperations::memset(td, 0, sizeof(o_transferDescriptor_t) * 10);
+    
+    // Create the rest of the in td's
+    int i = 0; int p = 0; int t = 1;
+    int cnt = len;
+    while (cnt > 0) {
+        td[i].flags = (14<<28) | (0 << 26) | ((2 | (t & 1)) << 24) | (7<<21) | (0 << 19) | (1<<18);
+        td[i].curBufPtr = returnBufPhys + p;
+        td[i].nextTd = ((i > 0) ? td[i-1].nextTd : tdPhys) + sizeof(o_transferDescriptor_t);
+        td[i].bufEnd = td[i].curBufPtr + ((cnt > packetSize) ? (packetSize - 1) : (cnt - 1));
+        t ^= 1;
+        p += packetSize;
+        i++;
+        cnt -= packetSize;
+    }  
+
+    // Create Interrupt transfer info
+    InterruptTransfer_t* transfer = new InterruptTransfer_t();
+    transfer->bufferLen = len;
+    transfer->bufferPointer = returnBuf;
+    transfer->handler = handler;
+    transfer->queueIndex = 18;
+
+    // Controller specific
+    transfer->td = td;
+    transfer->numTd = i;
+    transfer->tdPhys = tdPhys;
+    transfer->qh = 0;
+    transfer->bufferPhys = returnBufPhys;
+
+    // Add transfer to list
+    this->interrupTransfers.push_back(transfer);
+
+    // Place transfer in interrupt list
+    this->interruptEndpoints[transfer->queueIndex].headp = tdPhys;
+    this->interruptEndpoints[transfer->queueIndex].tailp = tdPhys + sizeof(o_transferDescriptor_t) * i;
+    this->interruptEndpoints[transfer->queueIndex].flags = (packetSize << 16) | (0 << 15) | (0 << 14) | (lsDevice ? (1<<13) : 0) | (TD_DP_IN << 11) | (endP << 7) | (devAddress & 0x7F);
+
+    //uint32_t* b = (uint32_t*)td;
+    //Log(Info, "TD Bytes %x %x %x %x", b[0], b[1], b[2], b[3]);
+
+    //uint32_t* b2 = (uint32_t*)&this->interruptEndpoints[transfer->queueIndex];
+    //Log(Info, "TD Bytes %x %x %x %x", b2[0], b2[1], b2[2], b2[3]);
+}
+
+int OHCIController::CheckTransferDone(o_transferDescriptor_t* td, int numTDs)
+{
+    bool noError = true;
+
+    // Check if any TD has a error or a NAK is received. If not then the transfer is complete.
+    for (int i = 0; i < numTDs; i++) {
+        uint32_t status = ((td[i].flags & 0xF0000000) >> 28);    
+        //Log(Info, "Status = %b", status);
+        if (status != 0) { // Check if any error bit is set or not done
+            if(status & (1<<3) == (1<<3))
+                return 2; // (Only) Stall bit set
+            if(status == 14)
+                return 3; // (Only) Active bit set
+            
+            noError = false;
+            break;
+        }
+    }
+
+    return noError ? 0 : 1;
+}
+
 uint32_t OHCIController::HandleInterrupt(uint32_t esp)
 {
     uint32_t val = readMemReg(regBase + OHCInterruptStatus);
@@ -563,6 +660,60 @@ uint32_t OHCIController::HandleInterrupt(uint32_t esp)
     if(val & (1<<1))
     {
         Log(Info, "OHCI: Writeback Done Head");
+    }
+
+    if(val & (1<<2))
+    {
+        //Log(Info, "OHCI: SOF");
+        for(InterruptTransfer_t* transfer : this->interrupTransfers) {
+            uint8_t status = CheckTransferDone((o_transferDescriptor_t*)transfer->td, transfer->numTd);
+
+            if(status != 3) // Done or error
+            {
+                //Log(Info, "OHCI, Transfer finished with status -> %d", status);
+
+                // Check if it is a succesfull transfer, if not just clear the buffer
+                if(status == 1 || status == 2)
+                    MemoryOperations::memset(transfer->bufferPointer, 0, transfer->bufferLen);
+
+                if(status == 2)
+                    Log(Warning, "UHCI: Received NAK");
+                
+                bool rescedule = transfer->handler->HandleInterruptPacket(transfer);
+                
+                if(rescedule) {
+                    MemoryOperations::memset(transfer->bufferPointer, 0, transfer->bufferLen);
+                    
+                    o_transferDescriptor_t* td = (o_transferDescriptor_t*)transfer->td;
+                    for(int i = 0; i < transfer->numTd; i++) {
+                        td[i].flags |= (14<<28); // Mark all transfer descriptors as active again
+                        td[i].curBufPtr = transfer->bufferPhys;
+                        td[i].bufEnd = transfer->bufferPhys + transfer->bufferLen - 1;
+                        td[i].nextTd = transfer->tdPhys + i * sizeof(o_transferDescriptor_t);
+                    }
+
+                    this->interruptEndpoints[transfer->queueIndex].headp = transfer->tdPhys;
+
+
+                    //uint32_t* b = (uint32_t*)td;
+                    //Log(Info, "AC -> TD Bytes %x %x %x %x", b[0], b[1], b[2], b[3]);
+
+                    //uint32_t* b2 = (uint32_t*)&this->interruptEndpoints[transfer->queueIndex];
+                    //Log(Info, "AC -> TD Bytes %x %x %x %x", b2[0], b2[1], b2[2], b2[3]);
+                }
+                else {
+                    this->interruptEndpoints[transfer->queueIndex].flags = (1<<14);
+                    
+                    // Free temporary buffer
+                    if(transfer->bufferPointer) KernelHeap::free(transfer->bufferPointer);
+                    // Free td's
+                    if(transfer->td) KernelHeap::allignedFree(transfer->td);
+
+                    this->interrupTransfers.Remove(transfer);
+                    delete transfer;
+                }
+            }
+        }
     }
 
     if (val & (1<<3))
@@ -593,46 +744,7 @@ uint32_t OHCIController::HandleInterrupt(uint32_t esp)
 /////////
 // USB Controller Functions
 /////////
-bool OHCIController::GetDeviceDescriptor(struct DEVICE_DESC* dev_desc, USBDevice* device)
-{
-    return ControlIn(dev_desc, device->ohciProperties.ls_device, device->devAddress, device->ohciProperties.desc_mps, sizeof(struct DEVICE_DESC), STDRD_GET_REQUEST, DeviceRequest::GET_DESCRIPTOR, DescriptorTypes::DEVICE);
-}
-bool OHCIController::GetStringDescriptor(struct STRING_DESC* stringDesc, USBDevice* device, uint16_t index, uint16_t lang)
-{
-    if(!ControlIn(stringDesc, device->ohciProperties.ls_device, device->devAddress, device->ohciProperties.desc_mps, 2, STDRD_GET_REQUEST, DeviceRequest::GET_DESCRIPTOR, DescriptorTypes::STRING, index, lang))
-        return false;
-        
-    int totalSize = stringDesc->len;
-    return ControlIn(stringDesc, device->ohciProperties.ls_device, device->devAddress, device->ohciProperties.desc_mps, totalSize, STDRD_GET_REQUEST, DeviceRequest::GET_DESCRIPTOR, DescriptorTypes::STRING, index, lang);
-}
-uint8_t* OHCIController::GetConfigDescriptor(USBDevice* device)
-{
-    struct CONFIG_DESC confDesc;
-    MemoryOperations::memset(&confDesc, 0, sizeof(struct CONFIG_DESC));
 
-    if(!ControlIn(&confDesc, device->ohciProperties.ls_device, device->devAddress, device->ohciProperties.desc_mps, sizeof(struct CONFIG_DESC), STDRD_GET_REQUEST, GET_DESCRIPTOR, CONFIG))
-        return 0;
-    
-    int totalSize = confDesc.tot_len;
-    uint8_t* buffer = new uint8_t[totalSize];
-    MemoryOperations::memset(buffer, 0, totalSize);
-
-    if(!ControlIn(buffer, device->ohciProperties.ls_device, device->devAddress, device->ohciProperties.desc_mps, totalSize, STDRD_GET_REQUEST, GET_DESCRIPTOR, CONFIG))
-        return 0;
-    
-    return buffer;
-}
-bool OHCIController::SetConfiguration(USBDevice* device, uint8_t config) 
-{
-    return ControlOut(device->ohciProperties.ls_device, device->devAddress, device->ohciProperties.desc_mps, 0, STDRD_SET_REQUEST, SET_CONFIGURATION, 0, config);
-}
-int OHCIController::GetMaxLuns(USBDevice* device)
-{
-    uint8_t ret;
-    if(ControlIn(&ret, device->ohciProperties.ls_device, device->devAddress, device->ohciProperties.desc_mps, 1, DEV_TO_HOST | REQ_TYPE_CLASS | RECPT_INTERFACE, GET_MAX_LUNS))
-        return ret;
-    return 0;
-}
 bool OHCIController::BulkIn(USBDevice* device, void* retBuffer, int len, int endP)
 {
     return BulkIn(device->ohciProperties.ls_device, device->devAddress, device->endpoints[endP-1]->max_packet_size, endP, retBuffer, len);
@@ -641,4 +753,17 @@ bool OHCIController::BulkOut(USBDevice* device, void* sendBuffer, int len, int e
 {
     return BulkOut(device->ohciProperties.ls_device, device->devAddress, device->endpoints[endP-1]->max_packet_size, endP, sendBuffer, len);
 }
-*/
+
+bool OHCIController::ControlIn(USBDevice* device, void* target, const int len, const uint8_t requestType, const uint8_t request, const uint16_t valueHigh, const uint16_t valueLow, const uint16_t index)
+{
+    return ControlIn(target, device->ohciProperties.ls_device, device->devAddress, device->ohciProperties.desc_mps, len, requestType, request, valueHigh, valueLow, index);
+}
+bool OHCIController::ControlOut(USBDevice* device, void* target, const int len, const uint8_t requestType, const uint8_t request, const uint16_t valueHigh, const uint16_t valueLow, const uint16_t index)
+{
+    return ControlOut(device->ohciProperties.ls_device, device->devAddress, device->ohciProperties.desc_mps, len, requestType, request, valueHigh, valueLow, index);
+}
+
+void OHCIController::InterruptIn(USBDevice* device, int len, int endP)
+{
+    InterruptIn(device->ohciProperties.ls_device, device->devAddress, device->endpoints[endP-1]->max_packet_size, endP, device->endpoints[endP-1]->interval, device->driver, len);
+}

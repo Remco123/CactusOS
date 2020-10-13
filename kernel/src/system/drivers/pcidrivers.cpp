@@ -73,13 +73,13 @@ void PCIDrivers::AssignDriversFromPCI(PCIController* pci, DriverManager* driverM
                                 goto FoundDriver;
                                 break;
                             }
-                            /*
                             case 0x10: //OHCI
                             {
                                 driverManager->AddDriver(new OHCIController(pciDevice));
                                 goto FoundDriver;
                                 break;
                             }
+                            /*
                             case 0x20: //EHCI
                             {
                                 driverManager->AddDriver(new EHCIController(pciDevice));

@@ -34,6 +34,9 @@ namespace CactusOS
 
                 //Called when mass storage device is unplugged from system
                 void DeInitialize() override;
+
+                //Called by USB driver when we receive a interrupt packet
+                bool HandleInterruptPacket(InterruptTransfer_t* transfer) override;
             };
         }
     }

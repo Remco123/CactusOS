@@ -11,6 +11,7 @@ using namespace CactusOS::system::drivers;
 USBController::USBController(USBControllerType usbType)
 {
     this->type = usbType;
+    this->interrupTransfers.Clear();
 }
 
 void USBController::Setup()
@@ -46,10 +47,9 @@ bool USBController::ControlOut(USBDevice* device, void* target, const int len, c
     Log(Error, "Virtual function called directly %s:%d", __FILE__, __LINE__);
     return false;
 }
-bool USBController::InterruptIn(USBDevice* device, void* retBuffer, int len, int endP)
+void USBController::InterruptIn(USBDevice* device, int len, int endP)
 {
     Log(Error, "Virtual function called directly %s:%d", __FILE__, __LINE__);
-    return false;
 }
 
 
@@ -93,6 +93,15 @@ uint8_t* USBController::GetConfigDescriptor(USBDevice* device)
 bool USBController::SetConfiguration(USBDevice* device, uint8_t config)
 {
     return ControlOut(device, 0, 0, STDRD_SET_REQUEST, SET_CONFIGURATION, 0, config);
+}
+
+int USBController::GetConfiguration(USBDevice* device)
+{
+    uint8_t ret = 0;
+    if(!ControlIn(device, &ret, 1, STDRD_GET_REQUEST, GET_CONFIGURATION))
+        return 0;
+    
+    return ret;
 }
 
 int USBController::GetMaxLuns(USBDevice* device)

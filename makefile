@@ -24,7 +24,7 @@
 #######################
 
 INCLUDEDIRS := kernel/include
-QEMUOPTIONS := -boot d -device VGA,edid=on,xres=1024,yres=768 -trace events=../qemuTrace.txt -device ich9-usb-uhci1 -device usb-mouse
+QEMUOPTIONS := -boot d -device VGA,edid=on,xres=1024,yres=768 -trace events=../qemuTrace.txt -usb -device usb-mouse
 
 G++PARAMS := -m32 -g -I $(INCLUDEDIRS) -fno-use-cxa-atexit -nostdlib -fno-builtin -fno-exceptions -fno-rtti -fno-leading-underscore -Wno-write-strings -fpermissive -Wall
 GCCPARAMS := -m32 -g -I $(INCLUDEDIRS) -nostdlib -fno-builtin -Wall
@@ -113,7 +113,7 @@ qemuGDB: CactusOS.iso
 
 run: CactusOS.iso
 	(killall VirtualBox && sleep 1) || true
-	virtualbox --startvm 'CactusOS' &
+	virtualbox &
 	rm "../Virtualbox Serial Log.txt"
 	echo "" > "../Virtualbox Serial Log.txt"
 	tail -f "../Virtualbox Serial Log.txt"

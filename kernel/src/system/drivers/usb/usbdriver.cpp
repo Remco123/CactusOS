@@ -17,3 +17,9 @@ void USBDriver::DeInitialize()
 {
     Log(Error, "Virtual function called directly %s:%d", __FILE__, __LINE__);
 }
+
+bool USBDriver::HandleInterruptPacket(InterruptTransfer_t* transfer)
+{
+    Log(Error, "Virtual function called directly %s:%d", __FILE__, __LINE__);
+    return false;
+}

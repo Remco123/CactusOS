@@ -18,9 +18,28 @@ namespace CactusOS
             xHCI
         };
 
+        class USBDriver;
+        typedef struct InterruptTransfer
+        {
+            uint8_t* bufferPointer;
+            uint32_t bufferPhys;
+            int bufferLen;
+
+            USBDriver* handler;
+            int queueIndex;
+
+            uint32_t tdPhys;
+            void* td;
+            int numTd;
+
+            void* qh;
+        } InterruptTransfer_t;
+
         class USBDevice;
         class USBController
-        {            
+        {
+        protected:
+            List<InterruptTransfer_t*> interrupTransfers;            
         public:
             // What type of controller is this
             USBControllerType type;
@@ -48,8 +67,8 @@ namespace CactusOS
             // Perform a control out operation
             virtual bool ControlOut(USBDevice* device, void* target = 0, const int len = 0, const uint8_t requestType = 0, const uint8_t request = 0, const uint16_t valueHigh = 0, const uint16_t valueLow = 0, const uint16_t index = 0);
             
-            // Perform a Interrupt in operation
-            virtual bool InterruptIn(USBDevice* device, void* retBuffer, int len, int endP);
+            // Place a interrupt in transfer in the dedicated queue, handler will get called on completion
+            virtual void InterruptIn(USBDevice* device, int len, int endP);
 
             /////
             // Functions that use controler specific implementations
@@ -67,6 +86,9 @@ namespace CactusOS
             
             // Set configuration for device
             bool SetConfiguration(USBDevice* device, uint8_t config);
+
+            // Receive devices current configuration
+            int GetConfiguration(USBDevice* device);
             
             // Get maximum of Logical unit numbers, Only for Mass Storage Devices!
             int GetMaxLuns(USBDevice* device);

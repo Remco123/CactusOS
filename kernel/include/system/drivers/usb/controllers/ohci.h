@@ -1,4 +1,3 @@
-/*
 #ifndef __CACTUSOS__SYSTEM__DRIVERS__USB__CONTROLLERS__OHCI_H
 #define __CACTUSOS__SYSTEM__DRIVERS__USB__CONTROLLERS__OHCI_H
 
@@ -68,9 +67,10 @@ namespace CactusOS
                 uint32_t unknown;
             } __attribute__((packed)) HCCA_t;
 
-            #define NUM_CONTROL_EDS 16
-            #define NUM_BULK_EDS    16
-            #define OHCI_TD_TIMEOUT 1000
+            #define NUM_CONTROL_EDS     16
+            #define NUM_BULK_EDS        16
+            #define NUM_INTERRUPT_EDS   32
+            #define OHCI_TD_TIMEOUT     1000
 
             class OHCIController : public USBController, public Driver, public InterruptHandler
             {
@@ -85,50 +85,63 @@ namespace CactusOS
                 uint8_t numPorts;
 
                 //Lists
-                o_endpointDescriptor_t* controlEndpoints[NUM_CONTROL_EDS];        //Control list endpoint descriptors
-                uint32_t                controlEndpointsPhys[NUM_CONTROL_EDS];    //Physical Addresses of Control ED's
-                o_endpointDescriptor_t* bulkEndpoints[NUM_BULK_EDS];              //Bulk list endpoint descriptors
-                uint32_t                bulkEndpointsPhys[NUM_BULK_EDS];          //Physical Addresses of Bulk ED's
+                o_endpointDescriptor_t* controlEndpoints[NUM_CONTROL_EDS];          // Control list endpoint descriptors
+                uint32_t                controlEndpointsPhys[NUM_CONTROL_EDS];      // Physical Addresses of Control ED's
+                o_endpointDescriptor_t* bulkEndpoints[NUM_BULK_EDS];                // Bulk list endpoint descriptors
+                uint32_t                bulkEndpointsPhys[NUM_BULK_EDS];            // Physical Addresses of Bulk ED's
+                o_endpointDescriptor_t* interruptEndpoints;                         // Interrupt endpoint descriptors
+                                                                                    // Physical addresses are in hcca
             public:
                 OHCIController(PCIDevice* device);
 
                 bool Initialize() override;
                 void Setup() override;
 
+                // Check if a set of transfer descriptors is done executing
+                // Returns:
+                // 0 -> No Errors and Done
+                // 1 -> Generic Error
+                // 2 -> NAK
+                // 3 -> Not done yet
+                int CheckTransferDone(o_transferDescriptor_t* td, int numTDs);
+                
+                //Reset port of this controller, returns true when succesfull
+                bool ResetPort(uint8_t port);
+
                 bool ControlOut(const bool lsDevice, const int devAddress, const int packetSize, const int len = 0, const uint8_t requestType = 0, const uint8_t request = 0, const uint16_t valueHigh = 0, const uint16_t valueLow = 0, const uint16_t index = 0);
                 bool ControlIn(void* targ, const bool lsDevice, const int devAddress, const int packetSize, const int len = 0, const uint8_t requestType = 0, const uint8_t request = 0, const uint16_t valueHigh = 0, const uint16_t valueLow = 0, const uint16_t index = 0);
+                
                 bool BulkOut(const bool lsDevice, const int devAddress, const int packetSize, const int endP, void* bufPtr, const int len = 0);
                 bool BulkIn(const bool lsDevice, const int devAddress, const int packetSize, const int endP, void* bufPtr, const int len = 0);
 
+                void InterruptIn(const bool lsDevice, const int devAddress, const int packetSize, const int endP, int interval, USBDriver* handler, const int len = 0);
+
                 uint32_t HandleInterrupt(uint32_t esp);
 
-                void ControllerChecksThread() override;
                 void SetupNewDevice(uint8_t port);
 
                 //////////
                 // USB Controller Common Functions
                 //////////
-                //Reset port of this controller, returns true when succesfull
-                bool ResetPort(uint8_t port) override;
-                //Receive descriptor from device, returns true when succesfull
-                bool GetDeviceDescriptor(struct DEVICE_DESC* dev_desc, USBDevice* device) override;
-                //Receive descriptor from device, returns true when succesfull
-                bool GetStringDescriptor(struct STRING_DESC* stringDesc, USBDevice* device, uint16_t index, uint16_t lang) override;
-                //Get String descriptor of specific device
-                //Returns buffer with Configuration header and additional data            
-                uint8_t* GetConfigDescriptor(USBDevice* device) override;
-                //Set configuration for device
-                bool SetConfiguration(USBDevice* device, uint8_t config) override;
-                //Get maximum of Logical unit numbers, Only for Mass Storage Devices!
-                int GetMaxLuns(USBDevice* device) override;
-                //Perform a bulk in operation
+                
+                // Function that will get called on a periodic interval in which the controller can perform specific kinds of things.
+                void ControllerChecksThread() override;
+
+                // Perform a bulk in operation
                 bool BulkIn(USBDevice* device, void* retBuffer, int len, int endP) override;
-                //Perform a bulk out operation
-                bool BulkOut(USBDevice* device, void* sendBuffer, int len, int endP) override;           
+                // Perform a bulk out operation
+                bool BulkOut(USBDevice* device, void* sendBuffer, int len, int endP) override;
+
+                // Perform a control in operation
+                bool ControlIn(USBDevice* device, void* target = 0, const int len = 0, const uint8_t requestType = 0, const uint8_t request = 0, const uint16_t valueHigh = 0, const uint16_t valueLow = 0, const uint16_t index = 0) override;
+                // Perform a control out operation
+                bool ControlOut(USBDevice* device, void* target = 0, const int len = 0, const uint8_t requestType = 0, const uint8_t request = 0, const uint16_t valueHigh = 0, const uint16_t valueLow = 0, const uint16_t index = 0) override;        
+            
+                // Place a interrupt in transfer in the dedicated queue, handler will get called on completion
+                void InterruptIn(USBDevice* device, int len, int endP) override;
             };
         }
     }
 }
 
 #endif
-*/

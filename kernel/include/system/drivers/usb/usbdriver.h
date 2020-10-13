@@ -8,6 +8,8 @@ namespace CactusOS
 {
     namespace system
     {
+        typedef struct InterruptTransfer InterruptTransfer_t;
+
         class USBDriver : public drivers::Driver
         {
         protected:
@@ -16,9 +18,12 @@ namespace CactusOS
         public:
             USBDriver(USBDevice* dev, char* driverName);
 
-            //De-Active this driver from the system
-            //Called when device is unplugged
+            // De-Active this driver from the system
+            // Called when device is unplugged
             virtual void DeInitialize();
+
+            // Called from USB Controller when a interrupt packet is received
+            virtual bool HandleInterruptPacket(InterruptTransfer_t* transfer);
         };
     }
 }

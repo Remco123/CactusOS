@@ -30,6 +30,10 @@ namespace CactusOS
             uint16_t subclassID = 0;
             //Protocol used
             uint16_t protocol = 0;
+
+            uint16_t vendorID = 0;
+            uint16_t productID = 0;
+
             //Driver associated with this device, 0 if none found
             USBDriver* driver = 0;
 
