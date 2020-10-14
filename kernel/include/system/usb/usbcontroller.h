@@ -33,6 +33,7 @@ namespace CactusOS
             int numTd;
 
             void* qh;
+            int endpoint;
         } InterruptTransfer_t;
 
         class USBDevice;

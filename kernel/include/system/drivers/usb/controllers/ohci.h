@@ -104,6 +104,9 @@ namespace CactusOS
                 // 2 -> NAK
                 // 3 -> Not done yet
                 int CheckTransferDone(o_transferDescriptor_t* td, int numTDs);
+
+                // Calculate in which queue the packet should be placed for this interval
+                int CalculateRequiredQueue(int interval);
                 
                 //Reset port of this controller, returns true when succesfull
                 bool ResetPort(uint8_t port);

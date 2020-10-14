@@ -12,8 +12,8 @@ namespace CactusOS
 
         class USBDriver : public drivers::Driver
         {
-        protected:
-            //Which device is this driver for
+        public:
+            // Which device is this driver for
             USBDevice* device;
         public:
             USBDriver(USBDevice* dev, char* driverName);

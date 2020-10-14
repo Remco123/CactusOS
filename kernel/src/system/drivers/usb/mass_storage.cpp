@@ -17,12 +17,12 @@ USBMassStorageDriver::USBMassStorageDriver(USBDevice* dev)
 //Called when mass storage device is plugged into system
 bool USBMassStorageDriver::Initialize()
 {
-    for(ENDPOINT_DESC* ep : this->device->endpoints) {
-        if((ep->bm_attrbs & 0b11) == 0b10) { //Bulk Endpoint
-            if((ep->end_point & (1<<7)) == (1<<7)) //In
-                this->bulkInEP = ep->end_point & 0b1111;
+    for(USBEndpoint* ep : this->device->endpoints) {
+        if(ep->type == EndpointType::Bulk) { // Bulk Endpoint
+            if(ep->dir == EndpointDirection::In) //In
+                this->bulkInEP = ep->endpointNumber;
             else //Out
-                this->bulkOutEP = ep->end_point & 0b1111;
+                this->bulkOutEP = ep->endpointNumber;
         }
     }
     this->maxLUN = this->device->controller->GetMaxLuns(this->device);

@@ -38,10 +38,10 @@ bool USBMouse::Initialize()
         return false;
 
     // Find Interrupt Endpoint
-    for(ENDPOINT_DESC* ep : this->device->endpoints) {
-        if((ep->bm_attrbs & 0b11) == 0b11) { // Interrupt Endpoint
-            if((ep->end_point & (1<<7)) == (1<<7)) { // In
-                this->InInterruptEndpoint = ep->end_point & 0b1111;
+    for(USBEndpoint* ep : this->device->endpoints) {
+        if(ep->type == EndpointType::Interrupt) { // Interrupt Endpoint
+            if(ep->dir == EndpointDirection::In) { // In
+                this->InInterruptEndpoint = ep->endpointNumber;
                 break;
             }
         }

@@ -167,9 +167,7 @@ bool USBDevice::AssignDriver()
                 struct ENDPOINT_DESC* c = (struct ENDPOINT_DESC*)startByte;
                 Log(Info, "USBDevice Endpoint Desc: Num=%d %s TransferType=%d MaxPacket=%d Interval=%d", c->end_point & 0xF, (c->end_point & (1<<7)) ? "In" : "Out", c->bm_attrbs & 0b11, c->max_packet_size, c->interval);
 
-                struct ENDPOINT_DESC* endP = new ENDPOINT_DESC();
-                MemoryOperations::memcpy(endP, c, sizeof(struct ENDPOINT_DESC));
-                this->endpoints.push_back(endP);
+                this->endpoints.push_back(new USBEndpoint(c));
             }
             else if (type == HID) // HID descriptor
             {
@@ -236,7 +234,7 @@ bool USBDevice::AssignDriver()
 }
 USBDevice::~USBDevice()
 {
-    for(ENDPOINT_DESC* endP : this->endpoints)
+    for(USBEndpoint* endP : this->endpoints)
         delete endP;
 }
 void USBDevice::OnUnplugged()

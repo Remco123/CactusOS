@@ -623,7 +623,7 @@ void UHCIController::InterruptIn(const bool lsDevice, const int devAddress, cons
         td[i].link_ptr = (i > 0 ? (td[i-1].link_ptr & ~0xF) : tdPhys) + sizeof(u_transferDescriptor_t);
         td[i].reply = (lsDevice ? (1<<26) : 0) | (3<<27) | (0x80 << 16);
         int t = ((sz <= packetSize) ? sz : packetSize);
-        td[i].info = ((t-1)<<21) | ((i & 1) ? (1<<19) : 0) | (endP<<15) | ((devAddress & 0x7F)<<8) | TOKEN_IN;
+        td[i].info = ((t-1)<<21) | (handler->device->endpoints[endP-1]->Toggle() ? (1<<19) : 0) | (endP<<15) | ((devAddress & 0x7F)<<8) | TOKEN_IN;
         td[i].buff_ptr = returnBufPhys + (packetSize*i);
         sz -= t;
         i++;
@@ -642,6 +642,7 @@ void UHCIController::InterruptIn(const bool lsDevice, const int devAddress, cons
     transfer->numTd = i;
     transfer->tdPhys = tdPhys;
     transfer->qh = queue;
+    transfer->endpoint = endP;
 
     // Add transfer to list
     this->interrupTransfers.push_back(transfer);
@@ -685,8 +686,10 @@ uint32_t UHCIController::HandleInterrupt(uint32_t esp)
                     
                     u_transferDescriptor_t* td = (u_transferDescriptor_t*)transfer->td;
                     uhci_queue_head_t* qh = (uhci_queue_head_t*)transfer->qh;
-                    for(int i = 0; i < transfer->numTd; i++)
+                    for(int i = 0; i < transfer->numTd; i++) {
                         td[i].reply |= (0x80 << 16); // Mark all transfer descriptors as active again
+                        td[i].info = td[i].info & ~(1 << 19) | (transfer->handler->device->endpoints[transfer->endpoint-1]->Toggle() << 19);
+                    }
 
                     // Queue head automaticly points to next transfer descriptor on completion
                     // So we need to set it to the initial position
@@ -752,11 +755,11 @@ uint32_t UHCIController::HandleInterrupt(uint32_t esp)
 
 bool UHCIController::BulkIn(USBDevice* device, void* retBuffer, int len, int endP)
 {
-    return BulkIn(device->uhciProperties.lowSpeedDevice, device->devAddress, device->endpoints[endP-1]->max_packet_size, endP, retBuffer, len);
+    return BulkIn(device->uhciProperties.lowSpeedDevice, device->devAddress, device->endpoints[endP-1]->maxPacketSize, endP, retBuffer, len);
 }
 bool UHCIController::BulkOut(USBDevice* device, void* sendBuffer, int len, int endP)
 {
-    return BulkOut(device->uhciProperties.lowSpeedDevice, device->devAddress, device->endpoints[endP-1]->max_packet_size, endP, sendBuffer, len);
+    return BulkOut(device->uhciProperties.lowSpeedDevice, device->devAddress, device->endpoints[endP-1]->maxPacketSize, endP, sendBuffer, len);
 }
 
 bool UHCIController::ControlIn(USBDevice* device, void* target, const int len, const uint8_t requestType, const uint8_t request, const uint16_t valueHigh, const uint16_t valueLow, const uint16_t index)
@@ -770,5 +773,5 @@ bool UHCIController::ControlOut(USBDevice* device, void* target, const int len, 
 
 void UHCIController::InterruptIn(USBDevice* device, int len, int endP)
 {
-    InterruptIn(device->uhciProperties.lowSpeedDevice, device->devAddress, device->endpoints[endP-1]->max_packet_size, endP, device->endpoints[endP-1]->interval, device->driver, len);
+    InterruptIn(device->uhciProperties.lowSpeedDevice, device->devAddress, device->endpoints[endP-1]->maxPacketSize, endP, device->endpoints[endP-1]->interval, device->driver, len);
 }
