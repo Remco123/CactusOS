@@ -36,11 +36,11 @@ void operator delete[](void *p)
     KernelHeap::free(p);
 }
 
-void operator delete(void* ptr, unsigned long size)
+void operator delete(void* ptr, size_t size)
 {
     KernelHeap::free(ptr);
 }
-void operator delete[](void* ptr, unsigned long size)
+void operator delete[](void* ptr, size_t size)
 {
     KernelHeap::free(ptr);
 }

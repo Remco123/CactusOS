@@ -36,11 +36,11 @@ void operator delete[](void *p)
     UserHeap::Free(p);
 }
 
-void operator delete(void* ptr, unsigned long size)
+void operator delete(void* ptr, size_t size)
 {
     UserHeap::Free(ptr);
 }
-void operator delete[](void* ptr, unsigned long size)
+void operator delete[](void* ptr, size_t size)
 {
     UserHeap::Free(ptr);
 }
