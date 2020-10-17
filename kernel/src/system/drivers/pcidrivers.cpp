@@ -79,7 +79,6 @@ void PCIDrivers::AssignDriversFromPCI(PCIController* pci, DriverManager* driverM
                                 goto FoundDriver;
                                 break;
                             }
-                            /*
                             case 0x20: //EHCI
                             {
                                 driverManager->AddDriver(new EHCIController(pciDevice));
@@ -93,7 +92,6 @@ void PCIDrivers::AssignDriversFromPCI(PCIController* pci, DriverManager* driverM
                                 //goto FoundDriver;
                                 break;
                             }
-                            */
                             default:
                             {
                                 Log(Warning, "Unknown USB controller found of type %b", pciDevice->programmingInterfaceID);

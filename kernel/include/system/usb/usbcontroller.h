@@ -66,7 +66,7 @@ namespace CactusOS
             // Perform a control in operation
             virtual bool ControlIn(USBDevice* device, void* target = 0, const int len = 0, const uint8_t requestType = 0, const uint8_t request = 0, const uint16_t valueHigh = 0, const uint16_t valueLow = 0, const uint16_t index = 0);
             // Perform a control out operation
-            virtual bool ControlOut(USBDevice* device, void* target = 0, const int len = 0, const uint8_t requestType = 0, const uint8_t request = 0, const uint16_t valueHigh = 0, const uint16_t valueLow = 0, const uint16_t index = 0);
+            virtual bool ControlOut(USBDevice* device, const int len = 0, const uint8_t requestType = 0, const uint8_t request = 0, const uint16_t valueHigh = 0, const uint16_t valueLow = 0, const uint16_t index = 0);
             
             // Place a interrupt in transfer in the dedicated queue, handler will get called on completion
             virtual void InterruptIn(USBDevice* device, int len, int endP);

@@ -42,7 +42,7 @@ bool USBController::ControlIn(USBDevice* device, void* target, const int len, co
     Log(Error, "Virtual function called directly %s:%d", __FILE__, __LINE__);
     return false;
 }
-bool USBController::ControlOut(USBDevice* device, void* target, const int len, const uint8_t requestType, const uint8_t request, const uint16_t valueHigh, const uint16_t valueLow, const uint16_t index)
+bool USBController::ControlOut(USBDevice* device, const int len, const uint8_t requestType, const uint8_t request, const uint16_t valueHigh, const uint16_t valueLow, const uint16_t index)
 {
     Log(Error, "Virtual function called directly %s:%d", __FILE__, __LINE__);
     return false;

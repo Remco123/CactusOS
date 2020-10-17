@@ -1,4 +1,3 @@
-/*
 #ifndef __CACTUSOS__SYSTEM__DRIVERS__USB__CONTROLLERS__EHCI_H
 #define __CACTUSOS__SYSTEM__DRIVERS__USB__CONTROLLERS__EHCI_H
 
@@ -14,22 +13,22 @@ namespace CactusOS
     {
         namespace drivers
         {
-            #define EHC_CAPS_CapLength      0x00
-            #define EHC_CAPS_Reserved       0x01
-            #define EHC_CAPS_IVersion       0x02
-            #define EHC_CAPS_HCSParams      0x04
-            #define EHC_CAPS_HCCParams      0x08
-            #define EHC_CAPS_HCSPPortRoute  0x0C
+            #define EHCI_CAPS_CapLength      0x00
+            #define EHCI_CAPS_Reserved       0x01
+            #define EHCI_CAPS_IVersion       0x02
+            #define EHCI_CAPS_HCSParams      0x04
+            #define EHCI_CAPS_HCCParams      0x08
+            #define EHCI_CAPS_HCSPPortRoute  0x0C
 
-            #define EHC_OPS_USBCommand       0x00
-            #define EHC_OPS_USBStatus        0x04
-            #define EHC_OPS_USBInterrupt     0x08
-            #define EHC_OPS_FrameIndex       0x0C
-            #define EHC_OPS_CtrlDSSegemnt    0x10
-            #define EHC_OPS_PeriodicListBase 0x14
-            #define EHC_OPS_AsyncListBase    0x18
-            #define EHC_OPS_ConfigFlag       0x40
-            #define EHC_OPS_PortStatus       0x44  // first port
+            #define EHCI_OPS_USBCommand       0x00
+            #define EHCI_OPS_USBStatus        0x04
+            #define EHCI_OPS_USBInterrupt     0x08
+            #define EHCI_OPS_FrameIndex       0x0C
+            #define EHCI_OPS_CtrlDSSegemnt    0x10
+            #define EHCI_OPS_PeriodicListBase 0x14
+            #define EHCI_OPS_AsyncListBase    0x18
+            #define EHCI_OPS_ConfigFlag       0x40
+            #define EHCI_OPS_PortStatus       0x44  // first port
 
             #define EHCI_PORT_CCS            (1<<0)
             #define EHCI_PORT_CSC            (1<<1)
@@ -41,13 +40,13 @@ namespace CactusOS
             #define EHCI_PORT_PP             (1<<12)
             #define EHCI_PORT_OWNER          (1<<13)
 
-            #define EHC_LEGACY_USBLEGSUP     0x00
-            #define EHC_LEGACY_USBLEGCTLSTS  0x04
+            #define EHCI_LEGACY_USBLEGSUP     0x00
+            #define EHCI_LEGACY_USBLEGCTLSTS  0x04
 
-            #define EHC_LEGACY_TIMEOUT     10  // 10 milliseconds
-            #define EHC_LEGACY_BIOS_OWNED  (1<<16)
-            #define EHC_LEGACY_OS_OWNED    (1<<24)
-            #define EHC_LEGACY_OWNED_MASK  (EHC_LEGACY_BIOS_OWNED | EHC_LEGACY_OS_OWNED)
+            #define EHCI_LEGACY_TIMEOUT     10  // 10 milliseconds
+            #define EHCI_LEGACY_BIOS_OWNED  (1<<16)
+            #define EHCI_LEGACY_OS_OWNED    (1<<24)
+            #define EHCI_LEGACY_OWNED_MASK  (EHC_LEGACY_BIOS_OWNED | EHC_LEGACY_OS_OWNED)
 
             #define EHCI_PORT_WRITE_MASK     0x007FF1EE
 
@@ -66,6 +65,17 @@ namespace CactusOS
             #define EHCI_TD_PID_OUT    0
             #define EHCI_TD_PID_IN     1
             #define EHCI_TD_PID_SETUP  2
+
+            #define E_QUEUE_Q128      0
+            #define E_QUEUE_Q64       1
+            #define E_QUEUE_Q32       2
+            #define E_QUEUE_Q16       3
+            #define E_QUEUE_Q8        4
+            #define E_QUEUE_Q4        5
+            #define E_QUEUE_Q2        6
+            #define E_QUEUE_Q1        7
+
+            #define NUM_EHCI_QUEUES 8
 
             typedef struct
             {
@@ -88,7 +98,7 @@ namespace CactusOS
                 uint32_t altNextQTDVirt;
 
                 uint32_t pad[1];
-            } __attribute__((packed)) e_queueTransferDescriptor_t;
+            } __attribute__((packed)) e_TransferDescriptor_t;
 
             typedef struct
             {
@@ -96,100 +106,85 @@ namespace CactusOS
                 uint32_t flags;
                 uint32_t hubFlags;
                 uint32_t curQTD;
-                e_queueTransferDescriptor_t transferDescriptor;
+                e_TransferDescriptor_t transferDescriptor;
 
-                //Additional items
+                // Additional items
                 uint32_t prevPointer;
                 uint32_t prevPointerVirt;
                 uint32_t horzPointerVirt;
                 uint32_t pad[1];
             } __attribute__((packed)) e_queueHead_t;
 
-            // ISO's
-            #define EHCI_ISO_OFF_NEXT_TD_PTR        0  // offset of item within td
-            #define EHCI_ISO_OFF_STATUS_0           4
-            #define EHCI_ISO_OFF_STATUS_1           8
-            #define EHCI_ISO_OFF_STATUS_2          12
-            #define EHCI_ISO_OFF_STATUS_3          16
-            #define EHCI_ISO_OFF_STATUS_4          20
-            #define EHCI_ISO_OFF_STATUS_5          24
-            #define EHCI_ISO_OFF_STATUS_6          28
-            #define EHCI_ISO_OFF_STATUS_7          32
-            #define EHCI_ISO_OFF_BUFFER_0          36
-            #define EHCI_ISO_OFF_BUFFER_1          40
-            #define EHCI_ISO_OFF_BUFFER_2          44
-            #define EHCI_ISO_OFF_BUFFER_3          48
-            #define EHCI_ISO_OFF_BUFFER_4          52
-            #define EHCI_ISO_OFF_BUFFER_5          56
-            #define EHCI_ISO_OFF_BUFFER_6          60
-
             class EHCIController : public USBController, public Driver, public InterruptHandler
             {
             private:
-                PCIDevice* pciDevice;
-                uint32_t regBase = 0;
-                uint8_t operRegsOffset = 0;
+                PCIDevice*      pciDevice;
+                uint32_t        regBase = 0;
+                uint8_t         operRegsOffset = 0;
 
-                uint32_t AsyncListVirt = 0;
-                uint32_t AsyncListPhys = 0;
-                uint8_t dev_address = 1;
-                uint8_t numPorts = 0;
-                bool hasPortIndicators = false;
+                uint32_t        AsyncListVirt = 0;
+                uint32_t        AsyncListPhys = 0;
+
+                uint32_t*       frameList = 0;
+                uint32_t        frameListPhys = 0;
+                e_queueHead_t*  queueStackList = 0;
+
+                uint8_t         dev_address = 1;
+                uint8_t         numPorts = 0;
+
+                uint32_t ReadOpReg(uint32_t reg);
+                void WriteOpReg(uint32_t reg, uint32_t val);
             public:
                 EHCIController(PCIDevice* device);
 
                 bool Initialize() override;
                 void Setup() override;
 
+                // Reset port of this controller, returns true when succesfull
+                bool ResetPort(uint8_t port);
+
                 uint32_t HandleInterrupt(uint32_t esp);
                 
-                bool ehciHandshake(const uint32_t reg, const uint32_t mask, const uint32_t result, unsigned ms);
-                bool StopLegacy(const uint32_t params);
+                bool WaitForRegister(const uint32_t reg, const uint32_t mask, const uint32_t result, unsigned ms);
                 bool SetupNewDevice(const int port);
-                bool EnableAsycnList(const bool enable);
+                bool EnableAsycnList();
+                bool EnablePeriodicList();
 
                 void SetupQueueHead(e_queueHead_t* head, const uint32_t qtd, uint8_t endpt, const uint16_t mps, const uint8_t address);
-                int MakeSetupTransferDesc(e_queueTransferDescriptor_t* tdVirt, const uint32_t tdPhys, uint32_t bufPhys);
+                int MakeSetupTransferDesc(e_TransferDescriptor_t* tdVirt, const uint32_t tdPhys, uint32_t bufPhys);
                 int MakeTransferDesc(uint32_t virtAddr, uint32_t physAddr, const uint32_t status_qtdVirt, const uint32_t status_qtdPhys, uint32_t bufferPhys, const uint32_t size, const bool last, uint8_t data0, const uint8_t dir, const uint16_t mps);
                 
                 void InsertIntoQueue(e_queueHead_t* item, uint32_t itemPhys, const uint8_t type);
                 bool RemoveFromQueue(e_queueHead_t* item);
                 
-                int WaitForInterrupt(e_queueTransferDescriptor_t* td, const uint32_t timeout, bool* spd);
+                int WaitForTransferComplete(e_TransferDescriptor_t* td, const uint32_t timeout, bool* spd);
                 
                 bool ControlOut(const int devAddress, const int packetSize, const int len = 0, const uint8_t requestType = 0, const uint8_t request = 0, const uint16_t valueHigh = 0, const uint16_t valueLow = 0, const uint16_t index = 0);
                 bool ControlIn(void* targ, const int devAddress, const int packetSize, const int len = 0, const uint8_t requestType = 0, const uint8_t request = 0, const uint16_t valueHigh = 0, const uint16_t valueLow = 0, const uint16_t index = 0);
                 
-                void SetPortIndicator(uint8_t port, uint8_t color);
-                void ControllerChecksThread() override;
-
-                uint32_t ReadOpReg(uint32_t reg);
-                void WriteOpReg(uint32_t reg, uint32_t val);
 
                 //////////
                 // USB Controller Common Functions
                 //////////
-                //Reset port of this controller, returns true when succesfull
-                bool ResetPort(uint8_t port) override;
-                //Receive descriptor from device, returns true when succesfull
-                bool GetDeviceDescriptor(struct DEVICE_DESC* dev_desc, USBDevice* device) override;
-                //Receive descriptor from device, returns true when succesfull
-                bool GetStringDescriptor(struct STRING_DESC* stringDesc, USBDevice* device, uint16_t index, uint16_t lang = 0) override;            
-                //Get String descriptor of specific device
-                //Returns buffer with Configuration header and additional data            
-                uint8_t* GetConfigDescriptor(USBDevice* device) override;
-                //Set configuration for device
-                bool SetConfiguration(USBDevice* device, uint8_t config) override;
-                //Get maximum of Logical unit numbers, Only for Mass Storage Devices!
-                int GetMaxLuns(USBDevice* device) override;
-                //Perform a bulk in operation
+
+                // Function that will get called on a periodic interval in which the controller can perform specific kinds of things.
+                void ControllerChecksThread() override;
+
+                // Perform a bulk in operation
                 bool BulkIn(USBDevice* device, void* retBuffer, int len, int endP) override;
-                //Perform a bulk out operation
+                // Perform a bulk out operation
                 bool BulkOut(USBDevice* device, void* sendBuffer, int len, int endP) override;
+
+                // Perform a control in operation
+                bool ControlIn(USBDevice* device, void* target = 0, const int len = 0, const uint8_t requestType = 0, const uint8_t request = 0, const uint16_t valueHigh = 0, const uint16_t valueLow = 0, const uint16_t index = 0) override;
+                // Perform a control out operation
+                bool ControlOut(USBDevice* device, const int len = 0, const uint8_t requestType = 0, const uint8_t request = 0, const uint16_t valueHigh = 0, const uint16_t valueLow = 0, const uint16_t index = 0) override;
+            
+                // Place a interrupt in transfer in the dedicated queue, handler will get called on completion
+                void InterruptIn(USBDevice* device, int len, int endP) override;
             };
         }
     }
 }
 
 #endif
-*/

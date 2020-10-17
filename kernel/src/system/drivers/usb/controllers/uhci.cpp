@@ -66,21 +66,21 @@ int UHCIController::CalculateRequiredQueue(int interval)
     switch(interval)
     {
         case 0 ... 1:
-            return QUEUE_Q1;
+            return U_QUEUE_Q1;
         case 2 ... 3:
-            return QUEUE_Q2;
+            return U_QUEUE_Q2;
         case 4 ... 7:
-            return QUEUE_Q4;
+            return U_QUEUE_Q4;
         case 8 ... 15:
-            return QUEUE_Q8;
+            return U_QUEUE_Q8;
         case 16 ... 31:
-            return QUEUE_Q16;
+            return U_QUEUE_Q16;
         case 32 ... 63:
-            return QUEUE_Q32;
+            return U_QUEUE_Q32;
         case 64 ... 127:
-            return QUEUE_Q64;
+            return U_QUEUE_Q64;
         default:
-            return QUEUE_Q128;
+            return U_QUEUE_Q128;
     }
 }
 
@@ -166,7 +166,7 @@ void UHCIController::Setup()
 
     // Setup UHCI stack frame
     for(int i = 0; i < 1024; i++) {
-        int queueStart = QUEUE_Q1;
+        int queueStart = U_QUEUE_Q1;
         if((i + 1) % 2 == 0) queueStart--;
         if((i + 1) % 4 == 0) queueStart--;
         if((i + 1) % 8 == 0) queueStart--;
@@ -394,7 +394,7 @@ bool UHCIController::ControlIn(void* targ, const bool lsDevice, const int devAdd
     i++; // for a total count
 
     // Instert queue into QControl list
-    InsertQueue(queue, queuePhys, QUEUE_QControl);
+    InsertQueue(queue, queuePhys, U_QUEUE_QControl);
     
     // Wait for transfer completion
     int timeout = 1000;
@@ -405,7 +405,7 @@ bool UHCIController::ControlIn(void* targ, const bool lsDevice, const int devAdd
         status = CheckTransferDone(td, i);
     }
     //Log(Info, "UHCI, Transfer finished with status -> %d", status);
-    RemoveQueue(queue, QUEUE_QControl);
+    RemoveQueue(queue, U_QUEUE_QControl);
 
     if (timeout == 0) {
         Log(Warning, "UHCI timed out.");
@@ -465,7 +465,7 @@ bool UHCIController::ControlOut(const bool lsDevice, const int devAddress, const
     td[1].buff_ptr = 0x00000000;
     
     // Instert queue into QControl list
-    InsertQueue(queue, queuePhys, QUEUE_QControl);
+    InsertQueue(queue, queuePhys, U_QUEUE_QControl);
     
     // Wait for transfer completion
     int timeout = 1000;
@@ -476,7 +476,7 @@ bool UHCIController::ControlOut(const bool lsDevice, const int devAddress, const
         status = CheckTransferDone(td, 2);
     }
     //Log(Info, "UHCI, Transfer finished with status -> %d", status);
-    RemoveQueue(queue, QUEUE_QControl);
+    RemoveQueue(queue, U_QUEUE_QControl);
 
     // Free td's
     KernelHeap::allignedFree(td);
@@ -517,7 +517,7 @@ bool UHCIController::BulkOut(const bool lsDevice, const int devAddress, const in
     }
 
     // Instert queue into QBulk list
-    InsertQueue(queue, queuePhys, QUEUE_QBulk);
+    InsertQueue(queue, queuePhys, U_QUEUE_QBulk);
     
     // Wait for transfer completion
     int timeout = 1000;
@@ -528,7 +528,7 @@ bool UHCIController::BulkOut(const bool lsDevice, const int devAddress, const in
         status = CheckTransferDone(td, i);
     }
     //Log(Info, "UHCI, Transfer finished with status -> %d", status);
-    RemoveQueue(queue, QUEUE_QBulk);
+    RemoveQueue(queue, U_QUEUE_QBulk);
     
     // Free td's
     KernelHeap::allignedFree(td);
@@ -570,7 +570,7 @@ bool UHCIController::BulkIn(const bool lsDevice, const int devAddress, const int
     }
     
     // Instert queue into QBulk list
-    InsertQueue(queue, queuePhys, QUEUE_QBulk);
+    InsertQueue(queue, queuePhys, U_QUEUE_QBulk);
     
     // Wait for transfer completion
     int timeout = 1000;
@@ -581,7 +581,7 @@ bool UHCIController::BulkIn(const bool lsDevice, const int devAddress, const int
         status = CheckTransferDone(td, i);
     }
     //Log(Info, "UHCI, Transfer finished with status -> %d", status);
-    RemoveQueue(queue, QUEUE_QBulk);
+    RemoveQueue(queue, U_QUEUE_QBulk);
     
     if(status == 0) {
         // copy the descriptor to the passed memory block
@@ -766,7 +766,7 @@ bool UHCIController::ControlIn(USBDevice* device, void* target, const int len, c
 {
     return ControlIn(target, device->uhciProperties.lowSpeedDevice, device->devAddress, device->uhciProperties.maxPacketSize, len, requestType, request, valueHigh, valueLow, index);
 }
-bool UHCIController::ControlOut(USBDevice* device, void* target, const int len, const uint8_t requestType, const uint8_t request, const uint16_t valueHigh, const uint16_t valueLow, const uint16_t index)
+bool UHCIController::ControlOut(USBDevice* device, const int len, const uint8_t requestType, const uint8_t request, const uint16_t valueHigh, const uint16_t valueLow, const uint16_t index)
 {
     return ControlOut(device->uhciProperties.lowSpeedDevice, device->devAddress, device->uhciProperties.maxPacketSize, len, requestType, request, valueHigh, valueLow, index);
 }

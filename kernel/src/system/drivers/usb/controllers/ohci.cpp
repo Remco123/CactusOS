@@ -801,7 +801,7 @@ bool OHCIController::ControlIn(USBDevice* device, void* target, const int len, c
 {
     return ControlIn(target, device->ohciProperties.ls_device, device->devAddress, device->ohciProperties.desc_mps, len, requestType, request, valueHigh, valueLow, index);
 }
-bool OHCIController::ControlOut(USBDevice* device, void* target, const int len, const uint8_t requestType, const uint8_t request, const uint16_t valueHigh, const uint16_t valueLow, const uint16_t index)
+bool OHCIController::ControlOut(USBDevice* device, const int len, const uint8_t requestType, const uint8_t request, const uint16_t valueHigh, const uint16_t valueLow, const uint16_t index)
 {
     return ControlOut(device->ohciProperties.ls_device, device->devAddress, device->ohciProperties.desc_mps, len, requestType, request, valueHigh, valueLow, index);
 }

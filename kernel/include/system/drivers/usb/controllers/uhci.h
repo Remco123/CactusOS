@@ -83,16 +83,16 @@ namespace CactusOS
             #define TD_INFO_PID           0x000000FF
 
 
-            #define QUEUE_Q128      0
-            #define QUEUE_Q64       1
-            #define QUEUE_Q32       2
-            #define QUEUE_Q16       3
-            #define QUEUE_Q8        4
-            #define QUEUE_Q4        5
-            #define QUEUE_Q2        6
-            #define QUEUE_Q1        7
-            #define QUEUE_QControl  8
-            #define QUEUE_QBulk     9
+            #define U_QUEUE_Q128      0
+            #define U_QUEUE_Q64       1
+            #define U_QUEUE_Q32       2
+            #define U_QUEUE_Q16       3
+            #define U_QUEUE_Q8        4
+            #define U_QUEUE_Q4        5
+            #define U_QUEUE_Q2        6
+            #define U_QUEUE_Q1        7
+            #define U_QUEUE_QControl  8
+            #define U_QUEUE_QBulk     9
 
             #define NUM_UHCI_QUEUES 10
 
@@ -163,7 +163,7 @@ namespace CactusOS
                 // Perform a control in operation
                 bool ControlIn(USBDevice* device, void* target = 0, const int len = 0, const uint8_t requestType = 0, const uint8_t request = 0, const uint16_t valueHigh = 0, const uint16_t valueLow = 0, const uint16_t index = 0) override;
                 // Perform a control out operation
-                bool ControlOut(USBDevice* device, void* target = 0, const int len = 0, const uint8_t requestType = 0, const uint8_t request = 0, const uint16_t valueHigh = 0, const uint16_t valueLow = 0, const uint16_t index = 0) override;
+                bool ControlOut(USBDevice* device, const int len = 0, const uint8_t requestType = 0, const uint8_t request = 0, const uint16_t valueHigh = 0, const uint16_t valueLow = 0, const uint16_t index = 0) override;
             
                 // Place a interrupt in transfer in the dedicated queue, handler will get called on completion
                 void InterruptIn(USBDevice* device, int len, int endP) override;
