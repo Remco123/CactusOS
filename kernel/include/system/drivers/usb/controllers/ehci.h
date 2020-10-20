@@ -43,10 +43,10 @@ namespace CactusOS
             #define EHCI_LEGACY_USBLEGSUP     0x00
             #define EHCI_LEGACY_USBLEGCTLSTS  0x04
 
-            #define EHCI_LEGACY_TIMEOUT     10  // 10 milliseconds
+            #define EHCI_LEGACY_TIMEOUT     100  // 100 milliseconds
             #define EHCI_LEGACY_BIOS_OWNED  (1<<16)
             #define EHCI_LEGACY_OS_OWNED    (1<<24)
-            #define EHCI_LEGACY_OWNED_MASK  (EHC_LEGACY_BIOS_OWNED | EHC_LEGACY_OS_OWNED)
+            #define EHCI_LEGACY_OWNED_MASK  (EHCI_LEGACY_BIOS_OWNED | EHCI_LEGACY_OS_OWNED)
 
             #define EHCI_PORT_WRITE_MASK     0x007FF1EE
 
@@ -122,11 +122,11 @@ namespace CactusOS
                 uint32_t        regBase = 0;
                 uint8_t         operRegsOffset = 0;
 
-                uint32_t        AsyncListVirt = 0;
-                uint32_t        AsyncListPhys = 0;
+                e_queueHead_t*  asyncList = 0;
+                uint32_t        asyncListPhys = 0;
 
-                uint32_t*       frameList = 0;
-                uint32_t        frameListPhys = 0;
+                uint32_t*       periodicList = 0;
+                uint32_t        periodicListPhys = 0;
                 e_queueHead_t*  queueStackList = 0;
 
                 uint8_t         dev_address = 1;
@@ -134,6 +134,7 @@ namespace CactusOS
 
                 uint32_t ReadOpReg(uint32_t reg);
                 void WriteOpReg(uint32_t reg, uint32_t val);
+                void DisplayRegisters();
             public:
                 EHCIController(PCIDevice* device);
 
@@ -143,12 +144,30 @@ namespace CactusOS
                 // Reset port of this controller, returns true when succesfull
                 bool ResetPort(uint8_t port);
 
+                // Release BIOS ownership of controller
+                // On Entry:
+                //   params: the dword value of the capability register
+                // On Return:
+                //   true if ownership released
+                // 
+                // Set bit 24 to indicate to the BIOS to release ownership
+                // The BIOS should clear bit 16 indicating that it has successfully done so
+                // Ownership is released when bit 24 is set *and* bit 16 is clear.
+                // This will wait EHC_LEGACY_TIMEOUT ms for the BIOS to release ownership.
+                //   (It is unknown the exact time limit that the BIOS has to release ownership.)
+                // 
+                bool StopLegacy(const uint32_t params);
+
+                // Enable or disable the periodic or async list
+                bool EnableList(const bool enable, const uint8_t bit);
+
+                void InitializeAsyncList();
+                void InitializePeriodicList();
+
                 uint32_t HandleInterrupt(uint32_t esp);
                 
                 bool WaitForRegister(const uint32_t reg, const uint32_t mask, const uint32_t result, unsigned ms);
                 bool SetupNewDevice(const int port);
-                bool EnableAsycnList();
-                bool EnablePeriodicList();
 
                 void SetupQueueHead(e_queueHead_t* head, const uint32_t qtd, uint8_t endpt, const uint16_t mps, const uint8_t address);
                 int MakeSetupTransferDesc(e_TransferDescriptor_t* tdVirt, const uint32_t tdPhys, uint32_t bufPhys);

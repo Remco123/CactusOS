@@ -1,5 +1,6 @@
 #include <system/drivers/usb/controllers/ohci.h>
 #include <system/system.h>
+#include <system/memory/deviceheap.h>
 #include <system/drivers/usb/usbdefs.h>
 #include <system/drivers/usb/usbdriver.h>
 
@@ -22,16 +23,14 @@ bool OHCIController::Initialize()
     if(BAR0.type == InputOutput)
         return false; // We only want memory mapped controllers
 
-    uint32_t virtIOArea = (uint32_t)KernelHeap::allignedMalloc(pageRoundUp(BAR0.size), PAGE_SIZE);
-    MemoryOperations::memset((void*)virtIOArea, 0, pageRoundUp(BAR0.size));
-    // Save Register memory base
-    this->regBase = virtIOArea;
+    // Allocate virtual chuck of memory that we can use for device
+    this->regBase = DeviceHeap::AllocateChunck(pageRoundUp(BAR0.size));
+
+    // Map memory so that we can use it
+    VirtualMemoryManager::mapVirtualToPhysical((void*)BAR0.address, (void*)this->regBase, pageRoundUp(BAR0.size), true, true);
 
     // Enable BUS Mastering
     System::pci->Write(pciDevice->bus, pciDevice->device, pciDevice->function, 0x04, 0x0006);
-
-    // Map memory so that we can use it
-    VirtualMemoryManager::mapVirtualToPhysical((void*)BAR0.address, (void*)virtIOArea, pageRoundUp(BAR0.size), true, true);
 
     // First, read the version register and check for version 1.0
     if ((readMemReg(regBase + OHCRevision) & 0xFF) != 0x10)

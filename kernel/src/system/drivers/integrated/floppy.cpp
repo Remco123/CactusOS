@@ -1,5 +1,6 @@
 #include <system/drivers/integrated/floppy.h>
 #include <core/port.h>
+#include <system/memory/deviceheap.h>
 #include <system/system.h>
 
 using namespace CactusOS;
@@ -46,7 +47,7 @@ bool FloppyDriver::Initialize()
 	}
 
     // Use address below 1MB for buffer, should be possible until 16MB but this does not seem to work
-    this->bufferVirt = (uint8_t*)KernelHeap::allignedMalloc(PAGE_SIZE, PAGE_SIZE);
+    this->bufferVirt = (uint8_t*)DeviceHeap::AllocateChunck(PAGE_SIZE);
 	this->bufferPhys = 0x8000;
 	VirtualMemoryManager::mapVirtualToPhysical((void*)this->bufferPhys, this->bufferVirt, true, true);
 	MemoryOperations::memset(this->bufferVirt, 0, BYTES_PER_SECT);

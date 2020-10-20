@@ -53,11 +53,11 @@ namespace CactusOS
         }
 
         inline static void writeMemReg(const common::uint32_t addr, const common::uint32_t val) {
-            *(common::uint32_t*)addr = val;
+            *(volatile common::uint32_t*)addr = val;
         }
 
         inline static common::uint32_t readMemReg(const common::uint32_t addr) {
-            return *(common::uint32_t*)addr;
+            return *(volatile common::uint32_t*)addr;
         }
     }
 }

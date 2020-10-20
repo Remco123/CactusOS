@@ -1,4 +1,5 @@
 #include <system/drivers/drivermanager.h>
+#include <system/log.h>
 
 using namespace CactusOS;
 using namespace CactusOS::system;
@@ -18,12 +19,9 @@ void DriverManager::ActivateAll()
 {
     for(int i = 0; i < driverList.size(); i++)
     {
+        Log(Info, "Activating driver %s", driverList[i]->GetDriverName());
+        
         if(driverList[i]->Initialize() == false)
-        {
-            uint8_t oldColor = BootConsole::ForegroundColor;
-            BootConsole::ForegroundColor = VGA_COLOR_BLUE;
-            BootConsole::Write("Warning: driver initialize failed for driver: "); BootConsole::WriteLine(driverList[i]->GetDriverName());
-            BootConsole::ForegroundColor = oldColor;
-        }
+            Log(Error, "driver initialize failed for driver -> %s ", driverList[i]->GetDriverName());
     }
 }

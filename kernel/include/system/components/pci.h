@@ -39,10 +39,10 @@ namespace CactusOS
         struct BaseAddressRegister
         {
             bool prefetchable;
-            CactusOS::common::uint32_t address;
-            CactusOS::common::uint32_t size;
             BaseAddressRegisterType type;
-        } __attribute__((packed));
+            CactusOS::common::uint32_t size;
+            CactusOS::common::uint64_t address;
+        };
 
         class PCIController : public SystemComponent
         {

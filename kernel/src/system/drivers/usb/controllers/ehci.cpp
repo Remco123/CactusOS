@@ -1,5 +1,6 @@
 #include <system/drivers/usb/controllers/ehci.h>
 #include <system/drivers/usb/usbdefs.h>
+#include <system/memory/deviceheap.h>
 #include <system/system.h>
 
 using namespace CactusOS;
@@ -25,33 +26,66 @@ void EHCIController::WriteOpReg(uint32_t reg, uint32_t val)
     writeMemReg(regBase + operRegsOffset + reg, val);
 }
 
+void EHCIController::DisplayRegisters()
+{
+    Log(Info, "------------------- EHCI Register Dump-----------------------");
+    Log(Info, "EHCI %s %x", "EHCI_CAPS_CapLength",      readMemReg(this->regBase + EHCI_CAPS_CapLength));
+    Log(Info, "EHCI %s %x", "EHCI_CAPS_Reserved",       readMemReg(this->regBase + EHCI_CAPS_Reserved));
+    Log(Info, "EHCI %s %x", "EHCI_CAPS_IVersion",       readMemReg(this->regBase + EHCI_CAPS_IVersion));
+    Log(Info, "EHCI %s %x", "EHCI_CAPS_HCSParams",      readMemReg(this->regBase + EHCI_CAPS_HCSParams));
+    Log(Info, "EHCI %s %x", "EHCI_CAPS_HCCParams",      readMemReg(this->regBase + EHCI_CAPS_HCCParams));
+    Log(Info, "EHCI %s %x", "EHCI_CAPS_HCSPPortRoute",  readMemReg(this->regBase + EHCI_CAPS_HCSPPortRoute));
+
+    Log(Info, "EHCI %s %x", "EHCI_OPS_USBCommand",          ReadOpReg(EHCI_OPS_USBCommand));
+    Log(Info, "EHCI %s %x", "EHCI_OPS_USBStatus",           ReadOpReg(EHCI_OPS_USBStatus));
+    Log(Info, "EHCI %s %x", "EHCI_OPS_USBInterrupt",        ReadOpReg(EHCI_OPS_USBInterrupt));
+    Log(Info, "EHCI %s %x", "EHCI_OPS_FrameIndex",          ReadOpReg(EHCI_OPS_FrameIndex));
+    Log(Info, "EHCI %s %x", "EHCI_OPS_CtrlDSSegemnt",       ReadOpReg(EHCI_OPS_CtrlDSSegemnt));
+    Log(Info, "EHCI %s %x", "EHCI_OPS_PeriodicListBase",    ReadOpReg(EHCI_OPS_PeriodicListBase));
+    Log(Info, "EHCI %s %x", "EHCI_OPS_AsyncListBase",       ReadOpReg(EHCI_OPS_AsyncListBase));
+    Log(Info, "EHCI %s %x", "EHCI_OPS_ConfigFlag",          ReadOpReg(EHCI_OPS_ConfigFlag));
+    Log(Info, "EHCI %s %x", "EHCI_OPS_PortStatus",          ReadOpReg(EHCI_OPS_PortStatus));
+    Log(Info, "-------------------------------------------------------------");
+}
+
 bool EHCIController::Initialize()
 {
     BaseAddressRegister BAR0 = System::pci->GetBaseAddressRegister(pciDevice->bus, pciDevice->device, pciDevice->function, 0);
     if(BAR0.type == InputOutput)
         return false; // We only want memory mapped controllers
     
-    uint32_t virtIOArea = (uint32_t)KernelHeap::allignedMalloc(pageRoundUp(BAR0.size), PAGE_SIZE);
-    MemoryOperations::memset((void*)virtIOArea, 0, pageRoundUp(BAR0.size));
-    // Save Register memory base
-    this->regBase = virtIOArea;
+    // Allocate virtual chuck of memory that we can use for device
+    this->regBase = DeviceHeap::AllocateChunck(pageRoundUp(BAR0.size));
+
+    // Map memory so that we can use it
+    VirtualMemoryManager::mapVirtualToPhysical((void*)BAR0.address, (void*)this->regBase, pageRoundUp(BAR0.size), true, true);
+
+    Log(Info, "EHCI Bar0 -> %x %x %x %d %d", (uint32_t)BAR0.address & 0xFFFFFFFF, (uint32_t)(((uint64_t)BAR0.address & 0xFFFFFFFF00000000) >> 32), BAR0.size, BAR0.prefetchable, BAR0.type);
+    Log(Info, "EHCI regBase -> %x", this->regBase);
 
     // Enable BUS Mastering
     System::pci->Write(pciDevice->bus, pciDevice->device, pciDevice->function, 0x04, 0x0006);
-
-    // Map memory so that we can use it
-    VirtualMemoryManager::mapVirtualToPhysical((void*)BAR0.address, (void*)virtIOArea, pageRoundUp(BAR0.size), true, true);
 
     // Calculate the operational base
     // Must be before any ReadOpReg() or WriteOpReg() calls
     operRegsOffset = (uint8_t)readMemReg(this->regBase + EHCI_CAPS_CapLength);
 
+    DisplayRegisters();
+
     // Make sure the run/stop bit is clear
     WriteOpReg(EHCI_OPS_USBCommand, ReadOpReg(EHCI_OPS_USBCommand) & ~(1<<0));
 
-    // Reset the controller, returning false after 50mS if it doesn't reset
-    int timeout = 50;
-    WriteOpReg(EHCI_OPS_USBCommand, (1<<1));
+    // Wait for HCHalted bit to be set
+    while(!(ReadOpReg(EHCI_OPS_USBStatus & (1<<12))))
+        System::pit->Sleep(1);
+
+    // Reset the controller, returning false after 500 ms if it doesn't reset
+    int timeout = 500;
+    WriteOpReg(EHCI_OPS_USBCommand, ReadOpReg(EHCI_OPS_USBCommand) | (1<<1));
+    
+    // Give controller some time to initalize the reset
+    System::pit->Sleep(10);
+
     while (ReadOpReg(EHCI_OPS_USBCommand) & (1<<1)) {
         System::pit->Sleep(1);
         if (--timeout == 0)
@@ -63,21 +97,10 @@ bool EHCIController::Initialize()
 
     return true;
 }
-void EHCIController::Setup()
+void EHCIController::InitializeAsyncList()
 {
-    uint32_t hcsparams = readMemReg(this->regBase + EHCI_CAPS_HCSParams);
-    uint32_t hccparams = readMemReg(this->regBase + EHCI_CAPS_HCCParams);
-
-    // Get num_ports from EHCI's HCSPARAMS register
-    numPorts = (uint8_t)(hcsparams & 0x0F);  // At least 1 and no more than 15
-    Log(Info, "EHCI Found %d root hub ports.", numPorts);
-
-    // Allocate then initialize the async queue list (Control and Bulk TD's)
-    AsyncListVirt = (uint32_t)KernelHeap::allignedMalloc(16 * sizeof(e_queueHead_t), 32, &AsyncListPhys);
-    MemoryOperations::memset((void*)AsyncListVirt, 0, 16 * sizeof(e_queueHead_t));
-    e_queueHead_t* queueHeadPtr = (e_queueHead_t*)AsyncListVirt;
-    uint32_t queueHeadPhysPtr = AsyncListPhys;
-
+    e_queueHead_t* queueHeadPtr = this->asyncList;
+    uint32_t queueHeadPhysPtr = this->asyncListPhys;
     // The async queue (Control and Bulk TD's) is a round robin set of 16 Queue Heads.
     for (int i = 0; i < 16; i++) {
         queueHeadPtr->horzPointer = (queueHeadPhysPtr + sizeof(e_queueHead_t)) | QH_HS_TYPE_QH | QH_HS_T0;
@@ -90,51 +113,63 @@ void EHCIController::Setup()
         queueHeadPhysPtr += sizeof(e_queueHead_t);
     }
     
-    // Point the last one at the first one
-    queueHeadPtr--;
-    queueHeadPtr->horzPointer = (AsyncListPhys | QH_HS_TYPE_QH | QH_HS_T0);
-    queueHeadPtr->horzPointerVirt = (AsyncListVirt | QH_HS_TYPE_QH | QH_HS_T0);
+    // Backup and point the last one at the first one
+    queueHeadPtr--;;
+    queueHeadPtr->horzPointer = (this->asyncListPhys | QH_HS_TYPE_QH | QH_HS_T0);
+    queueHeadPtr->horzPointerVirt = ((uint32_t)this->asyncList | QH_HS_TYPE_QH | QH_HS_T0);
+}
+void EHCIController::InitializePeriodicList()
+{
+  // The periodic list is a round robin set of (256, 512, or) 1204 list pointers.
+  for (int i = 0; i < 1024; i++)
+    this->periodicList[i] = QH_HS_TYPE_QH | QH_HS_T1;
+}
+bool EHCIController::EnableList(const bool enable, const uint8_t bit)
+{    
+    // First make sure that both bits are the same
+    // Should not modify the enable bit unless the status bit has the same value
+    uint32_t command = ReadOpReg(EHCI_OPS_USBCommand);
+    if (WaitForRegister(EHCI_OPS_USBStatus, (1<<(bit + 10)), (command & (1<<(bit + 0))) ? (1<<(bit + 10)) : 0, 100)) {
+        if (enable) {
+            if (!(command & (1<<(bit + 0))))
+                WriteOpReg(EHCI_OPS_USBCommand, command | (1<<(bit + 0)));
+            return WaitForRegister(EHCI_OPS_USBStatus, (1<<(bit + 10)), (1<<(bit + 10)), 100);
+        } else {
+            if (command & (1<<(bit + 0)))
+                WriteOpReg(EHCI_OPS_USBCommand, command & ~(1<<(bit + 0)));
+            return WaitForRegister(EHCI_OPS_USBStatus, (1<<(bit + 10)), 0, 100);
+        }
+    }
+    
+    return false;
+}
+void EHCIController::Setup()
+{
+    uint32_t hcsparams = readMemReg(this->regBase + EHCI_CAPS_HCSParams);
+    uint32_t hccparams = readMemReg(this->regBase + EHCI_CAPS_HCCParams);
 
-    // Allocate Periodic list
-    this->frameList = (uint32_t*)KernelHeap::allignedMalloc(1024 * sizeof(uint32_t), 4096, &this->frameListPhys);
-    MemoryOperations::memset(this->frameList, 0x0, 1024 * sizeof(uint32_t));
+    // Get num_ports from EHCI's HCSPARAMS register
+    numPorts = (uint8_t)(hcsparams & 0x0F);  // At least 1 and no more than 15
+    Log(Info, "EHCI Found %d root hub ports.", numPorts);
 
-    // Allocate queue stack list
-    uint32_t queuePhysStart = 0;
-    this->queueStackList = (e_queueHead_t*)KernelHeap::allignedMalloc(sizeof(e_queueHead_t) * NUM_EHCI_QUEUES, 16, &queuePhysStart);
-    MemoryOperations::memset(this->queueStackList, 0x0, sizeof(e_queueHead_t) * NUM_EHCI_QUEUES);
-
-    // Set all queue entries to invalid
-    for(int i = 0; i < NUM_EHCI_QUEUES; i++) {
-        this->queueStackList[i].horzPointer = QH_HS_T1;
-        this->queueStackList[i].curQTD = 0;
-        this->queueStackList[i].transferDescriptor.nextQTD = QH_HS_T1;
-        this->queueStackList[i].transferDescriptor.altNextQTD = QH_HS_T1;
-        this->queueStackList[i].hubFlags = (1<<30) | 0x1C;
+    // Turn off legacy support for Keyboard and Mice
+    if (!StopLegacy(hccparams)) {
+        Log(Error, "EHCI BIOS did not release Legacy support...");
+        System::usbManager->RemoveController(this);
+        return;
     }
 
-    // Setup queue entries to point to each other
-    // 128 -> 64 -> 32 -> 16 -> 8 -> 4 -> 2 -> 1
-    for(int i = 0; i < NUM_EHCI_QUEUES - 1; i++) {
-        this->queueStackList[i].horzPointer = (queuePhysStart + (i + 1) * sizeof(e_queueHead_t)) | QH_HS_TYPE_QH | QH_HS_T0;
-    }
+    // Allocate Async and Periodic lists
+    this->asyncList = (e_queueHead_t*)KernelHeap::allignedMalloc(16 * sizeof(e_queueHead_t), 32, &this->asyncListPhys);
+    this->periodicList = (uint32_t*)KernelHeap::allignedMalloc(1024 * sizeof(uint32_t), 4096, &this->periodicListPhys);
 
-    // Setup EHCI stack frame
-    for(int i = 0; i < 1024; i++) {
-        int queueStart = E_QUEUE_Q1;
-        if((i + 1) % 2 == 0) queueStart--;
-        if((i + 1) % 4 == 0) queueStart--;
-        if((i + 1) % 8 == 0) queueStart--;
-        if((i + 1) % 16 == 0) queueStart--;
-        if((i + 1) % 32 == 0) queueStart--;
-        if((i + 1) % 64 == 0) queueStart--;
-        if((i + 1) % 128 == 0) queueStart--;
+    // And then initialize them
+    InitializeAsyncList();
+    InitializePeriodicList();
 
-        this->frameList[i] = (queuePhysStart + queueStart * sizeof(e_queueHead_t)) | QH_HS_TYPE_QH | QH_HS_T0;
-    }
-
-
-
+    // Set List Pointers
+    WriteOpReg(EHCI_OPS_PeriodicListBase, this->periodicListPhys);
+    WriteOpReg(EHCI_OPS_AsyncListBase, this->asyncListPhys);
 
     // Set Interrupt Enable register for following interrupts:
     // Short Packet, Completion of frame, Error with transaction and port change interrupt
@@ -143,25 +178,25 @@ void EHCIController::Setup()
     // Set frame number index to 0
     WriteOpReg(EHCI_OPS_FrameIndex, 0);
 
-    // Set List Pointers
-    WriteOpReg(EHCI_OPS_PeriodicListBase, this->frameListPhys);
-    WriteOpReg(EHCI_OPS_AsyncListBase, AsyncListPhys);
-
     // We use 32bit addresses so set this to 0
     WriteOpReg(EHCI_OPS_CtrlDSSegemnt, 0);
 
+    // Clear status register
     WriteOpReg(EHCI_OPS_USBStatus, 0x3F);
-    WriteOpReg(EHCI_OPS_USBCommand, (0x8 << 16) | (1<<5) | (1<<4) | (1<<0));
+
+    // Start controller, 8 micro-frames, (frame list size = 1024)
+    WriteOpReg(EHCI_OPS_USBCommand, (0x8 << 16) | (1<<0));
 
     // Enable the asynchronous list
-    if (!EnableAsycnList()) {
-        Log(Error, "Did not enable the Ascynchronous List");
+    if (!EnableList(true, 5)) {
+        Log(Error, "EHCI Did not enable the Ascynchronous List");
         System::usbManager->RemoveController(this);
         return;
     }
+    
     // Enable the periodic list
-    if (!EnablePeriodicList()) {
-        Log(Error, "Did not enable the Periodic List");
+    if (!EnableList(true, 4)) {
+        Log(Error, "EHCI Did not enable the Periodic List");
         System::usbManager->RemoveController(this);
         return;
     }
@@ -233,11 +268,13 @@ void EHCIController::ControllerChecksThread()
             portStatus |= EHCI_PORT_CSC; // Clear bit
             WriteOpReg(HCPortStatusOff, portStatus);
 
-            if (portStatus & EHCI_PORT_CCS) // Connected
+            if (portStatus & EHCI_PORT_CCS) { // Connected
                 if(ResetPort(i))
                     SetupNewDevice(i);
-            else
+            }
+            else {
                 System::usbManager->RemoveDevice(this, i);          
+            }
         }
     }
 }
@@ -337,33 +374,27 @@ bool EHCIController::SetupNewDevice(const int port) {
     return true;
 }
 
-// Enable asynchronous list
-bool EHCIController::EnableAsycnList() {    
-    // First make sure that both bits are the same
-    // Should not modify the enable bit unless the status bit has the same value
-    uint32_t command = ReadOpReg(EHCI_OPS_USBCommand);
-    if (WaitForRegister(EHCI_OPS_USBStatus, (1<<15), (command & (1<<5)) ? (1<<15) : 0, 100)) {
-        if (!(command & (1<<5)))
-            WriteOpReg(EHCI_OPS_USBCommand, command | (1<<5));
-            
-        return WaitForRegister(EHCI_OPS_USBStatus, (1<<15), (1<<15), 100);
-    }
+bool EHCIController::StopLegacy(const uint32_t params)
+{
+    const uint8_t eecp = (uint8_t) ((params & 0x0000FF00) >> 8);
     
-    return false;
-}
-// Enable periodic list
-bool EHCIController::EnablePeriodicList() {    
-    // First make sure that both bits are the same
-    // Should not modify the enable bit unless the status bit has the same value
-    uint32_t command = ReadOpReg(EHCI_OPS_USBCommand);
-    if (WaitForRegister(EHCI_OPS_USBStatus, (1<<14), (command & (1<<4)) ? (1<<14) : 0, 100)) {
-        if (!(command & (1<<4)))
-            WriteOpReg(EHCI_OPS_USBCommand, command | (1<<4));
-            
-        return WaitForRegister(EHCI_OPS_USBStatus, (1<<14), (1<<14), 100);
-    }
-    
-    return false;
+    if (eecp >= 0x40) 
+    {
+        // set bit 24 asking the BIOS to release ownership
+        System::pci->Write(pciDevice->bus, pciDevice->device, pciDevice->function, eecp + EHCI_LEGACY_USBLEGSUP, 
+        (System::pci->Read(pciDevice->bus, pciDevice->device, pciDevice->function, eecp + EHCI_LEGACY_USBLEGSUP) | EHCI_LEGACY_OS_OWNED));
+        
+        // Timeout if bit 24 is not set and bit 16 is not clear after EHC_LEGACY_TIMEOUT milliseconds
+        int timeout = EHCI_LEGACY_TIMEOUT;
+        while (timeout--) {
+            if ((System::pci->Read(pciDevice->bus, pciDevice->device, pciDevice->function, eecp + EHCI_LEGACY_USBLEGSUP) & EHCI_LEGACY_OWNED_MASK) == EHCI_LEGACY_OS_OWNED)
+                return true;
+            System::pit->Sleep(1);
+        }
+        
+        return false;
+    } else
+        return true;
 }
 
 void EHCIController::SetupQueueHead(e_queueHead_t* head, const uint32_t qtd, uint8_t endpt, const uint16_t mps, const uint8_t address) {    
@@ -440,14 +471,14 @@ int EHCIController::MakeTransferDesc(uint32_t virtAddr, uint32_t physAddr, const
 }
 
 void EHCIController::InsertIntoQueue(e_queueHead_t* item, uint32_t itemPhys, const uint8_t type) {
-    item->horzPointer = ((e_queueHead_t*)AsyncListVirt)->horzPointer;
-    item->horzPointerVirt = ((e_queueHead_t*)AsyncListVirt)->horzPointerVirt;
+    item->horzPointer = this->asyncList->horzPointer;
+    item->horzPointerVirt = this->asyncList->horzPointerVirt;
 
-    ((e_queueHead_t*)AsyncListVirt)->horzPointer = itemPhys | type;
-    ((e_queueHead_t*)AsyncListVirt)->horzPointerVirt = (uint32_t)item | type;
+    this->asyncList->horzPointer = itemPhys | type;
+    this->asyncList->horzPointerVirt = (uint32_t)item | type;
 
-    item->prevPointer = AsyncListPhys;
-    item->prevPointerVirt = AsyncListVirt;
+    item->prevPointer = this->asyncListPhys;
+    item->prevPointerVirt = (uint32_t)this->asyncList;
 }
 
 // removes a queue from the async list
@@ -581,7 +612,6 @@ bool EHCIController::ControlOut(const int devAddress, const int packetSize, cons
     
     return (ret == 1);
 }
-
 bool EHCIController::ControlIn(void* targ, const int devAddress, const int packetSize, const int len, const uint8_t requestType, const uint8_t request, const uint16_t valueHigh, const uint16_t valueLow, const uint16_t index) 
 {
     //Create Request Packet
@@ -629,6 +659,7 @@ bool EHCIController::ControlIn(void* targ, const int devAddress, const int packe
     KernelHeap::allignedFree(requestPacket);
     return false;
 }
+
 /////////
 // USB Controller Functions
 /////////
@@ -678,6 +709,7 @@ bool EHCIController::BulkOut(USBDevice* device, void* sendBuffer, int len, int e
     
     return (ret == 1);
 }
+
 bool EHCIController::ControlIn(USBDevice* device, void* target, const int len, const uint8_t requestType, const uint8_t request, const uint16_t valueHigh, const uint16_t valueLow, const uint16_t index)
 {
     return ControlIn(target, device->devAddress, 64, len, requestType, request, valueHigh, valueLow, index);

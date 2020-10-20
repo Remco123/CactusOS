@@ -175,6 +175,12 @@ extern "C" void kernelMain(const multiboot_info_t* mbi, unsigned int multiboot_m
     kernelProcess->Threads[0]->parent = kernelProcess;
     System::scheduler->AddThread(kernelProcess->Threads[0], false);
 
+    // Check if we have found the directory with all the required stuff
+    if(System::vfs->bootPartitionID == -1) {
+        Log(Error, "Boot partition not found/present");
+        while(1) asm ("pause");
+    }   
+
     // Check if kernel is run from HardDisk
     // If not than ask the user if they would like to run the installer
     // Otherwise we run the liveCD

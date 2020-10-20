@@ -1,4 +1,5 @@
 #include <system/components/pci.h>
+#include <system/system.h>
 
 using namespace CactusOS;
 using namespace CactusOS::common;
@@ -62,7 +63,7 @@ void PCIController::PopulateDeviceList()
                 BootConsole::Write(Convert::IntToString(device)); BootConsole::Write(":");
                 BootConsole::Write(Convert::IntToString(function));
 
-                //Add pci device to list
+                // Add pci device to list
                 PCIDevice* pciDevice = new PCIDevice();
                 pciDevice->bus = bus;
                 pciDevice->device = device;
@@ -77,12 +78,55 @@ void PCIController::PopulateDeviceList()
                 pciDevice->revisionID = Read(bus, device, function, 0x08);
                 pciDevice->interrupt = Read(bus, device, function, 0x3C);
 
-                //Get the portBase from the base address registers
+                // Get the portBase from the base address registers
                 for(int barNum = 0; barNum < 6; barNum++)
                 {
                     BaseAddressRegister bar = GetBaseAddressRegister(bus, device, function, barNum);
                     if(bar.address && (bar.type == InputOutput))
                         pciDevice->portBase = (uint32_t)bar.address;
+                }
+
+                // Read status byte from device
+                uint16_t status = (Read(bus, device, function, 0x04) & 0xFFFF0000) >> 16;
+                if(status & (1<<4)) { // There is a capabilities list
+                    uint8_t offset = Read(bus, device, function, 0x34) & 0xFF;
+                    offset &= ~(0b11);
+                    
+                    while(offset) {
+                        // Read value stored at offset, this contains ID, next offset and a feature specific uint16_t.
+                        uint32_t capValue1 = Read(bus, device, function, offset);
+
+                        // Extract ID from value read above
+                        uint8_t id = capValue1 & 0xFF;
+
+                        if(id == 1) // Power Management, see https://lekensteyn.nl/files/docs/PCI_Power_Management_12.pdf for details
+                        {
+                            // Read next 4 bytes of structure
+                            uint32_t capValue2 = Read(bus, device, function, offset + 4);
+
+                            //Log(Info, "CAP1 = %x    CAP2 = %x", capValue1, capValue2);
+
+                            // Extract PMCSR from value
+                            uint16_t powerValue = (capValue2 & 0xFFFF);
+                            
+                            // Powerstate is not D0 (Complete on)
+                            if((powerValue & 0b11) != 0) {
+                                powerValue &= ~(0b11); // Set it to D0
+                                powerValue |= (1<<15); // Also set PME Status bit (not sure why)
+                                Write(bus, device, function, offset + 4, (capValue2 & 0xFFFF0000) | powerValue);
+
+                                System::pit->Sleep(10);
+
+                                // Read second 4 bytes again to check if power on succeeded
+                                capValue2 = Read(bus, device, function, offset + 4);
+
+                                if((capValue2 & 0b11) != 0) // Power on failed
+                                    Log(Error, "Could not enable power for device %d:%d:%d", bus, device, function);
+                            }
+                        }
+
+                        offset = (capValue1 & 0xFF00) >> 8;
+                    } 
                 }
 
                 BootConsole::SetX(8); BootConsole::Write("  ");

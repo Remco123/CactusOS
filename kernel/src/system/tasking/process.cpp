@@ -56,7 +56,10 @@ Process* ProcessHelper::Create(char* fileName, bool isKernel)
 
     //Copy kernel pages
     pageDir->entries[KERNEL_PTNUM] = ((PageDirectory*)&BootPageDirectory)->entries[KERNEL_PTNUM];
-    pageDir->entries[KERNEL_PTNUM + 1] = ((PageDirectory*)&BootPageDirectory)->entries[KERNEL_PTNUM + 1];
+    
+    //Copy kernel heap as well
+    for(uint32_t i = 0; i < KERNEL_HEAP_SIZE / 4_MB; i++)
+        pageDir->entries[KERNEL_PTNUM + i + 1] = ((PageDirectory*)&BootPageDirectory)->entries[KERNEL_PTNUM + i + 1];
 
     //Set the last pde to the page directory itself
     //With this we can use recursive page tables

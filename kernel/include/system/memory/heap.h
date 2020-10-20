@@ -8,7 +8,7 @@ namespace CactusOS
     namespace system
     {
         #define KERNEL_HEAP_START (KERNEL_VIRT_ADDR + 4_MB)
-        #define KERNEL_HEAP_SIZE 4_MB
+        #define KERNEL_HEAP_SIZE 16_MB
 
         #define USE_HEAP_MAGIC 1
         

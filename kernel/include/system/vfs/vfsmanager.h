@@ -12,7 +12,7 @@ namespace CactusOS
         public:
             List<VirtualFileSystem*>* Filesystems;
         public:
-            int bootPartitionID = 0;
+            int bootPartitionID = -1;
 
             VFSManager();
             void Mount(VirtualFileSystem* vfs);
