@@ -1,6 +1,7 @@
 #include <system/tasking/process.h>
 
 #include <system/system.h>
+#include <system/memory/deviceheap.h>
 #include <system/tasking/elf.h>
 
 using namespace CactusOS;
@@ -60,6 +61,11 @@ Process* ProcessHelper::Create(char* fileName, bool isKernel)
     //Copy kernel heap as well
     for(uint32_t i = 0; i < KERNEL_HEAP_SIZE / 4_MB; i++)
         pageDir->entries[KERNEL_PTNUM + i + 1] = ((PageDirectory*)&BootPageDirectory)->entries[KERNEL_PTNUM + i + 1];
+
+    //We also need to copy memory used by devices to this process
+    //We assume all memory is initialized when the first process is started
+    for(uint32_t i = DEVICE_HEAP_START; i < (DEVICE_HEAP_START + DEVICE_HEAP_SIZE); i += 4_MB)
+        pageDir->entries[PAGEDIR_INDEX(i)] = ((PageDirectory*)&BootPageDirectory)->entries[PAGEDIR_INDEX(i)];
 
     //Set the last pde to the page directory itself
     //With this we can use recursive page tables

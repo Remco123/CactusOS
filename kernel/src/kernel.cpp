@@ -59,8 +59,8 @@ void IdleThread()
             Power::Poweroff();
         }
         
-        //Nothing more to do here
-        System::scheduler->ForceSwitch();
+        //Wait for interrupt to perform next operation
+        asm volatile("hlt");
     }
 }
 

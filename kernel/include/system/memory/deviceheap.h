@@ -8,8 +8,13 @@ namespace CactusOS
 {
     namespace system
     {
+        // Memory reserved for devices, 100MB Should be more than enough
+        #define DEVICE_HEAP_SIZE 100_MB
+
+        #define DEVICE_HEAP_START (KERNEL_HEAP_START + KERNEL_HEAP_SIZE + 4_MB)
+        #define DEVICE_HEAP_END (DEVICE_HEAP_START + DEVICE_HEAP_SIZE)
+
         // Class that can allocate memory for memory mapped devices
-        // Memory will range from (KERNEL_HEAP_START+KERNEL_HEAP_SIZE) to PAGE_TABLE_ADDRESS
         class DeviceHeap
         {
         private:
