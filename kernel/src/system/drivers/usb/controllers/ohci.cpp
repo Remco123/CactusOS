@@ -23,11 +23,14 @@ bool OHCIController::Initialize()
     if(BAR0.type == InputOutput)
         return false; // We only want memory mapped controllers
 
+    uint32_t memStart = pageRoundDown((uint32_t)BAR0.address); // Assuming 32-Bit address
+    uint32_t memEnd = pageRoundUp((uint32_t)BAR0.address + BAR0.size);
+    
     // Allocate virtual chuck of memory that we can use for device
-    this->regBase = DeviceHeap::AllocateChunck(pageRoundUp(BAR0.size));
+    this->regBase = DeviceHeap::AllocateChunck(memEnd - memStart) + ((uint32_t)BAR0.address % PAGE_SIZE);
 
     // Map memory so that we can use it
-    VirtualMemoryManager::mapVirtualToPhysical((void*)BAR0.address, (void*)this->regBase, pageRoundUp(BAR0.size), true, true);
+    VirtualMemoryManager::mapVirtualToPhysical((void*)memStart, (void*)this->regBase, memEnd - memStart, true, true);
 
     // Enable BUS Mastering
     System::pci->Write(pciDevice->bus, pciDevice->device, pciDevice->function, 0x04, 0x0006);

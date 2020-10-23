@@ -53,14 +53,17 @@ bool EHCIController::Initialize()
     BaseAddressRegister BAR0 = System::pci->GetBaseAddressRegister(pciDevice->bus, pciDevice->device, pciDevice->function, 0);
     if(BAR0.type == InputOutput)
         return false; // We only want memory mapped controllers
+
+    uint32_t memStart = pageRoundDown((uint32_t)BAR0.address); // Assuming 32-Bit address
+    uint32_t memEnd = pageRoundUp((uint32_t)BAR0.address + BAR0.size);
     
     // Allocate virtual chuck of memory that we can use for device
-    this->regBase = DeviceHeap::AllocateChunck(pageRoundUp(BAR0.size));
+    this->regBase = DeviceHeap::AllocateChunck(memEnd - memStart) + ((uint32_t)BAR0.address % PAGE_SIZE);
 
     // Map memory so that we can use it
-    VirtualMemoryManager::mapVirtualToPhysical((void*)BAR0.address, (void*)this->regBase, pageRoundUp(BAR0.size), true, true);
+    VirtualMemoryManager::mapVirtualToPhysical((void*)memStart, (void*)this->regBase, memEnd - memStart, true, true);
 
-    Log(Info, "EHCI Bar0 -> %x %x %x %d %d", (uint32_t)BAR0.address & 0xFFFFFFFF, (uint32_t)(((uint64_t)BAR0.address & 0xFFFFFFFF00000000) >> 32), BAR0.size, BAR0.prefetchable, BAR0.type);
+    Log(Info, "EHCI Controller Memory addres %x -> Memory Mapped: Start=%x End=%x Size=%x", (uint32_t)BAR0.address, memStart, memEnd, memEnd - memStart);
     Log(Info, "EHCI regBase -> %x", this->regBase);
 
     // Enable BUS Mastering
