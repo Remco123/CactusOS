@@ -182,7 +182,6 @@ void OHCIController::Setup()
 }
 void OHCIController::SetupNewDevice(uint8_t port)
 {
-    static int dev_address = 1;
     struct DEVICE_DESC devDesc;
 
     // Port has been reset, and is ready to be used
@@ -199,23 +198,21 @@ void OHCIController::SetupNewDevice(uint8_t port)
             return;
        
         // Set address
-        good_ret = ControlOut(ls_device, 0, devDesc.max_packet_size, 0, STDRD_SET_REQUEST, SET_ADDRESS, 0, dev_address);
+        good_ret = ControlOut(ls_device, 0, devDesc.max_packet_size, 0, STDRD_SET_REQUEST, SET_ADDRESS, 0, this->newDeviceAddress);
         if (!good_ret) {
-            Log(Error, "Error when trying to set device address to %d", dev_address);
+            Log(Error, "Error when trying to set device address to %d", this->newDeviceAddress);
             return;
         }
 
         // Create Device
         USBDevice* newDev = new USBDevice();
         newDev->controller = this;
-        newDev->devAddress = dev_address;
+        newDev->devAddress = this->newDeviceAddress++;
         newDev->portNum = port;
         newDev->ohciProperties.desc_mps = devDesc.max_packet_size;
         newDev->ohciProperties.ls_device = ls_device;
         
         System::usbManager->AddDevice(newDev);
-        
-        dev_address++;
     }
 }
 void OHCIController::ControllerChecksThread()
@@ -315,7 +312,7 @@ bool OHCIController::ControlOut(const bool lsDevice, const int devAddress, const
     for (int i = 0; i < 2; i++) {
         if ((td[i].flags & 0xF0000000) != 0) {
             ret = false;
-            Log(Error, "our_tds[%d].cc != 0  (%d)", i, (td[i].flags & 0xF0000000) >> 28);
+            Log(Error, "OCHI: our_tds[%d].cc != 0  (%d)", i, (td[i].flags & 0xF0000000) >> 28);
             break;
         }
     }
@@ -410,7 +407,7 @@ bool OHCIController::ControlIn(void* targ, const bool lsDevice, const int devAdd
         if ((td[i].flags & 0xF0000000) != 0) {
             uint8_t err = (td[i].flags & 0xF0000000) >> 28;
             ret = false;
-            Log(Error, "our_tds[%d].cc != 0  (%d)", i, err);
+            Log(Error, "OHCI: our_tds[%d].cc != 0  (%d)", i, err);
             break;
         }
     }
@@ -482,7 +479,7 @@ bool OHCIController::BulkOut(const bool lsDevice, const int devAddress, const in
     for (int c = 0; c < i; c++) {
         if ((td[c].flags & 0xF0000000) != 0) {
             ret = false;
-            Log(Error, "our_tds[%d].cc != 0  (%d)", c, (td[c].flags & 0xF0000000) >> 28);
+            Log(Error, "OHCI: our_tds[%d].cc != 0  (%d)", c, (td[c].flags & 0xF0000000) >> 28);
             break;
         }
     }
@@ -546,7 +543,7 @@ bool OHCIController::BulkIn(const bool lsDevice, const int devAddress, const int
         if ((td[c].flags & 0xF0000000) != 0) {
             uint8_t err = (td[c].flags & 0xF0000000) >> 28;
             ret = false;
-            Log(Error, "our_tds[%d].cc != 0  (%d)", c, err);
+            Log(Error, "OHCI our_tds[%d].cc != 0  (%d)", c, err);
             break;
         }
     }
@@ -689,8 +686,6 @@ uint32_t OHCIController::HandleInterrupt(uint32_t esp)
     if(val == 0)
         return esp;
 
-    writeMemReg(regBase + OHCInterruptStatus, val); // reset interrupts
-
     if (!((val & (1<<2)) || (val & (1<<6))))
     {
         Log(Info, "USB OHCI %d: ", this->hcca->HccaFrameNumber);
@@ -721,7 +716,7 @@ uint32_t OHCIController::HandleInterrupt(uint32_t esp)
                     MemoryOperations::memset(transfer->bufferPointer, 0, transfer->bufferLen);
 
                 if(status == 2)
-                    Log(Warning, "UHCI: Received NAK");
+                    Log(Warning, "OHCI: Received NAK");
                 
                 bool rescedule = transfer->handler->HandleInterruptPacket(transfer);
                 
@@ -783,6 +778,8 @@ uint32_t OHCIController::HandleInterrupt(uint32_t esp)
     {
         Log(Info, "OHCI, ownership change");
     }
+
+    writeMemReg(regBase + OHCInterruptStatus, val); // reset interrupts
 
     return esp;
 }

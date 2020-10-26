@@ -33,9 +33,12 @@ void USBManager::AddDevice(USBDevice* c)
 {
     deviceList.push_back(c);
 
-    if(this->initDone)
+    if(this->initDone) {
         if(c->AssignDriver())
             Log(Info, "USBDevice %s driver assignment succes!", c->deviceName != 0 ? c->deviceName : "Unnamed");
+        else
+            Log(Warning, "USBDevice %s driver assignment failed!", c->deviceName != 0 ? c->deviceName : "Unnamed");
+    }
 }
 void USBManager::RemoveDevice(USBController* controller, uint8_t port)
 {

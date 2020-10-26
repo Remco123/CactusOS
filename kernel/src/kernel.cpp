@@ -178,7 +178,9 @@ extern "C" void kernelMain(const multiboot_info_t* mbi, unsigned int multiboot_m
     // Check if we have found the directory with all the required stuff
     if(System::vfs->bootPartitionID == -1) {
         Log(Error, "Boot partition not found/present");
-        while(1) asm ("pause");
+        
+        // Just start running the idle thread so we at least detect device changes
+        System::scheduler->ForceSwitch();
     }   
 
     // Check if kernel is run from HardDisk

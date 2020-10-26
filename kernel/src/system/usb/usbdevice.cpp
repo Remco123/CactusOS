@@ -64,6 +64,11 @@ bool USBDevice::AssignDriver()
     MemoryOperations::memset(&dev_desc, 0, sizeof(struct DEVICE_DESC));
     if(!this->controller->GetDeviceDescriptor(&dev_desc, this))
         return false;
+
+    if(dev_desc.len == 0) {
+        Log(Error, "No device is connected even though controller says it is");
+        return false;
+    }
     
     Log(Info, "USBDevice Descriptor:"
         "\n                 len: %d"
@@ -150,6 +155,25 @@ bool USBDevice::AssignDriver()
             {
                 struct CONFIG_DESC* c = (struct CONFIG_DESC*)startByte;
                 Log(Info, "USBDevice Config Desc: NumInterfaces=%d ConfigVal=%d ConfigString=%d Attr=%b MaxPower=%d mA", c->num_interfaces, c->config_val, c->config_indx, c->bm_attrbs, c->max_power);
+                
+                if(c->config_indx) {
+                    struct STRING_DESC configString;
+                    MemoryOperations::memset(&configString, 0, sizeof(struct STRING_DESC));
+                    if(this->controller->GetStringDescriptor(&configString, this, c->config_indx, 0x0409))
+                    {
+                        int strLen = (configString.len-2)/2;
+                        if(strLen > 0) {
+                            //Convert Unicode string to ASCII
+                            char* tmp = new char[strLen + 1];
+                            tmp[strLen] = '\0';
+                            for(int i = 0; i < strLen; i++)
+                                tmp[i] = configString.string[i];
+                            
+                            Log(Info, "     Config String -> %s", tmp);
+                            delete tmp;
+                        }
+                    }
+                }
             }
             else if (length == 9 && type == INTERFACE) // INTERFACE descriptor
             {

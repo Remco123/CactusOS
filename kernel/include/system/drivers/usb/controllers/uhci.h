@@ -109,6 +109,7 @@ namespace CactusOS
             {
             private:
                 PCIDevice* pciDevice;
+                int newDeviceAddress = 1;
 
                 uhci_queue_head_t* queueStackList = 0;
 

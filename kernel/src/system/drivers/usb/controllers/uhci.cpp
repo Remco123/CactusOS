@@ -203,7 +203,6 @@ void UHCIController::Setup()
 }
 void UHCIController::SetupNewDevice(uint8_t port)
 {
-    static int dev_address = 1;
     struct DEVICE_DESC dev_desc;
 
     bool ls_device = (inportw(pciDevice->portBase + port) & (1<<8)) ? true : false;
@@ -215,12 +214,12 @@ void UHCIController::SetupNewDevice(uint8_t port)
         // Reset the port again
         ResetPort(port);
         // Set address of device
-        if (ControlOut(ls_device, 0, dev_desc.max_packet_size, 0, STDRD_SET_REQUEST, SET_ADDRESS, 0, dev_address)) 
+        if (ControlOut(ls_device, 0, dev_desc.max_packet_size, 0, STDRD_SET_REQUEST, SET_ADDRESS, 0, this->newDeviceAddress)) 
         {
             // Setup device
             USBDevice* newDev = new USBDevice();
             newDev->controller = this;
-            newDev->devAddress = dev_address++;
+            newDev->devAddress = this->newDeviceAddress++;
             newDev->portNum = (port - 0x10) / 2;
             newDev->uhciProperties.lowSpeedDevice = ls_device;
             newDev->uhciProperties.maxPacketSize = dev_desc.max_packet_size;

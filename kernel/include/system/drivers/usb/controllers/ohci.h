@@ -76,6 +76,8 @@ namespace CactusOS
             {
             private:
                 PCIDevice* pciDevice;
+                int newDeviceAddress = 1;
+                
                 volatile uint32_t regBase; //Base address of registers
                 //Host Controller Communication Area
                 HCCA_t* hcca;

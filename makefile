@@ -24,7 +24,7 @@
 #######################
 
 INCLUDEDIRS := kernel/include
-QEMUOPTIONS := -boot d -device VGA,edid=on,xres=1024,yres=768 -trace events=../qemuTrace.txt -usb -device usb-ehci,id=ehci -device usb-mouse,bus=ehci.0
+QEMUOPTIONS := -boot d -device VGA,edid=on,xres=1024,yres=768 -trace events=../qemuTrace.txt -usb -device usb-mouse
 
 G++PARAMS := -m32 -g -I $(INCLUDEDIRS) -fno-use-cxa-atexit -nostdlib -fno-builtin -fno-exceptions -fno-rtti -fno-leading-underscore -Wno-write-strings -fpermissive -Wall
 GCCPARAMS := -m32 -g -I $(INCLUDEDIRS) -nostdlib -fno-builtin -Wall

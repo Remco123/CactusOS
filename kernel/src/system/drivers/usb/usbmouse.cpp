@@ -52,7 +52,7 @@ bool USBMouse::Initialize()
         return false;
 
     // Send set-idle request to device
-    if(!this->device->controller->ControlOut(this->device, 0, 0, HOST_TO_DEV | REQ_TYPE_CLASS | RECPT_INTERFACE, REQUEST_SET_IDLE))
+    if(!this->device->controller->ControlOut(this->device, 0, HOST_TO_DEV | REQ_TYPE_CLASS | RECPT_INTERFACE, REQUEST_SET_IDLE))
         Log(Warning, "USBMouse not reacting to SetIdle request");
     
     // Get length of HID report from Interface HID Descriptor
@@ -75,7 +75,7 @@ bool USBMouse::Initialize()
         this->useCustomReport = true;
 
     // Send SET_PROTOCOL request to device
-    if(!this->device->controller->ControlOut(this->device, 0, 0, HOST_TO_DEV | REQ_TYPE_CLASS | RECPT_INTERFACE, REQUEST_SET_PROTOCOL, 0, this->useCustomReport ? 1 : 0))
+    if(!this->device->controller->ControlOut(this->device, 0, HOST_TO_DEV | REQ_TYPE_CLASS | RECPT_INTERFACE, REQUEST_SET_PROTOCOL, 0, this->useCustomReport ? 1 : 0))
         return false;
 
     // Start recieving interrupt packets from device

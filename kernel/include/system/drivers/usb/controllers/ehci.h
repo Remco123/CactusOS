@@ -55,12 +55,13 @@ namespace CactusOS
             #define QH_HS_T0         (0<<0)  // pointer is valid
             #define QH_HS_T1         (1<<0)  // pointer is not valid
 
-            #define QH_HS_TYPE_ISO   (0<<1)  // ISO
             #define QH_HS_TYPE_QH    (1<<1)  // Queue Head
 
-            #define QH_HS_EPS_FS     (0<<12) // Full speed endpoint
-            #define QH_HS_EPS_LS     (1<<12) // Low  speed endpoint
-            #define QH_HS_EPS_HS     (2<<12) // High speed endpoint
+            #define QH_HS_EPS_FS     0 // Full speed endpoint
+            #define QH_HS_EPS_LS     1 // Low  speed endpoint
+            #define QH_HS_EPS_HS     2 // High speed endpoint
+
+            #define EHCI_MPS 64 // Max Packet Speed
 
             #define EHCI_TD_PID_OUT    0
             #define EHCI_TD_PID_IN     1
@@ -77,48 +78,44 @@ namespace CactusOS
 
             #define NUM_EHCI_QUEUES 8
 
-            typedef struct
+            typedef struct e_transferDescriptor e_transferDescriptor_t;
+            typedef struct e_queueHead e_queueHead_t;
+
+            struct e_transferDescriptor
             {
-                uint32_t nextQTD;
-                uint32_t altNextQTD;
-                uint32_t flags;
-                uint32_t bufPtr0;
-                uint32_t bufPtr1;
-                uint32_t bufPtr2;
-                uint32_t bufPtr3;
-                uint32_t bufPtr4;
-
-                uint32_t bufPtr0_Hi;
-                uint32_t bufPtr1_Hi;
-                uint32_t bufPtr2_Hi;
-                uint32_t bufPtr3_Hi;
-                uint32_t bufPtr4_Hi;
-
-                uint32_t nextQTDVirt;
-                uint32_t altNextQTDVirt;
+                uint32_t nextQTD;       // Next Transfer descriptor pointer 31:5 is physical address, 1:4 is reserved, 0 is if the link is valid
+                uint32_t altNextQTD;    // Alternative Transfer descriptor on short packet pointer 31:5 is physical address, 1:4 is reserved, 0 is if the link is valid
+                uint32_t flags;         // Flags of this transfer descriptor
+                uint32_t bufPtr[5];     // Low address of buffer pointer
+                uint32_t bufPtrHi[5];   // High address of buffer pointer
+                
+                // Internal fields
+                e_transferDescriptor_t* nextQTDVirt;
+                e_transferDescriptor_t* altNextQTDVirt;
 
                 uint32_t pad[1];
-            } __attribute__((packed)) e_TransferDescriptor_t;
+            } __attribute__((packed));
 
-            typedef struct
+            struct e_queueHead
             {
-                uint32_t horzPointer;
-                uint32_t flags;
-                uint32_t hubFlags;
-                uint32_t curQTD;
-                e_TransferDescriptor_t transferDescriptor;
+                uint32_t horzPointer;   // Points to next queue head 31:5 is physical address, 4:3 is reserved. 2:1 is type, 0 is if the link is valid
+                uint32_t flags;         // Flags of this queue, includes device specific information
+                uint32_t hubFlags;      // Flags needed when device is on a external hub
+                uint32_t curQTD;        // Current transfer descriptor that is excecuted by the controller
+                e_transferDescriptor_t transferDescriptor; // Transfer descriptor overlay
 
-                // Additional items
-                uint32_t prevPointer;
-                uint32_t prevPointerVirt;
-                uint32_t horzPointerVirt;
+                // Internal fields
+                uint32_t prevPointerPhys; // Physical address of previous transfer descriptor
+                e_queueHead_t* prevPointerVirt; // Virtual pointer to previous queue head, 0 if invallid
+                e_queueHead_t* horzPointerVirt; // Virtual pointer to next queue head, 0 if invallid
                 uint32_t pad[1];
-            } __attribute__((packed)) e_queueHead_t;
+            } __attribute__((packed));
 
             class EHCIController : public USBController, public Driver, public InterruptHandler
             {
             private:
                 PCIDevice*      pciDevice;
+                int             newDeviceAddress = 1;
                 uint32_t        regBase = 0;
                 uint8_t         operRegsOffset = 0;
 
@@ -129,12 +126,14 @@ namespace CactusOS
                 uint32_t        periodicListPhys = 0;
                 e_queueHead_t*  queueStackList = 0;
 
-                uint8_t         dev_address = 1;
                 uint8_t         numPorts = 0;
 
                 uint32_t ReadOpReg(uint32_t reg);
                 void WriteOpReg(uint32_t reg, uint32_t val);
                 void DisplayRegisters();
+                void PrintTransferDescriptors(e_transferDescriptor_t* td);
+                void PrintQueueHead(e_queueHead_t* qh);
+                void PrintAsyncQueue();
             public:
                 EHCIController(PCIDevice* device);
 
@@ -169,14 +168,13 @@ namespace CactusOS
                 bool WaitForRegister(const uint32_t reg, const uint32_t mask, const uint32_t result, unsigned ms);
                 bool SetupNewDevice(const int port);
 
-                void SetupQueueHead(e_queueHead_t* head, const uint32_t qtd, uint8_t endpt, const uint16_t mps, const uint8_t address);
-                int MakeSetupTransferDesc(e_TransferDescriptor_t* tdVirt, const uint32_t tdPhys, uint32_t bufPhys);
-                int MakeTransferDesc(uint32_t virtAddr, uint32_t physAddr, const uint32_t status_qtdVirt, const uint32_t status_qtdPhys, uint32_t bufferPhys, const uint32_t size, const bool last, uint8_t data0, const uint8_t dir, const uint16_t mps);
+                void MakeSetupTransferDesc(e_transferDescriptor_t* tdVirt, const uint32_t tdPhys, uint32_t bufPhys);
+                void MakeTransferDesc(e_transferDescriptor_t* currentTD, uint32_t physAddr, e_transferDescriptor_t* status_qtd, const uint32_t status_qtdPhys, uint32_t bufferPhys, int size, const bool last, uint8_t data0, const uint8_t dir, const uint16_t mps);
                 
                 void InsertIntoQueue(e_queueHead_t* item, uint32_t itemPhys, const uint8_t type);
                 bool RemoveFromQueue(e_queueHead_t* item);
                 
-                int WaitForTransferComplete(e_TransferDescriptor_t* td, const uint32_t timeout, bool* spd);
+                int WaitForTransferComplete(e_transferDescriptor_t* td, const uint32_t timeout, bool* spd);
                 
                 bool ControlOut(const int devAddress, const int packetSize, const int len = 0, const uint8_t requestType = 0, const uint8_t request = 0, const uint16_t valueHigh = 0, const uint16_t valueLow = 0, const uint16_t index = 0);
                 bool ControlIn(void* targ, const int devAddress, const int packetSize, const int len = 0, const uint8_t requestType = 0, const uint8_t request = 0, const uint16_t valueHigh = 0, const uint16_t valueLow = 0, const uint16_t index = 0);

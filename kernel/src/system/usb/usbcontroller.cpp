@@ -92,7 +92,7 @@ uint8_t* USBController::GetConfigDescriptor(USBDevice* device)
 
 bool USBController::SetConfiguration(USBDevice* device, uint8_t config)
 {
-    return ControlOut(device, 0, 0, STDRD_SET_REQUEST, SET_CONFIGURATION, 0, config);
+    return ControlOut(device, 0, STDRD_SET_REQUEST, SET_CONFIGURATION, 0, config);
 }
 
 int USBController::GetConfiguration(USBDevice* device)
