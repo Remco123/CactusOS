@@ -106,9 +106,13 @@ int USBController::GetConfiguration(USBDevice* device)
 
 int USBController::GetMaxLuns(USBDevice* device)
 {
-    uint8_t ret;
-    if(ControlIn(device, &ret, 1, DEV_TO_HOST | REQ_TYPE_CLASS | RECPT_INTERFACE, GET_MAX_LUNS))
-        return ret;
-    
+    uint8_t ret = 0;
+    for(int i = 0; i < 3; i++) {
+        if(ControlIn(device, &ret, 1, DEV_TO_HOST | REQ_TYPE_CLASS | RECPT_INTERFACE, GET_MAX_LUNS))
+            return ret;
+        
+        // If request failed send Clear feature (HALT) to control endpoint
+        device->controller->ControlOut(device, 0, HOST_TO_DEV | REQ_TYPE_STNDRD | RECPT_ENDPOINT, CLEAR_FEATURE);
+    }
     return 0;
 }

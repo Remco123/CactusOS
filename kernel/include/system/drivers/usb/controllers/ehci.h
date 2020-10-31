@@ -179,6 +179,8 @@ namespace CactusOS
                 bool ControlOut(const int devAddress, const int packetSize, const int len = 0, const uint8_t requestType = 0, const uint8_t request = 0, const uint16_t valueHigh = 0, const uint16_t valueLow = 0, const uint16_t index = 0);
                 bool ControlIn(void* targ, const int devAddress, const int packetSize, const int len = 0, const uint8_t requestType = 0, const uint8_t request = 0, const uint16_t valueHigh = 0, const uint16_t valueLow = 0, const uint16_t index = 0);
                 
+                bool BulkOut(USBEndpoint* toggleSrc, const int devAddress, const int packetSize, const int endP, void* bufPtr, const int len = 0);
+                bool BulkIn(USBEndpoint* toggleSrc, const int devAddress, const int packetSize, const int endP, void* bufPtr, const int len = 0);
 
                 //////////
                 // USB Controller Common Functions

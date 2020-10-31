@@ -615,6 +615,82 @@ bool EHCIController::ControlIn(void* targ, const int devAddress, const int packe
     return false;
 }
 
+bool EHCIController::BulkOut(USBEndpoint* toggleSrc, const int devAddress, const int packetSize, const int endP, void* bufPtr, const int len)
+{
+    uint32_t bufPhys;
+    void* tempBuffer = KernelHeap::malloc(len, &bufPhys);
+    MemoryOperations::memcpy(tempBuffer, bufPtr, len);
+
+    uint32_t queuePhys; // Physical address of queue
+    uint32_t td0Phys; // Physical address of start of transfer descriptors
+    e_queueHead_t* queue = (e_queueHead_t*)KernelHeap::allignedMalloc(sizeof(e_queueHead_t), 64, &queuePhys);
+    e_transferDescriptor_t* td0 = (e_transferDescriptor_t*)KernelHeap::allignedMalloc(sizeof(e_transferDescriptor_t) * 16, 64, &td0Phys);
+    
+    // Clear both buffers to 0
+    MemoryOperations::memset(queue, 0, sizeof(e_queueHead_t));
+    MemoryOperations::memset(td0, 0, sizeof(e_transferDescriptor_t) * 16);
+    
+    // Setup queue head
+    queue->flags = (8<<28) | (packetSize << 16) | (0<<15) | (1<<14) | (QH_HS_EPS_HS<<12) | (endP << 8) | (0<<7) | (devAddress & 0x7F);
+    queue->hubFlags = (1<<30) | (0<<23) | (0<<16);
+    queue->transferDescriptor.nextQTD = td0Phys;
+
+    MakeTransferDesc(td0, td0Phys, 0, 0, bufPhys, len, true, toggleSrc->Toggle(), EHCI_TD_PID_OUT, packetSize);
+    for(int t = 0; t < (1 + ((len + (packetSize-1)) / packetSize)); t++)
+        toggleSrc->Toggle();
+
+    InsertIntoQueue(queue, queuePhys, QH_HS_TYPE_QH);
+    int ret = WaitForTransferComplete(td0, 2000, 0);
+    RemoveFromQueue(queue);
+
+    KernelHeap::allignedFree(tempBuffer);
+    KernelHeap::allignedFree(queue);
+    KernelHeap::allignedFree(td0);
+    
+    return (ret == 1);
+}
+bool EHCIController::BulkIn(USBEndpoint* toggleSrc, const int devAddress, const int packetSize, const int endP, void* bufPtr, const int len)
+{
+    uint32_t bufferPhys;
+    uint8_t* bufferVirt = (uint8_t*)KernelHeap::malloc(len, &bufferPhys);  // get a physical address buffer and then copy from it later
+
+    uint32_t queuePhys; // Physical address of queue
+    uint32_t td0Phys; // Physical address of start of transfer descriptors
+    e_queueHead_t* queue = (e_queueHead_t*)KernelHeap::allignedMalloc(sizeof(e_queueHead_t), 64, &queuePhys);
+    e_transferDescriptor_t* td0 = (e_transferDescriptor_t*)KernelHeap::allignedMalloc(sizeof(e_transferDescriptor_t) * 16, 64, &td0Phys);
+    
+    // Clear both buffers to 0
+    MemoryOperations::memset(queue, 0, sizeof(e_queueHead_t));
+    MemoryOperations::memset(td0, 0, sizeof(e_transferDescriptor_t) * 16);
+    
+    const int last = ((len + (packetSize-1)) / packetSize);
+    
+    // Setup queue head
+    queue->flags = (8<<28) | (packetSize << 16) | (0<<15) | (1<<14) | (QH_HS_EPS_HS<<12) | (endP << 8) | (0<<7) | (devAddress & 0x7F);
+    queue->hubFlags = (1<<30) | (0<<23) | (0<<16);
+    queue->transferDescriptor.nextQTD = td0Phys;
+
+    MakeTransferDesc(td0, td0Phys, 0, 0, bufferPhys, len, true, toggleSrc->Toggle(), EHCI_TD_PID_IN, packetSize);
+    for(int t = 0; t < (1 + ((len + (packetSize-1)) / packetSize)); t++)
+        toggleSrc->Toggle();
+
+
+    InsertIntoQueue(queue, queuePhys, QH_HS_TYPE_QH);
+    int ret = WaitForTransferComplete(td0, 2000, 0);
+    RemoveFromQueue(queue);
+    
+    if (ret == 1) {
+        // now copy from the physical buffer to the specified buffer
+        MemoryOperations::memcpy(bufPtr, bufferVirt, len);
+    }
+    
+    KernelHeap::allignedFree(queue);
+    KernelHeap::allignedFree(td0);
+    KernelHeap::free(bufferVirt);
+    
+    return (ret == 1);
+}
+
 uint32_t EHCIController::ReadOpReg(uint32_t reg)
 {
     return readMemReg(regBase + operRegsOffset + reg);
@@ -710,11 +786,11 @@ void EHCIController::PrintAsyncQueue()
 
 bool EHCIController::BulkIn(USBDevice* device, void* retBuffer, int len, int endP)
 {
-    return false;
+    return BulkIn(device->endpoints[endP-1], device->devAddress, device->endpoints[endP-1]->maxPacketSize, endP, retBuffer, len);
 }
 bool EHCIController::BulkOut(USBDevice* device, void* sendBuffer, int len, int endP)
 {
-    return false;
+    return BulkOut(device->endpoints[endP-1], device->devAddress, device->endpoints[endP-1]->maxPacketSize, endP, sendBuffer, len);
 }
 
 bool EHCIController::ControlIn(USBDevice* device, void* target, const int len, const uint8_t requestType, const uint8_t request, const uint16_t valueHigh, const uint16_t valueLow, const uint16_t index)

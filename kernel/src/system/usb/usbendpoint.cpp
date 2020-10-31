@@ -18,3 +18,8 @@ bool USBEndpoint::Toggle()
     this->toggleState = !this->toggleState;
     return !this->toggleState; // Return original value
 }
+
+void USBEndpoint::SetToggle(bool v)
+{
+    this->toggleState = v;
+}

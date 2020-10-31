@@ -26,23 +26,25 @@ namespace CactusOS
             #define CBW_SIGNATURE 0x43425355
             #define CSW_SIGNATURE 0x53425355
 
+            #define COMMAND_RETRIES 5
+
             typedef struct 
             {
-                uint32_t signature;     //USBC in hexadecimal, acting as magic number
-                uint32_t tag;           //Signature
-                uint32_t transferLen;   //Number of bytes to transfer excluding size of CBW
-                uint8_t flags;          //7: 0=Out 1=In, 6:0=Reserved
-                uint8_t lun;            //7:4 Reserved, 3:0 Logical Unit Number
-                uint8_t cmdLen;         //Length of command in next field [1-16]
-                uint8_t command[16];    //Command Data
+                uint32_t signature;     // USBC in hexadecimal, acting as magic number
+                uint32_t tag;           // Signature
+                uint32_t transferLen;   // Number of bytes to transfer excluding size of CBW
+                uint8_t flags;          // 7: 0=Out 1=In, 6:0=Reserved
+                uint8_t lun;            // 7:4 Reserved, 3:0 Logical Unit Number
+                uint8_t cmdLen;         // Length of command in next field [1-16]
+                uint8_t command[16];    // Command Data
             } __attribute__((packed)) CommandBlockWrapper;
 
             typedef struct
             {
-                uint32_t signature;     //CSW Magic number
-                uint32_t tag;           //Signature, same as CBW
-                uint32_t dataResidue;   //Difference in data actually read/written
-                uint8_t status;         //Status Byte
+                uint32_t signature;     // CSW Magic number
+                uint32_t tag;           // Signature, same as CBW
+                uint32_t dataResidue;   // Difference in data actually read/written
+                uint8_t status;         // Status Byte
             } __attribute__((packed)) CommandStatusWrapper;
 
             typedef struct
@@ -129,34 +131,36 @@ namespace CactusOS
             class USBMassStorageDriver : public USBDriver, public Disk
             {
             private:
-                int bulkInEP = 0; //Endpoint number of bulk in
-                int bulkOutEP = 0; //Endpoint number of bulk out
-                int maxLUN = 0; //Number of Logical Units
+                int bulkInEP = 0;   // Endpoint number of bulk in
+                int bulkOutEP = 0;  // Endpoint number of bulk out
+                int maxLUN = 0;     // Number of Logical Units
 
-                uint32_t numBlocks = 0; //Number of Blocks
-                uint32_t blockSize = 0; //Size of 1 block
+                uint32_t numBlocks = 0; // Number of Blocks
+                uint32_t blockSize = 0; // Size of 1 block
                 
-                bool use16Base = false; //Should we read/write using the 16 command
+                bool use16Base = false; // Should we read/write using the 16 command
             public:
-                //Create new driver for a MSD
+                // Create new driver for a MSD
                 USBMassStorageDriver(USBDevice* dev);
 
-                //Send request to device and put response in returnData
-                bool SCSIRequestIn(CommandBlockWrapper* request, uint8_t* returnData, int returnLen);
-                //Send request to device and then the specified data
-                bool SCSIRequestOut(CommandBlockWrapper* request, uint8_t* sendData, int sendLen);
-                //Prepare Command Block for a specific request
-                CommandBlockWrapper* SCSIPrepareCommandBlock(uint8_t command, int length, uint64_t lba = 0, int sectors = 0);
+                // Send request to device and put response in returnData
+                bool SCSIRequestIn(CommandBlockWrapper* request, uint8_t* returnData, int returnLen, uint8_t tryCount = 0);
+                // Send request to device and then the specified data
+                bool SCSIRequestOut(CommandBlockWrapper* request, uint8_t* sendData, int sendLen, uint8_t tryCount = 0);
+                // Prepare Command Block for a specific request
+                CommandBlockWrapper SCSIPrepareCommandBlock(uint8_t command, int length, uint64_t lba = 0, int sectors = 0);
+                // Perform a reset recovery process after stall
+                bool ResetRecovery();
 
-                //Called when mass storage device is plugged into system
+                // Called when mass storage device is plugged into system
                 bool Initialize() override;
 
-                //Called when mass storage device is unplugged from system
+                // Called when mass storage device is unplugged from system
                 void DeInitialize() override;
 
-                //Read Sector from mass storage device
+                // Read Sector from mass storage device
                 char ReadSector(common::uint32_t lba, common::uint8_t* buf) override;
-                //Write Sector to mass storage device
+                // Write Sector to mass storage device
                 char WriteSector(common::uint32_t lba, common::uint8_t* buf) override;
             };
         }

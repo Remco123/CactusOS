@@ -38,6 +38,9 @@ namespace CactusOS
 
             // Get toggle bit and toggle it for next packet
             bool Toggle();
+
+            // Set Toggle bit
+            void SetToggle(bool v);
         };
     }
 }
