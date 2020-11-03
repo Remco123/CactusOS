@@ -5,6 +5,7 @@
 
 #include <system/system.h>
 #include <system/tasking/ipcmanager.h>
+#include <system/tasking/lock.h>
 #include <core/power.h>
 #include <system/listings/listingcontroller.h>
 
@@ -13,7 +14,7 @@ using namespace CactusOS::common;
 using namespace CactusOS::core;
 using namespace CactusOS::system;
 
-DECLARE_LOCK(stdOutStream);
+MutexLock stdOutStream;
 extern PowerRequest powerRequestState; //Defined in kernel.cpp
 
 CPUState* CactusOSSyscalls::HandleSyscall(CPUState* state)
@@ -304,14 +305,14 @@ CPUState* CactusOSSyscalls::HandleSyscall(CPUState* state)
                 
                 //This makes sure output text does not get mixed up when interrupted during writing.
                 if(proc->stdOutput == System::ProcStandardOut)
-                    LOCK(stdOutStream);
+                    stdOutStream.Lock();
 
                 for(int d = 0; d < state->ECX; d++)
                     proc->stdOutput->Write(data[d]);
 
                 //Don't forget to unlock
                 if(proc->stdOutput == System::ProcStandardOut)
-                    UNLOCK(stdOutStream);
+                    stdOutStream.Unlock();
             }
             else
                 Log(Warning, "StdOut is zero for process %s", proc->fileName);

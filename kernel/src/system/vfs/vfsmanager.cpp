@@ -74,7 +74,7 @@ bool VFSManager::SearchBootPartition()
 
     uint8_t bootDevice = (System::mbi->boot_device & 0xFF000000) >> 24;
     BiosDriveParameters* diskInfo = System::diskManager->GetDriveInfoBios(bootDevice);
-    if(diskInfo->bufLen > 0) // Valid structure
+    if(diskInfo->bufLen > 0 && diskInfo->interfaceName[0] != '\0') // Valid structure
     {
         DiskType bootDiskType = HardDisk;
         if(diskInfo->bytesPerSector == 2048) // Probably a cdrom

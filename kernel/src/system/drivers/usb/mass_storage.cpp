@@ -33,11 +33,26 @@ bool USBMassStorageDriver::Initialize()
     Log(Info, "MSD: Bulk in=%d Bulk Out=%d LUNS=%d", this->bulkInEP, this->bulkOutEP, this->maxLUN + 1);
 
     ///////////////
+    // Test Unit Ready
+    ///////////////
+    CommandBlockWrapper checkReadyCMD = SCSIPrepareCommandBlock(SCSI_TEST_UNIT_READY, 0);
+    for(int i = 0; i < 3; i++) {
+        if(!SCSIRequest(&checkReadyCMD, 0, 0)) {
+            Log(Warning, "MSD Device not ready yet");
+            System::pit->Sleep(100);
+        }
+        else {
+            break;
+        }
+    }
+
+
+    ///////////////
     // Inquiry
     ///////////////
     CommandBlockWrapper inquiryCMD = SCSIPrepareCommandBlock(SCSI_INQUIRY, sizeof(InquiryReturnBlock));
     InquiryReturnBlock inquiryRet;
-    if(SCSIRequestIn(&inquiryCMD, (uint8_t*)&inquiryRet, sizeof(InquiryReturnBlock))) {
+    if(SCSIRequest(&inquiryCMD, (uint8_t*)&inquiryRet, sizeof(InquiryReturnBlock))) {
         char vendorInfo[8 + 1]; vendorInfo[8] = '\0'; MemoryOperations::memcpy(vendorInfo, inquiryRet.vendorInformation, 8);
         char productInfo[16 + 1]; productInfo[16] = '\0'; MemoryOperations::memcpy(productInfo, inquiryRet.productIdentification, 16);
         char revision[4 + 1]; revision[4] = '\0'; MemoryOperations::memcpy(revision, inquiryRet.productRevisionLevel, 4);
@@ -68,29 +83,19 @@ bool USBMassStorageDriver::Initialize()
         return false;
     }
 
-    CommandBlockWrapper checkReadyCMD = SCSIPrepareCommandBlock(SCSI_TEST_UNIT_READY, 0);
-    for(int i = 0; i < 3; i++) {
-        if(!SCSIRequestIn(&checkReadyCMD, 0, 0)) {
-            Log(Warning, "MSD Device not ready yet");
-            System::pit->Sleep(100);
-        }
-        else {
-            break;
-        }
-    }
-
     ///////////////
     // Read Format Capacities
     // We try this command 3 times since it will stall at least once
     ///////////////
 
+    /*
     CommandBlockWrapper formatCapCMD = SCSIPrepareCommandBlock(SCSI_READ_FORMAT_CAPACITIES, 0xFC);
     uint8_t formatCapRet[0xFC];
     MemoryOperations::memset(formatCapRet, 0, 0xFC);
 
     for(int i = 0; i < 3; i++) 
     {
-        if(SCSIRequestIn(&formatCapCMD, formatCapRet, 0xFC)) {
+        if(SCSIRequest(&formatCapCMD, formatCapRet, 0xFC)) {
             CapacityListHeader* header = (CapacityListHeader*)formatCapRet;
             if(header->listLength > 0) {
                 CapacityDescriptor* capDesc = (CapacityDescriptor*)(formatCapRet + 4);
@@ -100,32 +105,20 @@ bool USBMassStorageDriver::Initialize()
                 break;
             }
         }
-
-        // Command didn't succeed so recieve the Request Sense data
-        CommandBlockWrapper requestSenseCMD = SCSIPrepareCommandBlock(SCSI_REQUEST_SENSE, sizeof(RequestSenseBlock));
-        RequestSenseBlock requestSenseRet;
-        if(SCSIRequestIn(&requestSenseCMD, (uint8_t*)&requestSenseRet, sizeof(RequestSenseBlock))) {
-            Log(Info, "MSD Request Sense after ReadCap: Error=%b Valid=%d Additional=%d Key=%d ASC=%b ASCQ=%b", requestSenseRet.errorCode, requestSenseRet.valid, requestSenseRet.additionalLength, requestSenseRet.senseKey, requestSenseRet.ASC, requestSenseRet.ASCQ);
-        }
-        else {
-            Log(Error, "MSD Could not request sense after read capacity failure");
-            return false;
-        }
-
-
         Log(Warning, "MSD Read Format Capacities try %d failed", i+1);
     }
     
     if(this->numBlocks == 0 || this->blockSize == 0)
         Log(Warning, "MSD Device does not support READ_FORMAT_CAPACITIES command");
-
+    */
+   
     ///////////////
     // Read Capacity
     // Command might not be required since we already got the data from READ_FORMAT_CAPACITIES
     ///////////////
     CommandBlockWrapper readCapacityCMD = SCSIPrepareCommandBlock(SCSI_READ_CAPACITY_10, sizeof(Capacity10Block));
     Capacity10Block readCapacityRet;
-    if(SCSIRequestIn(&readCapacityCMD, (uint8_t*)&readCapacityRet, sizeof(Capacity10Block)))
+    if(SCSIRequest(&readCapacityCMD, (uint8_t*)&readCapacityRet, sizeof(Capacity10Block)))
     {
         readCapacityRet.logicalBlockAddress = __builtin_bswap32(readCapacityRet.logicalBlockAddress);
         readCapacityRet.blockLength = __builtin_bswap32(readCapacityRet.blockLength);
@@ -137,7 +130,7 @@ bool USBMassStorageDriver::Initialize()
             ////////////
             CommandBlockWrapper readCapacity16CMD = SCSIPrepareCommandBlock(SCSI_READ_CAPACITY_16, sizeof(Capacity16Block));
             Capacity16Block readCapacityRet16;
-            if(SCSIRequestIn(&readCapacity16CMD, (uint8_t*)&readCapacityRet16, sizeof(Capacity16Block))) {
+            if(SCSIRequest(&readCapacity16CMD, (uint8_t*)&readCapacityRet16, sizeof(Capacity16Block))) {
                 readCapacityRet16.logicalBlockAddress = __builtin_bswap64(readCapacityRet16.logicalBlockAddress);
                 readCapacityRet16.blockLength = __builtin_bswap64(readCapacityRet16.blockLength);
 
@@ -286,25 +279,46 @@ bool USBMassStorageDriver::ResetRecovery()
 
     return true;
 }
-// Send request to device and put response in returnData
-bool USBMassStorageDriver::SCSIRequestIn(CommandBlockWrapper* request, uint8_t* returnData, int returnLen, uint8_t tryCount)
+// Perform a SCSI In or Out operation on device
+bool USBMassStorageDriver::SCSIRequest(CommandBlockWrapper* request, uint8_t* dataPointer, int dataLength)
 {
     // Send request to device
     if(!this->device->controller->BulkOut(this->device, request, sizeof(CommandBlockWrapper), this->bulkOutEP)) {
         Log(Error, "Error Sending command %b to bulk out endpoint", request->command[0]);
-        this->ResetRecovery();
         
-        if(tryCount == COMMAND_RETRIES)
+        // Clear HALT for the OUT-Endpoint
+        if(!this->device->controller->ControlOut(this->device, 0, HOST_TO_DEV | REQ_TYPE_STNDRD | RECPT_ENDPOINT, CLEAR_FEATURE, 0, 0, this->bulkOutEP)) {
+            Log(Error, "MSD, Clear feature (HALT) Failed for Bulk-Out!");
             return false;
-        else
-            return this->SCSIRequestIn(request, returnData, returnLen, tryCount + 1);
+        }
+        this->device->endpoints[this->bulkOutEP-1]->SetToggle(0);
     }
 
-    // If this is a data command, send the data
-    if(returnLen > 0) {
-        if(!this->device->controller->BulkIn(this->device, returnData, returnLen, this->bulkInEP)) {
-            Log(Error, "Error receiving data after command %b from bulk endpoint, len=%d", request->command[0], returnLen);
-            this->ResetRecovery();
+    // If this is a data command, recieve the data
+    if(dataLength > 0) {
+        if(request->flags == 0x80) { // In Transfer
+            if(!this->device->controller->BulkIn(this->device, dataPointer, dataLength, this->bulkInEP)) {
+                Log(Error, "Error receiving data after command %b from bulk endpoint, len=%d", request->command[0], dataLength);
+                
+                // Clear HALT feature for the IN-Endpoint
+                if(!this->device->controller->ControlOut(this->device, 0, HOST_TO_DEV | REQ_TYPE_STNDRD | RECPT_ENDPOINT, CLEAR_FEATURE, 0, 0, this->bulkInEP)) {
+                    Log(Error, "MSD, Clear feature (HALT) Failed for Bulk-In!");
+                    return false;
+                }
+                this->device->endpoints[this->bulkInEP-1]->SetToggle(0);
+            }
+        }
+        else { // Out Transfer
+            if(!this->device->controller->BulkOut(this->device, dataPointer, dataLength, this->bulkOutEP)) {
+                Log(Error, "Error sending data after command %b to bulk endpoint, len=%d", request->command[0], dataLength);
+                
+                // Clear HALT feature for the OUT-Endpoint
+                if(!this->device->controller->ControlOut(this->device, 0, HOST_TO_DEV | REQ_TYPE_STNDRD | RECPT_ENDPOINT, CLEAR_FEATURE, 0, 0, this->bulkOutEP)) {
+                    Log(Error, "MSD, Clear feature (HALT) Failed for Bulk-Out!");
+                    return false;
+                }
+                this->device->endpoints[this->bulkOutEP-1]->SetToggle(0);                
+            }
         }
     }
 
@@ -312,48 +326,44 @@ bool USBMassStorageDriver::SCSIRequestIn(CommandBlockWrapper* request, uint8_t* 
     // Also when receiving data failed this is required
     CommandStatusWrapper status;
     MemoryOperations::memset(&status, 0, sizeof(CommandStatusWrapper));
-    if(!this->device->controller->BulkIn(this->device, &status, sizeof(CommandStatusWrapper), this->bulkInEP))
+    if(!this->device->controller->BulkIn(this->device, &status, sizeof(CommandStatusWrapper), this->bulkInEP)) {
         Log(Error, "Error reading Command Status Wrapper from bulk in endpoint");
 
-    if((status.signature == CSW_SIGNATURE) && (status.status == 0) && (status.tag == request->tag))
-        return true;
-        
-    Log(Error, "Something wrong with Command Status Wrapper");
-    return false;
-}
-// Send request to device and then the specified data
-bool USBMassStorageDriver::SCSIRequestOut(CommandBlockWrapper* request, uint8_t* sendData, int sendLen, uint8_t tryCount)
-{
-    // Send request to device
-    if(!this->device->controller->BulkOut(this->device, request, sizeof(CommandBlockWrapper), this->bulkOutEP)) {
-        Log(Error, "Error Sending command %b to bulk out endpoint", request->command[0]);
-        this->ResetRecovery();
-        
-        if(tryCount == COMMAND_RETRIES)
+        // Clear HALT feature for the IN-Endpoint
+        if(!this->device->controller->ControlOut(this->device, 0, HOST_TO_DEV | REQ_TYPE_STNDRD | RECPT_ENDPOINT, CLEAR_FEATURE, 0, 0, this->bulkInEP)) {
+            Log(Error, "MSD, Clear feature (HALT) Failed for Bulk-In!");
             return false;
-        else
-            return this->SCSIRequestOut(request, sendData, sendLen, tryCount + 1);
-    }
-
-    // If this is a data command, send the data
-    if(sendLen > 0) {
-        if(!this->device->controller->BulkOut(this->device, sendData, sendLen, this->bulkInEP)) {
-            Log(Error, "Error sending data after command %b to bulk endpoint, len=%d", request->command[0], sendLen);
-            this->ResetRecovery();
         }
+        this->device->endpoints[this->bulkInEP-1]->SetToggle(0);        
     }
 
-    // Receive status descriptor from device.
-    // Also when sending data failed this is required
-    CommandStatusWrapper status;
-    MemoryOperations::memset(&status, 0, sizeof(CommandStatusWrapper));
-    if(!this->device->controller->BulkIn(this->device, &status, sizeof(CommandStatusWrapper), this->bulkInEP))
-        Log(Error, "Error reading Command Status Wrapper from bulk in endpoint");
+    if(status.signature != CSW_SIGNATURE) {
+        this->ResetRecovery();
+        return false;
+    }
 
-    if((status.signature == CSW_SIGNATURE) && (status.status == 0) && (status.tag == request->tag))
+    if((status.status == 1) && (request->command[0] != SCSI_REQUEST_SENSE)) {
+        // Command did not succeed so Request the Sense data
+        CommandBlockWrapper requestSenseCMD = SCSIPrepareCommandBlock(SCSI_REQUEST_SENSE, sizeof(RequestSenseBlock));
+        RequestSenseBlock requestSenseRet;
+
+        if(SCSIRequest(&requestSenseCMD, (uint8_t*)&requestSenseRet, sizeof(RequestSenseBlock)))
+            Log(Info, "MSD Request Sense after ReadCap: Error=%b Valid=%d Additional=%d Key=%d ASC=%b ASCQ=%b", requestSenseRet.errorCode, requestSenseRet.valid, requestSenseRet.additionalLength, requestSenseRet.senseKey, requestSenseRet.ASC, requestSenseRet.ASCQ);
+        else
+            Log(Error, "MSD Could not request sense after read capacity failure");
+
+        return false;
+    }
+
+    if((status.status == 2) && (request->command[0] != SCSI_REQUEST_SENSE)) {
+        this->ResetRecovery();
+        return false;
+    }
+
+    if((status.status == 0) && (status.tag == request->tag))
         return true;
         
-    Log(Error, "Something wrong with Command Status Wrapper");
+    Log(Error, "Something wrong with Command Status Wrapper, status = %d", status.status);
     return false;
 }
 
@@ -366,33 +376,31 @@ void USBMassStorageDriver::DeInitialize()
 // Read Sector from mass storage device
 char USBMassStorageDriver::ReadSector(common::uint32_t lba, common::uint8_t* buf)
 {
+    this->readWriteLock.Lock();
     CommandBlockWrapper sendBuf = SCSIPrepareCommandBlock(this->use16Base ? SCSI_READ_16 : SCSI_READ_10, this->blockSize, lba, 1);
-    if(SCSIRequestIn(&sendBuf, buf, this->blockSize))
+    if(SCSIRequest(&sendBuf, buf, this->blockSize)) {
+        this->readWriteLock.Unlock();
         return 0; // Command Succes
-    
-    // Error with request, so we try to receive error code
-    sendBuf = SCSIPrepareCommandBlock(SCSI_REQUEST_SENSE, sizeof(RequestSenseBlock));
-    RequestSenseBlock status;
-    if(SCSIRequestIn(&sendBuf, (uint8_t*)&status, sizeof(RequestSenseBlock)))
-        return status.errorCode;
+    }
 
-    Log(Error, "Error requesting sense after read sector %x fail", lba);
+    Log(Error, "MSD Error reading sector %x", lba);
+
+    this->readWriteLock.Unlock();
     return -1;
 }
 
 // Write Sector to mass storage device
 char USBMassStorageDriver::WriteSector(common::uint32_t lba, common::uint8_t* buf)
 {
+    this->readWriteLock.Lock();
     CommandBlockWrapper sendBuf = SCSIPrepareCommandBlock(this->use16Base ? SCSI_WRITE_16 : SCSI_WRITE_10, this->blockSize, lba, 1);
-    if(SCSIRequestOut(&sendBuf, buf, this->blockSize))
+    if(SCSIRequest(&sendBuf, buf, this->blockSize)) {
+        this->readWriteLock.Unlock();
         return 0; // Command Succes
-    
-    // Error with request, so we try to receive error code
-    sendBuf = SCSIPrepareCommandBlock(SCSI_REQUEST_SENSE, sizeof(RequestSenseBlock));
-    RequestSenseBlock status;
-    if(SCSIRequestIn(&sendBuf, (uint8_t*)&status, sizeof(RequestSenseBlock)))
-        return status.errorCode;
+    }
 
-    Log(Error, "Error requesting sense after write sector %x fail", lba);
+    Log(Error, "MSD Error writing sector %x", lba);
+
+    this->readWriteLock.Unlock();
     return -1;
 }

@@ -643,9 +643,9 @@ bool EHCIController::BulkOut(USBEndpoint* toggleSrc, const int devAddress, const
     int ret = WaitForTransferComplete(td0, 2000, 0);
     RemoveFromQueue(queue);
 
-    KernelHeap::allignedFree(tempBuffer);
     KernelHeap::allignedFree(queue);
     KernelHeap::allignedFree(td0);
+    KernelHeap::free(tempBuffer);
     
     return (ret == 1);
 }
@@ -673,7 +673,6 @@ bool EHCIController::BulkIn(USBEndpoint* toggleSrc, const int devAddress, const 
     MakeTransferDesc(td0, td0Phys, 0, 0, bufferPhys, len, true, toggleSrc->Toggle(), EHCI_TD_PID_IN, packetSize);
     for(int t = 0; t < (1 + ((len + (packetSize-1)) / packetSize)); t++)
         toggleSrc->Toggle();
-
 
     InsertIntoQueue(queue, queuePhys, QH_HS_TYPE_QH);
     int ret = WaitForTransferComplete(td0, 2000, 0);

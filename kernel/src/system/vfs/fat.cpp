@@ -422,7 +422,7 @@ char* FAT::ParseLFNEntries(List<LFNEntry>* entries, DirectoryEntry sfnEntry)
     {
         if(item.checksum != shortChecksum) {
             Log(Error, "Checksum of LFN entry is incorrect");
-            return 0;
+            return longName;
         }
 
         uint8_t index = item.entryIndex & 0x0F;

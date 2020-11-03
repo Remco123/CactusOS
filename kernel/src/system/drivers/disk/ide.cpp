@@ -1,6 +1,7 @@
 #include <system/drivers/disk/ide.h>
 #include <system/system.h>
 #include <system/tasking/scheduler.h>
+#include <system/tasking/lock.h>
 
 using namespace CactusOS;
 using namespace CactusOS::common;
@@ -12,7 +13,7 @@ uint8_t ide_buf[2048] = {0};
 static volatile uint8_t IRQTriggered = 0;
 static uint8_t atapi_packet[12] = {0xA8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
-DECLARE_LOCK(IDE_LOCK);
+MutexLock IDELock;
 
 IDEInterruptHandler::IDEInterruptHandler(IDEController* controller, uint32_t number)
 : InterruptHandler(IDT_INTERRUPT_OFFSET + number)
@@ -327,7 +328,7 @@ uint8_t IDEController::PrintErrorCode(uint32_t drive, uint8_t err)
 
 char IDEController::ReadSector(uint16_t drive, uint32_t lba, uint8_t* buf)
 {
-    LOCK(IDE_LOCK);
+    IDELock.Lock();
     uint8_t returnCode = 0;
     
     //Check if the drive presents:
@@ -350,13 +351,13 @@ char IDEController::ReadSector(uint16_t drive, uint32_t lba, uint8_t* buf)
         }
         returnCode = PrintErrorCode(drive, err);
     }
-    UNLOCK(IDE_LOCK);
+    IDELock.Unlock();
     return returnCode;
 }
 
 char IDEController::WriteSector(uint16_t drive, uint32_t lba, uint8_t* buf)
 {
-    LOCK(IDE_LOCK);
+    IDELock.Lock();
     uint8_t returnCode = 0;
 
     // 1: Check if the drive presents:
@@ -377,7 +378,7 @@ char IDEController::WriteSector(uint16_t drive, uint32_t lba, uint8_t* buf)
             err = 4; // Write-Protected.
         returnCode = PrintErrorCode(drive, err);
     }
-    UNLOCK(IDE_LOCK);
+    IDELock.Unlock();
     return returnCode;
 }
 
