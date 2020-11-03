@@ -11,7 +11,6 @@ namespace CactusOS
         {
         private:
             int value = 0;
-            common::uint64_t startTime = 0;
         public:
             MutexLock();
 
