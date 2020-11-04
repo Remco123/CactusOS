@@ -10,9 +10,6 @@ namespace CactusOS
     {
         namespace drivers
         {
-            #define REQUEST_SET_IDLE 0x0A
-            #define REQUEST_SET_PROTOCOL 0x0B
-
             class USBMouse : public USBDriver
             {
             private:
@@ -26,16 +23,16 @@ namespace CactusOS
 
                 int InInterruptEndpoint = -1;
             public:
-                //Instance initializer
+                // Instance initializer
                 USBMouse(USBDevice* dev);
                 
-                //Called when mass storage device is plugged into system
+                // Called when device is plugged into system
                 bool Initialize() override;
 
-                //Called when mass storage device is unplugged from system
+                // Called when device is unplugged from system
                 void DeInitialize() override;
 
-                //Called by USB driver when we receive a interrupt packet
+                // Called by USB driver when we receive a interrupt packet
                 bool HandleInterruptPacket(InterruptTransfer_t* transfer) override;
             };
         }

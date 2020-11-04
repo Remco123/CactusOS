@@ -1,4 +1,4 @@
-#include <system/drivers/integrated/mouse.h>
+#include <system/drivers/integrated/ps2-mouse.h>
 #include <core/port.h>
 #include <system/system.h>
 
@@ -8,7 +8,7 @@ using namespace CactusOS::system;
 using namespace CactusOS::system::drivers;
 using namespace CactusOS::core;
 
-MouseDriver::MouseDriver()
+PS2MouseDriver::PS2MouseDriver()
 : InterruptHandler(0x2C), Driver("PS2 Mouse", "Driver for a generic ps2 mouse")
 {
     this->packetBuffer = new signed char[3];
@@ -63,7 +63,7 @@ inline uint8_t mouseRead()
   return inportb(0x60);
 }
 
-bool MouseDriver::Initialize()
+bool PS2MouseDriver::Initialize()
 {
     //Enable the auxiliary mouse device
     mouseWait(1);
@@ -101,7 +101,7 @@ bool MouseDriver::Initialize()
     this->ready = true;
     return true;
 }
-bool MouseDriver::EnableScrollWheel()
+bool PS2MouseDriver::EnableScrollWheel()
 {
     if(MouseID == 3) //We are already using the scrollwheel
         return true;
@@ -126,7 +126,7 @@ bool MouseDriver::EnableScrollWheel()
     MouseID = newID;
     return true;
 }
-bool MouseDriver::SetSampleRate(uint8_t value)
+bool PS2MouseDriver::SetSampleRate(uint8_t value)
 {
     mouseWrite(0xF3);
     if(mouseRead() != MOUSE_ACK)  //Acknowledge
@@ -138,7 +138,7 @@ bool MouseDriver::SetSampleRate(uint8_t value)
     
     return true;
 }
-uint32_t MouseDriver::HandleInterrupt(uint32_t esp)
+uint32_t PS2MouseDriver::HandleInterrupt(uint32_t esp)
 {
     if(!this->ready)
         return esp;
@@ -187,7 +187,7 @@ uint32_t MouseDriver::HandleInterrupt(uint32_t esp)
 
     return esp;
 }
-void MouseDriver::ProcessPacket()
+void PS2MouseDriver::ProcessPacket()
 {
     MousePacket* packet = (MousePacket*)this->packetBuffer;
 

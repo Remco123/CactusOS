@@ -1,4 +1,4 @@
-#include <system/drivers/integrated/keyboard.h>
+#include <system/drivers/integrated/ps2-keyboard.h>
 #include <core/port.h>
 #include <system/bootconsole.h>
 #include <system/system.h>
@@ -10,7 +10,7 @@ using namespace CactusOS::system;
 using namespace CactusOS::system::drivers;
 using namespace CactusOS::core;
 
-KeyboardDriver::KeyboardDriver()
+PS2KeyboardDriver::PS2KeyboardDriver()
 : InterruptHandler(0x21), Driver("PS2 Keyboard", "Driver for a generic ps2 keyboard"), FIFOStream(100)
 {
     status.LeftShift = false;
@@ -24,7 +24,7 @@ KeyboardDriver::KeyboardDriver()
     System::keyboardStream = this;
 }
 
-bool KeyboardDriver::Initialize()
+bool PS2KeyboardDriver::Initialize()
 {
     while(inportb(0x64) & 0x1)
         inportb(0x60);
@@ -38,7 +38,7 @@ bool KeyboardDriver::Initialize()
 
     return true;
 }
-uint32_t KeyboardDriver::HandleInterrupt(uint32_t esp)
+uint32_t PS2KeyboardDriver::HandleInterrupt(uint32_t esp)
 {
     uint8_t key = inportb(0x60);
      
@@ -98,7 +98,7 @@ uint32_t KeyboardDriver::HandleInterrupt(uint32_t esp)
     return esp;
 }
 
-void KeyboardDriver::UpdateLeds()
+void PS2KeyboardDriver::UpdateLeds()
 {
 	uint8_t code = 0;
 

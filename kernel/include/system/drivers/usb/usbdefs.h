@@ -152,6 +152,9 @@ namespace CactusOS
             
             HUB = 0x29
         };
+
+        #define HID_REQUEST_SET_IDLE 0x0A
+        #define HID_REQUEST_SET_PROTOCOL 0x0B
     }
 }
 

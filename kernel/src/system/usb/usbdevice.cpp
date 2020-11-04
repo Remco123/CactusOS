@@ -5,6 +5,7 @@
 
 #include <system/drivers/usb/mass_storage.h>
 #include <system/drivers/usb/usbmouse.h>
+#include <system/drivers/usb/usbkeyboard.h>
 
 using namespace CactusOS;
 using namespace CactusOS::common;
@@ -237,6 +238,9 @@ bool USBDevice::AssignDriver()
     }
     else if(this->classID == 0x03 && this->protocol == 0x02) {
         this->driver = new USBMouse(this);
+    }
+    else if(this->classID == 0x03 && this->protocol == 0x01) {
+        this->driver = new USBKeyboard(this);
     }
 
     ////////////

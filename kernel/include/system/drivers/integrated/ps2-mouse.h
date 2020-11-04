@@ -1,5 +1,5 @@
-#ifndef __CACTUSOS__SYSTEM__DRIVERS__MOUSE_H
-#define __CACTUSOS__SYSTEM__DRIVERS__MOUSE_H
+#ifndef __CACTUSOS__SYSTEM__DRIVERS__PS2MOUSE_H
+#define __CACTUSOS__SYSTEM__DRIVERS__PS2MOUSE_H
 
 #include <system/drivers/driver.h>
 #include <system/interruptmanager.h>
@@ -27,7 +27,7 @@ namespace CactusOS
             };
             
 
-            class MouseDriver : public InterruptHandler, public Driver
+            class PS2MouseDriver : public InterruptHandler, public Driver
             {
             private:
                 #define MOUSE_DATA 0x60
@@ -40,7 +40,7 @@ namespace CactusOS
 
                 bool ready = false;
             public:
-                MouseDriver();
+                PS2MouseDriver();
 
                 bool Initialize();
                 common::uint32_t HandleInterrupt(common::uint32_t esp);

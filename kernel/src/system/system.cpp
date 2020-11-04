@@ -113,8 +113,8 @@ void System::Start()
     MemoryOperations::memset(System::systemInfo, 0, PAGE_SIZE);
 
     BootConsole::WriteLine("Added drivers for integrated devices");
-    System::driverManager->AddDriver(new MouseDriver());
-    System::driverManager->AddDriver(new KeyboardDriver());
+    System::driverManager->AddDriver(new PS2MouseDriver());
+    System::driverManager->AddDriver(new PS2KeyboardDriver());
     System::driverManager->AddDriver(new FloppyDriver());
     
     BootConsole::WriteLine("Activating Drivers");

@@ -227,7 +227,7 @@ uint32_t EHCIController::HandleInterrupt(uint32_t esp)
 
     if (val & (1<<3))
     {
-        Log(Info, "EHCI: Frame List Rollover Interrupt");
+        //Log(Info, "EHCI: Frame List Rollover Interrupt");
     }
 
     if (val & (1<<4))

@@ -21,8 +21,8 @@
 #include <system/initrd.h>
 #include <system/drivers/drivermanager.h>
 #include <system/drivers/pcidrivers.h>
-#include <system/drivers/integrated/mouse.h>
-#include <system/drivers/integrated/keyboard.h>
+#include <system/drivers/integrated/ps2-mouse.h>
+#include <system/drivers/integrated/ps2-keyboard.h>
 #include <system/drivers/integrated/floppy.h>
 #include <system/disks/diskmanager.h>
 #include <system/disks/partitionmanager.h>

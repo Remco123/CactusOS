@@ -1,5 +1,5 @@
-#ifndef __CACTUSOS__SYSTEM__DRIVERS__KEYBOARD_H
-#define __CACTUSOS__SYSTEM__DRIVERS__KEYBOARD_H
+#ifndef __CACTUSOS__SYSTEM__DRIVERS__PS2KEYBOARD_H
+#define __CACTUSOS__SYSTEM__DRIVERS__PS2KEYBOARD_H
 
 #include <system/drivers/driver.h>
 #include <system/interruptmanager.h>
@@ -11,7 +11,7 @@ namespace CactusOS
     {
         namespace drivers
         {
-            struct KeyboardInternalStatus
+            struct PS2KeyboardInternalStatus
             {
                 bool LeftShift;
                 bool RightShift;
@@ -22,12 +22,12 @@ namespace CactusOS
                 bool NumberLock;
             };
 
-            class KeyboardDriver : public InterruptHandler, public Driver, public FIFOStream
+            class PS2KeyboardDriver : public InterruptHandler, public Driver, public FIFOStream
             {
             private:
-                KeyboardInternalStatus status;
+                PS2KeyboardInternalStatus status;
             public:
-                KeyboardDriver();
+                PS2KeyboardDriver();
 
                 bool Initialize();
                 void UpdateLeds();
