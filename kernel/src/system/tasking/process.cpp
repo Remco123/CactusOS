@@ -206,7 +206,7 @@ void ProcessHelper::RemoveProcess(Process* proc)
             Processes[i]->stdOutput = 0;
     
     //Free memory used by stdinput if possible
-    if(proc->stdInput != 0 && proc->stdInput != System::keyboardStream)
+    if(proc->stdInput != 0 && proc->stdInput != System::keyboardManager)
         delete proc->stdInput;
 
     delete proc;

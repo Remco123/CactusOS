@@ -34,6 +34,7 @@
 #include <system/memory/sharedmem.h>
 #include <system/listings/listingcontroller.h>
 #include <system/usb/usbmanager.h>
+#include <system/input/keyboardmanager.h>
 
 #include <system/log.h>
 #include <../../lib/include/systeminfo.h>
@@ -103,7 +104,7 @@ namespace CactusOS
             static ScreenMode screenMode;
             static bool gdbEnabled; //Is the gdb stub enabled?
             static bool setupMode; //Are we running the setup program?
-            static Stream* keyboardStream;
+            static KeyboardManager* keyboardManager;
             static Stream* ProcStandardOut;
             static List<ListingController*>* listings;
             static USBManager* usbManager;

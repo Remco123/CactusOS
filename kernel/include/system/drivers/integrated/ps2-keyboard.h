@@ -4,6 +4,7 @@
 #include <system/drivers/driver.h>
 #include <system/interruptmanager.h>
 #include <system/memory/fifostream.h>
+#include <system/input/keyboard.h>
 
 namespace CactusOS
 {
@@ -11,27 +12,16 @@ namespace CactusOS
     {
         namespace drivers
         {
-            struct PS2KeyboardInternalStatus
+            class PS2KeyboardDriver : public InterruptHandler, public Keyboard, public Driver, public FIFOStream
             {
-                bool LeftShift;
-                bool RightShift;
-                bool Alt;
-                bool LeftControl;
-                bool RightControl;
-                bool CapsLock;
-                bool NumberLock;
-            };
-
-            class PS2KeyboardDriver : public InterruptHandler, public Driver, public FIFOStream
-            {
-            private:
-                PS2KeyboardInternalStatus status;
             public:
                 PS2KeyboardDriver();
 
                 bool Initialize();
-                void UpdateLeds();
                 common::uint32_t HandleInterrupt(common::uint32_t esp);
+
+                // Update LED's on a keyboard device
+                void UpdateLEDS() override;
             };
         }
     }

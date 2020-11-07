@@ -31,7 +31,7 @@ SharedSystemInfo* System::systemInfo = 0;
 ScreenMode System::screenMode = ScreenMode::TextMode;
 bool System::gdbEnabled = false;
 bool System::setupMode = false;
-Stream* System::keyboardStream = 0;
+KeyboardManager* System::keyboardManager = 0;
 Stream* System::ProcStandardOut = 0;
 List<ListingController*>* System::listings = 0;
 USBManager* System::usbManager = 0;
@@ -113,6 +113,7 @@ void System::Start()
     MemoryOperations::memset(System::systemInfo, 0, PAGE_SIZE);
 
     BootConsole::WriteLine("Added drivers for integrated devices");
+    System::keyboardManager = new KeyboardManager();
     System::driverManager->AddDriver(new PS2MouseDriver());
     System::driverManager->AddDriver(new PS2KeyboardDriver());
     System::driverManager->AddDriver(new FloppyDriver());

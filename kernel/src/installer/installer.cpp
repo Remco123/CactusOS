@@ -118,9 +118,10 @@ void Installer::Run()
 
 char Installer::GetKey()
 {
-    while(System::keyboardStream->Availible() == 0);
+    while(System::keyboardManager->Availible() == 0)
+        asm ("hlt");
 
-    return System::keyboardStream->Read();
+    return System::keyboardManager->Read();
 }
 
 void Installer::ShowWelcomeMessage()
@@ -229,8 +230,10 @@ void Installer::ShowDiskEraseMenu()
             TextGUI::DrawString(Convert::IntToString32(s), 13, VGA_HEIGHT - 3);
             TextGUI::SetPixel(((double)s/(double)sectors) * (double)VGA_WIDTH, VGA_HEIGHT - 2, TEXT_COLOR, '#', VGA_COLOR_GREEN);
         }
-        if(System::keyboardStream->Availible() > 0)
+        if(System::keyboardManager->Availible() > 0) {
+            System::keyboardManager->Read();
             break;
+        }
     }
 }
 

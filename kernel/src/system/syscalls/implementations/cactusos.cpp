@@ -328,7 +328,7 @@ CPUState* CactusOSSyscalls::HandleSyscall(CPUState* state)
                     Process* toProc = ProcessHelper::ProcessById(toID);
                     
                     Log(Info, "Redirecting keyboard stream to StdIn of %s", toProc->fileName);
-                    toProc->stdInput = System::keyboardStream;
+                    toProc->stdInput = System::keyboardManager;
                     break;
                 }
 
@@ -339,7 +339,7 @@ CPUState* CactusOSSyscalls::HandleSyscall(CPUState* state)
 
                 Log(Info, "Redirecting StdOut from %s to StdIn of %s", fromProc->fileName, toProc->fileName);
 
-                if(toProc->stdInput == System::keyboardStream || toProc->stdInput == 0)
+                if(toProc->stdInput == System::keyboardManager || toProc->stdInput == 0)
                     toProc->stdInput = new FIFOStream();
                 
                 fromProc->stdOutput = toProc->stdInput;

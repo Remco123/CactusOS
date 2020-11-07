@@ -11,8 +11,10 @@ using namespace CactusOS::system;
 using namespace CactusOS::system::drivers;
 
 USBKeyboard::USBKeyboard(USBDevice* dev)
-: USBDriver(dev, "USB HID Keyboard")
-{ }
+: USBDriver(dev, "USB HID Keyboard"), Keyboard(KeyboardType::USB)
+{ 
+    MemoryOperations::memset(this->prevPacket, 0, sizeof(this->prevPacket));
+}
 
 bool USBKeyboard::Initialize()
 {
@@ -50,12 +52,58 @@ bool USBKeyboard::Initialize()
 void USBKeyboard::DeInitialize()
 { } // Keyboard does not have any requirements for unplugging
 
-bool USBKeyboard::HandleInterruptPacket(InterruptTransfer_t* transfer)
+// Checks if the buffer contains the given key, also returns position of key
+bool ContainsKey(uint8_t key, uint8_t* packet, int* pos)
 {
-    uint8_t* packet = transfer->bufferPointer;
-    Log(Info, "Received keyboard packet! %d %d %d %d %d %d %d %d", packet[0], packet[1], packet[2], packet[3], packet[4], packet[5], packet[6], packet[7]);
-    
-    
+    for(int i = 2; i < 8; i++)
+        if(packet[i] == key) { *pos = i; return true; }
+    return false;
+}
 
+bool USBKeyboard::HandleInterruptPacket(InterruptTransfer_t* transfer)
+{    
+    uint8_t* packet = transfer->bufferPointer;
+
+    // Update internal modifier keys
+    uint8_t modifier = packet[0];
+    this->status.LeftControl = modifier & (1<<0);
+    this->status.LeftShift = modifier & (1<<1);
+    this->status.Alt = modifier & (1<<2);
+    this->status.RightControl = modifier & (1<<4);
+    this->status.RightShift = modifier & (1<<5);
+    this->status.AltGr = modifier & (1<<6);
+
+    // Check for each keypacket field if there are any updates
+    for(int i = 2; i < 8; i++) {
+        uint8_t key = packet[i];
+        int pos[2];
+
+        bool b1 = ContainsKey(key, packet, &pos[0]);
+        bool b2 = ContainsKey(key, this->prevPacket, &pos[1]);
+
+        if(b1 && b2) // Key is still pressed
+            continue;
+        
+        if(b1 && !b2) // Key pressed for first time
+            System::keyboardManager->HandleKeyChange(this, packet[pos[0]], true);
+        else if(!b1 && b2) // Key is released
+            System::keyboardManager->HandleKeyChange(this, this->prevPacket[pos[1]], false);
+    }
+
+    MemoryOperations::memcpy(this->prevPacket, packet, sizeof(this->prevPacket));
     return true; // Rescedule
+}
+
+void USBKeyboard::UpdateLEDS()
+{
+	uint8_t code = 0;
+
+	if(System::keyboardManager->sharedStatus.NumLock)
+		code |= 1 << 0;
+		
+	if(System::keyboardManager->sharedStatus.CapsLock)
+		code |= 1 << 1;
+
+    if(!this->device->controller->ControlOut(this->device, 1, HOST_TO_DEV | REQ_TYPE_CLASS | RECPT_INTERFACE, 0x9, 0x02, 0, 0))
+        Log(Warning, "USB KBD Could not update Leds");
 }

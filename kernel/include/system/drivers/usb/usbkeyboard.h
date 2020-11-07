@@ -3,6 +3,7 @@
 
 #include <system/drivers/usb/usbdriver.h>
 #include <system/usb/hidparser.h>
+#include <system/input/keyboard.h>
 
 namespace CactusOS
 {
@@ -10,23 +11,12 @@ namespace CactusOS
     {
         namespace drivers
         {
-            struct USBKeyboardInternalStatus
-            {
-                bool LeftControl;
-                bool LeftShift;
-                bool LeftAlt;
-                bool LeftGUI;
-                bool RightControl;
-                bool RightShift;
-                bool RightAlt;
-                bool RightGUI;
-            };
-
-            class USBKeyboard : public USBDriver
+            class USBKeyboard : public USBDriver, public Keyboard
             {
             private:
                 int InInterruptEndpoint = -1;
-                USBKeyboardInternalStatus status;
+
+                uint8_t prevPacket[8];
             public:
                 // Instance initializer
                 USBKeyboard(USBDevice* dev);
@@ -39,6 +29,9 @@ namespace CactusOS
 
                 // Called by USB driver when we receive a interrupt packet
                 bool HandleInterruptPacket(InterruptTransfer_t* transfer) override;
+
+                // Update LED's on a keyboard device
+                void UpdateLEDS() override;
             };
         }
     }
