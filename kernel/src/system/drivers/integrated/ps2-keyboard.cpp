@@ -13,17 +13,61 @@ PS2KeyboardDriver::PS2KeyboardDriver()
 : InterruptHandler(0x21), Keyboard(KeyboardType::PS2), Driver("PS2 Keyboard", "Driver for a generic ps2 keyboard"), FIFOStream(100)
 { }
 
+bool ReadyForRead()
+{
+    uint32_t timeOut = 100000;
+    while(timeOut--)
+        if((inportb(PS2_STATUS) & (1<<0)) == 1)
+            return true;
+    
+    return false;
+}
+bool ReadyForWrite()
+{
+    uint32_t timeOut = 100000;
+    while(timeOut--)
+        if((inportb(PS2_STATUS) & (1<<1)) == 0)
+            return true;
+    
+    return false;
+}
+
+bool SendCommand(uint8_t cmd, uint8_t data = 0)
+{
+    if(ReadyForWrite() == false)
+        return false;
+
+    outportb(PS2_COMMAND, cmd);
+
+    if(data) {
+        if(ReadyForWrite() == false)
+            return false;
+        
+        outportb(PS2_DATA, data);
+    }
+    return true;
+}
+
 bool PS2KeyboardDriver::Initialize()
 {
-    while(inportb(0x64) & 0x1)
-        inportb(0x60);
-
-    outportb(0x64, 0xae);
-    outportb(0x64, 0x20);
-    uint8_t status = (inportb(0x60) | 1) & ~0x10;
-    outportb(0x64, 0x60);
-    outportb(0x60, status);
-    outportb(0x60, 0xf4);
+    if(!SendCommand(0xAD)) // Send Disable keyboard command
+        return false;
+    
+    if(!SendCommand(0x20)) // Indicate we would like to recieve the config byte
+        return false;
+    
+    if(!ReadyForRead())
+        return false;
+    
+    uint8_t status = (inportb(PS2_DATA) | 1) & ~0x10;
+    if(!SendCommand(0x60, status)) // Update config byte
+        return false;
+    
+    if(!SendCommand(0xAE)) // Send Enable keyboard command
+        return false;
+        
+    // Add ourself to the list of known keyboards
+    System::keyboardManager->keyboards.push_back(this);
 
     return true;
 }

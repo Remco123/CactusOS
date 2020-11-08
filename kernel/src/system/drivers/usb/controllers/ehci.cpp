@@ -389,7 +389,7 @@ void EHCIController::MakeTransferDesc(e_transferDescriptor_t* currentTD, uint32_
                 uint8_t data0, const uint8_t dir, const uint16_t mps) 
 {   
     do {        
-        currentTD->nextQTD = (last && (size <= mps)) ? QH_HS_T1 : (physAddr + sizeof(e_transferDescriptor_t) | QH_HS_T0);
+        currentTD->nextQTD = (last && (size <= mps)) ? QH_HS_T1 : ((physAddr + sizeof(e_transferDescriptor_t)) | QH_HS_T0);
         currentTD->nextQTDVirt = (last && (size <= mps)) ? 0 : (currentTD + 1);
         currentTD->altNextQTD = (!status_qtdPhys) ? QH_HS_T1 : status_qtdPhys;
         currentTD->altNextQTDVirt = (!status_qtd) ? 0 : status_qtd;
@@ -662,8 +662,6 @@ bool EHCIController::BulkIn(USBEndpoint* toggleSrc, const int devAddress, const 
     // Clear both buffers to 0
     MemoryOperations::memset(queue, 0, sizeof(e_queueHead_t));
     MemoryOperations::memset(td0, 0, sizeof(e_transferDescriptor_t) * 16);
-    
-    const int last = ((len + (packetSize-1)) / packetSize);
     
     // Setup queue head
     queue->flags = (8<<28) | (packetSize << 16) | (0<<15) | (1<<14) | (QH_HS_EPS_HS<<12) | (endP << 8) | (0<<7) | (devAddress & 0x7F);

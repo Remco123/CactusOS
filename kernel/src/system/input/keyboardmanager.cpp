@@ -8,7 +8,7 @@ using namespace CactusOS::system;
 
 KeyboardManager::KeyboardManager()
 { 
-    MemoryOperations::memset(&this->sharedStatus, 0, sizeof(KeyboardStatus));
+    MemoryOperations::memset(&this->sharedStatus, 0, sizeof(this->sharedStatus));
 }
 
 void KeyboardManager::HandleKeyChange(Keyboard* src, uint32_t key, bool pressed)
@@ -53,8 +53,9 @@ void KeyboardManager::HandleKeyChange(Keyboard* src, uint32_t key, bool pressed)
         this->Write(key); //Make things easier for the setup
 
     if(updateLeds) {
-        // TODO: Implement this
-        // Currently usb keyboards need interrupts enabled, and they are not
+        for(Keyboard* kbd : this->keyboards)
+            if(kbd->type != USB) // USB keyboards need interrupts enabled. TODO: Change this perhaps?
+                kbd->UpdateLEDS();
     }
 }
 uint8_t KeyboardManager::ConvertToPS2(uint32_t key)

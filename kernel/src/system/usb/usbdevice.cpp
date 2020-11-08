@@ -6,6 +6,7 @@
 #include <system/drivers/usb/mass_storage.h>
 #include <system/drivers/usb/usbmouse.h>
 #include <system/drivers/usb/usbkeyboard.h>
+#include <system/drivers/usb/usbcomborecv.h>
 
 using namespace CactusOS;
 using namespace CactusOS::common;
@@ -36,7 +37,7 @@ char* USBClassCodeStrings[] =
     "0B Smart Card",
     "0D Content security",
     "0E Video",
-    "0F Personal healthcare device class (PHDC",
+    "0F Personal healthcare device class (PHDC)",
     "10 Audio/Video (AV)",
     "11 Billboard",
     "DC Diagnostic Device",
@@ -233,7 +234,9 @@ bool USBDevice::AssignDriver()
     ////////////
     // Driver Selection
     ////////////
-    if(this->classID == 0x08 && this->subclassID == 0x06 && this->protocol == 0x50) {
+    if(this->productID == 0xc52e && this->vendorID == 0x046d)
+        this->driver = new USBComboReceiver(this);
+    else if(this->classID == 0x08 && this->subclassID == 0x06 && this->protocol == 0x50) {
         this->driver = new USBMassStorageDriver(this);
     }
     else if(this->classID == 0x03 && this->protocol == 0x02) {

@@ -92,6 +92,9 @@ void System::Start()
     BootConsole::WriteLine("Starting Disk Manager");
     System::diskManager = new DiskManager();
 
+    BootConsole::WriteLine("Starting Keyboard Manager");
+    System::keyboardManager = new KeyboardManager();
+
     BootConsole::WriteLine("Starting Scheduler");
     InterruptDescriptorTable::DisableInterrupts();
     System::scheduler = new Scheduler();
@@ -113,7 +116,6 @@ void System::Start()
     MemoryOperations::memset(System::systemInfo, 0, PAGE_SIZE);
 
     BootConsole::WriteLine("Added drivers for integrated devices");
-    System::keyboardManager = new KeyboardManager();
     System::driverManager->AddDriver(new PS2MouseDriver());
     System::driverManager->AddDriver(new PS2KeyboardDriver());
     System::driverManager->AddDriver(new FloppyDriver());

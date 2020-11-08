@@ -46,11 +46,17 @@ bool USBKeyboard::Initialize()
     // Start recieving interrupt packets from device
     this->device->controller->InterruptIn(this->device, 8, this->InInterruptEndpoint);
 
+    // Add ourself to the list of known keyboards
+    System::keyboardManager->keyboards.push_back(this);
+
     return true;
 }
 
 void USBKeyboard::DeInitialize()
-{ } // Keyboard does not have any requirements for unplugging
+{ 
+    // Remove ourself from the list of known keyboards
+    System::keyboardManager->keyboards.Remove(this);
+}
 
 // Checks if the buffer contains the given key, also returns position of key
 bool ContainsKey(uint8_t key, uint8_t* packet, int* pos)

@@ -667,7 +667,7 @@ int OHCIController::CheckTransferDone(o_transferDescriptor_t* td, int numTDs)
         uint32_t status = ((td[i].flags & 0xF0000000) >> 28);    
         //Log(Info, "Status = %b", status);
         if (status != 0) { // Check if any error bit is set or not done
-            if(status & (1<<3) == (1<<3))
+            if((status & (1<<3)) == (1<<3))
                 return 2; // (Only) Stall bit set
             if(status == 14)
                 return 3; // (Only) Active bit set
@@ -726,7 +726,7 @@ uint32_t OHCIController::HandleInterrupt(uint32_t esp)
                     o_transferDescriptor_t* td = (o_transferDescriptor_t*)transfer->td;
                     for(int i = 0; i < transfer->numTd; i++) {
                         td[i].flags |= (14<<28); // Mark all transfer descriptors as active again
-                        td[i].flags = td[i].flags & ~(1 << 24) | (transfer->handler->device->endpoints[transfer->endpoint-1]->Toggle() << 24);
+                        td[i].flags = (td[i].flags & ~(1 << 24)) | (transfer->handler->device->endpoints[transfer->endpoint-1]->Toggle() << 24);
                         td[i].curBufPtr = transfer->bufferPhys;
                         td[i].bufEnd = transfer->bufferPhys + transfer->bufferLen - 1;
                         td[i].nextTd = transfer->tdPhys + i * sizeof(o_transferDescriptor_t);

@@ -40,7 +40,6 @@ namespace CactusOS
             InternalKeyboardStatus status;
         public:
             Keyboard(KeyboardType type);
-            ~Keyboard();
 
             // Update LED's on a keyboard device
             virtual void UpdateLEDS();

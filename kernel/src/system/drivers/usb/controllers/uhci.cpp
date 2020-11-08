@@ -323,9 +323,9 @@ int UHCIController::CheckTransferDone(u_transferDescriptor_t* td, int numTDs)
         uint8_t status = td[i].reply & (0xFF << 16);
         //Log(Info, "Status = %b", status);
         if (status != 0) { // Check if any error bit is set or not done
-            if(status & (1<<3) == (1<<3))
+            if((status & (1<<3)) == (1<<3))
                 return 2; // (Only) NAK bit set
-            if(status & (1<<7) == (1<<7))
+            if((status & (1<<7)) == (1<<7))
                 return 3; // (Only) Active bit set
             
             noError = false;
@@ -687,7 +687,7 @@ uint32_t UHCIController::HandleInterrupt(uint32_t esp)
                     uhci_queue_head_t* qh = (uhci_queue_head_t*)transfer->qh;
                     for(int i = 0; i < transfer->numTd; i++) {
                         td[i].reply |= (0x80 << 16); // Mark all transfer descriptors as active again
-                        td[i].info = td[i].info & ~(1 << 19) | (transfer->handler->device->endpoints[transfer->endpoint-1]->Toggle() << 19);
+                        td[i].info = (td[i].info & ~(1 << 19)) | (transfer->handler->device->endpoints[transfer->endpoint-1]->Toggle() << 19);
                     }
 
                     // Queue head automaticly points to next transfer descriptor on completion

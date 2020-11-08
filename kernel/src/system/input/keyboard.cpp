@@ -8,16 +8,7 @@ using namespace CactusOS::system;
 Keyboard::Keyboard(KeyboardType type)
 {
     this->type = type;
-    MemoryOperations::memset(&this->status, 0, sizeof(InternalKeyboardStatus));
-    
-    // Add ourself to the list of known keyboards
-    System::keyboardManager->keyboards.push_back(this);
-}
-
-Keyboard::~Keyboard()
-{
-    // Remove ourself from the list of known keyboards
-    System::keyboardManager->keyboards.Remove(this);
+    MemoryOperations::memset(&this->status, 0, sizeof(this->status));
 }
 
 void Keyboard::UpdateLEDS()

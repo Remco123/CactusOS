@@ -78,10 +78,11 @@ $(KRNLOBJDIR)/%.o: $(KRNLSRCDIR)/%.asm
 
 CactusOS.bin: kernel/linker.ld $(KRNLOBJS)
 	i686-elf-ld $(LDPARAMS) -T $< -o $@ $(KRNLOBJS)
-	cd lib/ && $(MAKE)
-	cd apps/ && $(MAKE)
 
 CactusOS.iso: CactusOS.bin
+	cd lib/ && $(MAKE)
+	cd apps/ && $(MAKE)
+	
 	cp -r isofiles/. iso
 	mkdir iso/boot
 	mkdir iso/boot/grub
