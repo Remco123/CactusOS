@@ -49,9 +49,9 @@ void IdleThread()
             prevTicks = System::pit->Ticks();
         }
 
-        //Handle power state requests from userspace
-        //Processes can not do this themself because the first mb of memory is not mapped for them
-        //And that should not be the case due to security issues :)
+        // Handle power state requests from userspace
+        // Processes can not do this themself because the first mb of memory is not mapped for them
+        // And that should not be the case due to security issues :)
         if(powerRequestState == Reboot) {
             Power::Reboot();
         }
@@ -59,8 +59,8 @@ void IdleThread()
             Power::Poweroff();
         }
         
-        //Wait for interrupt to perform next operation
-        asm volatile("hlt");
+        // Move onto other threads since there is nothing else to do here
+        System::scheduler->ForceSwitch();
     }
 }
 
