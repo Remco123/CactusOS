@@ -58,14 +58,6 @@ void USBKeyboard::DeInitialize()
     System::keyboardManager->keyboards.Remove(this);
 }
 
-// Checks if the buffer contains the given key, also returns position of key
-bool ContainsKey(uint8_t key, uint8_t* packet, int* pos)
-{
-    for(int i = 2; i < 8; i++)
-        if(packet[i] == key) { *pos = i; return true; }
-    return false;
-}
-
 bool USBKeyboard::HandleInterruptPacket(InterruptTransfer_t* transfer)
 {    
     uint8_t* packet = transfer->bufferPointer;
@@ -84,8 +76,8 @@ bool USBKeyboard::HandleInterruptPacket(InterruptTransfer_t* transfer)
         uint8_t key = packet[i];
         int pos[2];
 
-        bool b1 = ContainsKey(key, packet, &pos[0]);
-        bool b2 = ContainsKey(key, this->prevPacket, &pos[1]);
+        bool b1 = this->ContainsKey(key, packet, &pos[0]);
+        bool b2 = this->ContainsKey(key, this->prevPacket, &pos[1]);
 
         if(b1 && b2) // Key is still pressed
             continue;

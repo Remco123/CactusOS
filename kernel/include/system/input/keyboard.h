@@ -1,6 +1,8 @@
 #ifndef __CACTUSOS__SYSTEM__INPUT__KEYBOARD_H
 #define __CACTUSOS__SYSTEM__INPUT__KEYBOARD_H
 
+#include <common/types.h>
+
 namespace CactusOS
 {
     namespace system
@@ -43,6 +45,9 @@ namespace CactusOS
 
             // Update LED's on a keyboard device
             virtual void UpdateLEDS();
+            
+            // Checks if the buffer contains the given key, also returns position of key
+            bool ContainsKey(common::uint8_t key, common::uint8_t* packet, int* pos);
         };
     }
 }

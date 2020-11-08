@@ -15,3 +15,10 @@ void Keyboard::UpdateLEDS()
 {
     Log(Error, "Virtual function called directly %s:%d", __FILE__, __LINE__);
 }
+
+bool Keyboard::ContainsKey(uint8_t key, uint8_t* packet, int* pos)
+{
+    for(int i = 2; i < 8; i++)
+        if(packet[i] == key) { *pos = i; return true; }
+    return false;
+}
