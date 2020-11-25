@@ -2,6 +2,7 @@
 
 //Drivers
 #include <system/drivers/disk/ide.h>
+#include <system/drivers/disk/ahci/ahcicontroller.h>
 #include <system/drivers/usb/controllers/uhci.h>
 #include <system/drivers/usb/controllers/ohci.h>
 #include <system/drivers/usb/controllers/ehci.h>
@@ -52,6 +53,12 @@ void PCIDrivers::AssignDriversFromPCI(PCIController* pci, DriverManager* driverM
                     case 0x01: //IDE Controller
                     {
                         driverManager->AddDriver(new IDEController(pciDevice));
+                        goto FoundDriver;
+                        break;
+                    }
+                    case 0x06: // SATA Controller
+                    {
+                        driverManager->AddDriver(new AHCIController(pciDevice));
                         goto FoundDriver;
                         break;
                     }
