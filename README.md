@@ -2,19 +2,19 @@
 CactusOS is a simple operating system that is aimed to not be anything like linux. I am just trying to build my own OS and definitely not the best one. It should run on every 32 bit emulator and pc but if it doesn't please let me know.
 <img src="images/Logo.png" width="200" height="200">
 # Current Features
-- Remake Core of CactusOS [Done]
 - Higher Half Kernel [Done]
-- Physical/Virtual Memory Manager [Done]
 - PCI Device Enumeration [Done]
-- SMBios Parsing [Done]
 - Virtual 8086 Mode [Done]
 - VESA Vbe after boot [Done]
-- IDE support (ATA/ATAPI) [Done]
-- ISO9660 filesystem [Basic]
+- Disk support (ATA/ATAPI) [Basic]
+  - PCI IDE Controller [Done]
+  - PCI AHCI Controller [Basic]
+- Filesystem support [Basic]
+  - ISO9660 [Done]
+  - FAT(12/16/32) [Basic]
 - Multitasking [Basic]
 - Usermode [Done]
-- Boot Screen [Done]
-- Graphics Desktop [Basic]
+- Graphical Desktop [Basic]
 - Applications
   - Calculator [Basic]
   - Clock [Basic]
@@ -25,11 +25,18 @@ CactusOS is a simple operating system that is aimed to not be anything like linu
   - OHCI
   - EHCI
   - xHCI Not supported yet
+- USB Devices [Basic]
+  - Mouse
+  - Keyboard
+  - Dual Receiver
+  - Mass Storage Device
 - Installer [Basic]
   - FAT Filesystem creation
   - Complete system install on hard drive
+- Boot from USB [Done]
 
 # Planned Features
+- Update all code to new log method
 - More complete custom build api for apps
 - Some basic applications
   - File Manager
