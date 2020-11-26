@@ -113,9 +113,17 @@ int ExecCommand(char* cmd)
         DoSyscall(SYSCALL_REBOOT);
         return 0;
     }
-    else if(memcmp(cmd, "ldir", 4) == 0) {
+    else if(memcmp(cmd, "lv", 2) == 0) {
         List<DiskInfo> items = DiskListing();
         for(DiskInfo item : items) {
+            static char* diskTypes[] = {
+                "HardDisk",
+                "USBDisk",
+                "Floppy",
+                "CDROM"
+            };
+
+            termWindow->Write(diskTypes[item.type]); termWindow->Write(" ["); termWindow->Write(Convert::IntToString((uint32_t)item.size / 1_MB)); termWindow->Write(" MB] -> ");
             termWindow->Write(item.identifier); termWindow->Write('\n');
         }
         return 0;

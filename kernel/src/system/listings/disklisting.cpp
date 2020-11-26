@@ -37,6 +37,8 @@ int DiskListing::GetEntry(Thread* thread, int entry, uint32_t bufPtr)
         Disk* src = System::diskManager->allDisks[entry];
         MemoryOperations::memcpy(targ->identifier, src->identifier, String::strlen(src->identifier));
         targ->identifier[String::strlen(src->identifier)] = '\0';
+        targ->size = src->size;
+        targ->type = src->type;
 
         return sizeof(LIBCactusOS::DiskInfo);
     }

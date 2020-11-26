@@ -29,8 +29,18 @@ namespace LIBCactusOS
     // Contains information about a disk device present on system
     struct DiskInfo
     {
-        //Disk identifier string
+        // Disk identifier string
         char identifier[100];
+
+        // Size of complete disk
+        uint64_t size;
+
+        // Type of disk
+        // 0 -> HardDisk
+        // 1 -> USBDisk
+        // 2 -> Floppy
+        // 3 -> CDROM
+        uint8_t type;
     };
 
     #define KEYPACKET_START 0xFF

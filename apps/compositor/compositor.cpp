@@ -23,6 +23,8 @@ Compositor::Compositor()
 : backgroundImage(0, 0) // Make background image 0x0 at the start, it must have a initializer.
 , dirtyRectList()
 {
+    GUI::SetDefaultFont();
+    
     Print("[Compositor] Starting Compositor\n");
     if(!DirectGUI::RequestFramebuffer()) {
         Print("[Compositor] Error initializing framebuffer\n");

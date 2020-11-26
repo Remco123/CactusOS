@@ -161,12 +161,20 @@ void TerminalControl::DrawTo(Canvas* context, int x_abs, int y_abs)
     char tmpStr[2];
     tmpStr[1] = '\0';
 
-    for(int xp = 0; xp < TERM_WIDTH; xp++)
-        for(int yp = 0; yp < TERM_HEIGH; yp++)
+    int xoff = 2;
+    for(int yp = 0; yp < TERM_HEIGH; yp++) {
+        for(int xp = 0; xp < TERM_WIDTH; xp++)
         {
             tmpStr[0] = textBuffer[yp * TERM_WIDTH + xp];
-            context->DrawString(this->font, tmpStr, x_abs + xp*8 + 2, y_abs + 1 + yp*14, textColor);
+            context->DrawString(this->font, tmpStr, x_abs + xoff, y_abs + 1 + yp*14, textColor);
+
+            Font* fnt = this->font;
+            int w,h = 0;
+            fnt->BoundingBox(tmpStr, &w, &h);
+            xoff += w;
         }
+        xoff = 2;
+    }
 }
 
 void TerminalControl::OnKeyDown(uint8_t key, KEYPACKET_FLAGS modifiers)
