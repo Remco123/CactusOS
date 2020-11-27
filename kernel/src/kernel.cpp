@@ -9,6 +9,7 @@
 #include <system/memory/new.h>
 #include <system/system.h>
 #include <common/list.h>
+#include <common/print.h>
 #include <common/convert.h>
 #include <core/cpu.h>
 #include <core/fpu.h>
@@ -66,7 +67,7 @@ void IdleThread()
 
 extern "C" void kernelMain(const multiboot_info_t* mbi, unsigned int multiboot_magic)
 {
-    //Basic kernel information gathered from the linker script
+    // Basic kernel information gathered from the linker script
     uint32_t kernel_base = (uint32_t) &_kernel_base;
     uint32_t kernel_end = (uint32_t) &_kernel_end;
     uint32_t kernel_size = kernel_end - kernel_base;
@@ -79,8 +80,8 @@ extern "C" void kernelMain(const multiboot_info_t* mbi, unsigned int multiboot_m
     if(String::strncmp(args, "gdb", 4)) {
         System::gdbEnabled = true;
         
-        Serialport::Init(COM1); //Init serial port
-        BootConsole::Init(false); //But don't use it for debug messages
+        Serialport::Init(COM1); // Init serial port
+        BootConsole::Init(false); // But don't use it for debug messages
     }
     else if(String::strncmp(args, "serial", 7))
         BootConsole::Init(true);
@@ -138,12 +139,12 @@ extern "C" void kernelMain(const multiboot_info_t* mbi, unsigned int multiboot_m
     BootConsole::WriteLine("Enabling FPU");
     FPU::Enable();
 
-    //Parse the memory map handled by grub
+    // Parse the memory map handled by grub
     PhysicalMemoryManager::ParseMemoryMap(mbi);
 
-    //Protect the first 1mb of physical memory + the end of kernel. 
-    //We also add the size of the bitmap so that it does not have to be staticly allocated, this makes the kernel way smaller. 
-    //Also round it to page bounds.
+    // Protect the first 1mb of physical memory + the end of kernel. 
+    // We also add the size of the bitmap so that it does not have to be staticly allocated, this makes the kernel way smaller. 
+    // Also round it to page bounds.
     PhysicalMemoryManager::SetRegionUsed(0x0, pageRoundUp(1_MB + kernel_size + PhysicalMemoryManager::GetBitmapSize()));
     PhysicalMemoryManager::SetRegionUsed(*(uint32_t*)phys2virt(mbi->mods_addr), *(uint32_t*)phys2virt(mbi->mods_addr + 4) - *(uint32_t*)phys2virt(mbi->mods_addr));
 
@@ -156,17 +157,20 @@ extern "C" void kernelMain(const multiboot_info_t* mbi, unsigned int multiboot_m
     KernelHeap::Initialize(KERNEL_HEAP_START, KERNEL_HEAP_START + KERNEL_HEAP_SIZE);
     BootConsole::WriteLine("Kernel Heap Initialized");
 
-    Power::Initialize();
-    BootConsole::WriteLine("Power Control Loaded");
+    // From here we (should) only use the Log function for logging
+    Log(Info, "Switching to log function based output");
 
-    BootConsole::WriteLine("Passing mbi to system");
+    Power::Initialize();
+    Log(Info, "Power Control Loaded");
+
+    Log(Info, "Passing mbi to system");
     System::mbi = (multiboot_info_t*)KernelHeap::malloc(sizeof(multiboot_info_t));
     MemoryOperations::memcpy(System::mbi, mbi, sizeof(multiboot_info_t));
 
     BootConsole::ForegroundColor = VGA_COLOR_MAGENTA;
-    BootConsole::WriteLine("-Kernel core intialized-");
+    Log(Info, "-Kernel core intialized-");
 
-    //Further intialisation is done in the system class
+    // Further intialisation is done in the system class
     System::Start();
 
     Log(Info, "Loading Kernel Process");
@@ -187,7 +191,7 @@ extern "C" void kernelMain(const multiboot_info_t* mbi, unsigned int multiboot_m
     // If not than ask the user if they would like to run the installer
     // Otherwise we run the liveCD
     if(System::vfs->Filesystems->GetAt(System::vfs->bootPartitionID)->disk->type != HardDisk) {
-        //Promt user
+        // Promt user
         BootConsole::ForegroundColor = VGA_COLOR_BLUE;
         System::setupMode = true;
         BootConsole::WriteLine("Press Enter to run Installer\nStarting LiveCD in 5 seconds....");
@@ -200,10 +204,10 @@ extern "C" void kernelMain(const multiboot_info_t* mbi, unsigned int multiboot_m
         }
         BootConsole::WriteLine();
 
-        if(System::keyboardManager->Availible() > 0) { //User pressed key
+        if(System::keyboardManager->Availible() > 0) { // User pressed key
             uint8_t keyCode = System::keyboardManager->Read();    
             
-            if(keyCode == KEY_ENTER) { //Return key
+            if(keyCode == KEY_ENTER) { // Return key
                 BootConsole::WriteLine("Running Installer...");
                 Installer::Run();
             }

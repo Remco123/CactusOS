@@ -1,4 +1,5 @@
 #include <core/physicalmemory.h>
+#include <common/print.h>
 
 using namespace CactusOS;
 using namespace CactusOS::common;

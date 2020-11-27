@@ -43,23 +43,13 @@ void PartitionManager::DetectAndLoadFilesystem(Disk* disk)
                 if(mbr->primaryPartitions[p].partition_id == 0x00)
                     continue;
 
-                BootConsole::Write("- Disk "); BootConsole::Write(diskIdentifier);
-                BootConsole::Write(" Partition: "); BootConsole::Write(Convert::IntToString(p));
-
-                if(mbr->primaryPartitions[p].bootable == 0x80)
-                    BootConsole::Write(" Bootable ID: 0x");
-                else
-                    BootConsole::Write(" ID: 0x");
-                
-                Print::printfHex(mbr->primaryPartitions[p].partition_id);
-                BootConsole::Write(" Sectors: "); BootConsole::Write(Convert::IntToString(mbr->primaryPartitions[p].length));
-
+                Log(Info, "- Disk %s Part=%d Boot=%d ID=%b Sectors=%d", diskIdentifier, p, mbr->primaryPartitions[p].bootable == 0x80, mbr->primaryPartitions[p].partition_id, mbr->primaryPartitions[p].length);
                 AssignVFS(mbr->primaryPartitions[p], disk);
             }
         }
     }
     else {
-        BootConsole::Write("Error reading disk "); BootConsole::Write(diskIdentifier); BootConsole::Write(" Code: 0x"); Print::printfHex(ret); BootConsole::WriteLine();
+        Log(Error, "Error reading disk %s code = %b", diskIdentifier, ret);
     }
     delete Readbuf;
 }

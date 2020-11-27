@@ -3,7 +3,6 @@
 
 #include <common/types.h>
 #include <common/convert.h>
-#include <common/print.h>
 #include <common/memoryoperations.h>
 #include <system/bootconsole.h>
 #include <multiboot/multiboot.h>

@@ -13,7 +13,7 @@ SMBIOS::SMBIOS(bool searchForTable)
 {
     if(searchForTable)
     {
-        BootConsole::WriteLine("Searching for SMBIOS structure");
+        Log(Info, "Searching for SMBIOS structure");
 
         char* memAddress = (char*)0xF0000;
         int length, i;
@@ -32,7 +32,7 @@ SMBIOS::SMBIOS(bool searchForTable)
 
         if((uint32_t)memAddress != 0x100000)
         {
-            BootConsole::Write("Found at: 0x"); Print::printfHex32((uint32_t)memAddress); BootConsole::WriteLine();
+            Log(Info, "Found at: %x", (uint32_t)memAddress);
             this->TableAddress = memAddress;
 
 #if BOCHS_GFX_HACK //Massive hack to detect bochs so that we can use the right video device, TODO: Improve
@@ -315,12 +315,13 @@ void SMBIOS::PrintSummary()
 {
     if(this->TableAddress != 0)
     {
-        BootConsole::WriteLine("SMBIOS Summary");
         SMBIOSEntryPoint* entryPoint = (SMBIOSEntryPoint*)this->TableAddress;
-        BootConsole::Write("Version: "); BootConsole::Write(Convert::IntToString(entryPoint->MajorVersion)); BootConsole::Write("."); BootConsole::WriteLine(Convert::IntToString(entryPoint->MinorVersion));
-        BootConsole::Write("Number of Structures: "); BootConsole::WriteLine(Convert::IntToString(entryPoint->NumberOfStructures));
-        BootConsole::Write("Table Address: 0x"); Print::printfHex32(entryPoint->TableAddress); BootConsole::WriteLine();
-        BootConsole::Write("Table Length: "); BootConsole::WriteLine(Convert::IntToString(entryPoint->TableLength));
+
+        Log(Info, " -------- SMBIOS Summary ----------");
+        Log(Info, "Version: %d.%d", entryPoint->MajorVersion, entryPoint->MinorVersion);
+        Log(Info, "Number of Structures: %d", entryPoint->NumberOfStructures);
+        Log(Info, "Table Address: %x", entryPoint->TableAddress);
+        Log(Info, "Table Length: %d", entryPoint->TableLength);
 
         BiosMajorVersion = entryPoint->MajorVersion;
         BiosMinorVersion = entryPoint->MinorVersion;

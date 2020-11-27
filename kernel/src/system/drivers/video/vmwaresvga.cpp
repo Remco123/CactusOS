@@ -33,7 +33,7 @@ uint32_t VMWARESVGAII::ReadRegister(uint32_t index)
 
 bool VMWARESVGAII::Initialize()
 {
-    BootConsole::WriteLine("Intializing VMWare Graphics Device");
+    Log(Info, "Intializing VMWare Graphics Device");
     
     //Enable Device Memory
     uint16_t com = System::pci->Read(pciDevice->bus, pciDevice->device, pciDevice->function, 0x04);
@@ -45,9 +45,9 @@ bool VMWARESVGAII::Initialize()
         return false;
 
     this->framebufferPhys = ReadRegister(SVGA_REG_FB_START);
-    BootConsole::Write("Framebuffer is at: 0x"); Print::printfHex32(this->framebufferPhys); BootConsole::WriteLine();
+    Log(Info, "Framebuffer is at: %x", this->framebufferPhys);
 
-    BootConsole::WriteLine("Replacing fallback gfx device");
+    Log(Warning, "Replacing fallback gfx device");
     GraphicsDevice* old = System::gfxDevice;
     System::gfxDevice = this;
     delete old;

@@ -3,7 +3,6 @@
 
 #include <system/components/systemcomponent.h>
 #include <system/bootconsole.h>
-#include <common/print.h>
 #include <common/string.h>
 #include <common/list.h>
 

@@ -46,7 +46,7 @@ PCIController::PCIController()
 
 void PCIController::PopulateDeviceList()
 {
-    BootConsole::WriteLine("Scanning for PCI Devices");
+    Log(Info, "Scanning for PCI Devices");
 
     for(int bus = 0; bus < 256; bus++)
     {
@@ -58,10 +58,6 @@ void PCIController::PopulateDeviceList()
                 uint16_t vendorID = Read(bus, device, function, 0x00);
                 if(vendorID == 0xFFFF)
                     continue;
-
-                BootConsole::Write(Convert::IntToString(bus)); BootConsole::Write(":"); 
-                BootConsole::Write(Convert::IntToString(device)); BootConsole::Write(":");
-                BootConsole::Write(Convert::IntToString(function));
 
                 // Add pci device to list
                 PCIDevice* pciDevice = new PCIDevice();
@@ -129,10 +125,7 @@ void PCIController::PopulateDeviceList()
                     } 
                 }
 
-                BootConsole::SetX(8); BootConsole::Write("  ");
-                Print::printfHex16(pciDevice->vendorID); BootConsole::Write(":");
-                Print::printfHex16(pciDevice->deviceID); BootConsole::Write("  ");
-                BootConsole::WriteLine(GetClassCodeString(pciDevice->classID, pciDevice->subclassID));
+                Log(Info, "%d:%d:%d %w:%w %s", bus, device, function, pciDevice->vendorID, pciDevice->deviceID, GetClassCodeString(pciDevice->classID, pciDevice->subclassID));
                 
                 deviceList.push_back(pciDevice);
             }

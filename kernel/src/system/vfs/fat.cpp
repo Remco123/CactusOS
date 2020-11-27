@@ -1,6 +1,5 @@
 #include <system/vfs/fat.h>
 
-#include <common/print.h>
 #include <system/log.h>
 #include <system/system.h>
 

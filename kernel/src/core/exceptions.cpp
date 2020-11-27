@@ -1,5 +1,6 @@
 #include <core/exceptions.h>
 #include <system/system.h>
+#include <common/print.h>
 
 using namespace CactusOS;
 using namespace CactusOS::common;

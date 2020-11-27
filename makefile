@@ -115,9 +115,9 @@ qemuGDB: CactusOS.iso
 run: CactusOS.iso
 	(killall VirtualBox && sleep 1) || true
 	virtualbox &
-	rm "../Virtualbox Serial Log.txt"
-	echo "" > "../Virtualbox Serial Log.txt"
-	tail -f "../Virtualbox Serial Log.txt"
+	rm "CactusOS.log"
+	echo "" > "CactusOS.log"
+	tail -f "CactusOS.log"
 
 serialDBG:
 	gcc -o tools/serialDebugger/a.out tools/serialDebugger/main.c

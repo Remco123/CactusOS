@@ -21,25 +21,6 @@ Scheduler::Scheduler()
     this->switchForced = false;
 }
 
-void printRegs(CPUState* regs)
-{
-    BootConsole::Write("eax: 0x"); Print::printfHex32(regs->EAX); BootConsole::Write("   ");
-    BootConsole::Write("ebx: 0x"); Print::printfHex32(regs->EBX); BootConsole::Write("   ");
-    BootConsole::Write("ecx: 0x"); Print::printfHex32(regs->ECX); BootConsole::WriteLine();
-    BootConsole::Write("edx: 0x"); Print::printfHex32(regs->EDX); BootConsole::Write("   ");
-    BootConsole::Write("esi: 0x"); Print::printfHex32(regs->ESI); BootConsole::Write("   ");
-    BootConsole::Write("edi: 0x"); Print::printfHex32(regs->EDI); BootConsole::WriteLine();
-    BootConsole::Write("ebp: 0x"); Print::printfHex32(regs->EBP); BootConsole::Write("   ");
-    BootConsole::Write("esp: 0x"); Print::printfHex32(regs->ESP); BootConsole::Write("   ");
-    BootConsole::Write("eip: 0x"); Print::printfHex32(regs->EIP); BootConsole::WriteLine();
-    BootConsole::Write("CS: 0x"); Print::printfHex16(regs->CS);   BootConsole::Write("   ");   
-    BootConsole::Write("DS: 0x"); Print::printfHex16(regs->DS);   BootConsole::Write("   ");
-    BootConsole::Write("ES: 0x"); Print::printfHex16(regs->ES);   BootConsole::WriteLine();
-    BootConsole::Write("FS: 0x"); Print::printfHex16(regs->FS);   BootConsole::Write("   ");
-    BootConsole::Write("GS: 0x"); Print::printfHex16(regs->GS);   BootConsole::WriteLine();
-    BootConsole::Write("EFLAGS: 0b"); Print::printbits((uint16_t)regs->EFLAGS); BootConsole::WriteLine();
-}
-
 uint32_t Scheduler::HandleInterrupt(uint32_t esp)
 {
     tickCount++;
@@ -70,15 +51,7 @@ uint32_t Scheduler::HandleInterrupt(uint32_t esp)
                 //Ask for a new thread
                 nextThread = GetNextReadyThread();
             }
-#if 0
-            Log(Info, "Switching from %s %d to %s %d", currentThread->parent->fileName, currentThread->parent->Threads.IndexOf(currentThread), nextThread->parent->fileName, nextThread->parent->Threads.IndexOf(nextThread));
-            BootConsole::WriteLine("-- Current Registers --");
-            printRegs((CPUState*)esp);
-            BootConsole::Write("cr3: 0x"); Print::printfHex32(currentThread->parent->pageDirPhys); BootConsole::WriteLine();
-            BootConsole::WriteLine("-- Next Registers --");
-            printRegs(nextThread->regsPtr);
-            BootConsole::Write("cr3: 0x"); Print::printfHex32(nextThread->parent->pageDirPhys); BootConsole::WriteLine();
-#endif         
+      
             //Check if the current thread is stopped
             if(currentThread != 0 && currentThread->state == Stopped)
             {

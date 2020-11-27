@@ -80,9 +80,6 @@ namespace CactusOS
 
         class VirtualMemoryManager
         {
-        private:
-            static void PrintPageDirectoryEntry(PageDirectoryEntry pde);
-            static void PrintPageTableEntry(PageTableEntry pte);
         public:      
             static void ReloadCR3();  
             static void Intialize();

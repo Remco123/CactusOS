@@ -36,6 +36,7 @@
 *.bin
 *.iso
 *.ipch
+*.log
 
 virtualbox_log.txt
 tools/fontGenerator/font.ttf

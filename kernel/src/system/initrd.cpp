@@ -1,4 +1,5 @@
 #include <system/initrd.h>
+#include <system/log.h>
 
 using namespace CactusOS;
 using namespace CactusOS::common;
@@ -10,15 +11,15 @@ void InitialRamDisk::Initialize(multiboot_info_t* mbi)
 {
     if(mbi->mods_count <= 0)
     {
-        BootConsole::WriteLine("Error mods count is 0 or less");
+        Log(Info, "Error mods count is 0 or less");
         return;
     }
     
     uint32_t ramdiskLocation = *(uint32_t*)mbi->mods_addr;
     uint32_t ramdiskEnd = *(uint32_t*)(mbi->mods_addr + 4);
 
-    BootConsole::Write("Ramdisk is at: 0x"); Print::printfHex32(ramdiskLocation); BootConsole::WriteLine();
-    BootConsole::Write("Ramdisk size: "); BootConsole::WriteLine(Convert::IntToString(ramdiskEnd - ramdiskLocation));
+    Log(Info, "Ramdisk is at: %x", ramdiskLocation);
+    Log(Info, "Ramdisk size: %d", ramdiskEnd - ramdiskLocation);
 
     locationInMemory = (void*)ramdiskLocation;
 }

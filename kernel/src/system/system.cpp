@@ -42,97 +42,94 @@ bool System::isBochs = false; //are we running inside bochs
 void System::Start()
 {
     BootConsole::ForegroundColor = VGA_COLOR_BLACK;
-    BootConsole::WriteLine("Adding system components");
+    Log(Info, "Adding system components");
     
-    BootConsole::Write("RTC");
     System::rtc = new RTC();
-    BootConsole::WriteLine(" [Done]");
+    Log(Info, "(%x) RTC [Done]", (uint32_t)System::rtc);
 
-    BootConsole::Write("PIT");
     InterruptDescriptorTable::DisableInterrupts();
     System::pit = new PIT();
     InterruptDescriptorTable::EnableInterrupts();
-    BootConsole::WriteLine(" [Done]");
+    Log(Info, "(%x) PIT [Done]", (uint32_t)System::pit);
 
-    BootConsole::WriteLine("DMA [Done]");
     System::dma = new DMAController();
+    Log(Info, "(%x) DMA [Done]", (uint32_t)System::dma);
 
-    BootConsole::WriteLine("SMBIOS [Done]");
     System::smbios = new SMBIOS(true);
+    Log(Info, "(%x) SMBIOS [Done]", (uint32_t)System::smbios);
 #if 0
 //This does not work on bochs for some weird reason, we get a page-fault then.
     System::smbios->PrintSummary();
 #endif
 
-    BootConsole::WriteLine("Adding Virtual 8086");
+    Log(Info, "Adding Virtual 8086");
     System::vm86Manager = new Virtual8086Manager();
     System::vm86Monitor = new Virtual8086Monitor();
 
-    //The graphics component is added here but not used right away, we don't need to be in video mode so early.
-    BootConsole::Write("Graphics Device");
+    // The graphics component is added here but not used right away, we don't need to be in video mode so early.
     System::gfxDevice = GraphicsDevice::GetBestDevice();
-    BootConsole::WriteLine(" [Done]");
+    Log(Info, "(%x) GFX [Done]", (uint32_t)System::gfxDevice);
 
-    //Check for monitor EDID
+    // Check for monitor EDID
     System::edid = new EDID();
+    Log(Info, "(%x) EDID [Done]", (uint32_t)System::edid);
     System::edid->AcquireEDID();
 
-    BootConsole::WriteLine("Loading Initial Ramdisk");
+    Log(Info, "Loading Initial Ramdisk");
     InitialRamDisk::Initialize(System::mbi);
 
-    BootConsole::Write("PCI");
     System::pci = new PCIController();
-    BootConsole::WriteLine(" [Done]");
+    Log(Info, "(%x) PCI [Done]", (uint32_t)System::pci);
 
     System::pci->PopulateDeviceList();
 
-    BootConsole::WriteLine("Starting Driver Manager");
+    Log(Info, "Starting Driver Manager");
     System::driverManager = new DriverManager();
 
-    BootConsole::WriteLine("Starting Disk Manager");
+    Log(Info, "Starting Disk Manager");
     System::diskManager = new DiskManager();
 
-    BootConsole::WriteLine("Starting Keyboard Manager");
+    Log(Info, "Starting Keyboard Manager");
     System::keyboardManager = new KeyboardManager();
 
-    BootConsole::WriteLine("Starting Scheduler");
+    Log(Info, "Starting Scheduler");
     InterruptDescriptorTable::DisableInterrupts();
     System::scheduler = new Scheduler();
     InterruptDescriptorTable::EnableInterrupts();
 
-    BootConsole::WriteLine("Starting USB Manager");
+    Log(Info, "Starting USB Manager");
     System::usbManager = new USBManager();
-    BootConsole::WriteLine("Initializing Virtual File System");
+    Log(Info, "Initializing Virtual File System");
     System::vfs = new VFSManager();
 
-    BootConsole::WriteLine("Setting up random...");
+    Log(Info, "Setting up random...");
     Random::SetSeed(pit->Ticks());
 
-    BootConsole::WriteLine("Assigning PCI Drivers");
+    Log(Info, "Assigning PCI Drivers");
     PCIDrivers::AssignDriversFromPCI(System::pci, System::driverManager);
 
-    BootConsole::WriteLine("Creating shared region for system info");
+    Log(Info, "Creating shared region for system info");
     System::systemInfo = (SharedSystemInfo*)KernelHeap::allignedMalloc(PAGE_SIZE, PAGE_SIZE);
     MemoryOperations::memset(System::systemInfo, 0, PAGE_SIZE);
 
-    BootConsole::WriteLine("Added drivers for integrated devices");
+    Log(Info, "Added drivers for integrated devices");
     System::driverManager->AddDriver(new PS2MouseDriver());
     System::driverManager->AddDriver(new PS2KeyboardDriver());
     System::driverManager->AddDriver(new FloppyDriver());
     
-    BootConsole::WriteLine("Activating Drivers");
+    Log(Info, "Activating Drivers");
     System::driverManager->ActivateAll();
 
-    BootConsole::WriteLine("Setting up found USB controllers");
+    Log(Info, "Setting up found USB controllers");
     System::usbManager->SetupAll();
-    BootConsole::WriteLine("Setting up found USB devices");
+    Log(Info, "Setting up found USB devices");
     System::usbManager->AssignAllDrivers();
     System::usbManager->USBPoll();
 
-    //Advanced Power Management
+    // Advanced Power Management
     System::apm = new APMController();
 
-    BootConsole::Write("Found a total of: "); BootConsole::Write(Convert::IntToString(System::diskManager->allDisks.size())); BootConsole::WriteLine(System::diskManager->allDisks.size() > 1 ? (char*)" disks" : (char*)" disk");
+    Log(Info, "Found a total of: %d disks", System::diskManager->allDisks.size());
     BootConsole::Write("Searching for boot partition");
     if(System::vfs->SearchBootPartition()) {
         BootConsole::Write(" [Found] ("); BootConsole::Write(Convert::IntToString(System::vfs->bootPartitionID)); BootConsole::WriteLine(")");
@@ -140,13 +137,13 @@ void System::Start()
     else
         BootConsole::WriteLine(" [Not found]");
 
-    BootConsole::WriteLine("Starting Systemcalls");
+    Log(Info, "Starting Systemcalls");
     System::syscalls = new SystemCallHandler();
 
-    BootConsole::WriteLine("Preparing IPC");
+    Log(Info, "Preparing IPC");
     IPCManager::Initialize();
 
-    BootConsole::WriteLine("Adding default listing handlers");
+    Log(Info, "Adding default listing handlers");
     System::listings = new List<ListingController*>();
     System::listings->push_back(new DirectoryListing());
     System::listings->push_back(new ProcessListing());

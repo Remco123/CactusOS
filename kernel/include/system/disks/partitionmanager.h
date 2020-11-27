@@ -1,7 +1,6 @@
 #ifndef __CACTUSOS__SYSTEM__DISKS__PARTITIONMANAGER_H
 #define __CACTUSOS__SYSTEM__DISKS__PARTITIONMANAGER_H
 
-#include <common/print.h>
 #include <system/disks/diskmanager.h>
 #include <system/vfs/vfsmanager.h>
 

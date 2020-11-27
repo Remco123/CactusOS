@@ -11,21 +11,6 @@ static inline void invlpg(void* addr)
     asm volatile("invlpg (%0)" ::"r" (addr) : "memory");
 }
 
-void VirtualMemoryManager::PrintPageDirectoryEntry(PageDirectoryEntry pde)
-{
-    BootConsole::Write("#- Present: "); BootConsole::WriteLine(Convert::IntToString(pde.present));
-    BootConsole::Write("#- Read Write: "); BootConsole::WriteLine(Convert::IntToString(pde.readWrite));
-    BootConsole::Write("#- User: "); BootConsole::WriteLine(Convert::IntToString(pde.isUser));
-    BootConsole::Write("#- Size: "); BootConsole::WriteLine(pde.pageSize ? (char*)"4m" : (char*)"4k");
-    BootConsole::Write("#- Frame: 0x"); Print::printfHex32(pde.frame); BootConsole::WriteLine();
-}
-void VirtualMemoryManager::PrintPageTableEntry(PageTableEntry pte)
-{
-    BootConsole::Write("#- Present: "); BootConsole::WriteLine(Convert::IntToString(pte.present));
-    BootConsole::Write("#- Read Write: "); BootConsole::WriteLine(Convert::IntToString(pte.readWrite));
-    BootConsole::Write("#- User: "); BootConsole::WriteLine(Convert::IntToString(pte.isUser));
-    BootConsole::Write("#- Frame: 0x"); Print::printfHex32(pte.frame); BootConsole::WriteLine();
-}
 void VirtualMemoryManager::ReloadCR3()
 {
     asm volatile("movl	%cr3,%eax");
