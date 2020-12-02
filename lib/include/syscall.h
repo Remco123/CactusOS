@@ -97,6 +97,7 @@ namespace LIBCactusOS
         SYSCALL_BEGIN_LISTING,
         SYSCALL_LISTING_ENTRY,
         SYSCALL_END_LISTING,
+        SYSCALL_GET_SYSINFO_VALUE,
 
         //////////////
         // Other

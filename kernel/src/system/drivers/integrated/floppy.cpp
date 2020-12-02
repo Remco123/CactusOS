@@ -62,12 +62,12 @@ bool FloppyDriver::Initialize()
 
 	// Assign disks
 	if(this->flpy1) {
-		Disk* disk1 = new Disk(0, this, DiskType::Floppy, 1_MB + 440_KB);
+		Disk* disk1 = new Disk(0, this, DiskType::Floppy, 1_MB + 440_KB, (1_MB + 440_KB) / 512, 512);
 		disk1->identifier = "Floppy 1";
 		System::diskManager->AddDisk(disk1);
 	}
 	if(this->flpy2) {
-		Disk* disk2 = new Disk(1, this, DiskType::Floppy, 1_MB + 440_KB);
+		Disk* disk2 = new Disk(1, this, DiskType::Floppy, 1_MB + 440_KB, (1_MB + 440_KB) / 512, 512);
 		disk2->identifier = "Floppy 2";
 		System::diskManager->AddDisk(disk2);
 	}

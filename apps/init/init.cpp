@@ -44,6 +44,7 @@ int main()
     Print("Launched GUI Demo pid: %d\n", Process::Run("B:\\apps\\guidemo.bin"));
     Print("Launched Desktop pid: %d\n", Process::Run("B:\\apps\\desktop.bin"));
     Print("Launched Clock pid: %d\n", Process::Run("B:\\apps\\clock.bin"));
+    Print("Launched Sysinfo pid: %d\n", Process::Run("B:\\apps\\sysinfo.bin"));
 
     bar->SetValue(100); 
 

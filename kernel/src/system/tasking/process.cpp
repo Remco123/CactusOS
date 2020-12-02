@@ -140,7 +140,7 @@ Process* ProcessHelper::Create(char* fileName, bool isKernel)
     proc->heap.heapEnd = proc->heap.heapStart + PROC_USER_HEAP_SIZE;
 
     //Create stream for input
-    proc->stdInput = new FIFOStream(1000);
+    proc->stdInput = new FIFOStream(10_KB);
     //Redirect output to system console
     proc->stdOutput = System::ProcStandardOut;
    

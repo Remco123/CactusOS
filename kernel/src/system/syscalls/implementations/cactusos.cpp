@@ -8,6 +8,7 @@
 #include <system/tasking/lock.h>
 #include <core/power.h>
 #include <system/listings/listingcontroller.h>
+#include <system/listings/systeminfo.h>
 
 using namespace CactusOS;
 using namespace CactusOS::common;
@@ -388,6 +389,11 @@ CPUState* CactusOSSyscalls::HandleSyscall(CPUState* state)
                 }
 
                 System::listings->GetAt(type)->EndListing(System::scheduler->CurrentThread());
+            }
+            break;
+        case LIBCactusOS::SYSCALL_GET_SYSINFO_VALUE:
+            {
+                state->EAX = SystemInfoManager::HandleSysinfoRequest((void*)state->EBX, state->EDX, state->ECX, (bool)state->ESI);
             }
             break;
         default:

@@ -10,12 +10,12 @@ namespace CactusOS
     {
         class USBManager
         { 
-        private:
-            //The list of all usb controllers present on this pc. (the ones detected by pci)
+        public:
+            // The list of all usb controllers present on this pc. (the ones detected by pci)
             List<USBController*> controllerList;
-            //List of all known USBDevices
+            // List of all known USBDevices
             List<USBDevice*> deviceList;
-            //Holds if usb devices present on boot are all initialized
+            // Holds if usb devices present on boot are all initialized
             bool initDone = false;
         public:
             //Create new instance of USBManager

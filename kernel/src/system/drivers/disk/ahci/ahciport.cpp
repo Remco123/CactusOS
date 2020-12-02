@@ -150,9 +150,10 @@ bool AHCIPort::StartupPort()
         diskModel[40] = 0; // Terminate String.
 
 		Log(Info, "AHCI: Found %s drive %s", this->isATATPI ? "ATAPI" : "ATA", diskModel);
+        uint32_t sectSize = this->isATATPI ? 2048 : 512;
 
 		// Create disk structure
-		Disk* disk = new Disk(this->index, this->parent, this->isATATPI ? CDROM : HardDisk, (uint64_t)(diskSize / 2U) * (uint64_t)1024);
+		Disk* disk = new Disk(this->index, this->parent, this->isATATPI ? CDROM : HardDisk, (uint64_t)(diskSize / 2U) * (uint64_t)1024, diskSize / 2 / sectSize, sectSize);
             
         // Create Identifier
         int strLen = 40;

@@ -155,7 +155,8 @@ bool IDEController::Initialize()
             BootConsole::Write(" Drive "); BootConsole::Write(Convert::IntToString(ideDevices[i].Size / 1024 / 2));
             BootConsole::Write(" MB - "); BootConsole::WriteLine((char*)ideDevices[i].Model);
 
-            Disk* disk = new Disk(i, this, ideDevices[i].Type == 0 ? HardDisk : CDROM, (uint64_t)(ideDevices[i].Size / 2U) * (uint64_t)1024);
+            uint32_t sectSize = ideDevices[i].Type == 0 ? 512 : 2048;
+            Disk* disk = new Disk(i, this, ideDevices[i].Type == 0 ? HardDisk : CDROM, (uint64_t)(ideDevices[i].Size / 2U) * (uint64_t)1024, ideDevices[i].Size / 2 / sectSize, sectSize);
             
             //////////
             // Create Identifier

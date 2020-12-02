@@ -56,7 +56,7 @@ Compositor::Compositor()
     memcpy(this->backBuffer, this->backgroundBuffer, GUI::Width*GUI::Height*4);
 
     Print("[Compositor] Requesting Systeminfo\n");
-    if(!RequestSystemInfo())
+    if(!SystemInfo::RequestSystemInfo())
         return;
 
     Print("[Compositor] Requesting direct keyboard input\n");

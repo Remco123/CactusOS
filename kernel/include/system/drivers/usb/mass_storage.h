@@ -133,9 +133,6 @@ namespace CactusOS
                 int bulkInEP = 0;   // Endpoint number of bulk in
                 int bulkOutEP = 0;  // Endpoint number of bulk out
                 int maxLUN = 0;     // Number of Logical Units
-
-                uint32_t numBlocks = 0; // Number of Blocks
-                uint32_t blockSize = 0; // Size of 1 block
                 
                 bool use16Base = false; // Should we read/write using the 16 command
 

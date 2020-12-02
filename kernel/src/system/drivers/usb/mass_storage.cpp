@@ -11,7 +11,7 @@ using namespace CactusOS::system::drivers;
 
 // Create new driver for a MSD
 USBMassStorageDriver::USBMassStorageDriver(USBDevice* dev)
-: USBDriver(dev, "USB Mass Storage"), Disk(0, 0, USBDisk, 0)
+: USBDriver(dev, "USB Mass Storage"), Disk(0, 0, USBDisk, 0, 0, 0)
 { }
 
 // Called when mass storage device is plugged into system
