@@ -7,13 +7,33 @@
 #include <log.h>
 #include <proc.h>
 #include <convert.h>
+#include <ipc.h>
 #include <vfs.h>
+#include <time.h>
 #include "terminalcontrol.h"
 
 char* workingDir = "B:\\";
 TerminalControl* termWindow = 0;
 
 int ExecCommand(char* cmd);
+
+void GUIThread()
+{
+    while(1)
+    {
+        static uint64_t ticks = 0;
+        if(Time::Ticks() - ticks > 500) {
+            termWindow->ToggleCursor();
+            ticks = Time::Ticks();
+        }
+
+        GUI::DrawGUI();
+        if(IPCAvailible())
+            GUI::ProcessEvents();
+        else
+            Process::Yield();
+    }
+}
 int main()
 {
     GUI::SetDefaultFont();
@@ -24,7 +44,7 @@ int main()
     termWindow = new TerminalControl(mainWindow->width, mainWindow->height - 30);
     mainWindow->AddChild(termWindow);
     
-    GUI::MakeAsync();
+    Process::CreateThread(GUIThread, false);
     while(GUI::HasItems())
     {
         mainWindow->titleString = workingDir;

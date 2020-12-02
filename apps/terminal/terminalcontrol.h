@@ -13,6 +13,7 @@ private:
     List<char> inputKeys;
 
     int x,y;
+    bool cursor = false;
 public:
     uint32_t textColor = 0xFF000000;
 
@@ -25,6 +26,7 @@ public:
     void Write(char* str);
     void ScrollLine();
     void Clear();
+    void ToggleCursor();
 
     void DrawTo(Canvas* context, int x_abs, int y_abs) override;
     

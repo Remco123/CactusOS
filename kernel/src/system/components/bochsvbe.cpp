@@ -11,7 +11,7 @@ using namespace CactusOS::system;
 using namespace CactusOS::core;
 
 BochsVBE::BochsVBE()
-: GraphicsDevice(),
+: GraphicsDevice("Bochs VBE Adapter"),
 SystemComponent("BOCHS VBE", "Bochs VBE Extensions")
 { }
 

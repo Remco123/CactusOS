@@ -14,8 +14,9 @@ namespace CactusOS
             common::uint32_t height;
             common::uint8_t bpp;
             common::uint32_t framebufferPhys;
+            char* identifier = 0;
 
-            GraphicsDevice();
+            GraphicsDevice(char* name);
             virtual bool SelectBestVideoMode();
             
             common::uint32_t GetBufferSize();

@@ -7,11 +7,12 @@ using namespace CactusOS;
 using namespace CactusOS::common;
 using namespace CactusOS::system;
 
-GraphicsDevice::GraphicsDevice()
+GraphicsDevice::GraphicsDevice(char* name)
 {
     this->width = 0;
     this->height = 0;
     this->bpp = 0;
+    this->identifier = name;
 }
 
 bool GraphicsDevice::SelectBestVideoMode()

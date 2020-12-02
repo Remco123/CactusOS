@@ -15,7 +15,7 @@ uint16_t* RealPTRToAddr(Real_Pointer ptr){
 }
 
 VESA::VESA(Virtual8086Manager* vm86)
-: GraphicsDevice(),
+: GraphicsDevice("VESA VBE Adapter"),
 SystemComponent("VESA VBE", "VESA BIOS Extensions")
 { 
     this->virtual8086Manager = vm86;

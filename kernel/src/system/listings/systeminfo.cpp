@@ -165,16 +165,100 @@ bool SystemInfoManager::HandleSysinfoRequest(void* arrayPointer, int count, comm
                 return false;         
         }
         else if(String::strcmp(items[1].id, "gfxdevice")) {
+            if(items[2].type != LIBCactusOS::SIPropertyIdentifier::String)
+                return false; // Needs to be property id
             
+            if(String::strcmp(items[2].id, "bpp")) {
+                *((uint8_t*)retAddr) = System::gfxDevice->bpp;
+                return true;
+            }
+            else if(String::strcmp(items[2].id, "width")) {
+                *((uint32_t*)retAddr) = System::gfxDevice->width;
+                return true;
+            }
+            else if(String::strcmp(items[2].id, "height")) {
+                *((uint32_t*)retAddr) = System::gfxDevice->height;
+                return true;
+            }
+            else if(String::strcmp(items[2].id, "framebuffer")) {
+                *((uint32_t*)retAddr) = System::gfxDevice->framebufferPhys;
+                return true;
+            }
+            else if(String::strcmp(items[2].id, "name")) {
+                char* targ = (char*)retAddr;
+                int len = String::strlen(System::gfxDevice->identifier);
+                MemoryOperations::memcpy(targ, System::gfxDevice->identifier, len);
+                targ[len] = '\0';
+                return true;
+            }
+            else
+                return false;
         }
         else if(String::strcmp(items[1].id, "processes")) {
-            
+            if(getSize) {
+                *((int*)retAddr) = ProcessHelper::Processes.size();
+                return true;
+            }
+            if(items[2].type != LIBCactusOS::SIPropertyIdentifier::Index || items[3].type != LIBCactusOS::SIPropertyIdentifier::String)
+                return false; // Needs to be index for collection and next needs to be property id
+
+            int index = items[2].index;
+            if(String::strcmp(items[3].id, "pid")) {
+                *((int*)retAddr) = ProcessHelper::Processes[index]->id;
+                return true;
+            }
+            else if(String::strcmp(items[3].id, "userspace")) {
+                *((bool*)retAddr) = ProcessHelper::Processes[index]->isUserspace;
+                return true;
+            }
+            else if(String::strcmp(items[3].id, "state")) {
+                *((int*)retAddr) = (int)ProcessHelper::Processes[index]->state;
+                return true;
+            }
+            else if(String::strcmp(items[3].id, "membase")) {
+                *((uint32_t*)retAddr) = ProcessHelper::Processes[index]->excecutable.memBase;
+                return true;
+            }
+            else if(String::strcmp(items[3].id, "memsize")) {
+                *((uint32_t*)retAddr) = ProcessHelper::Processes[index]->excecutable.memSize;
+                return true;
+            }
+            else if(String::strcmp(items[3].id, "heap-start")) {
+                *((uint32_t*)retAddr) = ProcessHelper::Processes[index]->heap.heapStart;
+                return true;
+            }
+            else if(String::strcmp(items[3].id, "heap-end")) {
+                *((uint32_t*)retAddr) = ProcessHelper::Processes[index]->heap.heapEnd;
+                return true;
+            }
+            else if(String::strcmp(items[3].id, "filename")) {
+                char* targ = (char*)retAddr;
+                int len = String::strlen(ProcessHelper::Processes[index]->fileName);
+                MemoryOperations::memcpy(targ, ProcessHelper::Processes[index]->fileName, len);
+                targ[len] = '\0';
+                return true;
+            }
+            else
+                return false;
         }
-        else if(String::strcmp(items[1].id, "threads")) {
+        else if(String::strcmp(items[1].id, "memory")) {
+            if(items[2].type != LIBCactusOS::SIPropertyIdentifier::String)
+                return false; // Needs to be property id
             
-        }
-        else if(String::strcmp(items[1].id, "cpu")) {
-            
+            if(String::strcmp(items[2].id, "total")) {
+                *((uint32_t*)retAddr) = PhysicalMemoryManager::AmountOfMemory();
+                return true;
+            }
+            else if(String::strcmp(items[2].id, "used")) {
+                *((uint32_t*)retAddr) = PhysicalMemoryManager::UsedBlocks() * PAGE_SIZE;
+                return true;
+            }
+            else if(String::strcmp(items[2].id, "free")) {
+                *((uint32_t*)retAddr) = PhysicalMemoryManager::FreeBlocks() * PAGE_SIZE;
+                return true;
+            }
+            else
+                return false;
         }
         else
             return false; // Unknown identifier

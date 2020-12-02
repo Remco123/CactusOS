@@ -43,6 +43,7 @@ void TerminalControl::Write(char c)
             break;
         case '\b':
             {
+                textBuffer[this->y * TERM_WIDTH + this->x] = '\0';
                 if(this->x >= 1)
                 {
                     this->x--;
@@ -86,6 +87,12 @@ void TerminalControl::Clear()
     this->x = 0;
     this->y = 0;
     memset(this->textBuffer, '\0', TERM_WIDTH * TERM_HEIGH);
+}
+void TerminalControl::ToggleCursor()
+{
+    this->cursor = !this->cursor;
+
+    textBuffer[this->y * TERM_WIDTH + this->x] = this->cursor ? '>' : '\0';
 }
 void TerminalControl::Write(char* str)
 {

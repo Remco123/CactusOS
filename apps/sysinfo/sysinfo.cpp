@@ -114,11 +114,60 @@ void PrintPCIInfo()
     }
 }
 
+void PrintGFXInfo()
+{
+    Print("Current GFX Device:\n");
+
+    char* name = (char*)SystemInfo::Properties["gfxdevice"]["name"];
+    Print("  -> Name = %s\n", name);
+    Print("  -> Bpp = %d\n", (uint8_t)SystemInfo::Properties["gfxdevice"]["bpp"]);
+    Print("  -> Width = %d\n", (uint32_t)SystemInfo::Properties["gfxdevice"]["width"]);
+    Print("  -> Height = %d\n", (uint32_t)SystemInfo::Properties["gfxdevice"]["height"]);
+    Print("  -> Buffer = %x\n", (uint32_t)SystemInfo::Properties["gfxdevice"]["framebuffer"]);
+
+    delete name;
+}
+
+void PrintPROCInfo()
+{
+    Print("Processes found:\n");
+    int procCount = SystemInfo::Properties["processes"].size();
+    for(int i = 0; i < procCount; i++) {
+        char* id = (char*)SystemInfo::Properties["processes"][i]["filename"];
+
+        Print("    %d: %s\n", i, id);
+        Print("        -> Pid    = %d\n", (int)SystemInfo::Properties["processes"][i]["pid"]);
+        Print("        -> Ring-3 = %d\n", (bool)SystemInfo::Properties["processes"][i]["userspace"]);
+        Print("        -> State  = %d\n", (int)SystemInfo::Properties["processes"][i]["state"]);
+        Print("        -> Base   = %x\n", (uint32_t)SystemInfo::Properties["processes"][i]["membase"]);
+        Print("        -> Size   = %x\n", (uint32_t)SystemInfo::Properties["processes"][i]["memsize"]);
+        Print("        -> Heap   = %d Kb\n", ((uint32_t)SystemInfo::Properties["processes"][i]["heap-end"] - (uint32_t)SystemInfo::Properties["processes"][i]["heap-start"]) / 1_KB);
+
+        delete id;
+    }
+}
+
+void PrintMEMInfo()
+{
+    Print("Memory Stats:\n");
+
+    uint32_t total = (uint32_t)SystemInfo::Properties["memory"]["total"];
+    uint32_t free = (uint32_t)SystemInfo::Properties["memory"]["free"];
+    uint32_t used = (uint32_t)SystemInfo::Properties["memory"]["used"];
+
+    Print("  -> Total = %d Mb\n", total / 1_MB);
+    Print("  -> Free = %d MB\n", free / 1_MB);
+    Print("  -> Used = %d Mb (%d%)\n", used / 1_MB, (uint32_t)(((double)used / (double)total) * 100.0));  
+}
+
 int main()
 {
     Print("---------- Start of system information dump ----------\n");
     PrintDiskInfo();
     PrintUSBInfo();
     PrintPCIInfo();
+    PrintGFXInfo();
+    PrintPROCInfo();
+    PrintMEMInfo();
     Print("------------------------------------------------------\n");
 }
