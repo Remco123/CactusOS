@@ -53,12 +53,8 @@ void System::Start()
     System::dma = new DMAController();
     Log(Info, "(%x) DMA [Done]", (uint32_t)System::dma);
 
-    System::smbios = new SMBIOS(true);
+    System::smbios = new SMBIOS();
     Log(Info, "(%x) SMBIOS [Done]", (uint32_t)System::smbios);
-#if 0
-//This does not work on bochs for some weird reason, we get a page-fault then.
-    System::smbios->PrintSummary();
-#endif
 
     Log(Info, "Adding Virtual 8086");
     System::vm86Manager = new Virtual8086Manager();

@@ -29,7 +29,7 @@ void PIT::Sleep(uint32_t ms)
 {
     unsigned long targetTicks = timer_ticks + ms;
     while(timer_ticks < targetTicks)
-        asm ("pause");
+        asm ("hlt"); // Wait for next interrupt
 }
 
 

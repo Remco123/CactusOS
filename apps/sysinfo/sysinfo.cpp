@@ -160,6 +160,86 @@ void PrintMEMInfo()
     Print("  -> Used = %d Mb (%d%)\n", used / 1_MB, (uint32_t)(((double)used / (double)total) * 100.0));  
 }
 
+void PrintBIOSInfo()
+{
+    Print("BIOS Information:\n");
+
+    char* vendor = (char*)SystemInfo::Properties["bios"]["vendor"];
+    char* version = (char*)SystemInfo::Properties["bios"]["version"];
+    char* release = (char*)SystemInfo::Properties["bios"]["releasedate"];
+
+    Print("  -> Vendor = %s\n", vendor);
+    Print("  -> Version = %s\n", version);
+    Print("  -> Release = %s\n", release);
+
+    delete vendor;
+    delete version;
+    delete release;
+}
+
+void PrintSystemInfo()
+{
+    Print("System Information:\n");
+
+    char* manufacturer = (char*)SystemInfo::Properties["system"]["manufacturer"];
+    char* product = (char*)SystemInfo::Properties["system"]["product"];
+    char* version = (char*)SystemInfo::Properties["system"]["version"];
+    char* serial = (char*)SystemInfo::Properties["system"]["serial"];
+    char* sku = (char*)SystemInfo::Properties["system"]["sku"];
+    char* family = (char*)SystemInfo::Properties["system"]["family"];
+
+    Print("  -> Manufacturer = %s\n", manufacturer);
+    Print("  -> Product = %s\n", product);
+    Print("  -> Version = %s\n", version);
+    Print("  -> Serial = %s\n", serial);
+    Print("  -> Sku = %s\n", sku);
+    Print("  -> Family = %s\n", family);
+    
+    delete manufacturer;
+    delete product;
+    delete version;
+    delete serial;
+    delete sku;
+    delete family;
+}
+
+void PrintEnclosureInfo()
+{
+    Print("Enclosure Information:\n");
+
+    char* manufacturer = (char*)SystemInfo::Properties["enclosure"]["manufacturer"];
+    char* version = (char*)SystemInfo::Properties["enclosure"]["version"];
+    char* serial = (char*)SystemInfo::Properties["enclosure"]["serial"];
+    char* sku = (char*)SystemInfo::Properties["enclosure"]["sku"];
+
+    Print("  -> Manufacturer = %s\n", manufacturer);
+    Print("  -> Version = %s\n", version);
+    Print("  -> Serial = %s\n", serial);
+    Print("  -> Sku = %s\n", sku);
+    
+    delete manufacturer;
+    delete version;
+    delete serial;
+    delete sku;
+}
+
+void PrintProcessorInfo()
+{
+    Print("Processor Information:\n");
+
+    char* manufacturer = (char*)SystemInfo::Properties["processor"]["manufacturer"];
+    char* socket = (char*)SystemInfo::Properties["processor"]["socket"];
+    char* version = (char*)SystemInfo::Properties["processor"]["version"];
+
+    Print("  -> Manufacturer = %s\n", manufacturer);
+    Print("  -> Socket = %s\n", socket);
+    Print("  -> Version = %s\n", version);
+    
+    delete manufacturer;
+    delete socket;
+    delete version;
+}
+
 int main()
 {
     Print("---------- Start of system information dump ----------\n");
@@ -169,5 +249,9 @@ int main()
     PrintGFXInfo();
     PrintPROCInfo();
     PrintMEMInfo();
+    PrintBIOSInfo();
+    PrintSystemInfo();
+    PrintEnclosureInfo();
+    PrintProcessorInfo();
     Print("------------------------------------------------------\n");
 }

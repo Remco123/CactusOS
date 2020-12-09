@@ -7,6 +7,11 @@ using namespace CactusOS::core;
 using namespace CactusOS::system;
 using namespace CactusOS::system::drivers;
 
+SIBIOS SystemInfoManager::bios;
+SISYSTEM SystemInfoManager::system;
+SIENCLOSURE SystemInfoManager::enclosure;
+SIPROCESSOR SystemInfoManager::processor;
+
 bool SystemInfoManager::HandleSysinfoRequest(void* arrayPointer, int count, common::uint32_t retAddr, bool getSize)
 {
     LIBCactusOS::SIPropertyProvider* items = (LIBCactusOS::SIPropertyProvider*)arrayPointer;
@@ -255,6 +260,146 @@ bool SystemInfoManager::HandleSysinfoRequest(void* arrayPointer, int count, comm
             }
             else if(String::strcmp(items[2].id, "free")) {
                 *((uint32_t*)retAddr) = PhysicalMemoryManager::FreeBlocks() * PAGE_SIZE;
+                return true;
+            }
+            else
+                return false;
+        }
+        else if(String::strcmp(items[1].id, "bios")) {
+            if(items[2].type != LIBCactusOS::SIPropertyIdentifier::String)
+                return false; // Needs to be property id
+
+            if(String::strcmp(items[2].id, "vendor")) {                
+                char* targ = (char*)retAddr;
+                int len = String::strlen(SystemInfoManager::bios.vendor);
+                MemoryOperations::memcpy(targ, SystemInfoManager::bios.vendor, len);
+                targ[len] = '\0';
+                return true;
+            }
+            else if(String::strcmp(items[2].id, "version")) {                
+                char* targ = (char*)retAddr;
+                int len = String::strlen(SystemInfoManager::bios.version);
+                MemoryOperations::memcpy(targ, SystemInfoManager::bios.version, len);
+                targ[len] = '\0';
+                return true;
+            }
+            else if(String::strcmp(items[2].id, "releasedate")) {                
+                char* targ = (char*)retAddr;
+                int len = String::strlen(SystemInfoManager::bios.releaseDate);
+                MemoryOperations::memcpy(targ, SystemInfoManager::bios.releaseDate, len);
+                targ[len] = '\0';
+                return true;
+            }
+            else
+                return false;
+        }
+        else if(String::strcmp(items[1].id, "system")) {
+            if(items[2].type != LIBCactusOS::SIPropertyIdentifier::String)
+                return false; // Needs to be property id
+
+            if(String::strcmp(items[2].id, "manufacturer")) {                
+                char* targ = (char*)retAddr;
+                int len = String::strlen(SystemInfoManager::system.manufacturer);
+                MemoryOperations::memcpy(targ, SystemInfoManager::system.manufacturer, len);
+                targ[len] = '\0';
+                return true;
+            }
+            else if(String::strcmp(items[2].id, "product")) {                
+                char* targ = (char*)retAddr;
+                int len = String::strlen(SystemInfoManager::system.product);
+                MemoryOperations::memcpy(targ, SystemInfoManager::system.product, len);
+                targ[len] = '\0';
+                return true;
+            }
+            else if(String::strcmp(items[2].id, "version")) {                
+                char* targ = (char*)retAddr;
+                int len = String::strlen(SystemInfoManager::system.version);
+                MemoryOperations::memcpy(targ, SystemInfoManager::system.version, len);
+                targ[len] = '\0';
+                return true;
+            }
+            else if(String::strcmp(items[2].id, "serial")) {                
+                char* targ = (char*)retAddr;
+                int len = String::strlen(SystemInfoManager::system.serial);
+                MemoryOperations::memcpy(targ, SystemInfoManager::system.serial, len);
+                targ[len] = '\0';
+                return true;
+            }
+            else if(String::strcmp(items[2].id, "sku")) {                
+                char* targ = (char*)retAddr;
+                int len = String::strlen(SystemInfoManager::system.sku);
+                MemoryOperations::memcpy(targ, SystemInfoManager::system.sku, len);
+                targ[len] = '\0';
+                return true;
+            }
+            else if(String::strcmp(items[2].id, "family")) {                
+                char* targ = (char*)retAddr;
+                int len = String::strlen(SystemInfoManager::system.family);
+                MemoryOperations::memcpy(targ, SystemInfoManager::system.family, len);
+                targ[len] = '\0';
+                return true;
+            }
+            else
+                return false;
+        }
+        else if(String::strcmp(items[1].id, "enclosure")) {
+            if(items[2].type != LIBCactusOS::SIPropertyIdentifier::String)
+                return false; // Needs to be property id
+
+            if(String::strcmp(items[2].id, "manufacturer")) {                
+                char* targ = (char*)retAddr;
+                int len = String::strlen(SystemInfoManager::enclosure.manufacturer);
+                MemoryOperations::memcpy(targ, SystemInfoManager::enclosure.manufacturer, len);
+                targ[len] = '\0';
+                return true;
+            }
+            else if(String::strcmp(items[2].id, "version")) {                
+                char* targ = (char*)retAddr;
+                int len = String::strlen(SystemInfoManager::enclosure.version);
+                MemoryOperations::memcpy(targ, SystemInfoManager::enclosure.version, len);
+                targ[len] = '\0';
+                return true;
+            }
+            else if(String::strcmp(items[2].id, "serial")) {                
+                char* targ = (char*)retAddr;
+                int len = String::strlen(SystemInfoManager::enclosure.serial);
+                MemoryOperations::memcpy(targ, SystemInfoManager::enclosure.serial, len);
+                targ[len] = '\0';
+                return true;
+            }
+            else if(String::strcmp(items[2].id, "sku")) {                
+                char* targ = (char*)retAddr;
+                int len = String::strlen(SystemInfoManager::enclosure.sku);
+                MemoryOperations::memcpy(targ, SystemInfoManager::enclosure.sku, len);
+                targ[len] = '\0';
+                return true;
+            }
+            else
+                return false;
+        }
+        else if(String::strcmp(items[1].id, "processor")) {
+            if(items[2].type != LIBCactusOS::SIPropertyIdentifier::String)
+                return false; // Needs to be property id
+
+            if(String::strcmp(items[2].id, "manufacturer")) {                
+                char* targ = (char*)retAddr;
+                int len = String::strlen(SystemInfoManager::processor.manufacturer);
+                MemoryOperations::memcpy(targ, SystemInfoManager::processor.manufacturer, len);
+                targ[len] = '\0';
+                return true;
+            }
+            else if(String::strcmp(items[2].id, "socket")) {                
+                char* targ = (char*)retAddr;
+                int len = String::strlen(SystemInfoManager::processor.socket);
+                MemoryOperations::memcpy(targ, SystemInfoManager::processor.socket, len);
+                targ[len] = '\0';
+                return true;
+            }
+            else if(String::strcmp(items[2].id, "version")) {                
+                char* targ = (char*)retAddr;
+                int len = String::strlen(SystemInfoManager::processor.version);
+                MemoryOperations::memcpy(targ, SystemInfoManager::processor.version, len);
+                targ[len] = '\0';
                 return true;
             }
             else

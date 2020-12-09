@@ -287,13 +287,11 @@ namespace CactusOS
         private:
             void* TableAddress = 0;
 
-            void PrintHeaderSummary(SMBIOSTag* header);
+            List<char*> ExtractStrings(SMBIOSTag* header);
 
-            List<char*>* ExtractStrings(SMBIOSTag* header);
+            char* CopyString(char* src);
         public:
-            SMBIOS(bool searchForTable = false);
-
-            void PrintSummary();
+            SMBIOS();
         };
     }
 }
