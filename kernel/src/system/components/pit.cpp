@@ -27,7 +27,7 @@ uint32_t PIT::HandleInterrupt(uint32_t esp)
 }
 void PIT::Sleep(uint32_t ms)
 {
-    unsigned long targetTicks = timer_ticks + ms;
+    uint64_t targetTicks = timer_ticks + ms;
     while(timer_ticks < targetTicks)
         asm ("hlt"); // Wait for next interrupt
 }

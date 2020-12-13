@@ -13,14 +13,14 @@ PS2KeyboardDriver::PS2KeyboardDriver()
 : InterruptHandler(0x21), Keyboard(KeyboardType::PS2), Driver("PS2 Keyboard", "Driver for a generic ps2 keyboard"), FIFOStream(100)
 { }
 
-bool ReadyForRead()
+void ReadyForRead()
 {
     uint32_t timeOut = 100000;
     while(timeOut--)
         if((inportb(PS2_STATUS) & (1<<0)) == 1)
-            return true;
+            return;
     
-    return false;
+    Log(Warning, "Keyboard wait timeout");
 }
 bool ReadyForWrite()
 {
@@ -56,9 +56,7 @@ bool PS2KeyboardDriver::Initialize()
     if(!SendCommand(0x20)) // Indicate we would like to recieve the config byte
         return false;
     
-    if(!ReadyForRead())
-        return false;
-    
+    ReadyForRead();
     uint8_t status = (inportb(PS2_DATA) | 1) & ~0x10;
     if(!SendCommand(0x60, status)) // Update config byte
         return false;

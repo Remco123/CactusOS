@@ -410,4 +410,6 @@ bool SystemInfoManager::HandleSysinfoRequest(void* arrayPointer, int count, comm
     }
     else
         return false; // Unknown category
+
+    return false;
 }

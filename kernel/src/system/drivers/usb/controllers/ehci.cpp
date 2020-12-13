@@ -31,8 +31,8 @@ bool EHCIController::Initialize()
     // Map memory so that we can use it
     VirtualMemoryManager::mapVirtualToPhysical((void*)memStart, (void*)this->regBase, memEnd - memStart, true, true);
 
-    Log(Info, "EHCI Controller Memory addres %x -> Memory Mapped: Start=%x End=%x Size=%x", (uint32_t)BAR0.address, memStart, memEnd, memEnd - memStart);
-    Log(Info, "EHCI regBase -> %x", this->regBase);
+    //Log(Info, "EHCI Controller Memory addres %x -> Memory Mapped: Start=%x End=%x Size=%x", (uint32_t)BAR0.address, memStart, memEnd, memEnd - memStart);
+    //Log(Info, "EHCI regBase -> %x", this->regBase);
 
     // Enable BUS Mastering
     System::pci->Write(pciDevice->bus, pciDevice->device, pciDevice->function, 0x04, 0x0006);
