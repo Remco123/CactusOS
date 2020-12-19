@@ -41,7 +41,6 @@ int main()
     bar->SetValue(70);
 
     Print("Launched Compositor pid: %d\n", Process::Run("B:\\apps\\compositor.bin"));
-    Print("Launched GUI Demo pid: %d\n", Process::Run("B:\\apps\\guidemo.bin"));
     Print("Launched Desktop pid: %d\n", Process::Run("B:\\apps\\desktop.bin"));
     Print("Launched Clock pid: %d\n", Process::Run("B:\\apps\\clock.bin"));
     Print("Launched Sysinfo pid: %d\n", Process::Run("B:\\apps\\sysinfo.bin"));

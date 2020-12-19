@@ -24,7 +24,7 @@
 #######################
 
 INCLUDEDIRS := kernel/include
-QEMUOPTIONS := -boot d -device VGA,edid=on,xres=1024,yres=768 -trace events=../qemuTrace.txt -usb -device usb-kbd -device usb-ehci,id=ehci -drive if=none,id=stick,file=./test.img -device usb-storage,bus=ehci.0,drive=stick
+QEMUOPTIONS := -boot d -device VGA,edid=on,xres=1024,yres=768 -trace events=../qemuTrace.txt
 
 G++PARAMS := -m32 -g -D CACTUSOSKERNEL -I $(INCLUDEDIRS) -fno-use-cxa-atexit -nostdlib -fno-builtin -fno-exceptions -fno-rtti -fno-leading-underscore -Wno-write-strings -fpermissive -Wall
 GCCPARAMS := -m32 -g -D CACTUSOSKERNEL -I $(INCLUDEDIRS) -nostdlib -fno-builtin -Wall
