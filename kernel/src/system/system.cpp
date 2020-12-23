@@ -131,6 +131,9 @@ void System::Start()
     else
         BootConsole::WriteLine(" [Not found]");
 
+    Log(Info, "Starting Debugger");
+    KernelDebugger::Initialize();
+
     Log(Info, "Starting Systemcalls");
     System::syscalls = new SystemCallHandler();
 
@@ -143,4 +146,15 @@ void System::Start()
 
     System::ProcStandardOut = new StandardOutSteam();
     Log(Info, "System Initialized");
+}
+void System::Panic()
+{
+    Log(Error, "-------------------------------");
+    Log(Error, "--------- Kernel Halted -------");
+    Log(Error, "-------------------------------");
+
+    InterruptDescriptorTable::DisableInterrupts();
+    while(1) {
+        asm("hlt");
+    }
 }

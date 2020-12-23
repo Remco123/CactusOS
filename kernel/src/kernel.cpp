@@ -45,8 +45,17 @@ void IdleThread()
     while(1) {
         if(System::usbManager)
             System::usbManager->USBPoll();
-        if(System::apm->Enabled && (System::pit->Ticks() - prevTicks > 500)) {
-            System::apm->CheckAndHandleEvents();
+        if(System::pit->Ticks() - prevTicks > 500) {
+            if(System::apm->Enabled)
+                System::apm->CheckAndHandleEvents();
+
+            #if ENABLE_MEMORY_CHECKS && USE_HEAP_MAGIC
+            if(KernelHeap::CheckForErrors() == true) {
+                Log(Error, "Memory is not intact anymore, halting system!");
+                System::Panic();
+            }
+            #endif
+
             prevTicks = System::pit->Ticks();
         }
 
@@ -223,8 +232,7 @@ extern "C" void kernelMain(const multiboot_info_t* mbi, unsigned int multiboot_m
     {
         if(System::gfxDevice->SelectBestVideoMode() == false) {
             Log(Error, "Could not set a video mode, halting system");
-            InterruptDescriptorTable::DisableInterrupts();
-            while(1);
+            System::Panic();
         }
 
         Log(Info, "Switched to graphics mode, phys=%x", System::gfxDevice->framebufferPhys);
@@ -237,7 +245,5 @@ extern "C" void kernelMain(const multiboot_info_t* mbi, unsigned int multiboot_m
     }
     
     Log(Error, "Could not load process init.bin, halting system");
-
-    InterruptDescriptorTable::DisableInterrupts();
-    while(1);
+    System::Panic();
 }

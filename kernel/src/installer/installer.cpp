@@ -223,7 +223,9 @@ void Installer::ShowDiskEraseMenu()
 
     TextGUI::StatusBar("Cleaning Disk....   [Press any key to cancel]", 30);
     for(uint32_t s = 0; s < sectors; s++) {
-        selectedDisk->WriteSector(s, buf);
+        if(selectedDisk->WriteSector(s, buf) != 0)
+            SetupError();
+        
         if(s % 100 == 0) {
             TextGUI::DrawString(Convert::IntToString32(sectors), 0, VGA_HEIGHT - 3);
             TextGUI::DrawString("/", 10, VGA_HEIGHT - 3);

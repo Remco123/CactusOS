@@ -19,6 +19,7 @@ namespace CactusOS
             static char* IntToHexString(common::uint32_t w);
 
             static int StringToInt(char* string);
+            static uint32_t HexToInt(char* string);
         };
     }
 }

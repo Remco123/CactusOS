@@ -37,7 +37,7 @@ void FIFOStream::Write(char item)
 
 char FIFOStream::Read()
 {
-    char result;
+    char result = 0;
     if(this->count == 0)
         return result;
 

@@ -183,7 +183,7 @@ Process* ProcessHelper::CreateKernelProcess()
 void ProcessHelper::RemoveProcess(Process* proc)
 {
     Log(Info, "Removing process %d from system", proc->id);
-    System::scheduler->Enabled = false; //We do not want to be interrupted during the switch
+    InterruptDescriptorTable::DisableInterrupts(); //We do not want to be interrupted during the switch
     Processes.Remove(proc); //Remove the process from the list
 
     for(int i = 0; i < proc->Threads.size(); i++)
@@ -210,6 +210,8 @@ void ProcessHelper::RemoveProcess(Process* proc)
         delete proc->stdInput;
 
     delete proc;
+
+    InterruptDescriptorTable::EnableInterrupts();
 
     //Finally force a contex switch so that we never return to this process again.
     System::scheduler->ForceSwitch();

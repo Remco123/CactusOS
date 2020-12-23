@@ -1,4 +1,5 @@
 #include <common/convert.h>
+#include <common/string.h>
 
 using namespace CactusOS::common;
 
@@ -134,4 +135,29 @@ int Convert::StringToInt(char* string)
         return -result;
     }
     return result;
+}
+uint32_t Convert::HexToInt(char* string)
+{
+    int length = String::strlen(string);
+
+	if (length>8)
+		length = 8;
+
+	int fact = 1;
+    uint32_t result = 0;
+	for(int i = length - 1; i >= 0; i--)
+	{
+		char digit = String::Lowercase(*(string + i));
+		if ((digit >= '0' && digit <= '9') || (digit >= 'a' && digit <= 'f'))
+		{
+			if (digit >= 97)
+				result += (digit - 87) * fact;
+			else
+				result += (digit - 48) * fact;
+			fact = fact << 4;
+		}
+		else
+			return 0;
+	}
+	return result;
 }

@@ -371,15 +371,14 @@ FATEntryInfo* FAT::GetEntryByPath(char* path)
             goto end;
         }
 
-        if(entry->entry.Attributes & ATTR_DIRECTORY) {
-            // Search next sub-directory
-            searchCluster = GET_CLUSTER(entry->entry);
-        }
+        bool isDirectory = (entry->entry.Attributes & ATTR_DIRECTORY);
+        if(isDirectory)
+            searchCluster = GET_CLUSTER(entry->entry); // Search next sub-directory
 
         delete entry->filename;
         delete entry;
         
-        if(!(entry->entry.Attributes & ATTR_DIRECTORY)) { // Item found is not a directory 
+        if(!isDirectory) { // Item found is not a directory 
             ret = 0;
             goto end;
         }

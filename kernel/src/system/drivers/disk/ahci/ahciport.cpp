@@ -132,15 +132,19 @@ bool AHCIPort::StartupPort()
 		char diskModel[40];
 
 		// Extract Command set from buffer
-        uint32_t commandSet = *((uint32_t*)(identifyBuffer + ATA_IDENT_COMMANDSETS));
+        uint16_t commandSet = *((uint16_t*)(identifyBuffer + ATA_IDENT_COMMANDSETS));
     
         // Get Size:
-        if (commandSet & (1 << 26))
+        if (commandSet & (1 << 10)) {
             // Device uses 48-Bit Addressing:
             diskSize = *((uint32_t*)(identifyBuffer + ATA_IDENT_MAX_LBA_EXT));
-        else
+			this->useLBA48 = true;
+		}
+        else {
             // Device uses CHS or 28-bit Addressing:
             diskSize = *((uint32_t*)(identifyBuffer + ATA_IDENT_MAX_LBA));
+			this->useLBA48 = false;
+		}
     
         // String indicates model of device:
         for(int k = 0; k < 40; k += 2) {
@@ -377,7 +381,7 @@ bool AHCIPort::TransferData(bool dirIn, uint32_t lba, uint8_t* buffer, uint32_t 
 	
 		cmdfis->fis_type = FIS_TYPE_REG_H2D;
 		cmdfis->c = 1;	// Command
-		cmdfis->command = dirIn ? ATA_CMD_READ_DMA_EXT : ATA_CMD_WRITE_DMA_EXT;
+		cmdfis->command = dirIn ? (this->useLBA48 ? ATA_CMD_READ_DMA_EXT : ATA_CMD_READ_DMA) : (this->useLBA48 ? ATA_CMD_WRITE_DMA_EXT : ATA_CMD_WRITE_DMA);
 	
 		cmdfis->lba0 = (uint8_t)lba;
 		cmdfis->lba1 = (uint8_t)(lba>>8);
@@ -385,8 +389,8 @@ bool AHCIPort::TransferData(bool dirIn, uint32_t lba, uint8_t* buffer, uint32_t 
 		cmdfis->device = 1<<6;	// LBA mode
 	
 		cmdfis->lba3 = (uint8_t)(lba>>24);
-		cmdfis->lba4 = (uint8_t)lba;
-		cmdfis->lba5 = (uint8_t)(lba>>8);
+		cmdfis->lba4 = 0; // TODO: Use when we might ever use 64-bit lba
+		cmdfis->lba5 = 0; // Not used for now
 	
 		cmdfis->countl = count2 & 0xFF;
 		cmdfis->counth = (count2 >> 8) & 0xFF;	

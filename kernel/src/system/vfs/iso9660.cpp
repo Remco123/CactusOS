@@ -277,56 +277,23 @@ int ISO9660::ReadFile(const char* path, uint8_t* buffer, uint32_t offset, uint32
 
     if(len == (uint32_t)-1)
         len = entry->data_length;
-    
-    /*
-    if(len > entry->data_length || (offset + len) > entry->data_length) // File is not this big
-        return -1;
-
-    uint8_t* bufPtr = buffer;
-    uint32_t startSector = offset / CDROM_SECTOR_SIZE;
-    uint32_t startOffset = offset % CDROM_SECTOR_SIZE;
-    uint32_t endSector = (offset + len) / CDROM_SECTOR_SIZE;
-
-    if(startOffset != 0) { // There is a partial sector at the beginning that needs to be read
-        if(disk->ReadSector(entry->extent_location + startSector, readBuffer) != 0)
-            return -1;
-        
-        // Copy partial data from readBuffer into target buffer
-        uint32_t len = CDROM_SECTOR_SIZE - (CDROM_SECTOR_SIZE - startOffset);
-        MemoryOperations::memcpy(bufPtr, readBuffer + (CDROM_SECTOR_SIZE - startOffset), len);
-
-        bufPtr += len;
-        startSector++;
-    }
-
-    for(; startSector < endSector; startSector++) { // Read whole sectors containing file data
-        if(disk->ReadSector(entry->extent_location + startSector, bufPtr) != 0)
-            return -1;
-        
-        bufPtr += CDROM_SECTOR_SIZE;
-    }
-
-    uint32_t endOffset = (offset + len) % CDROM_SECTOR_SIZE;
-    if(endOffset != 0) { // There is a partial sector at the end that needs to be read
-        if(disk->ReadSector(entry->extent_location + startSector, readBuffer) != 0)
-            return -1;
-
-        MemoryOperations::memcpy(bufPtr, readBuffer, endOffset);
-    }
-    */
 
     //TODO: Actually implement partial file reading, for now we read the whole file
     int sectorCount = entry->data_length / CDROM_SECTOR_SIZE;
     int dataRemainder = entry->data_length % CDROM_SECTOR_SIZE;
 
     for(int i = 0; i < sectorCount; i++)
-        if(this->disk->ReadSector(entry->extent_location + i, buffer + (CDROM_SECTOR_SIZE * i)) != 0)
+        if(this->disk->ReadSector(entry->extent_location + i, buffer + (CDROM_SECTOR_SIZE * i)) != 0) {
+            delete entry;
             return -1;
+        }
     
     if(dataRemainder > 0) //We have a remainder
     {
-        if(this->disk->ReadSector(entry->extent_location + sectorCount, readBuffer) != 0)
+        if(this->disk->ReadSector(entry->extent_location + sectorCount, readBuffer) != 0) {
+            delete entry;
             return -1;
+        }
         MemoryOperations::memcpy(buffer + (sectorCount*CDROM_SECTOR_SIZE), readBuffer, dataRemainder);
     }
     

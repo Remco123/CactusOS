@@ -129,10 +129,10 @@ bool IDEController::Initialize()
             ideDevices[count].Drive        = j;
             ideDevices[count].Signature    = *((unsigned short *)(ide_buf + ATA_IDENT_DEVICETYPE));
             ideDevices[count].Capabilities = *((unsigned short *)(ide_buf + ATA_IDENT_CAPABILITIES));
-            ideDevices[count].CommandSets  = *((uint32_t *)(ide_buf + ATA_IDENT_COMMANDSETS));
+            ideDevices[count].CommandSets  = *((uint16_t *)(ide_buf + ATA_IDENT_COMMANDSETS));
     
             //Get Size:
-            if (ideDevices[count].CommandSets & (1 << 26))
+            if (ideDevices[count].CommandSets & (1 << 10))
                 // Device uses 48-Bit Addressing:
                 ideDevices[count].Size   = *((uint32_t *)(ide_buf + ATA_IDENT_MAX_LBA_EXT));
             else
