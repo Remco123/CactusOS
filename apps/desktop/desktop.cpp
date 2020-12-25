@@ -11,13 +11,13 @@
 #include <vfs.h>
 #include "item.h"
 
-List<DesktopItem*> items;
+List<DesktopItem*>* items = 0;
 
 void ButtonHandler(void* sender, MouseButtonArgs arg)
 {
     Print("Desktop Button Handler\n");
     Context* source = (Context*)sender;
-    for(DesktopItem* item : items)
+    for(DesktopItem* item : *items)
         if(item->context == source && item->filename != 0)
             Process::Run(item->filename);
 }
@@ -25,8 +25,11 @@ void ButtonHandler(void* sender, MouseButtonArgs arg)
 int main()
 {
     GUI::SetDefaultFont();
+
+    // Create list
+    items = new List<DesktopItem*>();
     
-    Log(Info, "Parsing dekstop items");
+    Log(Info, "Parsing desktop items");
     if(FileExists("B:\\desktop\\items.txt") == false)
     {
         Log(Error, "B:\\desktop\\items.txt does not exist");
@@ -90,7 +93,7 @@ int main()
             else
                 item->drawLabel = true;
                 
-            items.push_back(item);
+            items->push_back(item);
             item->DrawToContext();
 
             delete str;

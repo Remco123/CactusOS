@@ -24,7 +24,7 @@
 #######################
 
 INCLUDEDIRS := kernel/include
-QEMUOPTIONS := -M q35 -boot d -hda install.img -device VGA,edid=on,xres=1024,yres=768 -trace events=../qemuTrace.txt
+QEMUOPTIONS := -boot d -device VGA,edid=on,xres=1024,yres=768 -trace events=../qemuTrace.txt -usb -device usb-ehci
 
 G++PARAMS := -m32 -g -D CACTUSOSKERNEL -I $(INCLUDEDIRS) -fno-omit-frame-pointer -fno-use-cxa-atexit -nostdlib -fno-builtin -fno-exceptions -fno-rtti -fno-leading-underscore -Wno-write-strings -fpermissive -Wall
 GCCPARAMS := -m32 -g -D CACTUSOSKERNEL -I $(INCLUDEDIRS) -fno-omit-frame-pointer -nostdlib -fno-builtin -Wall
@@ -92,10 +92,6 @@ CactusOS.iso: CactusOS.bin
 	grub-mkrescue --output=CactusOS.iso iso
 	rm -rf iso
 
-install: CactusOS.iso
-	cp $< /media/sf_Mint_OSDev/CactusOS.iso
-	cp CactusOS.bin /media/sf_Mint_OSDev/CactusOS.bin
-
 .PHONY: clean qemu kdbg run filelist serialDBG qemuDBG fastApps
 clean:
 	rm -rf $(KRNLOBJDIR) CactusOS.bin CactusOS.iso
@@ -142,6 +138,13 @@ turboApps:
 	rm -rf isofiles/apps/*.bin
 	cd apps/ && $(MAKE) clean && $(MAKE)
 	rm CactusOS.iso
+
+installUSB: CactusOS.iso CactusOS.bin isofiles/debug.sym isofiles/apps
+	rm -rf /media/remco/ISOIMAGE/apps/*.bin
+	cp -r isofiles/apps/* /media/remco/ISOIMAGE/apps/
+	cp isofiles/debug.sym /media/remco/ISOIMAGE/debug.sym
+	cp CactusOS.bin /media/remco/ISOIMAGE/boot/CactusOS.bin
+	umount /media/remco/ISOIMAGE
 
 filelist:
 	@echo "Source Files:"

@@ -57,10 +57,10 @@ namespace LIBCactusOS
             static Image CreateFromFile(const char* filepath, const char* ext = 0);
 
             // Resize source image and return result
-            static Image Resize(Image& source, int newWidth, int newHeight, ResizeMethod method = NearestNeighbor);
+            static Image Resize(Image source, int newWidth, int newHeight, ResizeMethod method = NearestNeighbor);
         private:
-            static Image ResizeNearestNeighbor(Image& source, int newWidth, int newHeight);
-            static Image ResizeBilinear(Image& source, int newWidth, int newHeight);
+            static Image ResizeNearestNeighbor(Image source, int newWidth, int newHeight);
+            static Image ResizeBilinear(Image source, int newWidth, int newHeight);
         };
     }
 }
