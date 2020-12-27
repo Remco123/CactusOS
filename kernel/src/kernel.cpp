@@ -49,7 +49,7 @@ void IdleThread()
             if(System::apm->Enabled)
                 System::apm->CheckAndHandleEvents();
 
-            #if ENABLE_MEMORY_CHECKS && USE_HEAP_MAGIC
+            #if ENABLE_MEMORY_CHECKS
             if(KernelHeap::CheckForErrors() == true) {
                 Log(Error, "Memory is not intact anymore, halting system!");
                 System::Panic();
@@ -164,7 +164,7 @@ extern "C" void kernelMain(const multiboot_info_t* mbi, unsigned int multiboot_m
     BootConsole::WriteLine("Virtual Memory Loaded");
 
     KernelHeap::Initialize(KERNEL_HEAP_START, KERNEL_HEAP_START + KERNEL_HEAP_SIZE);
-    BootConsole::WriteLine("Kernel Heap Initialized");
+    Log(Info, "Kernel Heap Initialized");
 
     // From here we (should) only use the Log function for logging
     Log(Info, "Switching to log function based output");

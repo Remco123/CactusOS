@@ -9,11 +9,7 @@ using namespace CactusOS::core;
 using namespace CactusOS::system;
 using namespace CactusOS::system::drivers;
 
-uint8_t ide_buf[2048] = {0};
-static volatile uint8_t IRQTriggered = 0;
 static uint8_t atapi_packet[12] = {0xA8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-
-MutexLock IDELock;
 
 IDEInterruptHandler::IDEInterruptHandler(IDEController* controller, uint32_t number)
 : InterruptHandler(IDT_INTERRUPT_OFFSET + number)
@@ -129,16 +125,21 @@ bool IDEController::Initialize()
             ideDevices[count].Drive        = j;
             ideDevices[count].Signature    = *((unsigned short *)(ide_buf + ATA_IDENT_DEVICETYPE));
             ideDevices[count].Capabilities = *((unsigned short *)(ide_buf + ATA_IDENT_CAPABILITIES));
-            ideDevices[count].CommandSets  = *((uint16_t *)(ide_buf + ATA_IDENT_COMMANDSETS));
-    
-            //Get Size:
-            if (ideDevices[count].CommandSets & (1 << 10))
-                // Device uses 48-Bit Addressing:
-                ideDevices[count].Size   = *((uint32_t *)(ide_buf + ATA_IDENT_MAX_LBA_EXT));
-            else
-                // Device uses CHS or 28-bit Addressing:
-                ideDevices[count].Size   = *((uint32_t *)(ide_buf + ATA_IDENT_MAX_LBA));
-    
+            ideDevices[count].CommandSets  = *((uint32_t*)(ide_buf + ATA_IDENT_COMMANDSETS));
+
+            if(type == IDE_ATA) {
+                if (ideDevices[count].CommandSets & (1 << 26))
+                    // Device uses 48-Bit Addressing:
+                    ideDevices[count].Size   = *((uint32_t *)(ide_buf + ATA_IDENT_MAX_LBA_EXT));
+                else
+                    // Device uses CHS or 28-bit Addressing:
+                    ideDevices[count].Size   = *((uint32_t *)(ide_buf + ATA_IDENT_MAX_LBA));
+            }
+            else {
+                // TODO: Use Identify Packet command to get size
+                ideDevices[count].Size = 0;
+            }
+
             //String indicates model of device:
             for(int k = 0; k < 40; k += 2) {
                 ideDevices[count].Model[k] = ide_buf[ATA_IDENT_MODEL + k + 1];

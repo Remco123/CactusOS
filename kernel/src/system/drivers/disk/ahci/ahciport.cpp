@@ -132,10 +132,10 @@ bool AHCIPort::StartupPort()
 		char diskModel[40];
 
 		// Extract Command set from buffer
-        uint16_t commandSet = *((uint16_t*)(identifyBuffer + ATA_IDENT_COMMANDSETS));
+        uint32_t commandSet = *((uint32_t*)(identifyBuffer + ATA_IDENT_COMMANDSETS));
     
         // Get Size:
-        if (commandSet & (1 << 10)) {
+        if (commandSet & (1 << 26)) {
             // Device uses 48-Bit Addressing:
             diskSize = *((uint32_t*)(identifyBuffer + ATA_IDENT_MAX_LBA_EXT));
 			this->useLBA48 = true;

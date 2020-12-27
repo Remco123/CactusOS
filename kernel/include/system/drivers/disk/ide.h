@@ -10,6 +10,7 @@ https://wiki.osdev.org/PCI_IDE_Controller
 #include <system/interruptmanager.h>
 
 #include <system/disks/diskcontroller.h>
+#include <system/tasking/lock.h>
 
 namespace CactusOS
 {
@@ -61,7 +62,7 @@ namespace CactusOS
             #define ATA_IDENT_CAPABILITIES 98
             #define ATA_IDENT_FIELDVALID   106
             #define ATA_IDENT_MAX_LBA      120
-            #define ATA_IDENT_COMMANDSETS  166
+            #define ATA_IDENT_COMMANDSETS  164
             #define ATA_IDENT_MAX_LBA_EXT  200
 
             #define IDE_ATA        0x00
@@ -110,7 +111,7 @@ namespace CactusOS
                 common::uint16_t Type;        // 0: ATA, 1:ATAPI.
                 common::uint16_t Signature;   // Drive Signature
                 common::uint16_t Capabilities;// Features.
-                common::uint16_t CommandSets; // Command Sets Supported.
+                common::uint32_t CommandSets; // Command Sets Supported.
                 common::uint32_t Size;        // Size in Sectors.
                 unsigned char    Model[41];   // Model in string.
             } __attribute__((packed));
@@ -130,6 +131,10 @@ namespace CactusOS
             {
             private:
                 PCIDevice* pciDevice;
+
+                uint8_t ide_buf[2048];
+                volatile uint8_t IRQTriggered = 0;
+                MutexLock IDELock;
 
                 IDEChannelRegisters channels[2];
                 IDEDevice ideDevices[4];
