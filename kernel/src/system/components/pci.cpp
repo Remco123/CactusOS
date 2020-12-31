@@ -53,7 +53,7 @@ void PCIController::PopulateDeviceList()
         for(int device = 0; device < 32; device++)
         {
             int numFunctions = DeviceHasFunctions(bus, device) ? 8 : 1;
-            for(int function = numFunctions-1; function >= 0; function--)
+            for(int function = 0; function < numFunctions; function++)
             {
                 uint16_t vendorID = Read(bus, device, function, 0x00);
                 if(vendorID == 0xFFFF)

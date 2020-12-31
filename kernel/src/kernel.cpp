@@ -45,6 +45,7 @@ void IdleThread()
     while(1) {
         if(System::usbManager)
             System::usbManager->USBPoll();
+                
         if(System::pit->Ticks() - prevTicks > 500) {
             if(System::apm->Enabled)
                 System::apm->CheckAndHandleEvents();

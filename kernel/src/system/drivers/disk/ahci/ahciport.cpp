@@ -124,33 +124,34 @@ bool AHCIPort::StartupPort()
 
 		// Now we can send a Identify command to the device
 		// Data will be the same as with the IDE controller
-		uint8_t identifyBuffer[512];
-		if(this->Identify(identifyBuffer) == false)
+		uint16_t identifyBuffer[256];
+		if(this->Identify((uint8_t*)identifyBuffer) == false)
 			return false;
 
 		uint32_t diskSize = 0;
-		char diskModel[40];
+		char diskModel[41];
 
 		// Extract Command set from buffer
-        uint32_t commandSet = *((uint32_t*)(identifyBuffer + ATA_IDENT_COMMANDSETS));
+        uint32_t commandSet = *( (uint32_t*) &identifyBuffer[ATA_IDENT_COMMANDSETS] );
     
         // Get Size:
         if (commandSet & (1 << 26)) {
             // Device uses 48-Bit Addressing:
-            diskSize = *((uint32_t*)(identifyBuffer + ATA_IDENT_MAX_LBA_EXT));
+            diskSize = *( (uint32_t*) &identifyBuffer[ATA_IDENT_MAX_LBA_EXT] );
 			this->useLBA48 = true;
 		}
         else {
             // Device uses CHS or 28-bit Addressing:
-            diskSize = *((uint32_t*)(identifyBuffer + ATA_IDENT_MAX_LBA));
+            diskSize = *( (uint32_t*) &identifyBuffer[ATA_IDENT_MAX_LBA] );
 			this->useLBA48 = false;
 		}
     
-        // String indicates model of device:
+        // String indicates model of device
+        uint8_t* strPtr = (uint8_t*)identifyBuffer;
         for(int k = 0; k < 40; k += 2) {
-            diskModel[k] = identifyBuffer[ATA_IDENT_MODEL + k + 1];
-            diskModel[k + 1] = identifyBuffer[ATA_IDENT_MODEL + k];
-		}
+            diskModel[k] = strPtr[ATA_IDENT_MODEL + k + 1];
+            diskModel[k + 1] = strPtr[ATA_IDENT_MODEL + k];
+        }
         diskModel[40] = 0; // Terminate String.
 
 		Log(Info, "AHCI: Found %s drive %s", this->isATATPI ? "ATAPI" : "ATA", diskModel);

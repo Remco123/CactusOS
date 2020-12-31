@@ -199,8 +199,10 @@ bool KernelHeap::CheckForErrors()
 
     MemoryHeader* block = firstHeader;
     while(block != 0) {
-        if(block->magic != MEMORY_HEADER_MAGIC) {
+        if(block->magic != MEMORY_HEADER_MAGIC || (((uint32_t)block->next < startAddress) || ((uint32_t)block->next > endAddress)) && block->next != 0) {
             heapMutex.Unlock();
+            
+            Log(Error, "Memory corrupted at: %x (magic = %d, next = %x, alloc = %d)", (uint32_t)block, block->magic, (uint32_t)block->next, block->allocated);
             return true;
         }
         block = block->next;

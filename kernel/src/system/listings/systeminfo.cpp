@@ -70,8 +70,9 @@ bool SystemInfoManager::HandleSysinfoRequest(void* arrayPointer, int count, comm
             int index = items[2].index;
             if(String::strcmp(items[3].id, "name")) {
                 char* targ = (char*)retAddr;
-                int len = String::strlen(System::usbManager->deviceList[index]->deviceName);
-                MemoryOperations::memcpy(targ, System::usbManager->deviceList[index]->deviceName, len);
+                char* src = System::usbManager->deviceList[index]->deviceName ? System::usbManager->deviceList[index]->deviceName : (char*)"N/A";
+                int len = String::strlen(src);
+                MemoryOperations::memcpy(targ, src, len);
                 targ[len] = '\0';
                 return true;
             }

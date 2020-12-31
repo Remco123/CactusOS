@@ -128,6 +128,9 @@ bool UHCIController::Initialize()
     // Write SOF back to device
     outportb(base + UHCI_SOF_MOD, sofBeforeReset);
 
+    // Disable Legacy Support
+    System::pci->Write(pciDevice->bus, pciDevice->device, pciDevice->function, UHCI_LEGACY, 0xAF00);
+
     // Add ourself to known controllers
     System::usbManager->AddController(this);
 
@@ -139,9 +142,6 @@ void UHCIController::Setup()
     outportw(pciDevice->portBase + UHCI_INTERRUPT, 0b1111);
     // Set frame number register to 0
     outportw(pciDevice->portBase + UHCI_FRAME_NUM, 0x0000);
-
-    // Disable Legacy Support
-    System::pci->Write(pciDevice->bus, pciDevice->device, pciDevice->function, UHCI_LEGACY, 0xAF00);
 
     // Allocate Stack frame
     this->frameList = (uint32_t*)KernelHeap::allignedMalloc(1024 * sizeof(uint32_t), 4096, &this->frameListPhys);

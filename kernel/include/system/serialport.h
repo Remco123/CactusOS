@@ -21,10 +21,10 @@ namespace CactusOS
         {
         private:
             static COMPort PortAddress;
-
+        public:
             static int SerialReceiveReady();
             static int SerialSendReady();
-        public:
+
             static bool Initialized;
             static void Init(COMPort port);
 
