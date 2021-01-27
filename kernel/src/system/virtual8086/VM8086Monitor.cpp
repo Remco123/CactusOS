@@ -214,6 +214,7 @@ uint32_t Virtual8086Monitor::HandleInterrupt(uint32_t esp)
         }
         default:
             Log(Error, "[vm86] Unknown instruction %b", opcode);
+            ++state->IP;
             return esp;
     }
     return esp;

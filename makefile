@@ -24,7 +24,7 @@
 #######################
 
 INCLUDEDIRS := kernel/include
-QEMUOPTIONS := -d cpu_reset -boot d -device VGA,edid=on,xres=1024,yres=768 -trace events=../qemuTrace.txt -usb -device usb-ehci
+QEMUOPTIONS := -hda disk.img -boot d -device VGA,edid=on,xres=1024,yres=768 -trace events=../qemuTrace.txt -usb -device usb-ehci
 
 G++PARAMS := -m32 -g -D CACTUSOSKERNEL -I $(INCLUDEDIRS) -fno-omit-frame-pointer -fno-use-cxa-atexit -nostdlib -fno-builtin -fno-exceptions -fno-rtti -fno-leading-underscore -Wno-write-strings -fpermissive -Wall
 GCCPARAMS := -m32 -g -D CACTUSOSKERNEL -I $(INCLUDEDIRS) -fno-omit-frame-pointer -nostdlib -fno-builtin -Wall
@@ -110,8 +110,7 @@ qemuGDB: CactusOS.iso
 	gdb -ex 'file CactusOS.bin' -ex 'target remote /dev/pts/1' -q
 
 run: CactusOS.iso
-	(killall VirtualBox && sleep 1) || true
-	virtualbox &
+	vboxmanage startvm "CactusOS" -E VBOX_GUI_DBG_AUTO_SHOW=true -E VBOX_GUI_DBG_ENABLED=true &
 	rm "CactusOS.log"
 	echo "" > "CactusOS.log"
 	tail -f "CactusOS.log"
@@ -145,6 +144,12 @@ installUSB: CactusOS.iso CactusOS.bin isofiles/debug.sym isofiles/apps
 	cp isofiles/debug.sym /media/remco/ISOIMAGE/debug.sym
 	cp CactusOS.bin /media/remco/ISOIMAGE/boot/CactusOS.bin
 	umount /media/remco/ISOIMAGE
+
+debug:
+	pyuic5 tools/advancedDebugger/mainGUI.ui -o tools/advancedDebugger/mainWindow.py
+	qemu-system-i386 -cdrom CactusOS.iso $(QEMUOPTIONS) -serial pty &
+	/usr/bin/python3 tools/advancedDebugger/main.py
+
 
 filelist:
 	@echo "Source Files:"

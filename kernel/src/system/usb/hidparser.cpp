@@ -143,6 +143,9 @@ bool HIDParser::Parse(struct HID_DATA* data)
             // Pos on next item
             this->pos += item_size[this->item & SIZE_MASK];
         }
+
+        if(this->item & ITEM_MASK == 0)
+            continue;
         
         //Log(Info, "\n (this->item & ITEM_MASK) = 0x%04X", (this->item & ITEM_MASK));
         switch (this->item & ITEM_MASK) {
@@ -349,7 +352,7 @@ bool HIDParser::Parse(struct HID_DATA* data)
                 break;
                 
             default:
-                Log(Info, "\n Found unknown item 0x%02X", (this->item & ITEM_MASK));
+                Log(Info, "\n Found unknown item %x", (this->item & ITEM_MASK));
         }
     }
     

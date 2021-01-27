@@ -42,3 +42,4 @@ virtualbox_log.txt
 tools/fontGenerator/font.ttf
 *.img
 *.sym
+*.pyc
