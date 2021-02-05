@@ -54,6 +54,7 @@ namespace CactusOS
             static void allignedFree(void* ptr);
 
             static bool CheckForErrors();
+            static common::uint32_t UsedMemory();
         };
     }
 }

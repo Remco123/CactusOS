@@ -210,3 +210,22 @@ bool KernelHeap::CheckForErrors()
     heapMutex.Unlock();
     return false;
 }
+
+uint32_t KernelHeap::UsedMemory()
+{
+    uint32_t result = 0;
+
+    MemoryHeader* block = firstHeader;
+    while(block != 0) {
+        if(block->magic != MEMORY_HEADER_MAGIC || (((uint32_t)block->next < startAddress) || ((uint32_t)block->next > endAddress)) && block->next != 0) {
+            Log(Error, "Memory corrupted at: %x (magic = %d, next = %x, alloc = %d)", (uint32_t)block, block->magic, (uint32_t)block->next, block->allocated);
+            return result;
+        }
+        if(block->allocated)
+            result += block->size;
+        
+        block = block->next;
+    }
+
+    return result;
+}

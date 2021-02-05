@@ -36,6 +36,7 @@ USBManager* System::usbManager = 0;
 #if BOCHS_GFX_HACK
 bool System::isBochs = false; //are we running inside bochs
 #endif
+System::SYSTEM_STATS System::statistics = {};
 
 void System::Start()
 {

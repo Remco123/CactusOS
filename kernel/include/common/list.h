@@ -1,6 +1,8 @@
 #ifndef __CACTUSOS__COMMON__LIST_H
 #define __CACTUSOS__COMMON__LIST_H
 
+#include <system/tasking/lock.h>
+
 namespace CactusOS
 {
     namespace common
@@ -40,6 +42,7 @@ namespace CactusOS
         private:
             ListNode<T>* head_;
             ListNode<T>* tail_;
+            system::MutexLock lock;
 
             int size_;
 
@@ -93,6 +96,7 @@ using namespace CactusOS::common;
 template <typename T>
 ListNode<T>* List<T>::insertInternal(const T &e, ListNode<T>* pos)
 {
+    this->lock.Lock();
     ListNode<T> *n = new ListNode<T>(e);
     size_++;
     // no operation below this should throw
@@ -118,6 +122,7 @@ ListNode<T>* List<T>::insertInternal(const T &e, ListNode<T>* pos)
         // at the very begining of the list
         head_ = n;
     }
+    this->lock.Unlock();
     return n;
 }
 template <typename T>
@@ -138,6 +143,7 @@ void List<T>::push_front(const T &e)
 template <typename T>
 void List<T>::removeInternal(ListNode<T> *pos)
 {
+    this->lock.Lock();
 	if(pos)
 	{
 		if(pos->prev)
@@ -151,6 +157,7 @@ void List<T>::removeInternal(ListNode<T> *pos)
 		delete pos;
 		size_--;
 	}
+    this->lock.Unlock();
 }
 
 template <typename T>
@@ -173,6 +180,7 @@ void List<T>::Remove(const T &e)
 template <typename T>
 void List<T>::Clear()
 {
+    this->lock.Lock();
     ListNode<T>* current( head_ );
 
     while(current)
@@ -184,6 +192,7 @@ void List<T>::Clear()
     size_ = 0; //Reset the size to 0
     head_ = 0;
     tail_ = 0;
+    this->lock.Unlock();
 }
 
 template <typename T>
@@ -193,10 +202,14 @@ T List<T>::GetAt(int index)
         return this->head_->data;
     else
     {
+        this->lock.Lock();
         ListNode<T>* cur = head_;
         for(int i = 0; i < index; ++i)
             cur = cur->next;
-        return cur->data;
+
+        T ret = cur->data;
+        this->lock.Unlock();
+        return ret;
     }
 }
 

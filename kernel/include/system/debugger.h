@@ -32,13 +32,33 @@ namespace CactusOS
             // List of all known kernel symbols
             static List<KernelSymbol_t> symbolTable;
 
+            // Buffer to store debug commands
+            static char messageBuffer[200];
+
+            // Address which we can map to physical regions
+            static uint32_t pageAccessAddress;
+
             static const char* FindSymbol(uint32_t address, uint32_t* offset);
+
+            static void HandleDebugCommand(int size);
         public:
             // Initialize debugger by loading symbol file from disk
             static void Initialize();
 
             // Print a stacktrace to console of given cpu state
             static void Stacktrace(core::CPUState* esp);
+            
+            // Perform a update on statistics and send info to debugger via serial
+            static void Update();
+
+            // Send a update on kernel stats to debugging host
+            static void SendUpdateToHost();
+
+            // Print a memory dump to the console
+            static void PrintMemoryDump(uint32_t address, uint32_t size, bool virtMemory);
+
+            // Print all page tables to the console
+            static void PrintPageTables();
         };
     }
 }

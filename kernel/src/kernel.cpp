@@ -43,10 +43,11 @@ void IdleThread()
     powerRequestState = None;
     uint64_t prevTicks = System::pit->Ticks();
     while(1) {
+        uint64_t ticks = System::pit->Ticks();
         if(System::usbManager)
             System::usbManager->USBPoll();
                 
-        if(System::pit->Ticks() - prevTicks > 500) {
+        if(ticks - prevTicks > 500) {
             if(System::apm->Enabled)
                 System::apm->CheckAndHandleEvents();
 
@@ -57,7 +58,7 @@ void IdleThread()
             }
             #endif
 
-            prevTicks = System::pit->Ticks();
+            prevTicks = ticks;
         }
 
         // Handle power state requests from userspace
@@ -69,7 +70,21 @@ void IdleThread()
         if(powerRequestState == Shutdown) {
             Power::Poweroff();
         }
-        
+#if ENABLE_ADV_DEBUG
+        // If we are sending messages over the serial port that don't go to gdb
+        // We can send debug statistics to the debugging system
+        if(Serialport::Initialized && !System::gdbEnabled) {
+            KernelDebugger::Update();
+        }
+
+        // Calculate system utilisation by measuring how much the idle process is active
+        System::statistics.idleProcCounter += 1;
+        if (ticks - System::statistics.idleProcStartTime > 1000) {
+            System::statistics.idleProcActive = System::statistics.idleProcCounter;
+            System::statistics.idleProcCounter = 0;
+            System::statistics.idleProcStartTime = ticks;
+        }
+#endif
         // Move onto other threads since there is nothing else to do here
         System::scheduler->ForceSwitch();
     }
@@ -195,7 +210,7 @@ extern "C" void kernelMain(const multiboot_info_t* mbi, unsigned int multiboot_m
         
         // Just start running the idle thread so we at least detect device changes
         System::scheduler->ForceSwitch();
-    }   
+    }
 
     // Check if kernel is run from HardDisk
     // If not than ask the user if they would like to run the installer

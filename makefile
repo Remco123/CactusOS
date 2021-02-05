@@ -145,7 +145,7 @@ installUSB: CactusOS.iso CactusOS.bin isofiles/debug.sym isofiles/apps
 	cp CactusOS.bin /media/remco/ISOIMAGE/boot/CactusOS.bin
 	umount /media/remco/ISOIMAGE
 
-debug:
+debug: CactusOS.iso
 	pyuic5 tools/advancedDebugger/mainGUI.ui -o tools/advancedDebugger/mainWindow.py
 	qemu-system-i386 -cdrom CactusOS.iso $(QEMUOPTIONS) -serial pty &
 	/usr/bin/python3 tools/advancedDebugger/main.py
