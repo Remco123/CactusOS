@@ -1,8 +1,10 @@
 #ifndef __CACTUSOS__SYSTEM__SYSTEM_H
 #define __CACTUSOS__SYSTEM__SYSTEM_H
 
-#define BOCHS_GFX_HACK 0 //Enable or disable the bochs hack
-#define ENABLE_USB 1
+#define BOCHS_GFX_HACK 0        // Enable or disable the bochs hack
+#define ENABLE_USB 1            // Enable USB-Stack
+#define ENABLE_MEMORY_CHECKS 1  // Enable the checking of memory on a specified interval
+#define ENABLE_ADV_DEBUG 1
 
 #include <system/bootconsole.h>
 #include <system/components/systemcomponent.h>
@@ -37,6 +39,7 @@
 #include <system/input/keyboardmanager.h>
 
 #include <system/log.h>
+#include <system/debugger.h>
 #include <../../lib/include/systeminfo.h>
 
 #define GDB_BREAK() asm("int $3");
@@ -112,7 +115,25 @@ namespace CactusOS
             static bool isBochs; //are we running inside bochs
             #endif
 
+            #if ENABLE_ADV_DEBUG
+            typedef struct
+            {
+                // Values for measuring activity of idle process
+                uint32_t idleProcCounter = 0;
+                uint32_t idleProcStartTime = 0;
+                uint32_t idleProcActive = 0;
+
+                // Amount of disk read operations
+                uint32_t diskReadOp = 0;
+
+                // Amount of disk write operations
+                uint32_t diskWriteOp = 0;
+            } SYSTEM_STATS;
+            static SYSTEM_STATS statistics;
+            #endif
+
             static void Start();
+            static void Panic();
         };
     }
 } 

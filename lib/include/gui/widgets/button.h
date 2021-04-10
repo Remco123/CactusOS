@@ -15,7 +15,7 @@ namespace LIBCactusOS
         /**
          * The text of this label
         */
-        char* label = 0;
+        GUIProperty<char*> label = GUIProperty<char*>(this, 0);
 
         /**
          * Create a new button with a peice of text
@@ -25,7 +25,7 @@ namespace LIBCactusOS
         /**
          * Draw this button
         */
-        void DrawTo(Canvas* context, int x_abs, int y_abs);
+        void DrawTo(Canvas* context, int x_abs, int y_abs) override;
 
     /*/////////
     // Events

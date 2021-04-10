@@ -8,7 +8,7 @@ namespace LIBCactusOS
     class Label : public Control
     {
     public:
-        char* text = 0;
+        GUIProperty<char*> text = GUIProperty<char*>(this, 0);
 
         /**
          * Create a new label with a peice of text
@@ -18,7 +18,7 @@ namespace LIBCactusOS
         /**
          * Draw this label
         */
-        void DrawTo(Canvas* context, int x_abs, int y_abs);
+        void DrawTo(Canvas* context, int x_abs, int y_abs) override;
     };
 }
 

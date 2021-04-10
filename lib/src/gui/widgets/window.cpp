@@ -96,7 +96,7 @@ void Window::OnMouseMove(int prevX_abs, int prevY_abs, int newX_abs, int newY_ab
     if(this->titleBarMouseDown) {
         this->contextBase->MoveToPosition(this->x + newX_abs - mouseDownX, this->y + newY_abs - mouseDownY);
     }
-    Control::OnMouseMove(prevX_abs, prevY_abs, newX_abs, newY_abs);
+    Control::OnMouseMove(prevX_abs, prevY_abs - this->titleBarHeight, newX_abs, newY_abs - this->titleBarHeight);
 }
 void Window::Close(void* sender, MouseButtonArgs arg)
 {

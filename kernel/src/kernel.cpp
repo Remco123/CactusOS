@@ -43,11 +43,22 @@ void IdleThread()
     powerRequestState = None;
     uint64_t prevTicks = System::pit->Ticks();
     while(1) {
+        uint64_t ticks = System::pit->Ticks();
         if(System::usbManager)
             System::usbManager->USBPoll();
-        if(System::apm->Enabled && (System::pit->Ticks() - prevTicks > 500)) {
-            System::apm->CheckAndHandleEvents();
-            prevTicks = System::pit->Ticks();
+                
+        if(ticks - prevTicks > 500) {
+            if(System::apm->Enabled)
+                System::apm->CheckAndHandleEvents();
+
+            #if ENABLE_MEMORY_CHECKS
+            if(KernelHeap::CheckForErrors() == true) {
+                Log(Error, "Memory is not intact anymore, halting system!");
+                System::Panic();
+            }
+            #endif
+
+            prevTicks = ticks;
         }
 
         // Handle power state requests from userspace
@@ -59,7 +70,21 @@ void IdleThread()
         if(powerRequestState == Shutdown) {
             Power::Poweroff();
         }
-        
+#if ENABLE_ADV_DEBUG
+        // If we are sending messages over the serial port that don't go to gdb
+        // We can send debug statistics to the debugging system
+        if(Serialport::Initialized && !System::gdbEnabled) {
+            KernelDebugger::Update();
+        }
+
+        // Calculate system utilisation by measuring how much the idle process is active
+        System::statistics.idleProcCounter += 1;
+        if (ticks - System::statistics.idleProcStartTime > 1000) {
+            System::statistics.idleProcActive = System::statistics.idleProcCounter;
+            System::statistics.idleProcCounter = 0;
+            System::statistics.idleProcStartTime = ticks;
+        }
+#endif
         // Move onto other threads since there is nothing else to do here
         System::scheduler->ForceSwitch();
     }
@@ -155,7 +180,7 @@ extern "C" void kernelMain(const multiboot_info_t* mbi, unsigned int multiboot_m
     BootConsole::WriteLine("Virtual Memory Loaded");
 
     KernelHeap::Initialize(KERNEL_HEAP_START, KERNEL_HEAP_START + KERNEL_HEAP_SIZE);
-    BootConsole::WriteLine("Kernel Heap Initialized");
+    Log(Info, "Kernel Heap Initialized");
 
     // From here we (should) only use the Log function for logging
     Log(Info, "Switching to log function based output");
@@ -185,7 +210,7 @@ extern "C" void kernelMain(const multiboot_info_t* mbi, unsigned int multiboot_m
         
         // Just start running the idle thread so we at least detect device changes
         System::scheduler->ForceSwitch();
-    }   
+    }
 
     // Check if kernel is run from HardDisk
     // If not than ask the user if they would like to run the installer
@@ -197,14 +222,14 @@ extern "C" void kernelMain(const multiboot_info_t* mbi, unsigned int multiboot_m
         BootConsole::WriteLine("Press Enter to run Installer\nStarting LiveCD in 5 seconds....");
 
         int timeout = 0;
-        while(System::keyboardManager->Availible() == 0 && timeout < 5000) {
+        while(System::keyboardManager->Available() == 0 && timeout < 5000) {
             System::pit->Sleep(100);
             timeout += 100;
             BootConsole::Write("#");
         }
         BootConsole::WriteLine();
 
-        if(System::keyboardManager->Availible() > 0) { // User pressed key
+        if(System::keyboardManager->Available() > 0) { // User pressed key
             uint8_t keyCode = System::keyboardManager->Read();    
             
             if(keyCode == KEY_ENTER) { // Return key
@@ -223,8 +248,7 @@ extern "C" void kernelMain(const multiboot_info_t* mbi, unsigned int multiboot_m
     {
         if(System::gfxDevice->SelectBestVideoMode() == false) {
             Log(Error, "Could not set a video mode, halting system");
-            InterruptDescriptorTable::DisableInterrupts();
-            while(1);
+            System::Panic();
         }
 
         Log(Info, "Switched to graphics mode, phys=%x", System::gfxDevice->framebufferPhys);
@@ -237,7 +261,5 @@ extern "C" void kernelMain(const multiboot_info_t* mbi, unsigned int multiboot_m
     }
     
     Log(Error, "Could not load process init.bin, halting system");
-
-    InterruptDescriptorTable::DisableInterrupts();
-    while(1);
+    System::Panic();
 }

@@ -118,7 +118,7 @@ void Installer::Run()
 
 char Installer::GetKey()
 {
-    while(System::keyboardManager->Availible() == 0)
+    while(System::keyboardManager->Available() == 0)
         asm ("hlt");
 
     return System::keyboardManager->Read();
@@ -223,14 +223,16 @@ void Installer::ShowDiskEraseMenu()
 
     TextGUI::StatusBar("Cleaning Disk....   [Press any key to cancel]", 30);
     for(uint32_t s = 0; s < sectors; s++) {
-        selectedDisk->WriteSector(s, buf);
+        if(selectedDisk->WriteSector(s, buf) != 0)
+            SetupError();
+        
         if(s % 100 == 0) {
             TextGUI::DrawString(Convert::IntToString32(sectors), 0, VGA_HEIGHT - 3);
             TextGUI::DrawString("/", 10, VGA_HEIGHT - 3);
             TextGUI::DrawString(Convert::IntToString32(s), 13, VGA_HEIGHT - 3);
             TextGUI::SetPixel(((double)s/(double)sectors) * (double)VGA_WIDTH, VGA_HEIGHT - 2, TEXT_COLOR, '#', VGA_COLOR_GREEN);
         }
-        if(System::keyboardManager->Availible() > 0) {
+        if(System::keyboardManager->Available() > 0) {
             System::keyboardManager->Read();
             break;
         }

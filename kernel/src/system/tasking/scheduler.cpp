@@ -167,7 +167,9 @@ Thread* Scheduler::CurrentThread()
 }
 Process* Scheduler::CurrentProcess()
 {
-    return currentThread->parent;
+    if(currentThread)
+        return currentThread->parent;
+    return 0;
 }
 
 void Scheduler::Block(Thread* thread, BlockedState reason)

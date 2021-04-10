@@ -1,0 +1,1 @@
+pkexec /usr/local/bin/gdb --baud 38400 "$@"

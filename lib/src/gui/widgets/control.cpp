@@ -86,6 +86,9 @@ void Control::OnMouseUp(int x_abs, int y_abs, uint8_t button)
 void Control::OnMouseMove(int prevX_abs, int prevY_abs, int newX_abs, int newY_abs)
 {
     //TODO: Implement mouseEnter and mouseLeave here
+    for(Control* c : this->childs)
+        if(c->Contains(newX_abs, newY_abs) || c->Contains(prevX_abs, prevY_abs))
+            c->OnMouseMove(prevX_abs - c->x, prevY_abs - c->y, newX_abs - c->x, newY_abs - c->y);
 }
 
 void Control::OnKeyDown(uint8_t key, KEYPACKET_FLAGS modifiers)

@@ -35,6 +35,20 @@ namespace LIBCactusOS
             return *this;
         }
 
+        // Increase operator
+        GUIProperty& operator+=(T newVal)
+        {
+            this->value += newVal;
+            return *this;
+        }
+
+        // Decrease operator
+        GUIProperty& operator-=(T newVal)
+        {
+            this->value += newVal;
+            return *this;
+        }
+
         // Get operator, used for value feedback
         operator T() const
         {

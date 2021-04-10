@@ -30,7 +30,7 @@ namespace CactusOS
             /**
              * How many bytes can currently be read?
             */
-            virtual int Availible();
+            virtual int Available();
         };
     }
 }

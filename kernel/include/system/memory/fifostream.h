@@ -42,7 +42,7 @@ namespace CactusOS
             /**
              * How many bytes can currently be read?
             */
-            int Availible();
+            int Available();
         };
     }
 }

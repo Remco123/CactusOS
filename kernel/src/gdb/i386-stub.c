@@ -86,15 +86,14 @@
  ****************************************************************************/
 
 const int stderr = -1;
-extern void fprintf(int stream, const char * format, ...);
+extern void fprintf(int stream, const char* format, ...);
 
-char* strcpy(char *dst, const char *src)
+char* strcpy(char* dst, const char* src)
 {
     char c;
     char* pointer = dst;
 
-    while ((c = *src++))
-    {
+    while ((c = *src++)) {
         *pointer++ = c;
     }
 
@@ -107,36 +106,38 @@ char* strcpy(char *dst, const char *src)
  * external low-level support routines
 */
 
-extern void putDebugChar(char a);	/* write a single character */
-extern int getDebugChar();	/* read and return a single char */
+extern void putDebugChar(char a); /* write a single character */
+extern int getDebugChar(); /* read and return a single char */
 
 //IDT Functions
 struct idt_entry {
-	unsigned short base_low;
-	unsigned short sel;
-	unsigned char zero;
-	unsigned char flags;
-	unsigned short base_high;
+    unsigned short base_low;
+    unsigned short sel;
+    unsigned char zero;
+    unsigned char flags;
+    unsigned short base_high;
 } __attribute__((packed));
 
-unsigned int get_idt_base (void)
+unsigned int get_idt_base(void)
 {
-	unsigned char	idtr[6];
-	unsigned int	idt	= 0;
- 
-	asm volatile("sidt %0" : : "m" (idtr));
-	idt = *((unsigned int*)&idtr[2]);
- 
-	return (idt);
+    unsigned char idtr[6];
+    unsigned int idt = 0;
+
+    asm volatile("sidt %0"
+                 :
+                 : "m"(idtr));
+    idt = *((unsigned int*)&idtr[2]);
+
+    return (idt);
 }
 
-void exceptionHandler(int exception_number, void *exception_address)	/* assign an exception handler   */
+void exceptionHandler(int exception_number, void* exception_address) /* assign an exception handler   */
 {
     struct idt_entry* entries = (struct idt_entry*)get_idt_base();
 
     unsigned int base = (unsigned int)exception_address;
 
-    entries[exception_number].base_low =	(base & 0xFFFF);
+    entries[exception_number].base_low = (base & 0xFFFF);
     entries[exception_number].base_high = (base >> 16) & 0xFFFF;
 }
 
@@ -145,23 +146,35 @@ void exceptionHandler(int exception_number, void *exception_address)	/* assign a
 /* at least NUMREGBYTES*2 are needed for register packets */
 #define BUFMAX 400
 
-static char initialized;  /* boolean flag. != 0 means we've been initialized */
+static char initialized; /* boolean flag. != 0 means we've been initialized */
 
 int remote_debug = 1;
 /*  debug >  0 prints ill-formed commands in valid packets & checksum errors */
 
-static const char hexchars[]="0123456789abcdef";
+static const char hexchars[] = "0123456789abcdef";
 
 /* Number of registers.  */
-#define NUMREGS	16
+#define NUMREGS 16
 
 /* Number of bytes of registers.  */
 #define NUMREGBYTES (NUMREGS * 4)
 
-enum regnames {EAX, ECX, EDX, EBX, ESP, EBP, ESI, EDI,
-	       PC /* also known as eip */,
-	       PS /* also known as eflags */,
-	       CS, SS, DS, ES, FS, GS};
+enum regnames { EAX,
+    ECX,
+    EDX,
+    EBX,
+    ESP,
+    EBP,
+    ESI,
+    EDI,
+    PC /* also known as eip */,
+    PS /* also known as eflags */,
+    CS,
+    SS,
+    DS,
+    ES,
+    FS,
+    GS };
 
 /*
  * these should not be static cuz they can be used outside this module
@@ -169,14 +182,14 @@ enum regnames {EAX, ECX, EDX, EBX, ESP, EBP, ESI, EDI,
 int registers[NUMREGS];
 
 #define STACKSIZE 10000
-int remcomStack[STACKSIZE/sizeof(int)];
-static int* stackPtr = &remcomStack[STACKSIZE/sizeof(int) - 1];
+int remcomStack[STACKSIZE / sizeof(int)];
+static int* stackPtr = &remcomStack[STACKSIZE / sizeof(int) - 1];
 
 /***************************  ASSEMBLY CODE MACROS *************************/
 /* 									   */
 
 extern void
-return_to_prog ();
+return_to_prog();
 
 /* Restore the program's registers (including the stack pointer, which
    means we get the right stack and don't have to worry about popping our
@@ -197,11 +210,11 @@ asm("        movw _registers+52, %es");
 asm("        movw _registers+56, %fs");
 asm("        movw _registers+60, %gs");
 asm("        movl _registers+36, %eax");
-asm("        pushl %eax");  /* saved eflags */
+asm("        pushl %eax"); /* saved eflags */
 asm("        movl _registers+40, %eax");
-asm("        pushl %eax");  /* saved cs */
+asm("        pushl %eax"); /* saved cs */
 asm("        movl _registers+32, %eax");
-asm("        pushl %eax");  /* saved eip */
+asm("        pushl %eax"); /* saved eip */
 asm("        movl _registers, %eax");
 /* use iret to restore pc and flags together so
    that trace flag works right.  */
@@ -217,73 +230,73 @@ int gdb_i386vector = -1;
 
 /* GDB stores segment registers in 32-bit words (that's just the way
    m-i386v.h is written).  So zero the appropriate areas in registers.  */
-#define SAVE_REGISTERS1() \
-  asm ("movl %eax, _registers");                                   	  \
-  asm ("movl %ecx, _registers+4");			  		     \
-  asm ("movl %edx, _registers+8");			  		     \
-  asm ("movl %ebx, _registers+12");			  		     \
-  asm ("movl %ebp, _registers+20");			  		     \
-  asm ("movl %esi, _registers+24");			  		     \
-  asm ("movl %edi, _registers+28");			  		     \
-  asm ("movw $0, %ax");							     \
-  asm ("movw %ds, _registers+48");			  		     \
-  asm ("movw %ax, _registers+50");					     \
-  asm ("movw %es, _registers+52");			  		     \
-  asm ("movw %ax, _registers+54");					     \
-  asm ("movw %fs, _registers+56");			  		     \
-  asm ("movw %ax, _registers+58");					     \
-  asm ("movw %gs, _registers+60");			  		     \
-  asm ("movw %ax, _registers+62");
+#define SAVE_REGISTERS1()            \
+    asm("movl %eax, _registers");    \
+    asm("movl %ecx, _registers+4");  \
+    asm("movl %edx, _registers+8");  \
+    asm("movl %ebx, _registers+12"); \
+    asm("movl %ebp, _registers+20"); \
+    asm("movl %esi, _registers+24"); \
+    asm("movl %edi, _registers+28"); \
+    asm("movw $0, %ax");             \
+    asm("movw %ds, _registers+48");  \
+    asm("movw %ax, _registers+50");  \
+    asm("movw %es, _registers+52");  \
+    asm("movw %ax, _registers+54");  \
+    asm("movw %fs, _registers+56");  \
+    asm("movw %ax, _registers+58");  \
+    asm("movw %gs, _registers+60");  \
+    asm("movw %ax, _registers+62");
 #define SAVE_ERRCODE() \
-  asm ("popl %ebx");                                  \
-  asm ("movl %ebx, _gdb_i386errcode");
-#define SAVE_REGISTERS2() \
-  asm ("popl %ebx"); /* old eip */			  		     \
-  asm ("movl %ebx, _registers+32");			  		     \
-  asm ("popl %ebx");	 /* old cs */			  		     \
-  asm ("movl %ebx, _registers+40");			  		     \
-  asm ("movw %ax, _registers+42");                                           \
-  asm ("popl %ebx");	 /* old eflags */		  		     \
-  asm ("movl %ebx, _registers+36");			 		     \
-  /* Now that we've done the pops, we can save the stack pointer.");  */   \
-  asm ("movw %ss, _registers+44");					     \
-  asm ("movw %ax, _registers+46");     	       	       	       	       	     \
-  asm ("movl %esp, _registers+16");
+    asm("popl %ebx");  \
+    asm("movl %ebx, _gdb_i386errcode");
+#define SAVE_REGISTERS2()                                                  \
+    asm("popl %ebx"); /* old eip */                                        \
+    asm("movl %ebx, _registers+32");                                       \
+    asm("popl %ebx"); /* old cs */                                         \
+    asm("movl %ebx, _registers+40");                                       \
+    asm("movw %ax, _registers+42");                                        \
+    asm("popl %ebx"); /* old eflags */                                     \
+    asm("movl %ebx, _registers+36");                                       \
+    /* Now that we've done the pops, we can save the stack pointer.");  */ \
+    asm("movw %ss, _registers+44");                                        \
+    asm("movw %ax, _registers+46");                                        \
+    asm("movl %esp, _registers+16");
 
 /* See if mem_fault_routine is set, if so just IRET to that address.  */
-#define CHECK_FAULT() \
-  asm ("cmpl $0, _mem_fault_routine");					   \
-  asm ("jne mem_fault");
+#define CHECK_FAULT()                   \
+    asm("cmpl $0, _mem_fault_routine"); \
+    asm("jne mem_fault");
 
-asm (".text");
-asm ("mem_fault:");
+asm(".text");
+asm("mem_fault:");
 /* OK to clobber temp registers; we're just going to end up in set_mem_err.  */
 /* Pop error code from the stack and save it.  */
-asm ("     popl %eax");
-asm ("     movl %eax, _gdb_i386errcode");
+asm("     popl %eax");
+asm("     movl %eax, _gdb_i386errcode");
 
-asm ("     popl %eax"); /* eip */
+asm("     popl %eax"); /* eip */
 /* We don't want to return there, we want to return to the function
    pointed to by mem_fault_routine instead.  */
-asm ("     movl _mem_fault_routine, %eax");
-asm ("     popl %ecx"); /* cs (low 16 bits; junk in hi 16 bits).  */
-asm ("     popl %edx"); /* eflags */
+asm("     movl _mem_fault_routine, %eax");
+asm("     popl %ecx"); /* cs (low 16 bits; junk in hi 16 bits).  */
+asm("     popl %edx"); /* eflags */
 
 /* Remove this stack frame; when we do the iret, we will be going to
    the start of a function, so we want the stack to look just like it
    would after a "call" instruction.  */
-asm ("     leave");
+asm("     leave");
 
 /* Push the stuff that iret wants.  */
-asm ("     pushl %edx"); /* eflags */
-asm ("     pushl %ecx"); /* cs */
-asm ("     pushl %eax"); /* eip */
+asm("     pushl %edx"); /* eflags */
+asm("     pushl %ecx"); /* cs */
+asm("     pushl %eax"); /* eip */
 
 /* Zero mem_fault_routine.  */
-asm ("     movl $0, %eax");
-asm ("     movl %eax, _mem_fault_routine");
+asm("     movl $0, %eax");
+asm("     movl %eax, _mem_fault_routine");
 
-asm ("iret");
+asm("iret");
 
 #define CALL_HOOK() asm("call _remcomHandler");
 
@@ -303,7 +316,7 @@ asm(".globl __catchException3");
 asm("__catchException3:");
 SAVE_REGISTERS1();
 SAVE_REGISTERS2();
-asm ("pushl $3");
+asm("pushl $3");
 CALL_HOOK();
 
 /* Same thing for exception 1.  */
@@ -313,7 +326,7 @@ asm(".globl __catchException1");
 asm("__catchException1:");
 SAVE_REGISTERS1();
 SAVE_REGISTERS2();
-asm ("pushl $1");
+asm("pushl $1");
 CALL_HOOK();
 
 /* Same thing for exception 0.  */
@@ -323,7 +336,7 @@ asm(".globl __catchException0");
 asm("__catchException0:");
 SAVE_REGISTERS1();
 SAVE_REGISTERS2();
-asm ("pushl $0");
+asm("pushl $0");
 CALL_HOOK();
 
 /* Same thing for exception 4.  */
@@ -333,7 +346,7 @@ asm(".globl __catchException4");
 asm("__catchException4:");
 SAVE_REGISTERS1();
 SAVE_REGISTERS2();
-asm ("pushl $4");
+asm("pushl $4");
 CALL_HOOK();
 
 /* Same thing for exception 5.  */
@@ -343,7 +356,7 @@ asm(".globl __catchException5");
 asm("__catchException5:");
 SAVE_REGISTERS1();
 SAVE_REGISTERS2();
-asm ("pushl $5");
+asm("pushl $5");
 CALL_HOOK();
 
 /* Same thing for exception 6.  */
@@ -353,7 +366,7 @@ asm(".globl __catchException6");
 asm("__catchException6:");
 SAVE_REGISTERS1();
 SAVE_REGISTERS2();
-asm ("pushl $6");
+asm("pushl $6");
 CALL_HOOK();
 
 /* Same thing for exception 7.  */
@@ -363,7 +376,7 @@ asm(".globl __catchException7");
 asm("__catchException7:");
 SAVE_REGISTERS1();
 SAVE_REGISTERS2();
-asm ("pushl $7");
+asm("pushl $7");
 CALL_HOOK();
 
 /* Same thing for exception 8.  */
@@ -374,7 +387,7 @@ asm("__catchException8:");
 SAVE_REGISTERS1();
 SAVE_ERRCODE();
 SAVE_REGISTERS2();
-asm ("pushl $8");
+asm("pushl $8");
 CALL_HOOK();
 
 /* Same thing for exception 9.  */
@@ -384,7 +397,7 @@ asm(".globl __catchException9");
 asm("__catchException9:");
 SAVE_REGISTERS1();
 SAVE_REGISTERS2();
-asm ("pushl $9");
+asm("pushl $9");
 CALL_HOOK();
 
 /* Same thing for exception 10.  */
@@ -395,7 +408,7 @@ asm("__catchException10:");
 SAVE_REGISTERS1();
 SAVE_ERRCODE();
 SAVE_REGISTERS2();
-asm ("pushl $10");
+asm("pushl $10");
 CALL_HOOK();
 
 /* Same thing for exception 12.  */
@@ -406,7 +419,7 @@ asm("__catchException12:");
 SAVE_REGISTERS1();
 SAVE_ERRCODE();
 SAVE_REGISTERS2();
-asm ("pushl $12");
+asm("pushl $12");
 CALL_HOOK();
 
 /* Same thing for exception 16.  */
@@ -416,45 +429,45 @@ asm(".globl __catchException16");
 asm("__catchException16:");
 SAVE_REGISTERS1();
 SAVE_REGISTERS2();
-asm ("pushl $16");
+asm("pushl $16");
 CALL_HOOK();
 
 /* For 13, 11, and 14 we have to deal with the CHECK_FAULT stuff.  */
 
 /* Same thing for exception 13.  */
-extern void _catchException13 ();
-asm (".text");
-asm (".globl __catchException13");
-asm ("__catchException13:");
+extern void _catchException13();
+asm(".text");
+asm(".globl __catchException13");
+asm("__catchException13:");
 CHECK_FAULT();
 SAVE_REGISTERS1();
 SAVE_ERRCODE();
 SAVE_REGISTERS2();
-asm ("pushl $13");
+asm("pushl $13");
 CALL_HOOK();
 
 /* Same thing for exception 11.  */
-extern void _catchException11 ();
-asm (".text");
-asm (".globl __catchException11");
-asm ("__catchException11:");
+extern void _catchException11();
+asm(".text");
+asm(".globl __catchException11");
+asm("__catchException11:");
 CHECK_FAULT();
 SAVE_REGISTERS1();
 SAVE_ERRCODE();
 SAVE_REGISTERS2();
-asm ("pushl $11");
+asm("pushl $11");
 CALL_HOOK();
 
 /* Same thing for exception 14.  */
-extern void _catchException14 ();
-asm (".text");
-asm (".globl __catchException14");
-asm ("__catchException14:");
+extern void _catchException14();
+asm(".text");
+asm(".globl __catchException14");
+asm("__catchException14:");
 CHECK_FAULT();
 SAVE_REGISTERS1();
 SAVE_ERRCODE();
 SAVE_REGISTERS2();
-asm ("pushl $14");
+asm("pushl $14");
 CALL_HOOK();
 
 /*
@@ -462,29 +475,27 @@ CALL_HOOK();
  * stack pointer into an area reserved for debugger use.
  */
 asm("_remcomHandler:");
-asm("           popl %eax");        /* pop off return address     */
-asm("           popl %eax");      /* get the exception number   */
+asm("           popl %eax"); /* pop off return address     */
+asm("           popl %eax"); /* get the exception number   */
 asm("		movl _stackPtr, %esp"); /* move to remcom stack area  */
-asm("		pushl %eax");	/* push exception onto stack  */
-asm("		call  _handle_exception");    /* this never returns */
+asm("		pushl %eax"); /* push exception onto stack  */
+asm("		call  _handle_exception"); /* this never returns */
 
-void
-_returnFromException ()
+void _returnFromException()
 {
-  return_to_prog ();
+    return_to_prog();
 }
 
 int
-hex (ch)
-     char ch;
+    hex(ch) char ch;
 {
-  if ((ch >= 'a') && (ch <= 'f'))
-    return (ch - 'a' + 10);
-  if ((ch >= '0') && (ch <= '9'))
-    return (ch - '0');
-  if ((ch >= 'A') && (ch <= 'F'))
-    return (ch - 'A' + 10);
-  return (-1);
+    if ((ch >= 'a') && (ch <= 'f'))
+        return (ch - 'a' + 10);
+    if ((ch >= '0') && (ch <= '9'))
+        return (ch - '0');
+    if ((ch >= 'A') && (ch <= 'F'))
+        return (ch - 'A' + 10);
+    return (-1);
 }
 
 static char remcomInBuffer[BUFMAX];
@@ -492,304 +503,277 @@ static char remcomOutBuffer[BUFMAX];
 
 /* scan for the sequence $<data>#<checksum>     */
 
-unsigned char *
-getpacket (void)
+unsigned char*
+getpacket(void)
 {
-  unsigned char *buffer = (unsigned char *) &remcomInBuffer[0];
-  unsigned char checksum;
-  unsigned char xmitcsum;
-  int count;
-  char ch;
+    unsigned char* buffer = (unsigned char*)&remcomInBuffer[0];
+    unsigned char checksum;
+    unsigned char xmitcsum;
+    int count;
+    char ch;
 
-  while (1)
-    {
-      /* wait around for the start character, ignore all other characters */
-      while ((ch = getDebugChar ()) != '$')
-	;
+    while (1) {
+        /* wait around for the start character, ignore all other characters */
+        while ((ch = getDebugChar()) != '$')
+            ;
 
     retry:
-      checksum = 0;
-      xmitcsum = -1;
-      count = 0;
+        checksum = 0;
+        xmitcsum = -1;
+        count = 0;
 
-      /* now, read until a # or end of buffer is found */
-      while (count < BUFMAX - 1)
-	{
-	  ch = getDebugChar ();
-	  if (ch == '$')
-	    goto retry;
-	  if (ch == '#')
-	    break;
-	  checksum = checksum + ch;
-	  buffer[count] = ch;
-	  count = count + 1;
-	}
-      buffer[count] = 0;
+        /* now, read until a # or end of buffer is found */
+        while (count < BUFMAX - 1) {
+            ch = getDebugChar();
+            if (ch == '$')
+                goto retry;
+            if (ch == '#')
+                break;
+            checksum = checksum + ch;
+            buffer[count] = ch;
+            count = count + 1;
+        }
+        buffer[count] = 0;
 
-      if (ch == '#')
-	{
-	  ch = getDebugChar ();
-	  xmitcsum = hex (ch) << 4;
-	  ch = getDebugChar ();
-	  xmitcsum += hex (ch);
+        if (ch == '#') {
+            ch = getDebugChar();
+            xmitcsum = hex(ch) << 4;
+            ch = getDebugChar();
+            xmitcsum += hex(ch);
 
-	  if (checksum != xmitcsum)
-	    {
-	      if (remote_debug)
-		{
-		  fprintf (stderr,
-			   "bad checksum.  My count = 0x%x, sent=0x%x. buf=%s\n",
-			   checksum, xmitcsum, buffer);
-		}
-	      putDebugChar ('-');	/* failed checksum */
-	    }
-	  else
-	    {
-	      putDebugChar ('+');	/* successful transfer */
+            if (checksum != xmitcsum) {
+                if (remote_debug) {
+                    fprintf(stderr,
+                        "bad checksum.  My count = 0x%x, sent=0x%x. buf=%s\n",
+                        checksum, xmitcsum, buffer);
+                }
+                putDebugChar('-'); /* failed checksum */
+            } else {
+                putDebugChar('+'); /* successful transfer */
 
-	      /* if a sequence char is present, reply the sequence ID */
-	      if (buffer[2] == ':')
-		{
-		  putDebugChar (buffer[0]);
-		  putDebugChar (buffer[1]);
+                /* if a sequence char is present, reply the sequence ID */
+                if (buffer[2] == ':') {
+                    putDebugChar(buffer[0]);
+                    putDebugChar(buffer[1]);
 
-		  return &buffer[3];
-		}
+                    return &buffer[3];
+                }
 
-	      return &buffer[0];
-	    }
-	}
+                return &buffer[0];
+            }
+        }
     }
 }
 
 /* send the packet in buffer.  */
 
-void
-putpacket (unsigned char *buffer)
+void putpacket(unsigned char* buffer)
 {
-  unsigned char checksum;
-  int count;
-  char ch;
+    unsigned char checksum;
+    int count;
+    char ch;
 
-  /*  $<packet info>#<checksum>.  */
-  do
-    {
-      putDebugChar ('$');
-      checksum = 0;
-      count = 0;
+    /*  $<packet info>#<checksum>.  */
+    do {
+        putDebugChar('$');
+        checksum = 0;
+        count = 0;
 
-      while ((ch = buffer[count]))
-	{
-	  putDebugChar (ch);
-	  checksum += ch;
-	  count += 1;
-	}
+        while ((ch = buffer[count])) {
+            putDebugChar(ch);
+            checksum += ch;
+            count += 1;
+        }
 
-      putDebugChar ('#');
-      putDebugChar (hexchars[checksum >> 4]);
-      putDebugChar (hexchars[checksum % 16]);
+        putDebugChar('#');
+        putDebugChar(hexchars[checksum >> 4]);
+        putDebugChar(hexchars[checksum % 16]);
 
-    }
-  while (getDebugChar () != '+');
+    } while (getDebugChar() != '+');
 }
 
 void
-debug_error (format, parm)
-     char *format;
-     char *parm;
+    debug_error(format, parm) char* format;
+char* parm;
 {
-  if (remote_debug)
-    fprintf (stderr, format, parm);
+    if (remote_debug)
+        fprintf(stderr, format, parm);
 }
 
 /* Address of a routine to RTE to if we get a memory fault.  */
-static void (*volatile mem_fault_routine) () = 0;
+static void (*volatile mem_fault_routine)() = 0;
 
 /* Indicate to caller of mem2hex or hex2mem that there has been an
    error.  */
 static volatile int mem_err = 0;
 
-void
-set_mem_err (void)
+void set_mem_err(void)
 {
-  mem_err = 1;
+    mem_err = 1;
 }
 
 /* These are separate functions so that they are so short and sweet
    that the compiler won't save any registers (if there is a fault
    to mem_fault, they won't get restored, so there better not be any
    saved).  */
-int
-get_char (char *addr)
+int get_char(char* addr)
 {
-  return *addr;
+    return *addr;
 }
 
-void
-set_char (char *addr, int val)
+void set_char(char* addr, int val)
 {
-  *addr = val;
+    *addr = val;
 }
 
 /* convert the memory pointed to by mem into hex, placing result in buf */
 /* return a pointer to the last char put in buf (null) */
 /* If MAY_FAULT is non-zero, then we should set mem_err in response to
    a fault; if zero treat a fault like any other fault in the stub.  */
-char *
-mem2hex (mem, buf, count, may_fault)
-     char *mem;
-     char *buf;
-     int count;
-     int may_fault;
+char*
+    mem2hex(mem, buf, count, may_fault) char* mem;
+char* buf;
+int count;
+int may_fault;
 {
-  int i;
-  unsigned char ch;
+    int i;
+    unsigned char ch;
 
-  if (may_fault)
-    mem_fault_routine = set_mem_err;
-  for (i = 0; i < count; i++)
-    {
-      ch = get_char (mem++);
-      if (may_fault && mem_err)
-	return (buf);
-      *buf++ = hexchars[ch >> 4];
-      *buf++ = hexchars[ch % 16];
+    if (may_fault)
+        mem_fault_routine = set_mem_err;
+    for (i = 0; i < count; i++) {
+        ch = get_char(mem++);
+        if (may_fault && mem_err)
+            return (buf);
+        *buf++ = hexchars[ch >> 4];
+        *buf++ = hexchars[ch % 16];
     }
-  *buf = 0;
-  if (may_fault)
-    mem_fault_routine = 0;
-  return (buf);
+    *buf = 0;
+    if (may_fault)
+        mem_fault_routine = 0;
+    return (buf);
 }
 
 /* convert the hex array pointed to by buf into binary to be placed in mem */
 /* return a pointer to the character AFTER the last byte written */
-char *
-hex2mem (buf, mem, count, may_fault)
-     char *buf;
-     char *mem;
-     int count;
-     int may_fault;
+char*
+    hex2mem(buf, mem, count, may_fault) char* buf;
+char* mem;
+int count;
+int may_fault;
 {
-  int i;
-  unsigned char ch;
+    int i;
+    unsigned char ch;
 
-  if (may_fault)
-    mem_fault_routine = set_mem_err;
-  for (i = 0; i < count; i++)
-    {
-      ch = hex (*buf++) << 4;
-      ch = ch + hex (*buf++);
-      set_char (mem++, ch);
-      if (may_fault && mem_err)
-	return (mem);
+    if (may_fault)
+        mem_fault_routine = set_mem_err;
+    for (i = 0; i < count; i++) {
+        ch = hex(*buf++) << 4;
+        ch = ch + hex(*buf++);
+        set_char(mem++, ch);
+        if (may_fault && mem_err)
+            return (mem);
     }
-  if (may_fault)
-    mem_fault_routine = 0;
-  return (mem);
+    if (may_fault)
+        mem_fault_routine = 0;
+    return (mem);
 }
 
 /* this function takes the 386 exception vector and attempts to
    translate this number into a unix compatible signal value */
-int
-computeSignal (int exceptionVector)
+int computeSignal(int exceptionVector)
 {
-  int sigval;
-  switch (exceptionVector)
-    {
+    int sigval;
+    switch (exceptionVector) {
     case 0:
-      sigval = 8;
-      break;			/* divide by zero */
+        sigval = 8;
+        break; /* divide by zero */
     case 1:
-      sigval = 5;
-      break;			/* debug exception */
+        sigval = 5;
+        break; /* debug exception */
     case 3:
-      sigval = 5;
-      break;			/* breakpoint */
+        sigval = 5;
+        break; /* breakpoint */
     case 4:
-      sigval = 16;
-      break;			/* into instruction (overflow) */
+        sigval = 16;
+        break; /* into instruction (overflow) */
     case 5:
-      sigval = 16;
-      break;			/* bound instruction */
+        sigval = 16;
+        break; /* bound instruction */
     case 6:
-      sigval = 4;
-      break;			/* Invalid opcode */
+        sigval = 4;
+        break; /* Invalid opcode */
     case 7:
-      sigval = 8;
-      break;			/* coprocessor not available */
+        sigval = 8;
+        break; /* coprocessor not available */
     case 8:
-      sigval = 7;
-      break;			/* double fault */
+        sigval = 7;
+        break; /* double fault */
     case 9:
-      sigval = 11;
-      break;			/* coprocessor segment overrun */
+        sigval = 11;
+        break; /* coprocessor segment overrun */
     case 10:
-      sigval = 11;
-      break;			/* Invalid TSS */
+        sigval = 11;
+        break; /* Invalid TSS */
     case 11:
-      sigval = 11;
-      break;			/* Segment not present */
+        sigval = 11;
+        break; /* Segment not present */
     case 12:
-      sigval = 11;
-      break;			/* stack exception */
+        sigval = 11;
+        break; /* stack exception */
     case 13:
-      sigval = 11;
-      break;			/* general protection */
+        sigval = 11;
+        break; /* general protection */
     case 14:
-      sigval = 11;
-      break;			/* page fault */
+        sigval = 11;
+        break; /* page fault */
     case 16:
-      sigval = 7;
-      break;			/* coprocessor error */
+        sigval = 7;
+        break; /* coprocessor error */
     default:
-      sigval = 7;		/* "software generated" */
+        sigval = 7; /* "software generated" */
     }
-  return (sigval);
+    return (sigval);
 }
 
 /**********************************************/
 /* WHILE WE FIND NICE HEX CHARS, BUILD AN INT */
 /* RETURN NUMBER OF CHARS PROCESSED           */
 /**********************************************/
-int
-hexToInt (char **ptr, int *intValue)
+int hexToInt(char** ptr, int* intValue)
 {
-  int numChars = 0;
-  int hexValue;
+    int numChars = 0;
+    int hexValue;
 
-  *intValue = 0;
+    *intValue = 0;
 
-  while (**ptr)
-    {
-      hexValue = hex (**ptr);
-      if (hexValue >= 0)
-	{
-	  *intValue = (*intValue << 4) | hexValue;
-	  numChars++;
-	}
-      else
-	break;
+    while (**ptr) {
+        hexValue = hex(**ptr);
+        if (hexValue >= 0) {
+            *intValue = (*intValue << 4) | hexValue;
+            numChars++;
+        } else
+            break;
 
-      (*ptr)++;
+        (*ptr)++;
     }
 
-  return (numChars);
+    return (numChars);
 }
 
 /*
  * This function does all command procesing for interfacing to gdb.
  */
-void
-handle_exception (int exceptionVector)
+void handle_exception(int exceptionVector)
 {
-  int sigval, stepping;
-  int addr, length;
-  char *ptr;
-  int newPC;
+    int sigval, stepping;
+    int addr, length;
+    char* ptr;
+    int newPC;
 
-  gdb_i386vector = exceptionVector;
+    gdb_i386vector = exceptionVector;
 
-  /*
+    /*
   if (remote_debug)
     {
       fprintf (stderr, "vector=%d, sr=0x%x, pc=0x%x\n",
@@ -797,187 +781,175 @@ handle_exception (int exceptionVector)
     }
   */
 
-  /* reply to host that an exception has occurred */
-  sigval = computeSignal (exceptionVector);
+    /* reply to host that an exception has occurred */
+    sigval = computeSignal(exceptionVector);
 
-  ptr = remcomOutBuffer;
+    ptr = remcomOutBuffer;
 
-  *ptr++ = 'T';			/* notify gdb with signo, PC, FP and SP */
-  *ptr++ = hexchars[sigval >> 4];
-  *ptr++ = hexchars[sigval & 0xf];
+    *ptr++ = 'T'; /* notify gdb with signo, PC, FP and SP */
+    *ptr++ = hexchars[sigval >> 4];
+    *ptr++ = hexchars[sigval & 0xf];
 
-  *ptr++ = hexchars[ESP]; 
-  *ptr++ = ':';
-  ptr = mem2hex((char *)&registers[ESP], ptr, 4, 0);	/* SP */
-  *ptr++ = ';';
+    *ptr++ = hexchars[ESP];
+    *ptr++ = ':';
+    ptr = mem2hex((char*)&registers[ESP], ptr, 4, 0); /* SP */
+    *ptr++ = ';';
 
-  *ptr++ = hexchars[EBP]; 
-  *ptr++ = ':';
-  ptr = mem2hex((char *)&registers[EBP], ptr, 4, 0); 	/* FP */
-  *ptr++ = ';';
+    *ptr++ = hexchars[EBP];
+    *ptr++ = ':';
+    ptr = mem2hex((char*)&registers[EBP], ptr, 4, 0); /* FP */
+    *ptr++ = ';';
 
-  *ptr++ = hexchars[PC]; 
-  *ptr++ = ':';
-  ptr = mem2hex((char *)&registers[PC], ptr, 4, 0); 	/* PC */
-  *ptr++ = ';';
+    *ptr++ = hexchars[PC];
+    *ptr++ = ':';
+    ptr = mem2hex((char*)&registers[PC], ptr, 4, 0); /* PC */
+    *ptr++ = ';';
 
-  *ptr = '\0';
+    *ptr = '\0';
 
-  putpacket ((unsigned char *)remcomOutBuffer);
+    putpacket((unsigned char*)remcomOutBuffer);
 
-  stepping = 0;
+    stepping = 0;
 
-  while (1 == 1)
-    {
-      remcomOutBuffer[0] = 0;
-      ptr = getpacket ();
+    while (1 == 1) {
+        remcomOutBuffer[0] = 0;
+        ptr = getpacket();
 
-      switch (*ptr++)
-	{
-	case '?':
-	  remcomOutBuffer[0] = 'S';
-	  remcomOutBuffer[1] = hexchars[sigval >> 4];
-	  remcomOutBuffer[2] = hexchars[sigval % 16];
-	  remcomOutBuffer[3] = 0;
-	  break;
-	case 'd':
-	  remote_debug = !(remote_debug);	/* toggle debug flag */
-	  break;
-	case 'g':		/* return the value of the CPU registers */
-	  mem2hex ((char *) registers, remcomOutBuffer, NUMREGBYTES, 0);
-	  break;
-	case 'G':		/* set the value of the CPU registers - return OK */
-	  hex2mem (ptr, (char *) registers, NUMREGBYTES, 0);
-	  strcpy (remcomOutBuffer, "OK");
-	  break;
-	case 'P':		/* set the value of a single CPU register - return OK */
-	  {
-	    int regno;
+        switch (*ptr++) {
+        case '?':
+            remcomOutBuffer[0] = 'S';
+            remcomOutBuffer[1] = hexchars[sigval >> 4];
+            remcomOutBuffer[2] = hexchars[sigval % 16];
+            remcomOutBuffer[3] = 0;
+            break;
+        case 'd':
+            remote_debug = !(remote_debug); /* toggle debug flag */
+            break;
+        case 'g': /* return the value of the CPU registers */
+            mem2hex((char*)registers, remcomOutBuffer, NUMREGBYTES, 0);
+            break;
+        case 'G': /* set the value of the CPU registers - return OK */
+            hex2mem(ptr, (char*)registers, NUMREGBYTES, 0);
+            strcpy(remcomOutBuffer, "OK");
+            break;
+        case 'P': /* set the value of a single CPU register - return OK */
+        {
+            int regno;
 
-	    if (hexToInt (&ptr, &regno) && *ptr++ == '=')
-	      if (regno >= 0 && regno < NUMREGS)
-		{
-		  hex2mem (ptr, (char *) &registers[regno], 4, 0);
-		  strcpy (remcomOutBuffer, "OK");
-		  break;
-		}
+            if (hexToInt(&ptr, &regno) && *ptr++ == '=')
+                if (regno >= 0 && regno < NUMREGS) {
+                    hex2mem(ptr, (char*)&registers[regno], 4, 0);
+                    strcpy(remcomOutBuffer, "OK");
+                    break;
+                }
 
-	    strcpy (remcomOutBuffer, "E01");
-	    break;
-	  }
+            strcpy(remcomOutBuffer, "E01");
+            break;
+        }
 
-	  /* mAA..AA,LLLL  Read LLLL bytes at address AA..AA */
-	case 'm':
-	  /* TRY TO READ %x,%x.  IF SUCCEED, SET PTR = 0 */
-	  if (hexToInt (&ptr, &addr))
-	    if (*(ptr++) == ',')
-	      if (hexToInt (&ptr, &length))
-		{
-		  ptr = 0;
-		  mem_err = 0;
-		  mem2hex ((char *) addr, remcomOutBuffer, length, 1);
-		  if (mem_err)
-		    {
-		      strcpy (remcomOutBuffer, "E03");
-		      debug_error ("memory fault");
-		    }
-		}
+            /* mAA..AA,LLLL  Read LLLL bytes at address AA..AA */
+        case 'm':
+            /* TRY TO READ %x,%x.  IF SUCCEED, SET PTR = 0 */
+            if (hexToInt(&ptr, &addr))
+                if (*(ptr++) == ',')
+                    if (hexToInt(&ptr, &length)) {
+                        ptr = 0;
+                        mem_err = 0;
+                        mem2hex((char*)addr, remcomOutBuffer, length, 1);
+                        if (mem_err) {
+                            strcpy(remcomOutBuffer, "E03");
+                            debug_error("memory fault");
+                        }
+                    }
 
-	  if (ptr)
-	    {
-	      strcpy (remcomOutBuffer, "E01");
-	    }
-	  break;
+            if (ptr) {
+                strcpy(remcomOutBuffer, "E01");
+            }
+            break;
 
-	  /* MAA..AA,LLLL: Write LLLL bytes at address AA.AA return OK */
-	case 'M':
-	  /* TRY TO READ '%x,%x:'.  IF SUCCEED, SET PTR = 0 */
-	  if (hexToInt (&ptr, &addr))
-	    if (*(ptr++) == ',')
-	      if (hexToInt (&ptr, &length))
-		if (*(ptr++) == ':')
-		  {
-		    mem_err = 0;
-		    hex2mem (ptr, (char *) addr, length, 1);
+            /* MAA..AA,LLLL: Write LLLL bytes at address AA.AA return OK */
+        case 'M':
+            /* TRY TO READ '%x,%x:'.  IF SUCCEED, SET PTR = 0 */
+            if (hexToInt(&ptr, &addr))
+                if (*(ptr++) == ',')
+                    if (hexToInt(&ptr, &length))
+                        if (*(ptr++) == ':') {
+                            mem_err = 0;
+                            hex2mem(ptr, (char*)addr, length, 1);
 
-		    if (mem_err)
-		      {
-			strcpy (remcomOutBuffer, "E03");
-			debug_error ("memory fault");
-		      }
-		    else
-		      {
-			strcpy (remcomOutBuffer, "OK");
-		      }
+                            if (mem_err) {
+                                strcpy(remcomOutBuffer, "E03");
+                                debug_error("memory fault");
+                            } else {
+                                strcpy(remcomOutBuffer, "OK");
+                            }
 
-		    ptr = 0;
-		  }
-	  if (ptr)
-	    {
-	      strcpy (remcomOutBuffer, "E02");
-	    }
-	  break;
+                            ptr = 0;
+                        }
+            if (ptr) {
+                strcpy(remcomOutBuffer, "E02");
+            }
+            break;
 
-	  /* cAA..AA    Continue at address AA..AA(optional) */
-	  /* sAA..AA   Step one instruction from AA..AA(optional) */
-	case 's':
-	  stepping = 1;
-	case 'c':
-	  /* try to read optional parameter, pc unchanged if no parm */
-	  if (hexToInt (&ptr, &addr))
-	    registers[PC] = addr;
+            /* cAA..AA    Continue at address AA..AA(optional) */
+            /* sAA..AA   Step one instruction from AA..AA(optional) */
+        case 's':
+            stepping = 1;
+        case 'c':
+            /* try to read optional parameter, pc unchanged if no parm */
+            if (hexToInt(&ptr, &addr))
+                registers[PC] = addr;
 
-	  newPC = registers[PC];
+            newPC = registers[PC];
 
-	  /* clear the trace bit */
-	  registers[PS] &= 0xfffffeff;
+            /* clear the trace bit */
+            registers[PS] &= 0xfffffeff;
 
-	  /* set the trace bit if we're stepping */
-	  if (stepping)
-	    registers[PS] |= 0x100;
+            /* set the trace bit if we're stepping */
+            if (stepping)
+                registers[PS] |= 0x100;
 
-	  _returnFromException ();	/* this is a jump */
-	  break;
+            _returnFromException(); /* this is a jump */
+            break;
 
-	  /* kill the program */
-	case 'k':		/* do nothing */
+            /* kill the program */
+        case 'k': /* do nothing */
 #if 0
 	  /* Huh? This doesn't look like "nothing".
 	     m68k-stub.c and sparc-stub.c don't have it.  */
 	  BREAKPOINT ();
 #endif
-	  break;
-	}			/* switch */
+            break;
+        } /* switch */
 
-      /* reply to the request */
-      putpacket (remcomOutBuffer);
+        /* reply to the request */
+        putpacket(remcomOutBuffer);
     }
 }
 
 /* this function is used to set up exception handlers for tracing and
    breakpoints */
-void
-set_debug_traps (void)
+void set_debug_traps(void)
 {
-  stackPtr = &remcomStack[STACKSIZE / sizeof (int) - 1];
+    stackPtr = &remcomStack[STACKSIZE / sizeof(int) - 1];
 
-  exceptionHandler (0, _catchException0);
-  exceptionHandler (1, _catchException1);
-  exceptionHandler (3, _catchException3);
-  exceptionHandler (4, _catchException4);
-  exceptionHandler (5, _catchException5);
-  exceptionHandler (6, _catchException6);
-  exceptionHandler (7, _catchException7);
-  exceptionHandler (8, _catchException8);
-  exceptionHandler (9, _catchException9);
-  exceptionHandler (10, _catchException10);
-  exceptionHandler (11, _catchException11);
-  exceptionHandler (12, _catchException12);
-  //exceptionHandler (13, _catchException13); //Needed for virtual8086
-  exceptionHandler (14, _catchException14);
-  exceptionHandler (16, _catchException16);
+    exceptionHandler(0, _catchException0);
+    exceptionHandler(1, _catchException1);
+    exceptionHandler(3, _catchException3);
+    exceptionHandler(4, _catchException4);
+    exceptionHandler(5, _catchException5);
+    exceptionHandler(6, _catchException6);
+    exceptionHandler(7, _catchException7);
+    exceptionHandler(8, _catchException8);
+    exceptionHandler(9, _catchException9);
+    exceptionHandler(10, _catchException10);
+    exceptionHandler(11, _catchException11);
+    exceptionHandler(12, _catchException12);
+    //exceptionHandler (13, _catchException13); //Needed for virtual8086
+    //exceptionHandler(14, _catchException14);
+    exceptionHandler(16, _catchException16);
 
-  initialized = 1;
+    initialized = 1;
 }
 
 /* This function will generate a breakpoint exception.  It is used at the
@@ -985,9 +957,8 @@ set_debug_traps (void)
    otherwise as a quick means to stop program execution and "break" into
    the debugger.  */
 
-void
-breakpoint (void)
+void breakpoint(void)
 {
-  if (initialized)
-    BREAKPOINT ();
+    if (initialized)
+        BREAKPOINT();
 }

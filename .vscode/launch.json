@@ -26,6 +26,7 @@
             "MIMode": "gdb",
             "miDebuggerPath": "/usr/local/bin/gdb",
             "miDebuggerArgs": "",
+            "logging": {"programOutput": false},
             "customLaunchSetupCommands": [
                 {
                     "text": "target remote localhost:1234",
@@ -39,13 +40,46 @@
                     "ignoreFailures": true
                 },
                 {
-                    "text": "file /home/remco/Documenten/CactusOS/CactusOS.bin",
+                    "text": "file ${workspaceRoot}/CactusOS.bin",
                     "description": "Load binary."
                 },
                 {
                     "description": "Load additional app binary",
                     "ignoreFailures": true,
-                    "text": "add-symbol-file /home/remco/Documenten/CactusOS/isofiles/apps/init.bin 0x800000"
+                    "text": "add-symbol-file ${workspaceRoot}/isofiles/apps/init.bin 0x800000"
+                }
+            ]
+        },
+        {
+            "name": "GDB on realHW",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceRoot}/CactusOS.bin",
+            "cwd": "${workspaceRoot}",
+            "targetArchitecture": "x86",
+            "MIMode": "gdb",
+            "miDebuggerPath": "${workspaceRoot}/rungdb",
+            "miDebuggerArgs": "",
+            "customLaunchSetupCommands": [
+                {
+                    "text": "target remote /dev/ttyUSB0",
+                    "description": "Connect to serialport"
+                }
+            ],
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                },
+                {
+                    "text": "file ${workspaceRoot}/CactusOS.bin",
+                    "description": "Load binary."
+                },
+                {
+                    "description": "Load additional app binary",
+                    "ignoreFailures": true,
+                    "text": "add-symbol-file ${workspaceRoot}/isofiles/apps/init.bin 0x800000"
                 }
             ]
         }

@@ -27,7 +27,7 @@ namespace LIBCactusOS
         // Create the close button for this window
         void CreateButtons();
     public:
-        char* titleString = 0;
+        GUIProperty<char*> titleString = GUIProperty<char*>(this, 0);
 
         /**
          * In which context are we located?
@@ -58,7 +58,7 @@ namespace LIBCactusOS
          * 
          * x_abs/y_abs: the coördinate of this window in absolute related to the canvas
         */
-        void DrawTo(Canvas* context, int x_abs, int y_abs);
+        void DrawTo(Canvas* context, int x_abs, int y_abs) override;
     friend class Context;
     protected:
         /**

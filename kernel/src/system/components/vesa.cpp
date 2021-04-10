@@ -31,7 +31,7 @@ VESAModeInfo* VESA::GetModeInfo(uint16_t mode)
 
 	regs.AX = 0x4F01;
 	regs.CX = mode;
-	regs.DI = (uint16_t)info;
+	regs.DI = (uint16_t)0x8000;
 	virtual8086Manager->CallInterrupt(0x10, &regs);	
 	
 	return info;
@@ -58,7 +58,7 @@ bool VESA::SelectBestVideoMode()
 	VM86Arguments regs;
 	MemoryOperations::memset(&regs, 0, sizeof(VM86Arguments));
 	regs.AX = 0x4F00;
-	regs.DI = (uint16_t)vesaInfo;
+	regs.DI = (uint16_t)0x7000;
 	virtual8086Manager->CallInterrupt(0x10, &regs);
 
 	if(MemoryOperations::memcmp(vesaInfo->Signature, "VESA", 4) == 0)

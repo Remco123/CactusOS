@@ -132,7 +132,7 @@ Image Image::CreateFromFile(const char* filepath, const char* ext)
     return Image(0, 0);
 }
 
-Image Image::Resize(Image& source, int newWidth, int newHeight, ResizeMethod method)
+Image Image::Resize(Image source, int newWidth, int newHeight, ResizeMethod method)
 {
     if(source.width == newWidth && source.height == newHeight) // No change in resolution
         return source; //TODO: Is this correct and logical? Or should we copy it?
@@ -151,7 +151,7 @@ Image Image::Resize(Image& source, int newWidth, int newHeight, ResizeMethod met
 // Resize Implementations
 ///////////
 // http://jankristanto.com/info/nearest-neighbor-interpolation-for-resize-image/
-Image Image::ResizeNearestNeighbor(Image& source, int newWidth, int newHeight)
+Image Image::ResizeNearestNeighbor(Image source, int newWidth, int newHeight)
 {
     Image result = Image(newWidth, newHeight);
     uint32_t* src = (uint32_t*)source.GetBufferPtr();
@@ -171,7 +171,7 @@ Image Image::ResizeNearestNeighbor(Image& source, int newWidth, int newHeight)
     return result;
 }
 // http://tech-algorithm.com/articles/bilinear-image-scaling/
-Image Image::ResizeBilinear(Image& source, int newWidth, int newHeight)
+Image Image::ResizeBilinear(Image source, int newWidth, int newHeight)
 {
     Image result = Image(newWidth, newHeight);
     int a, b, c, d, x, y, index;

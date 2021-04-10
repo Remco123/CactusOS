@@ -58,39 +58,37 @@ bool String::Contains(const char* str, char c)
 
 List<char*> String::Split(const char* str, char d)
 {
-    List<char*> Result;
+    List<char*> result = List<char*>();
+    int len = String::strlen(str);
+    int pos = 0;
 
-    int amountOfDelims = 0;
-    while(String::IndexOf(str, d, amountOfDelims) != -1)
-        amountOfDelims++;
-    
-    if(amountOfDelims == 0)
-        return Result;
-    
-    int* delimOffsets = new int[amountOfDelims];
-    for(int i = 0; i < amountOfDelims; i++)
-        delimOffsets[i] = String::IndexOf(str, d, i);
+    // Loop through string and everytime we find the delimiter make a substring of it
+    for(int i = 0; i < len; i++) {
+        if(str[i] == d) {
+            int itemLen = i - pos;
+            if(itemLen > 0) {
+                char* part = new char[itemLen + 1];
+                MemoryOperations::memcpy(part, str + pos, itemLen);
+                part[itemLen] = '\0';
+                result.push_back(part);
+            }
 
-    for(int i = 0; i < amountOfDelims; i++)
-    {
-        int len = i >= 1 ? (delimOffsets[i] - delimOffsets[i - 1] - 1) : delimOffsets[i];
-
-        char* partStr = new char[len + 1];
-        MemoryOperations::memcpy(partStr, str + (i >= 1 ? delimOffsets[i - 1] + 1 : 0), len);
-        partStr[len] = '\0';
-
-        Result.push_back(partStr);
+            pos = i + 1;   
+        }
     }
 
-    //Don't forget to add the remaining part of the string
-    int stringRemainder = String::strlen(str) - delimOffsets[amountOfDelims - 1];
-    char* lastStr = new char[stringRemainder];
-    MemoryOperations::memcpy(lastStr, str + delimOffsets[amountOfDelims - 1] + 1, stringRemainder);
-    lastStr[stringRemainder] = '\0';
-
-    Result.push_back(lastStr);
-
-    return Result;
+    // Skip delimiter character
+    if(pos > 0) {
+        // Add remaining part (if available)
+        int lastLen = len - pos;
+        if(lastLen > 0) {
+            char* part = new char[lastLen + 1];
+            MemoryOperations::memcpy(part, str + pos, lastLen);
+            part[lastLen] = '\0';
+            result.push_back(part);
+        }
+    }
+    return result;
 }
 
 char* String::Uppercase(char* str)

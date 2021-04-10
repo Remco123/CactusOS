@@ -1,4 +1,5 @@
 #include <system/disks/disk.h>
+#include <system/system.h>
 
 using namespace CactusOS;
 using namespace CactusOS::common;
@@ -15,12 +16,20 @@ Disk::Disk(uint32_t controllerIndex, DiskController* controller, DiskType type, 
 }
 char Disk::ReadSector(uint32_t lba, uint8_t* buf)
 {
+    #if ENABLE_ADV_DEBUG
+    System::statistics.diskReadOp += 1;
+    #endif
+
     if(this->controller != 0)
         return this->controller->ReadSector(this->controllerIndex, lba, buf);
     return 1;
 }
 char Disk::WriteSector(uint32_t lba, uint8_t* buf)
 {
+    #if ENABLE_ADV_DEBUG
+    System::statistics.diskWriteOp += 1;
+    #endif
+
     if(this->controller != 0)
         return this->controller->WriteSector(this->controllerIndex, lba, buf);
     return 1;

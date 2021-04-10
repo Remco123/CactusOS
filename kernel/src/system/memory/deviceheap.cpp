@@ -12,7 +12,7 @@ uint32_t DeviceHeap::currentAddress = DEVICE_HEAP_START;
 uint32_t DeviceHeap::AllocateChunck(uint32_t size)
 {
     uint32_t ret = DeviceHeap::currentAddress;
-    DeviceHeap::currentAddress += size;
+    DeviceHeap::currentAddress += pageRoundUp(size);
 
     // Will propably never happen
     if(DeviceHeap::currentAddress >= DEVICE_HEAP_END)

@@ -33,6 +33,7 @@ namespace CactusOS
 
                 int index = -1;
                 bool isATATPI = false;
+                bool useLBA48 = false;
             private:
                 // Read Port Register from memory location
                 inline uint32_t readRegister(uint32_t offset);

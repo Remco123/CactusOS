@@ -24,10 +24,10 @@
 #######################
 
 INCLUDEDIRS := kernel/include
-QEMUOPTIONS := -boot d -device VGA,edid=on,xres=1024,yres=768 -trace events=../qemuTrace.txt -usb -device usb-kbd -device usb-ehci,id=ehci -drive if=none,id=stick,file=./test.img -device usb-storage,bus=ehci.0,drive=stick
+QEMUOPTIONS := -hda disk.img -boot d -device VGA,edid=on,xres=1024,yres=768 -trace events=../qemuTrace.txt -usb -device usb-ehci
 
-G++PARAMS := -m32 -g -D CACTUSOSKERNEL -I $(INCLUDEDIRS) -fno-use-cxa-atexit -nostdlib -fno-builtin -fno-exceptions -fno-rtti -fno-leading-underscore -Wno-write-strings -fpermissive -Wall
-GCCPARAMS := -m32 -g -D CACTUSOSKERNEL -I $(INCLUDEDIRS) -nostdlib -fno-builtin -Wall
+G++PARAMS := -m32 -g -D CACTUSOSKERNEL -I $(INCLUDEDIRS) -fno-omit-frame-pointer -fno-use-cxa-atexit -nostdlib -fno-builtin -fno-exceptions -fno-rtti -fno-leading-underscore -Wno-write-strings -fpermissive -Wall
+GCCPARAMS := -m32 -g -D CACTUSOSKERNEL -I $(INCLUDEDIRS) -fno-omit-frame-pointer -nostdlib -fno-builtin -Wall
 ASPARAMS := --32
 LDPARAMS := -m elf_i386
 
@@ -83,6 +83,7 @@ CactusOS.iso: CactusOS.bin
 	cd lib/ && $(MAKE)
 	cd apps/ && $(MAKE)
 	
+	nm -a CactusOS.bin | sort -d > isofiles/debug.sym
 	cp -r isofiles/. iso
 	mkdir iso/boot
 	mkdir iso/boot/grub
@@ -90,10 +91,6 @@ CactusOS.iso: CactusOS.bin
 	cp grub.cfg iso/boot/grub/grub.cfg
 	grub-mkrescue --output=CactusOS.iso iso
 	rm -rf iso
-
-install: CactusOS.iso
-	cp $< /media/sf_Mint_OSDev/CactusOS.iso
-	cp CactusOS.bin /media/sf_Mint_OSDev/CactusOS.bin
 
 .PHONY: clean qemu kdbg run filelist serialDBG qemuDBG fastApps
 clean:
@@ -113,8 +110,7 @@ qemuGDB: CactusOS.iso
 	gdb -ex 'file CactusOS.bin' -ex 'target remote /dev/pts/1' -q
 
 run: CactusOS.iso
-	(killall VirtualBox && sleep 1) || true
-	virtualbox &
+	vboxmanage startvm "CactusOS" -E VBOX_GUI_DBG_AUTO_SHOW=true -E VBOX_GUI_DBG_ENABLED=true &
 	rm "CactusOS.log"
 	echo "" > "CactusOS.log"
 	tail -f "CactusOS.log"
@@ -141,6 +137,19 @@ turboApps:
 	rm -rf isofiles/apps/*.bin
 	cd apps/ && $(MAKE) clean && $(MAKE)
 	rm CactusOS.iso
+
+installUSB: CactusOS.iso CactusOS.bin isofiles/debug.sym isofiles/apps
+	rm -rf /media/remco/ISOIMAGE/apps/*.bin
+	cp -r isofiles/apps/* /media/remco/ISOIMAGE/apps/
+	cp isofiles/debug.sym /media/remco/ISOIMAGE/debug.sym
+	cp CactusOS.bin /media/remco/ISOIMAGE/boot/CactusOS.bin
+	umount /media/remco/ISOIMAGE
+
+debug: CactusOS.iso
+	pyuic5 tools/advancedDebugger/mainGUI.ui -o tools/advancedDebugger/mainWindow.py
+	qemu-system-i386 -cdrom CactusOS.iso $(QEMUOPTIONS) -serial pty &
+	/usr/bin/python3 tools/advancedDebugger/main.py
+
 
 filelist:
 	@echo "Source Files:"
