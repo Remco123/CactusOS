@@ -19,7 +19,7 @@ void Stream::Write(char byte)
     Log(Error, "Virtual stream function called");
 }
 
-int Stream::Availible()
+int Stream::Available()
 {
     Log(Error, "Virtual stream function called");
     return 0;

@@ -50,7 +50,7 @@ char FIFOStream::Read()
     return result;
 }
 
-int FIFOStream::Availible()
+int FIFOStream::Available()
 {
     return this->count;
 }

@@ -41,6 +41,7 @@ namespace CactusOS
             static const char* FindSymbol(uint32_t address, uint32_t* offset);
 
             static void HandleDebugCommand(int size);
+            static void PrintPageItem(void* item, bool table, uint16_t pdIndex, uint16_t ptIndex);
         public:
             // Initialize debugger by loading symbol file from disk
             static void Initialize();
@@ -58,7 +59,7 @@ namespace CactusOS
             static void PrintMemoryDump(uint32_t address, uint32_t size, bool virtMemory);
 
             // Print all page tables to the console
-            static void PrintPageTables();
+            static void PrintPageTables(int pid = -1);
         };
     }
 }

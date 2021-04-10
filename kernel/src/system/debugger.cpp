@@ -198,8 +198,13 @@ void KernelDebugger::HandleDebugCommand(int size)
             delete c;
     }
     else if(String::strncmp(messageBuffer, "pagedump", 8)) {
+        List<char*> args = String::Split(messageBuffer, ' ');
+
         // Page table dump
-        KernelDebugger::PrintPageTables();
+        KernelDebugger::PrintPageTables(args.size() > 1 ? Convert::StringToInt(args[1]) : -1);
+
+        for(char* c : args)
+            delete c;
     }
     else {
         Log(Error, "Unknown debug command %s", messageBuffer);
@@ -303,9 +308,18 @@ void KernelDebugger::PrintMemoryDump(uint32_t address, uint32_t size, bool virtM
     BootConsole::WriteLine();
     BootConsole::WriteLine("-----------------------------------");
 }
-void KernelDebugger::PrintPageTables()
+void KernelDebugger::PrintPageTables(int pid)
 {
-    char* flagBuf = "-----";
+    uint32_t prevPageDir = VirtualMemoryManager::GetPageDirectoryAddress();
+    if(pid != -1) {
+        Process* proc = ProcessHelper::ProcessById(pid);
+        if(proc == 0) {
+            Log(Error, "KernelDebugger: no process found with id %d", pid);
+            return;
+        }
+        
+        VirtualMemoryManager::SwitchPageDirectory(proc->pageDirPhys);
+    }
 
     BootConsole::WriteLine("------------ Paging Dump ----------");
 
@@ -318,15 +332,120 @@ void KernelDebugger::PrintPageTables()
         
         if(pdEntry.pageSize == FOUR_MB) {
             if(pdEntry.present) {
-                // Start
-                BootConsole::Write("0x");
-                BootConsole::Write(Convert::IntToHexString(pageDirIndex * 4_MB));
-                BootConsole::Write("  0x");
-                BootConsole::Write(Convert::IntToHexString(pdEntry.frame * 4_MB));
-                BootConsole::Write("  0x");
-                BootConsole::Write(Convert::IntToHexString(pdEntry.frame * 4_MB + 4_MB));
-                BootConsole::Write(" ");
+                KernelDebugger::PrintPageItem(&pdEntry, true, pageDirIndex, 0);
+            }
+        }
+        else {
+            if(pdEntry.present) {
+                PageTable* pageTable = (PageTable*)(PAGE_TABLE_ADDRESS + (PAGE_SIZE * pageDirIndex));
+                for(uint16_t pageTabIndex = 0; pageTabIndex < 1024; pageTabIndex++) {
+                    uint32_t address = pageDirIndex * 4_MB + pageTabIndex * 4_KB;
+                    uint32_t pt_offset = PAGETBL_INDEX(address);
 
+                    PageTableEntry ptEntry = pageTable->entries[pt_offset];
+                    if(!ptEntry.present)
+                        continue;
+                    
+                    KernelDebugger::PrintPageItem(&ptEntry, false, pageDirIndex, pageTabIndex);
+                }
+            }
+        }
+    }
+
+    BootConsole::WriteLine("-----------------------------------");
+
+    if(pid != -1)
+        VirtualMemoryManager::SwitchPageDirectory(prevPageDir);
+}
+void KernelDebugger::PrintPageItem(void* item, bool table, uint16_t pdIndex, uint16_t ptIndex)
+{
+    static uint32_t curChainSize = 0;
+    static uint32_t curChainStart = 0;
+    
+    // Calculate basic info about item
+    uint32_t address = pdIndex * 4_MB + ptIndex * 4_KB;
+    uint32_t physAddress = table ? ((PageDirectoryEntry*)item)->frame * 4_MB : ((PageTableEntry*)item)->frame * 4_KB;
+    uint32_t addressSize = table ? 4_MB : 4_KB;
+    
+    if(curChainSize == 0) {
+        curChainStart = address; // Start new chain
+        curChainSize = addressSize;
+    }
+    else {
+        uint32_t curChainAddress = curChainStart + curChainSize;
+
+        // Check if we can attach this entry to the chain
+        if(curChainAddress == address) // We fit right in
+            curChainSize += addressSize;
+        else {
+            // Else print the current chain and reset vars
+            Log(Info, "%x-%x --- %x %s", curChainStart, curChainAddress, curChainSize, "-XXX-");
+
+            // Reset vars to this entry
+            curChainStart = address;
+            curChainSize = addressSize;
+        }
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+/*
+void KernelDebugger::PrintPageItem(void* item, bool table, uint16_t pdIndex, uint16_t ptIndex)
+{
+    static uint32_t prevAddress = 0;
+    static uint32_t prevAddressPhys = 0;
+    static uint32_t prevAddressSize = 0;
+
+    static uint32_t curChainSize = 0;
+    static uint32_t startAddress = 0;
+    static uint32_t startAddressPhys = 0;
+
+    uint32_t address = pdIndex * 4_MB + ptIndex * 4_KB;
+    uint32_t physAddress = table ? ((PageDirectoryEntry*)item)->frame * 4_MB : ((PageTableEntry*)item)->frame * 4_KB;
+    uint32_t addressSize = table ? 4_MB : 4_KB;
+
+    bool canMakeChain = (address - prevAddressSize == prevAddress);// && (physAddress - addressSize == prevAddressPhys);
+    if(curChainSize == 0)
+        canMakeChain = true;
+
+    if(canMakeChain) {
+        if(curChainSize == 0) {
+            startAddress = address;
+            startAddressPhys = physAddress;
+        }
+        
+        curChainSize += addressSize;
+    }
+    else
+    {
+        if(curChainSize > 0)
+        {
+            Log(Info, "%x-%x  %x-%x  %x %s", startAddress, address, startAddressPhys, physAddress, curChainSize, "-XXX-");
+
+            // Reset vars
+            startAddress = 0;
+            startAddressPhys = 0;
+            curChainSize = 0;
+        }
+        else
+        {
+            char* flagBuf = "-----";
+
+            // Print single item
+            if(table) {
+                PageDirectoryEntry pdEntry = *(PageDirectoryEntry*)item;
+                
                 flagBuf[0] = 'R';
                 if(pdEntry.readWrite)
                     flagBuf[1] = 'W';
@@ -336,15 +455,27 @@ void KernelDebugger::PrintPageTables()
                     flagBuf[3] = 'W';
                 if(pdEntry.canCache)
                     flagBuf[4] = 'C';
-                
-                BootConsole::WriteLine(flagBuf);
             }
-        }
-        else {
-            if(pdEntry.present)
-                BootConsole::WriteLine("----------");
+            else {
+                PageTableEntry ptEntry = *(PageTableEntry*)item;
+
+                flagBuf[0] = 'R';
+                if(ptEntry.readWrite)
+                    flagBuf[1] = 'W';
+                if(ptEntry.isUser)
+                    flagBuf[2] = 'U';
+                if(ptEntry.writeThrough)
+                    flagBuf[3] = 'W';
+                if(ptEntry.canCache)
+                    flagBuf[4] = 'C';
+            }
+
+            Log(Info, "%x-%x  %x-%x  %x %s", address, address + addressSize, physAddress, physAddress + addressSize, addressSize, flagBuf);
         }
     }
 
-    BootConsole::WriteLine("-----------------------------------");
+    prevAddress = address;
+    prevAddressPhys = physAddress;
+    prevAddressSize = addressSize;
 }
+*/

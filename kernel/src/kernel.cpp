@@ -222,14 +222,14 @@ extern "C" void kernelMain(const multiboot_info_t* mbi, unsigned int multiboot_m
         BootConsole::WriteLine("Press Enter to run Installer\nStarting LiveCD in 5 seconds....");
 
         int timeout = 0;
-        while(System::keyboardManager->Availible() == 0 && timeout < 5000) {
+        while(System::keyboardManager->Available() == 0 && timeout < 5000) {
             System::pit->Sleep(100);
             timeout += 100;
             BootConsole::Write("#");
         }
         BootConsole::WriteLine();
 
-        if(System::keyboardManager->Availible() > 0) { // User pressed key
+        if(System::keyboardManager->Available() > 0) { // User pressed key
             uint8_t keyCode = System::keyboardManager->Read();    
             
             if(keyCode == KEY_ENTER) { // Return key

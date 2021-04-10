@@ -290,7 +290,7 @@ CPUState* CactusOSSyscalls::HandleSyscall(CPUState* state)
         case LIBCactusOS::SYSCALL_READ_STDIO:
             if(proc->stdInput != 0)
             {
-                while (proc->stdInput->Availible() <= 0) //TODO: Use blocking here
+                while (proc->stdInput->Available() <= 0) //TODO: Use blocking here
                     System::scheduler->ForceSwitch();
                 state->EAX = proc->stdInput->Read();
             }
@@ -348,7 +348,7 @@ CPUState* CactusOSSyscalls::HandleSyscall(CPUState* state)
             break;
         case LIBCactusOS::SYSCALL_STDIO_AVAILABLE:
             if(proc->stdInput != 0)
-                state->EAX = proc->stdInput->Availible();
+                state->EAX = proc->stdInput->Available();
             else
                 state->EAX = 0;
             
