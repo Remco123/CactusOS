@@ -77,7 +77,7 @@ void Context::MoveToPosition(int newX, int newY)
 
 void Context::CloseContext()
 {
-    ContextHeap::FreeArea(this->sharedContextInfo->virtAddrClient - sizeof(ContextInfo), pageRoundUp(this->sharedContextInfo->bytes) / 0x1000);
+    ContextHeap::FreeArea(this->sharedContextInfo->virtAddrClient - CONTEXT_INFO_SIZE, pageRoundUp(this->sharedContextInfo->bytes) / 0x1000);
     GUI::contextList->Remove(this);
     if(this->canvas != 0)
         delete this->canvas;

@@ -330,10 +330,10 @@ void Compositor::HandleClientRequest(IPCMessage msg)
             uint32_t memAddressClient = msg.arg2;
 
             // Calculate the required bytes needed for this context
-            uint32_t bytesRequired = (width * height * 4) + sizeof(ContextInfo);
+            uint32_t bytesRequired = (width * height * 4) + CONTEXT_INFO_SIZE;
 
             // Address of memory on the server side (our side)
-            uint32_t contextAddress = ContextHeap::AllocateArea(pageRoundUp(bytesRequired) / 0x1000);
+            uint32_t contextAddress = ContextHeap::AllocateArea(pageRoundUp(bytesRequired) / 4_KB);
             Print("[Compositor] Process %d requested a context of %d bytes at %x (w=%d,h=%d,x=%d,y=%d) mapping to %x\n", msg.source, bytesRequired, memAddressClient, width, height, x, y, contextAddress);
             
             // Map this memory between us and the client process
@@ -344,10 +344,16 @@ void Compositor::HandleClientRequest(IPCMessage msg)
                 break;
             }
 
+            // Create pointer to struct that we want to fill with info about this context
             ContextInfo* info = (ContextInfo*)contextAddress;
+
+            // Make sure it is completely zeroed
+            memset(info, 0, CONTEXT_INFO_SIZE);
+
+            // Start filling in the info
             info->bytes = bytesRequired;
-            info->virtAddrClient = memAddressClient + sizeof(ContextInfo);
-            info->virtAddrServer = contextAddress + sizeof(ContextInfo);
+            info->virtAddrClient = memAddressClient + CONTEXT_INFO_SIZE;
+            info->virtAddrServer = contextAddress + CONTEXT_INFO_SIZE;
             info->width = width;
             info->height = height;
             info->x = x;
@@ -356,6 +362,7 @@ void Compositor::HandleClientRequest(IPCMessage msg)
             info->supportsTransparency = false;
             info->background = false;
             info->id = nextContextID++;
+            info->numDirtyRects = 1;
 
             // Add this context to our list of all contexts
             this->contextManager->contextList.push_front(info);
@@ -391,10 +398,10 @@ void Compositor::HandleClientRequest(IPCMessage msg)
                     this->dirtyRectList.push_back(dirtyRect);
 
                     // Free area of virtual allocated memory
-                    ContextHeap::FreeArea(c->virtAddrServer + sizeof(ContextInfo), pageRoundUp(c->bytes) / 0x1000);
+                    ContextHeap::FreeArea(c->virtAddrServer + CONTEXT_INFO_SIZE, pageRoundUp(c->bytes) / 4_KB);
                     
                     // Free shared memory
-                    if(!Process::DeleteSharedMemory(c->clientID, c->virtAddrServer - sizeof(ContextInfo), c->virtAddrClient - sizeof(ContextInfo), pageRoundUp(c->bytes)))
+                    if(!Process::DeleteSharedMemory(c->clientID, c->virtAddrServer - CONTEXT_INFO_SIZE, c->virtAddrClient - CONTEXT_INFO_SIZE, pageRoundUp(c->bytes)))
                         Print("[Compositor] Error! Could not remove shared memory\n");
                 }
             }

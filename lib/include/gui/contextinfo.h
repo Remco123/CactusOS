@@ -3,7 +3,14 @@
 
 #include <types.h>
 
-//Directions a context can be resized in
+// We reserve 1 page for the context info structure for alignment reasons
+// The struct itself is not actually this big though
+#define CONTEXT_INFO_SIZE 4_KB
+
+// Maximum of dirty rects per frame per contextinfo struct
+#define CONTEXT_INFO_MAX_DIRTY 100
+
+// Directions a context can be resized in
 enum Direction
 {
     None = (0<<0),
@@ -46,8 +53,30 @@ struct ContextInfo
     // Can this context be moved to the front using a mouse click in it? (this will be done automatically when set to false)
     bool background;
 
-    // Each context gets it own uniqe id, this way the compositor can find the right context for each message. For example when a keypress occurs.
+    // Each context gets it own unique id, this way the compositor can find the right context for each message. For example when a keypress occurs.
     int id;
+
+    // Does this context support the dirty rectangle technique?
+    bool supportsDirtyRects;
+
+    // Number of dirty rectangles in the array below
+    LIBCactusOS::uint16_t numDirtyRects;
+
+    // Array of dirty rectangles specific to this context
+    struct
+    {
+        // The width of this rectangle
+        int width;
+        // The height of this rectangle
+        int height;
+        // The x coördinate of this rectangle
+        int x;
+        // The y coördinate of this rectangle
+        int y;
+    } dirtyRects[CONTEXT_INFO_MAX_DIRTY];
 };
+
+// Check if the structure doesn't cross page boundary
+STATIC_ASSERT(sizeof(ContextInfo) < CONTEXT_INFO_SIZE);
 
 #endif
