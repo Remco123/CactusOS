@@ -141,7 +141,7 @@ void Compositor::DrawFrame()
     if(this->prevMouseX != -1 && this->prevMouseY != -1 && (this->prevMouseX != this->curMouseX || this->prevMouseY != this->curMouseY))
         RemovePreviousCursor();
 
-    // Update dirty rectangles by drawing the backgroud image at every dirty rect position
+    // Update dirty rectangles by drawing the background image at every dirty rect position
     for(Rectangle rect : dirtyRectList) 
     {
         //Print("[Compositor] Dirty Rectangle (%d,%d,%d,%d)\n", rect.x, rect.y, rect.width, rect.height);

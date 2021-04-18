@@ -18,7 +18,7 @@ void VirtualMemoryManager::ReloadCR3()
 }
 
 
-void VirtualMemoryManager::Intialize()
+void VirtualMemoryManager::Initialize()
 {
     BootConsole::WriteLine("Intializing Paging");
     

@@ -21,7 +21,7 @@ namespace CactusOS
         private:
             static List<InterruptHandler*>* interruptCallbacks[256];
         public:
-            static void Intialize();
+            static void Initialize();
             static common::uint32_t HandleInterrupt(common::uint8_t interrupt, common::uint32_t esp);
 
             static void AddHandler(InterruptHandler* handler, common::uint8_t interrupt);

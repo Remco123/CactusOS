@@ -176,7 +176,7 @@ extern "C" void kernelMain(const multiboot_info_t* mbi, unsigned int multiboot_m
     InterruptDescriptorTable::EnableInterrupts();
     BootConsole::WriteLine("Interrupts Enabled");
 
-    VirtualMemoryManager::Intialize();
+    VirtualMemoryManager::Initialize();
     BootConsole::WriteLine("Virtual Memory Loaded");
 
     KernelHeap::Initialize(KERNEL_HEAP_START, KERNEL_HEAP_START + KERNEL_HEAP_SIZE);
@@ -216,7 +216,7 @@ extern "C" void kernelMain(const multiboot_info_t* mbi, unsigned int multiboot_m
     // If not than ask the user if they would like to run the installer
     // Otherwise we run the liveCD
     if(System::vfs->Filesystems->GetAt(System::vfs->bootPartitionID)->disk->type != HardDisk) {
-        // Promt user
+        // Prompt user
         BootConsole::ForegroundColor = VGA_COLOR_BLUE;
         System::setupMode = true;
         BootConsole::WriteLine("Press Enter to run Installer\nStarting LiveCD in 5 seconds....");

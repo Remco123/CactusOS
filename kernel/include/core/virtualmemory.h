@@ -82,7 +82,7 @@ namespace CactusOS
         {
         public:      
             static void ReloadCR3();  
-            static void Intialize();
+            static void Initialize();
             static void AllocatePage(PageTableEntry* page, bool kernel, bool writeable);
             static void FreePage(PageTableEntry* page);
 
