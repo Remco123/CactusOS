@@ -18,6 +18,7 @@ int main()
 
     mainScreen->sharedContextInfo->supportsTransparency = true;
     mainScreen->sharedContextInfo->background = true;
+    mainScreen->sharedContextInfo->supportsDirtyRects = true;
     int prevSec = -1;
     while(1) {
         DateTime currentTime = DateTime::Current();
@@ -58,6 +59,9 @@ int main()
 
             mainScreen->canvas->DrawString(GUI::defaultFont, Convert::IntToString(i), i < 10 ? x - 3 : x - 7, y - 8, 0xFF0000FF);
         }
+
+        // Force paint
+        mainScreen->SetDirtyArea(0, 0, 160, 160);
 
         prevSec = currentTime.Seconds;
     }

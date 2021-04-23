@@ -28,6 +28,7 @@ DesktopItem::DesktopItem(int x, int y, int width, int height)
     this->context->canvas->Clear();
     this->context->sharedContextInfo->background = true;
     this->context->sharedContextInfo->supportsTransparency = true;
+    this->context->sharedContextInfo->supportsDirtyRects = true;
 }
 
 void DesktopItem::DrawToContext()
@@ -48,6 +49,7 @@ void DesktopItem::DrawToContext()
         this->context->canvas->DrawRect(0xFF000000, 0, height-20, width-1, 20-1);
         this->context->canvas->DrawString(GUI::defaultFont, this->label, 5, height-17, 0xFFFFFFFF);
     }
+    this->context->SetDirtyArea(0, 0, width, height);
 }
 
 #endif

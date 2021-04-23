@@ -41,6 +41,16 @@ namespace LIBCactusOS
         void DrawGUI();
 
         /**
+         * Mark an area as dirty so that the compositor draws it
+        */
+        void SetDirtyArea(int x, int y, int width, int height);
+
+        /**
+         * Mark an area as dirty so that the compositor draws it
+        */
+        void SetDirtyArea(Rectangle* rect);
+
+        /**
          * Move this context to a new position.
         */
         void MoveToPosition(int newX, int newY);

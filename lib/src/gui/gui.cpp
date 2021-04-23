@@ -8,6 +8,7 @@
 #include <gui/contextinfo.h>
 #include <gui/contextheap.h>
 #include <gui/directgui.h>
+#include <gui/widgets/window.h>
 #include <gui/fonts/fontparser.h>
 
 using namespace LIBCactusOS;
@@ -204,4 +205,13 @@ void GUI::MakeAsync()
 bool GUI::HasItems()
 {
     return (contextList->size() > 0);
+}
+
+Window* GUI::GetControlWindow(Control* control)
+{
+    Control* tmp = control;
+    while(tmp && tmp->parent)
+        tmp = tmp->parent;
+    
+    return (Window*)tmp;
 }

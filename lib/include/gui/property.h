@@ -2,7 +2,6 @@
 #define __LIBCACTUSOS__GUI__PROPERTY_H
 
 #include <types.h>
-#include <gui/widgets/control.h>
 
 namespace LIBCactusOS
 {
@@ -20,6 +19,11 @@ namespace LIBCactusOS
 
         // Which control is the owner of this property
         Control* parent = 0;
+
+        void ForceUpdate()
+        {
+            GUI::GetControlWindow(this->parent)->needsRepaint = true;
+        }
     public:
         // Create new property with default value and pointer to parent control
         GUIProperty(Control* p, T def) { this->parent = p; this->value = def; }
@@ -32,6 +36,7 @@ namespace LIBCactusOS
         GUIProperty& operator=(T newVal)
         {
             this->value = newVal;
+            this->ForceUpdate();
             return *this;
         }
 
@@ -39,6 +44,7 @@ namespace LIBCactusOS
         GUIProperty& operator+=(T newVal)
         {
             this->value += newVal;
+            this->ForceUpdate();
             return *this;
         }
 
@@ -46,6 +52,7 @@ namespace LIBCactusOS
         GUIProperty& operator-=(T newVal)
         {
             this->value += newVal;
+            this->ForceUpdate();
             return *this;
         }
 

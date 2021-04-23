@@ -162,22 +162,50 @@ void Compositor::DrawFrame()
             continue; // Skip this context since it will not be visible anyway
         }
 
-        // Create rectangle for this context for easy calculations
-        Rectangle contextRectangle = Rectangle(context->width, context->height, context->x, context->y);
-        ApplyDesktopBounds(&contextRectangle);
-        
-        #define leftOffset ((context->x < 0) ? -context->x : 0)
-        #define topOffset  ((context->y < 0) ? -context->y : 0)
+        // Context does not support dirty rectangles
+        if(!context->supportsDirtyRects) {
+            // Create rectangle for this context for easy calculations
+            Rectangle contextRectangle = Rectangle(context->width, context->height, context->x, context->y);
+            ApplyDesktopBounds(&contextRectangle);
+            
+            #define leftOffset ((context->x < 0) ? -context->x : 0)
+            #define topOffset  ((context->y < 0) ? -context->y : 0)
 
-        // Check if context needs to be drawn using the transparency method
-        if(context->supportsTransparency) {
-            for(int y = 0; y < contextRectangle.height; y++)
-                for(int x = 0; x < contextRectangle.width; x++)
-                    *(uint32_t*)(this->backBuffer + (contextRectangle.y + y)*GUI::Width*4 + (contextRectangle.x + x)*4) = Colors::AlphaBlend(*(uint32_t*)(this->backgroundBuffer + (contextRectangle.y + y)*GUI::Width*4 + (contextRectangle.x + x)*4), *(uint32_t*)(context->virtAddrServer + (topOffset+y)*context->width*4 + (leftOffset+x)*4));
+            // Check if context needs to be drawn using the transparency method
+            if(context->supportsTransparency) {
+                for(int y = 0; y < contextRectangle.height; y++)
+                    for(int x = 0; x < contextRectangle.width; x++)
+                        *(uint32_t*)(this->backBuffer + (contextRectangle.y + y)*GUI::Width*4 + (contextRectangle.x + x)*4) = Colors::AlphaBlend(*(uint32_t*)(this->backgroundBuffer + (contextRectangle.y + y)*GUI::Width*4 + (contextRectangle.x + x)*4), *(uint32_t*)(context->virtAddrServer + (topOffset+y)*context->width*4 + (leftOffset+x)*4));
+            }
+            else { // Otherwise we use the very optimized way of drawing
+                for(int hOffset = 0; hOffset < contextRectangle.height; hOffset++)
+                    memcpy((this->backBuffer + (contextRectangle.y+hOffset)*GUI::Width*4 + contextRectangle.x*4), (void*)(context->virtAddrServer + leftOffset*4 + (topOffset + hOffset)*context->width*4), contextRectangle.width * 4);
+            }
         }
-        else { // Otherwise we use the very optimized way of drawing
-            for(int hOffset = 0; hOffset < contextRectangle.height; hOffset++)
-                memcpy((this->backBuffer + (contextRectangle.y+hOffset)*GUI::Width*4 + contextRectangle.x*4), (void*)(context->virtAddrServer + leftOffset*4 + (topOffset + hOffset)*context->width*4), contextRectangle.width * 4);
+        else if(context->numDirtyRects > 0)
+        {
+            //Log(Info, "[Compositor] Drawing dirty rectangles for client");
+            for(int dirtyIndex = 0; dirtyIndex < context->numDirtyRects; dirtyIndex++)
+            {
+                // Create rectangle for this context for easy calculations
+                Rectangle contextRectangle = Rectangle(context->dirtyRects[dirtyIndex].width, context->dirtyRects[dirtyIndex].height, context->dirtyRects[dirtyIndex].x + context->x, context->dirtyRects[dirtyIndex].y + context->y);
+                ApplyDesktopBounds(&contextRectangle);
+                
+                #define leftOffset (context->dirtyRects[dirtyIndex].x)
+                #define topOffset  (context->dirtyRects[dirtyIndex].y)
+
+                // Check if context needs to be drawn using the transparency method
+                if(context->supportsTransparency) {
+                    for(int y = 0; y < contextRectangle.height; y++)
+                        for(int x = 0; x < contextRectangle.width; x++)
+                            *(uint32_t*)(this->backBuffer + (contextRectangle.y + y)*GUI::Width*4 + (contextRectangle.x + x)*4) = Colors::AlphaBlend(*(uint32_t*)(this->backgroundBuffer + (contextRectangle.y + y)*GUI::Width*4 + (contextRectangle.x + x)*4), *(uint32_t*)(context->virtAddrServer + (topOffset+y)*context->width*4 + (leftOffset+x)*4));
+                }
+                else { // Otherwise we use the very optimized way of drawing
+                    for(int hOffset = 0; hOffset < contextRectangle.height; hOffset++)
+                        memcpy((this->backBuffer + (contextRectangle.y+hOffset)*GUI::Width*4 + contextRectangle.x*4), (void*)(context->virtAddrServer + leftOffset*4 + (topOffset + hOffset)*context->width*4), contextRectangle.width * 4);
+                }
+            }
+            context->numDirtyRects = 0;
         }
 
         // Draw debug info for this context when we should
@@ -236,11 +264,24 @@ void Compositor::ProcessEvents()
         // Which context is under the current mouse
         ContextInfo* curMouseInfo = this->contextManager->FindTargetContext(this->curMouseX, this->curMouseY);
         
-        if(prevMouseInfo != 0)
+        if(prevMouseInfo != 0) {
             IPCSend(prevMouseInfo->clientID, IPCMessageType::GUIEvent, GUIEvents::MouseMove, this->prevMouseX, this->prevMouseY, this->curMouseX, this->curMouseY);
-        
-        if(curMouseInfo != 0 && curMouseInfo != prevMouseInfo)
+            
+            prevMouseInfo->dirtyRects[prevMouseInfo->numDirtyRects].x = 0;
+            prevMouseInfo->dirtyRects[prevMouseInfo->numDirtyRects].y = 0;
+            prevMouseInfo->dirtyRects[prevMouseInfo->numDirtyRects].width = prevMouseInfo->width;
+            prevMouseInfo->dirtyRects[prevMouseInfo->numDirtyRects].height = prevMouseInfo->height;
+            prevMouseInfo->numDirtyRects += 1;
+        }
+        if(curMouseInfo != 0 && curMouseInfo != prevMouseInfo) {
             IPCSend(curMouseInfo->clientID, IPCMessageType::GUIEvent, GUIEvents::MouseMove, this->prevMouseX, this->prevMouseY, this->curMouseX, this->curMouseY);
+        
+            curMouseInfo->dirtyRects[curMouseInfo->numDirtyRects].x = 0;
+            curMouseInfo->dirtyRects[curMouseInfo->numDirtyRects].y = 0;
+            curMouseInfo->dirtyRects[curMouseInfo->numDirtyRects].width = curMouseInfo->width;
+            curMouseInfo->dirtyRects[curMouseInfo->numDirtyRects].height = curMouseInfo->height;
+            curMouseInfo->numDirtyRects += 1;
+        }
     }
 
     // Update variables for next iteration
