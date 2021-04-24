@@ -8,6 +8,8 @@
 
 namespace LIBCactusOS
 {
+    class Button;
+    
     class Window : public Control
     {
     private:
@@ -15,7 +17,7 @@ namespace LIBCactusOS
         GUIProperty<uint16_t> titleBarHeight = GUIProperty<uint16_t>(this, 30);
 
         // Is the mouse down on the title bar?
-        bool titleBarMouseDown = false;
+        GUIProperty<bool> titleBarMouseDown = GUIProperty<bool>(this, false);
 
         // Remember where the mouse was held down for a smooth window drag
         int mouseDownX = 0;

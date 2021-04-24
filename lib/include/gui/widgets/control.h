@@ -99,6 +99,9 @@ namespace LIBCactusOS
         // Is this control focused?
         virtual bool Focused();
 
+        // Force this control to be drawn aggain
+        virtual void ForcePaint();
+
     /*/////////
     // Events called by parent or context
     *//////////

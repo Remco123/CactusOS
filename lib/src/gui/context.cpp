@@ -20,24 +20,8 @@ void Context::DrawGUI()
     if(this->Window && this->Window->needsRepaint) {
         this->Window->DrawTo(this->canvas, 0, 0);
         this->Window->needsRepaint = false;
+        this->sharedContextInfo->AddDirtyArea(0, 0, this->Window->width, this->Window->height);
     }
-}
-
-void Context::SetDirtyArea(Rectangle* rect)
-{
-    this->SetDirtyArea(rect->x, rect->y, rect->width, rect->height);
-}
-
-void Context::SetDirtyArea(int x, int y, int width, int height)
-{
-    int curIndex = this->sharedContextInfo->numDirtyRects;
-
-    this->sharedContextInfo->dirtyRects[curIndex].x = x;
-    this->sharedContextInfo->dirtyRects[curIndex].y = y;
-    this->sharedContextInfo->dirtyRects[curIndex].width = width;
-    this->sharedContextInfo->dirtyRects[curIndex].height = height;
-
-    this->sharedContextInfo->numDirtyRects = curIndex + 1;
 }
 
 void Context::DrawStringAligned(Canvas* target, Font* font, char* string, uint32_t color, Rectangle bounds, Alignment align, int xoff, int yoff)

@@ -210,7 +210,7 @@ bool GUI::HasItems()
 Window* GUI::GetControlWindow(Control* control)
 {
     Control* tmp = control;
-    while(tmp && tmp->parent)
+    while(tmp->parent != 0)
         tmp = tmp->parent;
     
     return (Window*)tmp;

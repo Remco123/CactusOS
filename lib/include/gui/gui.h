@@ -32,6 +32,7 @@ namespace LIBCactusOS
         Right
     };
 
+    class Window;
     class GUI
     {
     private:

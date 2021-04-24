@@ -2,13 +2,15 @@
 #define CONTEXTINFO_H
 
 #include <types.h>
+#include <proc.h>
+#include <gui/rect.h>
 
 // We reserve 1 page for the context info structure for alignment reasons
 // The struct itself is not actually this big though
 #define CONTEXT_INFO_SIZE 4_KB
 
 // Maximum of dirty rects per frame per contextinfo struct
-#define CONTEXT_INFO_MAX_DIRTY 100
+#define CONTEXT_INFO_MAX_DIRTY 200
 
 // Directions a context can be resized in
 enum Direction
@@ -59,6 +61,9 @@ struct ContextInfo
     // Does this context support the dirty rectangle technique?
     bool supportsDirtyRects;
 
+    // Spinlock for modifying dirty rectangles
+    bool dirtyLockFlag;
+
     // Number of dirty rectangles in the array below
     LIBCactusOS::uint16_t numDirtyRects;
 
@@ -74,6 +79,32 @@ struct ContextInfo
         // The y coördinate of this rectangle
         int y;
     } dirtyRects[CONTEXT_INFO_MAX_DIRTY];
+
+    // Mark an area as dirty so that the compositor draws it
+    void AddDirtyArea(int x, int y, int width, int height)
+    {
+        // Wait until no one else is also doing this
+        while(dirtyLockFlag) Process::Yield();
+
+        if(this->numDirtyRects >= CONTEXT_INFO_MAX_DIRTY)
+            return; // Skip this one since the array is full :(
+
+        // Now we take control
+        dirtyLockFlag = true;
+
+        // Add dirty rectangle
+        this->dirtyRects[this->numDirtyRects].x = x;
+        this->dirtyRects[this->numDirtyRects].y = y;
+        this->dirtyRects[this->numDirtyRects].width = width;
+        this->dirtyRects[this->numDirtyRects].height = height;
+        this->numDirtyRects += 1;
+
+        // Release lock
+        dirtyLockFlag = false;
+    }
+
+    // Mark an area as dirty so that the compositor draws it
+    void AddDirtyArea(Rectangle* rect) { this->AddDirtyArea(rect->x, rect->y, rect->width, rect->height); }
 };
 
 // Check if the structure doesn't cross page boundary

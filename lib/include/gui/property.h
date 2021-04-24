@@ -19,11 +19,6 @@ namespace LIBCactusOS
 
         // Which control is the owner of this property
         Control* parent = 0;
-
-        void ForceUpdate()
-        {
-            GUI::GetControlWindow(this->parent)->needsRepaint = true;
-        }
     public:
         // Create new property with default value and pointer to parent control
         GUIProperty(Control* p, T def) { this->parent = p; this->value = def; }
@@ -36,7 +31,7 @@ namespace LIBCactusOS
         GUIProperty& operator=(T newVal)
         {
             this->value = newVal;
-            this->ForceUpdate();
+            if(this->parent) this->parent->ForcePaint();
             return *this;
         }
 
@@ -44,15 +39,15 @@ namespace LIBCactusOS
         GUIProperty& operator+=(T newVal)
         {
             this->value += newVal;
-            this->ForceUpdate();
+            if(this->parent) this->parent->ForcePaint();
             return *this;
         }
 
         // Decrease operator
         GUIProperty& operator-=(T newVal)
         {
-            this->value += newVal;
-            this->ForceUpdate();
+            this->value -= newVal;
+            if(this->parent) this->parent->ForcePaint();
             return *this;
         }
 

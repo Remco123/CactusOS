@@ -49,7 +49,7 @@ void DesktopItem::DrawToContext()
         this->context->canvas->DrawRect(0xFF000000, 0, height-20, width-1, 20-1);
         this->context->canvas->DrawString(GUI::defaultFont, this->label, 5, height-17, 0xFFFFFFFF);
     }
-    this->context->SetDirtyArea(0, 0, width, height);
+    this->context->sharedContextInfo->AddDirtyArea(0, 0, width, height);
 }
 
 #endif

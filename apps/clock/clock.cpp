@@ -61,7 +61,7 @@ int main()
         }
 
         // Force paint
-        mainScreen->SetDirtyArea(0, 0, 160, 160);
+        mainScreen->sharedContextInfo->AddDirtyArea(0, 0, 160, 160);
 
         prevSec = currentTime.Seconds;
     }
