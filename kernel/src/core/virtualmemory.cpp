@@ -1,15 +1,11 @@
 #include <core/virtualmemory.h>
 #include <system/log.h>
+#include <system/debugger.h>
 
 using namespace CactusOS;
 using namespace CactusOS::common;
 using namespace CactusOS::core;
 using namespace CactusOS::system;
-
-static inline void invlpg(void* addr)
-{
-    asm volatile("invlpg (%0)" ::"r" (addr) : "memory");
-}
 
 void VirtualMemoryManager::ReloadCR3()
 {
@@ -22,11 +18,11 @@ void VirtualMemoryManager::Initialize()
 {
     BootConsole::WriteLine("Intializing Paging");
     
-    //Re-use the page directory setup by the loader
+    // Re-use the page directory setup by the loader
     PageDirectory* pageDirectory = (PageDirectory*)&BootPageDirectory;
 
-    //Set the last pde to the page directory itself
-    //With this we can use recursive page tables
+    // Set the last pde to the page directory itself
+    // With this we can use recursive page tables
     PageDirectoryEntry lastPDE;
     MemoryOperations::memset(&lastPDE, 0, sizeof(PageDirectoryEntry));
     lastPDE.frame = virt2phys((uint32_t)&BootPageDirectory) / PAGE_SIZE;
@@ -36,11 +32,11 @@ void VirtualMemoryManager::Initialize()
     pageDirectory->entries[1023] = lastPDE;
 
     /*
-    What we do here is create a new pagetable for the kernel, currently is mapped by a 4mb page by the bootloader
-    But because we can (at least should) not access the physical allocated block directly, we need to add
-    it to the page directory first. But when we do that the physical page table is empty or contains junk, here is where the problem occurs.
-    Because of the junk qemu sometimes crashes and this could be posible on real hardware as well.
-    So for now just use the 4mb page for the kernel setup by the loader until we find a solution to this.
+        What we do here is create a new pagetable for the kernel, currently is mapped by a 4mb page by the bootloader
+        But because we can (at least should) not access the physical allocated block directly, we need to add
+        it to the page directory first. But when we do that the physical page table is empty or contains junk, here is where the problem occurs.
+        Because of the junk qemu sometimes crashes and this could be possible on real hardware as well.
+        So for now just use the 4mb page for the kernel setup by the loader until we find a solution to this.
     */
 #if 0
     //One pagetable for the kernel
@@ -63,20 +59,45 @@ void VirtualMemoryManager::Initialize()
         kernelPageTable->entries[i].present = 1;
     }
 #endif
-    //Here we map some pages for the intial kernel heap
+    // Here we map some pages for the initial kernel heap
     for(uint32_t i = KERNEL_HEAP_START; i < KERNEL_HEAP_START + KERNEL_HEAP_SIZE; i += PAGE_SIZE)
         AllocatePage(GetPageForAddress(i, true), true, true);
         
-
-    //The first 4mb are identity mapped, this is needed for the smbios and the vm86 code
-    //TODO: Make only the vm86 code accessible for userspace
-    pageDirectory->entries[0].frame = 0;
-    pageDirectory->entries[0].pageSize = FOUR_MB;
-    pageDirectory->entries[0].isUser = 1; //VM86 code needs to run in first 1mb of memory and runs in level 3
+    // The first 4mb are identity mapped, this is needed for the smbios and the vm86 code
+    MemoryOperations::memset(&pageDirectory->entries[0], 0, sizeof(PageDirectoryEntry));
+    pageDirectory->entries[0].frame     = (uint32_t)PhysicalMemoryManager::AllocateBlock() / PAGE_SIZE;
+    pageDirectory->entries[0].pageSize  = FOUR_KB;
+    pageDirectory->entries[0].present   = 1;
     pageDirectory->entries[0].readWrite = 1;
-    pageDirectory->entries[0].present = 1;
+    pageDirectory->entries[0].isUser    = 1;
 
-    //Finally reload the cr3 register
+    // Create required entries for the first 4 MB of memory
+    PageTable* fourMB_PT = (PageTable*)GetPageTableAddress(0);
+    MemoryOperations::memset(fourMB_PT, 0, sizeof(PageTable));
+
+    // Make whole first block kernel accessable (except for the first 4096 bytes)
+    // This way we can catch null-pointers
+    for(uint16_t i = 1; i < 1024; i++)
+    {
+        fourMB_PT->entries[i].frame     = i;    // Identity map memory
+        fourMB_PT->entries[i].isUser    = 0;    // Only for kernel
+        fourMB_PT->entries[i].readWrite = 1;    // We should be able to write to it (for VESA and stuff)
+        fourMB_PT->entries[i].present   = 1;    // Makes sense I hope
+    }
+
+    // Create entries required for VM86
+    for(uint32_t i = PAGE_SIZE; i < pageRoundUp(1_MB); i += PAGE_SIZE) {
+        uint16_t index = PAGETBL_INDEX(i);
+        fourMB_PT->entries[index].isUser = 1;
+    }
+
+    // Create entry 0 as well, just don't mark it as present (yet)
+    fourMB_PT->entries[0].frame     = 0;
+    fourMB_PT->entries[0].isUser    = 1;
+    fourMB_PT->entries[0].readWrite = 1;
+    fourMB_PT->entries[0].present   = 0; // Very Important!
+
+    // Finally reload the cr3 register
     ReloadCR3();
 }
 

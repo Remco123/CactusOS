@@ -44,18 +44,18 @@ void System::Start()
     Log(Info, "Adding system components");
     
     System::rtc = new RTC();
-    Log(Info, "(%x) RTC [Done]", (uint32_t)System::rtc);
+    Log(Info, "- RTC [Done]     (%x)", (uint32_t)System::rtc);
 
     InterruptDescriptorTable::DisableInterrupts();
     System::pit = new PIT();
     InterruptDescriptorTable::EnableInterrupts();
-    Log(Info, "(%x) PIT [Done]", (uint32_t)System::pit);
+    Log(Info, "- PIT [Done]     (%x)", (uint32_t)System::pit);
 
     System::dma = new DMAController();
-    Log(Info, "(%x) DMA [Done]", (uint32_t)System::dma);
+    Log(Info, "- DMA [Done]     (%x)", (uint32_t)System::dma);
 
     System::smbios = new SMBIOS();
-    Log(Info, "(%x) SMBIOS [Done]", (uint32_t)System::smbios);
+    Log(Info, "- SMBIOS [Done]     (%x)", (uint32_t)System::smbios);
 
     Log(Info, "Adding Virtual 8086");
     System::vm86Manager = new Virtual8086Manager();
@@ -63,18 +63,18 @@ void System::Start()
 
     // The graphics component is added here but not used right away, we don't need to be in video mode so early.
     System::gfxDevice = GraphicsDevice::GetBestDevice();
-    Log(Info, "(%x) GFX [Done]", (uint32_t)System::gfxDevice);
+    Log(Info, "- GFX [Done]     (%x)", (uint32_t)System::gfxDevice);
 
     // Check for monitor EDID
     System::edid = new EDID();
-    Log(Info, "(%x) EDID [Done]", (uint32_t)System::edid);
+    Log(Info, "- EDID [Done]     (%x)", (uint32_t)System::edid);
     System::edid->AcquireEDID();
 
     Log(Info, "Loading Initial Ramdisk");
     InitialRamDisk::Initialize(System::mbi);
 
     System::pci = new PCIController();
-    Log(Info, "(%x) PCI [Done]", (uint32_t)System::pci);
+    Log(Info, "- PCI [Done]     (%x)", (uint32_t)System::pci);
 
     System::pci->PopulateDeviceList();
 

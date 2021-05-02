@@ -10,7 +10,11 @@ namespace CactusOS
 {
     namespace system
     {
-        typedef uint16_t Real_Pointer[2];
+        typedef struct
+        {
+            uint16_t A;
+            uint16_t B;
+        } __attribute__((packed)) Real_Pointer;
 
         struct VESAControllerInfo
         {

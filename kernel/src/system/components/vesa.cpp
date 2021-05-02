@@ -11,7 +11,7 @@ using namespace CactusOS::system;
 using namespace CactusOS::core;
 
 uint16_t* RealPTRToAddr(Real_Pointer ptr){
-    return (uint16_t*)((ptr[1] * 0x10) + ptr[0]);
+    return (uint16_t*)((ptr.B * 0x10) + ptr.A);
 }
 
 VESA::VESA(Virtual8086Manager* vm86)
