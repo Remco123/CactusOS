@@ -31,11 +31,11 @@ GraphicsDevice* GraphicsDevice::GetBestDevice()
     #if BOCHS_GFX_HACK
     if(BochsVBE::IsAvailable() && System::isBochs)
     {
-        BootConsole::Write(" BochsVBE");
+        //BootConsole::Write(" BochsVBE");
         return new BochsVBE();
     }
     #endif
     
-    BootConsole::Write(" VESA");
+    //BootConsole::Write(" VESA");
     return new VESA(System::vm86Manager);
 }

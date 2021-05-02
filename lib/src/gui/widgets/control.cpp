@@ -139,3 +139,11 @@ void Control::OnResize(Rectangle old)
 
     }    
 }
+void Control::ForcePaint()
+{
+    //Log(Info, "Force paint of control!");
+    
+    Control* win = GUI::GetControlWindow(this);
+    if(win)
+        win->needsRepaint = true;
+}

@@ -17,8 +17,11 @@ Context::Context(uint32_t framebufferAddr, int width, int height)
 
 void Context::DrawGUI()
 {
-    if(this->Window)
+    if(this->Window && this->Window->needsRepaint) {
         this->Window->DrawTo(this->canvas, 0, 0);
+        this->Window->needsRepaint = false;
+        this->sharedContextInfo->AddDirtyArea(0, 0, this->Window->width, this->Window->height);
+    }
 }
 
 void Context::DrawStringAligned(Canvas* target, Font* font, char* string, uint32_t color, Rectangle bounds, Alignment align, int xoff, int yoff)
@@ -77,7 +80,7 @@ void Context::MoveToPosition(int newX, int newY)
 
 void Context::CloseContext()
 {
-    ContextHeap::FreeArea(this->sharedContextInfo->virtAddrClient - sizeof(ContextInfo), pageRoundUp(this->sharedContextInfo->bytes) / 0x1000);
+    ContextHeap::FreeArea(this->sharedContextInfo->virtAddrClient - CONTEXT_INFO_SIZE, pageRoundUp(this->sharedContextInfo->bytes) / 0x1000);
     GUI::contextList->Remove(this);
     if(this->canvas != 0)
         delete this->canvas;

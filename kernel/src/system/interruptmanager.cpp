@@ -19,7 +19,7 @@ uint32_t InterruptHandler::HandleInterrupt(uint32_t esp)
 
 List<InterruptHandler*>* InterruptManager::interruptCallbacks[256]; //Allows for multiple interrupt handlers per interrupt
 
-void InterruptManager::Intialize()
+void InterruptManager::Initialize()
 {
     for(int i = 0; i < 256; i++)
     {

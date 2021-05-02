@@ -8,6 +8,7 @@
 #include <gui/contextinfo.h>
 #include <gui/contextheap.h>
 #include <gui/directgui.h>
+#include <gui/widgets/window.h>
 #include <gui/fonts/fontparser.h>
 
 using namespace LIBCactusOS;
@@ -163,7 +164,7 @@ Context* GUI::FindTargetContext(int mouseX, int mouseY)
 
 Context* GUI::RequestContext(int width, int height, int x, int y)
 {
-    uint32_t contextAddress = ContextHeap::AllocateArea(pageRoundUp(GUI::Width * GUI::Height * 4 + sizeof(ContextInfo)) / 0x1000);
+    uint32_t contextAddress = ContextHeap::AllocateArea(pageRoundUp(GUI::Width * GUI::Height * 4 + CONTEXT_INFO_SIZE) / 0x1000);
     if(IPCSend(compositorPID, IPCMessageType::GUIRequest, GUICommunction::REQUEST_CONTEXT, contextAddress, width, height, x, y) != SYSCALL_RET_SUCCES)
         return 0;
 
@@ -171,7 +172,7 @@ Context* GUI::RequestContext(int width, int height, int x, int y)
     IPCMessage response = ICPReceive(compositorPID, 0, IPCMessageType::GUIRequest);
     if(response.arg1 == 1) {
         // Create context struct
-        Context* ret = new Context(contextAddress + sizeof(ContextInfo), width, height);
+        Context* ret = new Context(contextAddress + CONTEXT_INFO_SIZE, width, height);
         ret->sharedContextInfo = (ContextInfo*)contextAddress;
 
         // Add it to our list
@@ -204,4 +205,13 @@ void GUI::MakeAsync()
 bool GUI::HasItems()
 {
     return (contextList->size() > 0);
+}
+
+Window* GUI::GetControlWindow(Control* control)
+{
+    Control* tmp = control;
+    while(tmp->parent != 0)
+        tmp = tmp->parent;
+    
+    return (Window*)tmp;
 }

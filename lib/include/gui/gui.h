@@ -2,6 +2,7 @@
 #define __LIBCACTUSOS__GUI__GUI_H
 
 #include <gui/widgets/control.h>
+#include <gui/widgets/window.h>
 #include <gui/context.h>
 
 namespace LIBCactusOS
@@ -31,6 +32,7 @@ namespace LIBCactusOS
         Right
     };
 
+    class Window;
     class GUI
     {
     private:
@@ -58,7 +60,7 @@ namespace LIBCactusOS
         static Font* defaultFont;
 
         /**
-         * Initalize the gui for this process
+         * Initialize the gui for this process
         */
         static void Initialize();
 
@@ -103,6 +105,11 @@ namespace LIBCactusOS
          * @param y The position on vertical axis
         */
         static Context* RequestContext(int width, int height, int x, int y);
+
+        /**
+         * Find the window associated with the control
+        */
+        static Window* GetControlWindow(Control* control);
     };
 }
 

@@ -100,7 +100,7 @@ void KernelDebugger::Initialize()
         Serialport::WriteStr(Convert::IntToString32(PhysicalMemoryManager::AmountOfMemory()));
         Serialport::WriteStr("\n"); // Terminate info
 
-        KernelDebugger::PrintPageTables();
+        //KernelDebugger::PrintPageTables();
     }
 #endif
 }

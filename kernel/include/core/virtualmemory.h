@@ -77,12 +77,17 @@ namespace CactusOS
             PageDirectoryEntry entries[1024];
         }   __attribute__((packed));
 
+        // Invalidate TLB Entries
+        static inline void invlpg(void* addr)
+        {
+            asm volatile("invlpg (%0)" ::"r" (addr) : "memory");
+        }
 
         class VirtualMemoryManager
         {
         public:      
             static void ReloadCR3();  
-            static void Intialize();
+            static void Initialize();
             static void AllocatePage(PageTableEntry* page, bool kernel, bool writeable);
             static void FreePage(PageTableEntry* page);
 

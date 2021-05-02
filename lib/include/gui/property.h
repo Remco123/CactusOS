@@ -2,7 +2,6 @@
 #define __LIBCACTUSOS__GUI__PROPERTY_H
 
 #include <types.h>
-#include <gui/widgets/control.h>
 
 namespace LIBCactusOS
 {
@@ -32,6 +31,7 @@ namespace LIBCactusOS
         GUIProperty& operator=(T newVal)
         {
             this->value = newVal;
+            if(this->parent) this->parent->ForcePaint();
             return *this;
         }
 
@@ -39,13 +39,15 @@ namespace LIBCactusOS
         GUIProperty& operator+=(T newVal)
         {
             this->value += newVal;
+            if(this->parent) this->parent->ForcePaint();
             return *this;
         }
 
         // Decrease operator
         GUIProperty& operator-=(T newVal)
         {
-            this->value += newVal;
+            this->value -= newVal;
+            if(this->parent) this->parent->ForcePaint();
             return *this;
         }
 

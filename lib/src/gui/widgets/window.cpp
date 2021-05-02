@@ -8,9 +8,13 @@ using namespace LIBCactusOS;
 Window::Window(Context* base)
 : Control(base->sharedContextInfo->width, base->sharedContextInfo->height, base->sharedContextInfo->x, base->sharedContextInfo->y)
 {
+    // Set this to true since we support dirty rectangles when the context is managed by us
+    base->sharedContextInfo->supportsDirtyRects = true;
+
     base->Window = this;
     this->contextBase = base;
     this->CreateButtons();
+    this->needsRepaint = true;
 }
 
 Window::Window(int width, int height, int x, int y)
@@ -21,6 +25,9 @@ Window::Window(int width, int height, int x, int y)
         Log(Error, "Could not create a context for this window");
         return;
     }
+
+    // Set this to true since we support dirty rectangles when the context is managed by us
+    screen->sharedContextInfo->supportsDirtyRects = true;
 
     this->contextBase = screen;
     screen->Window = this;

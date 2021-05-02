@@ -7,7 +7,7 @@
 namespace LIBCactusOS
 {
     /**
-     * A class that describes a rectangulair shape
+     * A class that describes a rectangular shape
     */
     class Rectangle
     {
@@ -41,7 +41,7 @@ namespace LIBCactusOS
 
         /**
          * Get the area of this rectangle
-         * Basicly just width * height
+         * Basically just width * height
          */
         int Area();
 

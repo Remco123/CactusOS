@@ -12,7 +12,7 @@ private:
 
 public:
     // List of al contexts present on the desktop
-    // Orginized from top to bottom, so top context is at position 0
+    // Organized from top to bottom, so top context is at position 0
     List<ContextInfo*> contextList;
 
     // Initialize a new instance of the ContextManager

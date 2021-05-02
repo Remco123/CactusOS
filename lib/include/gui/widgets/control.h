@@ -49,8 +49,6 @@ namespace LIBCactusOS
     */
     class Control : public EventObject, public Rectangle
     {
-    protected:
-        bool needsRefresh = false;
     public:
         // All controls that are present on this control.
         List<Control*> childs;
@@ -60,6 +58,9 @@ namespace LIBCactusOS
 
         // If we are a child of some control this will point to our parent.
         Control* parent = 0;
+
+        // Does this control needs to be painted again?
+        bool needsRepaint = false;
         
         // Public properties for this control
         GUIProperty<uint32_t>       backColor       = GUIProperty<uint32_t>(this, 0xFF919191);
@@ -97,6 +98,9 @@ namespace LIBCactusOS
 
         // Is this control focused?
         virtual bool Focused();
+
+        // Force this control to be drawn aggain
+        virtual void ForcePaint();
 
     /*/////////
     // Events called by parent or context

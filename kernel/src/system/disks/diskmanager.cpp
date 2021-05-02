@@ -46,6 +46,6 @@ void DiskManager::RemoveDisk(Disk* disk)
 
 BiosDriveParameters* DiskManager::GetDriveInfoBios(uint8_t drive)
 {
-    System::vm86Manager->ExcecuteCode((uint32_t)&diskInfo, drive);
+    System::vm86Manager->ExecuteCode((uint32_t)&diskInfo, drive);
     return (BiosDriveParameters*)0x7000;
 }
