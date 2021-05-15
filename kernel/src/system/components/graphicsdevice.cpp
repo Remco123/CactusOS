@@ -15,6 +15,11 @@ GraphicsDevice::GraphicsDevice(char* name)
     this->identifier = name;
 }
 
+GraphicsDevice::~GraphicsDevice()
+{
+    
+}
+
 bool GraphicsDevice::SelectBestVideoMode()
 {
     return false;

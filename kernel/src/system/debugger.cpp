@@ -364,7 +364,7 @@ void KernelDebugger::PrintPageItem(void* item, bool table, uint16_t pdIndex, uin
     
     // Calculate basic info about item
     uint32_t address = pdIndex * 4_MB + ptIndex * 4_KB;
-    uint32_t physAddress = table ? ((PageDirectoryEntry*)item)->frame * 4_MB : ((PageTableEntry*)item)->frame * 4_KB;
+    //uint32_t physAddress = table ? ((PageDirectoryEntry*)item)->frame * 4_MB : ((PageTableEntry*)item)->frame * 4_KB;
     uint32_t addressSize = table ? 4_MB : 4_KB;
     
     if(curChainSize == 0) {

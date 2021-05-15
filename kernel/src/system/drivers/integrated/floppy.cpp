@@ -158,6 +158,8 @@ uint8_t FloppyDriver::ReadData()
 	for (int i = 0; i < 500; i++ )
 		if (ReadStatus() & FLPYDSK_MSR_MASK_DATAREG)
 			return inportb(FLPYDSK_FIFO);
+	
+	return inportb(FLPYDSK_FIFO);
 }
 
 //! check interrupt status command
@@ -310,8 +312,6 @@ void FloppyDriver::ResetController()
 
 int FloppyDriver::TransferSectorCHS(uint8_t drive, FloppyDirection dir, uint8_t head, uint8_t track, uint8_t sector)
 { 
-	uint32_t s_st0, s_cyl;
- 
 	//! set the DMA for read transfer
 	InitializeDMA(dir);
 
@@ -332,18 +332,11 @@ int FloppyDriver::TransferSectorCHS(uint8_t drive, FloppyDirection dir, uint8_t 
 	WaitForIRQ();
  
 	// first read status information
-    unsigned char st0, st1, st2, rcy, rhe, rse, bps;
+    unsigned char st0, st1, st2, bps;
     st0 = ReadData();
     st1 = ReadData();
     st2 = ReadData();
-    /*
-     * These are cylinder/head/sector values, updated with some
-     * rather bizarre logic, that I would like to understand.
-     *
-     */
-    rcy = ReadData();
-    rhe = ReadData();
-    rse = ReadData();
+
     // bytes per sector, should be what we programmed in
     bps = ReadData();
 

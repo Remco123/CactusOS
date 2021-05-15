@@ -189,7 +189,7 @@ void AsyncGUILoop()
     while (1)
     {
         GUI::DrawGUI();
-        if(IPCAvailible())
+        if(IPCAvailable())
             GUI::ProcessEvents();
         else
             Process::Yield();

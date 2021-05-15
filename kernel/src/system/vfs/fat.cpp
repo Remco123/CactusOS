@@ -561,7 +561,7 @@ char* FAT::CreateShortFilename(char* name)
     MemoryOperations::memset(result, ' ', 11);
     result[11] = '\0';
 
-    uint32_t len = String::strlen(name);
+    int len = String::strlen(name);
     int dotIndex = String::IndexOf(name, '.');
 
     // Write the extension
@@ -580,7 +580,7 @@ char* FAT::CreateShortFilename(char* name)
     }
 
     // Write the filename.
-    uint32_t flen = len;
+    int flen = len;
     if(dotIndex >= 0)
         flen = dotIndex;
     
@@ -602,12 +602,12 @@ char* FAT::CreateShortFilename(char* name)
     return result;
 }
 
-List<LFNEntry> FAT::CreateLFNEntriesFromName(char* name, uint32_t num, uint8_t checksum)
+List<LFNEntry> FAT::CreateLFNEntriesFromName(char* name, int num, uint8_t checksum)
 {
     List<LFNEntry> entries;
 
     uint32_t charsWritten = 0;
-    uint32_t nameLen = String::strlen(name);
+    int nameLen = String::strlen(name);
     char* namePtr = name;
 
     for(int n = 0; n < num; n++)
@@ -676,23 +676,25 @@ bool FAT::WriteLongFilenameEntries(List<LFNEntry>* entries, uint32_t targetClust
             return false;
 
         // Copy entry to free spot
-        MemoryOperations::memcpy(this->readBuffer + entryOffset, &entries->GetAt(i), sizeof(LFNEntry));
+        LFNEntry target = entries->GetAt(i);
+        MemoryOperations::memcpy(this->readBuffer + entryOffset, &target, sizeof(LFNEntry));
 
         // And copy back to the disk
         if(this->disk->WriteSector(this->StartLBA + sector + targetSector, this->readBuffer) != 0)
             return false;
 
-        if(entryOffset + sizeof(DirectoryEntry) >= this->bytesPerSector) // Check if we get outside of sector border for next write
+        if(entryOffset + sizeof(DirectoryEntry) >= this->bytesPerSector) { // Check if we get outside of sector border for next write
             if(rootDirectory && this->FatType != FAT32) {
                 sector++;           // Move onto next sector
                 sectorOffset = 0;   // And reset offset
             }
-        
-            else if(this->FatType == FAT32 || !rootDirectory)
-                if(sector + 1 > this->sectorsPerCluster) // Outside cluster boundry
+            else if((this->FatType == FAT32) || (!rootDirectory)) {
+                if(sector + 1 > this->sectorsPerCluster) // Outside cluster boundary
                     targetCluster = ReadTable(targetCluster);
                 else
                     sector++;
+            }
+        }
     }
     return true;
 }
@@ -1000,7 +1002,7 @@ uint32_t FAT::GetFileSize(const char* path)
 }
 int FAT::ReadFile(const char* path, uint8_t* buffer, uint32_t offset, uint32_t len)
 { 
-    if(len == -1)
+    if((int)len == -1)
         len = GetFileSize(path);
 
     FATEntryInfo* entry = GetEntryByPath((char*)path);

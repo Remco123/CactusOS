@@ -308,7 +308,7 @@ CPUState* CactusOSSyscalls::HandleSyscall(CPUState* state)
                 if(proc->stdOutput == System::ProcStandardOut)
                     stdOutStream.Lock();
 
-                for(int d = 0; d < state->ECX; d++)
+                for(uint32_t d = 0; d < state->ECX; d++)
                     proc->stdOutput->Write(data[d]);
 
                 //Don't forget to unlock

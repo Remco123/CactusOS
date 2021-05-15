@@ -137,19 +137,19 @@ bool USBComboReceiver::HandleInterruptPacket(InterruptTransfer_t* transfer)
         // Boundry checking for desktop
 
         int newX = (System::systemInfo->MouseX + realX);
-        if(newX >= 0 && newX < System::gfxDevice->width)
+        if((newX >= 0) && (newX < (int)System::gfxDevice->width))
             System::systemInfo->MouseX = newX;
         else if(newX < 0)
             System::systemInfo->MouseX = 0;
-        else if(newX >= System::gfxDevice->width)
+        else if(newX >= (int)System::gfxDevice->width)
             System::systemInfo->MouseX = System::gfxDevice->width - 1;
         
         int newY = (System::systemInfo->MouseY + realY);
-        if(newY >= 0 && newY < System::gfxDevice->height)
+        if((newY >= 0) && (newY < (int)System::gfxDevice->height))
             System::systemInfo->MouseY = newY;
         else if(newY < 0)
             System::systemInfo->MouseY = 0;
-        else if(newY >= System::gfxDevice->height)
+        else if(newY >= (int)System::gfxDevice->height)
             System::systemInfo->MouseY = System::gfxDevice->height - 1;
     }
     else if(transfer->endpoint == this->keyboardIntEndpoint)

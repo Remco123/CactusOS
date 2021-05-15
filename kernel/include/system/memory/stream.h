@@ -17,7 +17,7 @@ namespace CactusOS
             /**
              * Delete the stream and free all the memory it has used
             */
-            ~Stream();
+            virtual ~Stream();
 
             /**
              * Read a byte from this stream

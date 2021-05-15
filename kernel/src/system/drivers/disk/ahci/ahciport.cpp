@@ -306,7 +306,7 @@ bool AHCIPort::Identify(uint8_t* buffer)
 	return ret;
 }
 
-bool AHCIPort::TransferData(bool dirIn, uint32_t lba, uint8_t* buffer, uint32_t count = 1)
+bool AHCIPort::TransferData(bool dirIn, uint32_t lba, uint8_t* buffer, uint32_t count)
 {
 	int slot = this->FindFreeCMDSlot();
 	if (slot == -1)
@@ -315,7 +315,7 @@ bool AHCIPort::TransferData(bool dirIn, uint32_t lba, uint8_t* buffer, uint32_t 
 	// Required buffer size
 	uint32_t size = count * (this->isATATPI ? 2048 : 512);
 	uint32_t entryCount = (size / 8_KB + 1); // 8K bytes (16 sectors) per PRDT
-	int i = 0;
+	uint32_t i = 0;
 	uint32_t count2 = count;
 
 	uint32_t bufPhys = 0;

@@ -108,7 +108,7 @@ void Compositor::ApplyDesktopBounds(Rectangle* rect)
 
 void Compositor::DrawCursor()
 {
-    // Calculate the boundry for the cursor
+    // Calculate the boundary for the cursor
     uint8_t x_d = this->curMouseX + CURSOR_W < GUI::Width  ? CURSOR_W : GUI::Width  - this->curMouseX;
     uint8_t y_d = this->curMouseY + CURSOR_H < GUI::Height ? CURSOR_H : GUI::Height - this->curMouseY;
 
@@ -122,11 +122,11 @@ void Compositor::DrawCursor()
 }
 
 // Instead of this function it is also possible to simply add a dirty rectangle for the cursor.
-// But the speed impact is so little that we don't realy care about this.
+// But the speed impact is so little that we don't really care about this.
 void Compositor::RemovePreviousCursor()
 {
     // How much of the previous cursor should be removed?
-    // These values will be smaller than the cursor width when the mouse is partialy in the corner
+    // These values will be smaller than the cursor width when the mouse is partially in the corner
     uint8_t x_d = this->prevMouseX + CURSOR_W < GUI::Width  ? CURSOR_W : GUI::Width  - this->prevMouseX;
     uint8_t y_d = this->prevMouseY + CURSOR_H < GUI::Height ? CURSOR_H : GUI::Height - this->prevMouseY;
 
@@ -266,21 +266,11 @@ void Compositor::ProcessEvents()
         
         if(prevMouseInfo != 0) {
             IPCSend(prevMouseInfo->clientID, IPCMessageType::GUIEvent, GUIEvents::MouseMove, this->prevMouseX, this->prevMouseY, this->curMouseX, this->curMouseY);
-            
-            prevMouseInfo->dirtyRects[prevMouseInfo->numDirtyRects].x = 0;
-            prevMouseInfo->dirtyRects[prevMouseInfo->numDirtyRects].y = 0;
-            prevMouseInfo->dirtyRects[prevMouseInfo->numDirtyRects].width = prevMouseInfo->width;
-            prevMouseInfo->dirtyRects[prevMouseInfo->numDirtyRects].height = prevMouseInfo->height;
-            prevMouseInfo->numDirtyRects += 1;
+            prevMouseInfo->AddDirtyArea(0, 0, prevMouseInfo->width, prevMouseInfo->height);
         }
         if(curMouseInfo != 0 && curMouseInfo != prevMouseInfo) {
             IPCSend(curMouseInfo->clientID, IPCMessageType::GUIEvent, GUIEvents::MouseMove, this->prevMouseX, this->prevMouseY, this->curMouseX, this->curMouseY);
-        
-            curMouseInfo->dirtyRects[curMouseInfo->numDirtyRects].x = 0;
-            curMouseInfo->dirtyRects[curMouseInfo->numDirtyRects].y = 0;
-            curMouseInfo->dirtyRects[curMouseInfo->numDirtyRects].width = curMouseInfo->width;
-            curMouseInfo->dirtyRects[curMouseInfo->numDirtyRects].height = curMouseInfo->height;
-            curMouseInfo->numDirtyRects += 1;
+            curMouseInfo->AddDirtyArea(0, 0, curMouseInfo->width, curMouseInfo->height);
         }
     }
 
@@ -325,7 +315,7 @@ void Compositor::ProcessEvents()
         if(this->contextManager->contextList.size() == 0)
             continue; // Use continue instead of break so that all keys will get processed and not remain in the buffer
         
-        ContextInfo* sendTo = this->contextManager->contextList.GetAt(0); //Send key to the context currenly in focus
+        ContextInfo* sendTo = this->contextManager->contextList.GetAt(0); //Send key to the context currently in focus
         IPCSend(sendTo->clientID, IPCMessageType::GUIEvent, GUIEvents::Keypress, (uint32_t)key, (uint32_t)packet.flags, (uint32_t)sendTo->id);
     }
 }
@@ -333,7 +323,7 @@ void Compositor::ProcessEvents()
 void Compositor::ProcessRequests()
 {
     // Check if there is a message that needs to be handled
-    while(IPCAvailible() > 0)
+    while(IPCAvailable() > 0)
     {
         int msgError = 0;
         IPCMessage message;
@@ -347,7 +337,7 @@ void Compositor::ProcessRequests()
             return;
         }
 
-        // Call the function that handles all the posible events
+        // Call the function that handles all the possible events
         this->HandleClientRequest(message);
     }
 }

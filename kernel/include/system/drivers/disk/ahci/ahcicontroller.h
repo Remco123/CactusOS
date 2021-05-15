@@ -23,7 +23,7 @@ namespace CactusOS
                 PCIDevice* pciDevice = 0;
 
                 uint32_t regBase = 0;
-                uint32_t portCount = 0;
+                int32_t  portCount = 0;
 
                 // Read AHCI Register from memory location
                 inline uint32_t readRegister(uint32_t offset);

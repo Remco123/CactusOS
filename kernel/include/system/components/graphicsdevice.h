@@ -17,6 +17,7 @@ namespace CactusOS
             char* identifier = 0;
 
             GraphicsDevice(char* name);
+            virtual ~GraphicsDevice();
             virtual bool SelectBestVideoMode();
             
             common::uint32_t GetBufferSize();

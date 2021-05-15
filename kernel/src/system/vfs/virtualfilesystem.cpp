@@ -13,6 +13,11 @@ VirtualFileSystem::VirtualFileSystem(Disk* disk, common::uint32_t start, common:
     this->Name = name;
 }
 
+VirtualFileSystem::~VirtualFileSystem()
+{
+    Log(Error, "Virtual function called directly %s:%d", __FILE__, __LINE__);
+}
+
 bool VirtualFileSystem::Initialize()
 {
     return false;

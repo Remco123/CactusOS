@@ -17,6 +17,7 @@ namespace CactusOS
             USBDevice* device;
         public:
             USBDriver(USBDevice* dev, char* driverName);
+            virtual ~USBDriver();
 
             // De-Active this driver from the system
             // Called when device is unplugged

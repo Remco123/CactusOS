@@ -61,7 +61,7 @@ unsigned int* acpiCheckRSDPtr(unsigned int* ptr)
     {
         // check checksum rsdpd
         bptr = (uint8_t*)ptr;
-        for (i = 0; i < sizeof(struct RSDPtr); i++)
+        for (i = 0; i < (int)sizeof(struct RSDPtr); i++)
         {
             check += *bptr;
             bptr++;

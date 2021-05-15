@@ -144,7 +144,7 @@ bool HIDParser::Parse(struct HID_DATA* data)
             this->pos += item_size[this->item & SIZE_MASK];
         }
 
-        if(this->item & ITEM_MASK == 0)
+        if((this->item & ITEM_MASK) == 0)
             continue;
         
         //Log(Info, "\n (this->item & ITEM_MASK) = 0x%04X", (this->item & ITEM_MASK));

@@ -28,7 +28,7 @@ void GUIThread()
         }
 
         GUI::DrawGUI();
-        if(IPCAvailible())
+        if(IPCAvailable())
             GUI::ProcessEvents();
         else
             Process::Yield();

@@ -13,6 +13,11 @@ USBDriver::USBDriver(USBDevice* dev, char* driverName)
     this->device = dev;
 }
 
+USBDriver::~USBDriver()
+{
+    Log(Error, "Virtual function called directly %s:%d", __FILE__, __LINE__);
+}
+
 void USBDriver::DeInitialize()
 {
     Log(Error, "Virtual function called directly %s:%d", __FILE__, __LINE__);

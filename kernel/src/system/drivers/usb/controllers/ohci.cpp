@@ -615,7 +615,7 @@ void OHCIController::InterruptIn(const bool lsDevice, const int devAddress, cons
     MemoryOperations::memset(td, 0, sizeof(o_transferDescriptor_t) * 10);
     
     // Create the rest of the in td's
-    int i = 0; int p = 0; int t = 1;
+    int i = 0; int p = 0;
     int cnt = len;
     while (cnt > 0) {
         td[i].flags = (14<<28) | (0 << 26) | ((2 | (handler->device->endpoints[endP-1]->Toggle())) << 24) | (7<<21) | (0 << 19) | (1<<18);

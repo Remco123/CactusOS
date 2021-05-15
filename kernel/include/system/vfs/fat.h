@@ -194,7 +194,7 @@ namespace CactusOS
             ///////////////////////
 
             // Create a list of LFN entries from a filename
-            List<LFNEntry> CreateLFNEntriesFromName(char* name, common::uint32_t num, common::uint8_t checksum);
+            List<LFNEntry> CreateLFNEntriesFromName(char* name, int num, common::uint8_t checksum);
 
             // Create a 8.3 filename from a regular filename
             char* CreateShortFilename(char* name);

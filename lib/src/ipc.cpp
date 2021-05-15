@@ -28,7 +28,7 @@ int LIBCactusOS::IPCSend(IPCMessage message)
     return DoSyscall(SYSCALL_IPC_SEND, (uint32_t)&message);
 }
 
-int LIBCactusOS::IPCAvailible()
+int LIBCactusOS::IPCAvailable()
 {
     return DoSyscall(SYSCALL_IPC_AVAILABLE);
 }

@@ -249,11 +249,11 @@ const bool IDEController::SendPacketCommand(uint8_t channel, uint8_t cmd, uint32
 
 void IDEController::HandleIRQ(uint32_t esp)
 {
-    uint8_t status1 = this->ReadRegister(IDE_CHANNEL_PRIMARY, IDE_REG_STATUS);
-    uint8_t status2 = this->ReadRegister(IDE_CHANNEL_SECONDARY, IDE_REG_STATUS);
+    /*uint8_t status1 =*/ this->ReadRegister(IDE_CHANNEL_PRIMARY, IDE_REG_STATUS);
+    /*uint8_t status2 =*/ this->ReadRegister(IDE_CHANNEL_SECONDARY, IDE_REG_STATUS);
 
     //Log(Info, "IDE Interrupt (%b, %b)", status1, status2);
-
+ 
     /*
     // Reset Interrupt Status
     if(status1 & (1<<2))

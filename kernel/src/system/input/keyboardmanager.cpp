@@ -47,7 +47,7 @@ void KeyboardManager::HandleKeyChange(Keyboard* src, uint32_t key, bool pressed)
     packet.keyCode = key;
 
     if(System::screenMode == ScreenMode::GraphicsMode)
-        for(int i = 0; i < sizeof(LIBCactusOS::KeypressPacket); i++)
+        for(int i = 0; i < (int)sizeof(LIBCactusOS::KeypressPacket); i++)
             this->Write(*((char*)((uint32_t)&packet + i)));
     else if(System::setupMode == true && (packet.flags & LIBCactusOS::Pressed))
         this->Write(key); //Make things easier for the setup

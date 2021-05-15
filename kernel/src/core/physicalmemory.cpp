@@ -137,7 +137,7 @@ void* PhysicalMemoryManager::AllocateBlock()
 
     uint32_t frame = FirstFree();
 
-    if (frame == -1)
+    if (frame == (uint32_t)-1)
         return 0;
 
     SetBit(frame);
@@ -163,7 +163,7 @@ void* PhysicalMemoryManager::AllocateBlocks(uint32_t size)
 
     uint32_t frame = FirstFreeSize(size);
 
-    if (frame == -1)
+    if (frame == (uint32_t)-1)
         return 0; //not enough space
 
     for (uint32_t i = 0; i < size; i++)

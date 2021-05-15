@@ -38,7 +38,7 @@ namespace LIBCactusOS
     /**
      * How many messages are ready for receiving?
     */
-    int IPCAvailible();
+    int IPCAvailable();
 
     /**
      * Receive a single IPCMessage, blocks if none availible

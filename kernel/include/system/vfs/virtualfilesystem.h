@@ -25,6 +25,8 @@ namespace CactusOS
             char* Name = "Unkown";
         public:
             VirtualFileSystem(Disk* disk, common::uint32_t start, common::uint32_t size, char* name = 0);
+            virtual ~VirtualFileSystem();
+            
             virtual bool Initialize();
             
             /////////////

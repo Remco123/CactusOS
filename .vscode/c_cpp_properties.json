@@ -27,37 +27,32 @@
             "name": "Linux",
             "includePath": [
                 "${workspaceFolder}",
-                "/usr/include/c++/5",
-                "/usr/include/x86_64-linux-gnu/c++/5",
-                "/usr/include/c++/5/backward",
-                "/usr/lib/gcc/x86_64-linux-gnu/5/include",
-                "/usr/local/include",
-                "/usr/lib/gcc/x86_64-linux-gnu/5/include-fixed",
-                "/usr/include/x86_64-linux-gnu",
-                "/usr/include",
                 "${workspaceFolder}/kernel/include",
                 "${workspaceFolder}/lib/include"
             ],
             "defines": [],
-            "intelliSenseMode": "clang-x64",
+            "intelliSenseMode": "linux-gcc-x64",
             "browse": {
                 "path": [
                     "${workspaceFolder}",
-                    "/usr/include/c++/5",
-                    "/usr/include/x86_64-linux-gnu/c++/5",
-                    "/usr/include/c++/5/backward",
-                    "/usr/lib/gcc/x86_64-linux-gnu/5/include",
+                    "/usr/include/c++/9",
+                    "/usr/include/x86_64-linux-gnu/c++/9",
+                    "/usr/include/c++/9/backward",
+                    "/usr/lib/gcc/x86_64-linux-gnu/9/include",
                     "/usr/local/include",
-                    "/usr/lib/gcc/x86_64-linux-gnu/5/include-fixed",
                     "/usr/include/x86_64-linux-gnu",
                     "/usr/include"
                 ],
                 "limitSymbolsToIncludedHeaders": true,
                 "databaseFilename": ""
             },
-            "compilerPath": "/usr/bin/gcc",
+            "compilerPath": "/home/remco/opt/cross/bin/i686-elf-gcc",
             "cStandard": "c11",
-            "cppStandard": "c++17"
+            "cppStandard": "c++17",
+            "compilerArgs": [
+                "-Wall",
+                "-Werror"
+            ]
         },
         {
             "name": "Win32",

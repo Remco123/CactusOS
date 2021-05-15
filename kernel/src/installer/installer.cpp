@@ -71,19 +71,19 @@ void Installer::Run()
     TextGUI::ClearScreen(VGA_COLOR_BLUE);
 
     // Draw Ascii logo
-    for(int i = 0; i < sizeof(AsciiLogo) / sizeof(char*); i++)
+    for(uint32_t i = 0; i < sizeof(AsciiLogo) / sizeof(char*); i++)
         TextGUI::DrawString(AsciiLogo[i], 0, i + 1, VGA_COLOR_GREEN);
 
     TextGUI::StatusBar("Initializing Setup...", 0);
     TextGUI::StatusBar("Checking Setup Files...", 5);
-    for(int i = 0; i< sizeof(FileList) / sizeof(char*); i++) {
+    for(uint32_t i = 0; i< sizeof(FileList) / sizeof(char*); i++) {
         TextGUI::StatusBar(FileList[i], 5);
         if(System::vfs->FileExists(FileList[i]) == false)
             SetupError();
     }
 
     TextGUI::StatusBar("Checking Grub Modules...", 5);
-    for(int i = 0; i < sizeof(GrubModules) / sizeof(char*); i++) {
+    for(uint32_t i = 0; i < sizeof(GrubModules) / sizeof(char*); i++) {
         TextGUI::StatusBar(GrubModules[i], 5);
         if(System::vfs->FileExists(GrubModules[i]) == false)
             SetupError();
@@ -267,7 +267,7 @@ void Installer::ShowInstallScreen()
     MemoryOperations::memset(&newMBR, 0x0, sizeof(MasterBootRecord));
 
     // Fill in some values
-    char sign[4] = {'C', 'A', System::rtc->GetMonth(), System::rtc->GetYear() - 2000};
+    char sign[4] = { 'C', 'A', (char)System::rtc->GetMonth(), (char)(System::rtc->GetYear() - 2000) };
     newMBR.signature = *(uint32_t*)sign;
     newMBR.unused = 0;
     newMBR.magicnumber = 0xAA55;
@@ -381,7 +381,7 @@ void CopyDirectory(VirtualFileSystem* src, VirtualFileSystem* dest, char* path)
             if(String::strncmp(itemPath, "boot\\grub\\i386-pc\\", 17) == true) // We only need a couple of grub modules, not all from the liveCD
             {
                 bool shouldCopy = false;
-                for(int i = 0; i < sizeof(GrubModules) / sizeof(char*); i++)
+                for(uint32_t i = 0; i < sizeof(GrubModules) / sizeof(char*); i++)
                     if(String::strcmp(GrubModules[i] + 3 /* Skip B:\ */, itemPath)) // Check if we need to copy this module
                         shouldCopy = true;
                 
@@ -512,7 +512,7 @@ void Installer::CreateFatPartition(PartitionTableEntry* pEntry)
     biosParameterBlock.WinNTFlags = 0;
     biosParameterBlock.Signature = 0x29;
 
-    char volumeID[4] = {System::rtc->GetSecond(), System::rtc->GetDay(), System::rtc->GetMonth(), System::rtc->GetYear() - 2000};
+    char volumeID[4] = { (char)System::rtc->GetSecond(), (char)System::rtc->GetDay(), (char)System::rtc->GetMonth(), (char)(System::rtc->GetYear() - 2000) };
     biosParameterBlock.VolumeIDSerial = *(uint32_t*)volumeID;
     MemoryOperations::memcpy(biosParameterBlock.VolumeLabel, "CactusOS HD", 11);
     MemoryOperations::memcpy(biosParameterBlock.SystemIDString, "FAT32   ", 8);
@@ -545,7 +545,7 @@ void Installer::CreateFatPartition(PartitionTableEntry* pEntry)
     fatTable[0] = (uint8_t)biosParameterBlock.MediaDescriptorType; // Not sure why this is needed
     setClusterValue(fatTable, 2, CLUSTER_END_32);
 
-    uint32_t rootDirSize = biosParameterBlock.SectorsPerCluster * biosParameterBlock.bytesPerSector;
+    //uint32_t rootDirSize = biosParameterBlock.SectorsPerCluster * biosParameterBlock.bytesPerSector;
     DirectoryEntry rootDir;
     MemoryOperations::memset(&rootDir, 0, sizeof(DirectoryEntry));
 
