@@ -74,7 +74,7 @@ uint32_t ContextHeap::AllocateArea(uint32_t blocks)
     LOCK(bitmapOpperation);
     uint32_t frame = FirstFreeSize(blocks);
 
-    if (frame == -1) {
+    if (frame == (uint32_t)-1) {
         UNLOCK(bitmapOpperation);
         return 0; //not enough space
     }

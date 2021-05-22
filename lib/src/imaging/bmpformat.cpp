@@ -14,7 +14,7 @@ Image Imaging::ConvertBMP(const char* filepath)
     if(FileExists((char*)filepath))
     {
         uint32_t fileSize = GetFileSize((char*)filepath);
-        if(fileSize != -1)
+        if(fileSize != (uint32_t)-1)
         {
             uint8_t* fileBuf = new uint8_t[fileSize];
             ReadFile((char*)filepath, fileBuf);

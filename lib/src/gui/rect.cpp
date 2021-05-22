@@ -144,7 +144,7 @@ List<Rectangle>* Rectangle::Split(Rectangle cutter, List<Rectangle>* output)
 }
 void Rectangle::PushToClipList(List<Rectangle>* targetList)
 {
-    int i, j;
+    int i;
     List<Rectangle>* split_rects;
 
     Rect subject_copy;

@@ -148,7 +148,7 @@ void Compositor::DrawFrame()
 
         ApplyDesktopBounds(&rect);
         uint32_t byteWidth = (rect.width + rect.x <= GUI::Width ? rect.width : rect.width-(rect.x + rect.width - GUI::Width))*4;
-        for(uint32_t y = 0; y < rect.height; y++)
+        for(uint32_t y = 0; y < (uint32_t)rect.height; y++)
             memcpy((void*)(backBuffer + ((rect.y + y)*GUI::Width*4) + rect.x*4), (void*)((uint32_t)this->backgroundBuffer + (rect.y + y)*GUI::Width*4 + rect.x*4), byteWidth);
     }
     dirtyRectList.Clear(); // After processing all the dirty rects for this frame, we can clear the list.
@@ -168,8 +168,8 @@ void Compositor::DrawFrame()
             Rectangle contextRectangle = Rectangle(context->width, context->height, context->x, context->y);
             ApplyDesktopBounds(&contextRectangle);
             
-            #define leftOffset ((context->x < 0) ? -context->x : 0)
-            #define topOffset  ((context->y < 0) ? -context->y : 0)
+            uint32_t leftOffset = ((context->x < 0) ? -context->x : 0);
+            uint32_t topOffset = ((context->y < 0) ? -context->y : 0);
 
             // Check if context needs to be drawn using the transparency method
             if(context->supportsTransparency) {
@@ -191,8 +191,8 @@ void Compositor::DrawFrame()
                 Rectangle contextRectangle = Rectangle(context->dirtyRects[dirtyIndex].width, context->dirtyRects[dirtyIndex].height, context->dirtyRects[dirtyIndex].x + context->x, context->dirtyRects[dirtyIndex].y + context->y);
                 ApplyDesktopBounds(&contextRectangle);
                 
-                #define leftOffset (context->dirtyRects[dirtyIndex].x)
-                #define topOffset  (context->dirtyRects[dirtyIndex].y)
+                uint32_t leftOffset = (context->dirtyRects[dirtyIndex].x);
+                uint32_t topOffset = (context->dirtyRects[dirtyIndex].y);
 
                 // Check if context needs to be drawn using the transparency method
                 if(context->supportsTransparency) {
@@ -291,7 +291,7 @@ void Compositor::ProcessEvents()
         KeypressPacket packet;
         memset(&packet, 0, sizeof(KeypressPacket));
         // i = 1 for skipping start byte
-        for(int i = 1; i < sizeof(KeypressPacket); i++)
+        for(int i = 1; i < (int)sizeof(KeypressPacket); i++)
             *(uint8_t*)((uint32_t)&packet + i) = Process::ReadStdIn();
         
         uint8_t key = ConvertKeycode(&packet);

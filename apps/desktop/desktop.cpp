@@ -37,7 +37,7 @@ int main()
     }
 
     uint32_t fileSize = GetFileSize("B:\\desktop\\items.txt");
-    if(fileSize != -1)
+    if(fileSize != (uint32_t)-1)
     {
         char* fileBuf = new char[fileSize];
         ReadFile("B:\\desktop\\items.txt", (uint8_t*)fileBuf);
@@ -83,7 +83,7 @@ int main()
             if(FileExists(iconpathBuffer))
             {
                 uint32_t iconSize = GetFileSize(iconpathBuffer);
-                if(iconSize != -1)
+                if(iconSize != (uint32_t)-1)
                 {
                     uint8_t* iconBuf = new uint8_t[iconSize];
                     ReadFile(iconpathBuffer, iconBuf);

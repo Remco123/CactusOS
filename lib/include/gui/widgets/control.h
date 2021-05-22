@@ -81,7 +81,7 @@ namespace LIBCactusOS
         /**
          * Destructor
         */
-        ~Control();
+        virtual ~Control();
 
         /**
          * Draw this control to a canvas

@@ -96,7 +96,7 @@ Image Image::CreateFromFile(const char* filepath, const char* ext)
         if(FileExists((char*)filepath))
         {
             uint32_t fileSize = GetFileSize((char*)filepath);
-            if(fileSize != -1)
+            if(fileSize != (uint32_t)-1)
             {
                 uint8_t* fileBuf = new uint8_t[fileSize];
                 ReadFile((char*)filepath, fileBuf);
@@ -113,7 +113,7 @@ Image Image::CreateFromFile(const char* filepath, const char* ext)
                 Print("[JPEG] Conversion Succes! (%dx%d)\n", result.width, result.height);
 
                 // Move pixels to result image
-                for(uint32_t pixel = 0; pixel < result.width * result.height; pixel++) {
+                for(uint32_t pixel = 0; pixel < (uint32_t)(result.width * result.height); pixel++) {
                     const uint8_t r = data[pixel * 3];
                     const uint8_t g = data[pixel * 3 + 1];
                     const uint8_t b = data[pixel * 3 + 2];
@@ -179,7 +179,11 @@ Image Image::ResizeBilinear(Image source, int newWidth, int newHeight)
     float x_ratio = ((float)(source.width-1))/newWidth;
     float y_ratio = ((float)(source.height-1))/newHeight;
 
-    float x_diff, y_diff, blue, red, green, alpha;
+    float x_diff, y_diff, blue, red, green;
+    #if BILINEAR_ALPHA
+    float alpha;
+    #endif
+    
     int offset = 0;
     for (int i = 0; i < newHeight; i++) {
         for (int j = 0; j < newWidth; j++) {

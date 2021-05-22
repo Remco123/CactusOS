@@ -6,7 +6,7 @@
 using namespace LIBCactusOS;
 
 TerminalControl::TerminalControl(int w, int h)
-: inputKeys(), Control(w, h)
+: Control(w, h), inputKeys()
 {
     this->textBuffer = new char[TERM_WIDTH * TERM_HEIGH];
     memset(this->textBuffer, '\0', TERM_WIDTH * TERM_HEIGH);
@@ -93,6 +93,8 @@ void TerminalControl::ToggleCursor()
     this->cursor = !this->cursor;
 
     textBuffer[this->y * TERM_WIDTH + this->x] = this->cursor ? '>' : '\0';
+
+    this->ForcePaint();
 }
 void TerminalControl::Write(char* str)
 {
@@ -158,6 +160,7 @@ char* TerminalControl::ReadCommand(char* prompt)
                 break;
         }
         this->inputKeys.Remove(0);
+        this->ForcePaint();
     }
 }
 

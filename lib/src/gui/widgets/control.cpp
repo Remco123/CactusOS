@@ -10,7 +10,7 @@ Control::Control(int w, int h, int x, int y)
     this->childs.Clear();
     this->focusedChild = 0;
     this->parent = 0;
-    this->anchor = Top | Left;
+    this->anchor = Direction::Top | Direction::Left;
     this->font = GUI::defaultFont;
 }
 

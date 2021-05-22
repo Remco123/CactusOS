@@ -1,79 +1,23 @@
 {
     "configurations": [
         {
-            "name": "Mac",
-            "includePath": [
-                "/usr/include",
-                "/usr/local/include",
-                "${workspaceFolder}"
-            ],
-            "defines": [],
-            "intelliSenseMode": "clang-x64",
-            "browse": {
-                "path": [
-                    "/usr/include",
-                    "/usr/local/include",
-                    "${workspaceFolder}"
-                ],
-                "limitSymbolsToIncludedHeaders": true,
-                "databaseFilename": ""
-            },
-            "macFrameworkPath": [
-                "/System/Library/Frameworks",
-                "/Library/Frameworks"
-            ]
-        },
-        {
             "name": "Linux",
             "includePath": [
-                "${workspaceFolder}",
+                "${workspaceFolder}/**",
                 "${workspaceFolder}/kernel/include",
                 "${workspaceFolder}/lib/include"
             ],
-            "defines": [],
-            "intelliSenseMode": "linux-gcc-x64",
-            "browse": {
-                "path": [
-                    "${workspaceFolder}",
-                    "/usr/include/c++/9",
-                    "/usr/include/x86_64-linux-gnu/c++/9",
-                    "/usr/include/c++/9/backward",
-                    "/usr/lib/gcc/x86_64-linux-gnu/9/include",
-                    "/usr/local/include",
-                    "/usr/include/x86_64-linux-gnu",
-                    "/usr/include"
-                ],
-                "limitSymbolsToIncludedHeaders": true,
-                "databaseFilename": ""
-            },
-            "compilerPath": "/home/remco/opt/cross/bin/i686-elf-gcc",
-            "cStandard": "c11",
-            "cppStandard": "c++17",
-            "compilerArgs": [
-                "-Wall",
-                "-Werror"
-            ]
-        },
-        {
-            "name": "Win32",
-            "includePath": [
-                "C:/Program Files (x86)/Microsoft Visual Studio 14.0/VC/include",
-                "${workspaceFolder}"
-            ],
             "defines": [
-                "_DEBUG",
-                "UNICODE",
-                "_UNICODE"
+                "CACTUSOSKERNEL"
             ],
-            "intelliSenseMode": "msvc-x64",
-            "browse": {
-                "path": [
-                    "C:/Program Files (x86)/Microsoft Visual Studio 14.0/VC/include/*",
-                    "${workspaceFolder}"
-                ],
-                "limitSymbolsToIncludedHeaders": true,
-                "databaseFilename": ""
-            }
+            "compilerPath": "/usr/bin/gcc",
+            "compilerArgs": [
+                "-m32",
+                "-Wall",
+                "-Werror",
+                "-Wextra"
+            ],
+            "intelliSenseMode": "${default}"
         }
     ],
     "version": 4

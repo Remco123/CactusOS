@@ -37,14 +37,14 @@ void GUI::SetDefaultFont(const char* filename)
 
 void GUI::CleanUp()
 {
-    if(GUI::contextList != 0)
+    if(contextList != 0)
     {
-        for(Context* c : *GUI::contextList)
+        for(Context* c : *contextList)
         {
             c->CloseContext();
             delete c;
         }
-        GUI:contextList->Clear();
+        contextList->Clear();
     }
 }
 
@@ -110,7 +110,7 @@ void GUI::ProcessEvents()
             if(c->sharedContextInfo == 0)
                 continue;
 
-            if(c->sharedContextInfo->id == guiEvent.arg4)
+            if(c->sharedContextInfo->id == (int)guiEvent.arg4)
             {
                 KEYPACKET_FLAGS args = (KEYPACKET_FLAGS)guiEvent.arg3;
                 if(args & Pressed)
@@ -155,8 +155,8 @@ Context* GUI::FindTargetContext(int mouseX, int mouseY)
         if(c->sharedContextInfo == 0)
             continue;
 
-        if(mouseX >= c->sharedContextInfo->x && mouseX <= c->sharedContextInfo->x + c->sharedContextInfo->width)
-            if(mouseY >= c->sharedContextInfo->y && mouseY <= c->sharedContextInfo->y + c->sharedContextInfo->height)
+        if(mouseX >= c->sharedContextInfo->x && mouseX <= c->sharedContextInfo->x + (int32_t)c->sharedContextInfo->width)
+            if(mouseY >= c->sharedContextInfo->y && mouseY <= c->sharedContextInfo->y + (int32_t)c->sharedContextInfo->height)
                 return c;
     }
     return 0;

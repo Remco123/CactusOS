@@ -567,7 +567,7 @@ char* FAT::CreateShortFilename(char* name)
     // Write the extension
     if(dotIndex >= 0) {
         for(int i = 0; i < 3; i++) {
-            uint32_t charIndex = dotIndex + 1 + i;
+            int charIndex = dotIndex + 1 + i;
             uint8_t c = charIndex >= len ? ' ' : String::Uppercase(name[charIndex]);
             result[8 + i] = c;
         }
@@ -606,7 +606,7 @@ List<LFNEntry> FAT::CreateLFNEntriesFromName(char* name, int num, uint8_t checks
 {
     List<LFNEntry> entries;
 
-    uint32_t charsWritten = 0;
+    int charsWritten = 0;
     int nameLen = String::strlen(name);
     char* namePtr = name;
 

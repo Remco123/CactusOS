@@ -14,11 +14,11 @@ Canvas::Canvas(void* buffer, int w, int h)
 
 void Canvas::SetPixel(int x, int y, uint32_t color)
 {
-    *(uint32_t*)(bufferPointer + (y * Width * 4 + x * 4)) = color;
+    *(uint32_t*)((uint32_t)bufferPointer + (y * Width * 4 + x * 4)) = color;
 }
 uint32_t Canvas::GetPixel(int x, int y)
 {
-    return *(uint32_t*)(bufferPointer + (y * Width * 4 + x * 4));
+    return *(uint32_t*)((uint32_t)bufferPointer + (y * Width * 4 + x * 4));
 }
 
 void Canvas::Clear()
@@ -28,7 +28,7 @@ void Canvas::Clear()
 void Canvas::Clear(uint32_t color)
 {
     uint32_t* buf = (uint32_t*)bufferPointer;       
-    for(uint32_t index = 0; index < Width*Height; index++)
+    for(uint32_t index = 0; index < (uint32_t)(Width*Height); index++)
         buf[index] = color;
 }
 void Canvas::DrawHorizontalLine(uint32_t color, int dx, int x1, int y1)

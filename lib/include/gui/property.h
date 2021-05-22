@@ -7,6 +7,11 @@ namespace LIBCactusOS
 {
     class Control;
 
+    // Function to force a control to update its GUI
+    // We need this because if we place it in the template we get a lot of warnings
+    // This a nice way to fix it
+    void UpdateGUIPropertyTargetGUI(Control* target);
+
     // Property that is used to declare a gui specific variable
     // When this property changes the gui needs to be repainted
     template <typename T>
@@ -31,7 +36,7 @@ namespace LIBCactusOS
         GUIProperty& operator=(T newVal)
         {
             this->value = newVal;
-            if(this->parent) this->parent->ForcePaint();
+            UpdateGUIPropertyTargetGUI(this->parent);
             return *this;
         }
 
@@ -39,7 +44,7 @@ namespace LIBCactusOS
         GUIProperty& operator+=(T newVal)
         {
             this->value += newVal;
-            if(this->parent) this->parent->ForcePaint();
+            UpdateGUIPropertyTargetGUI(this->parent);
             return *this;
         }
 
@@ -47,7 +52,7 @@ namespace LIBCactusOS
         GUIProperty& operator-=(T newVal)
         {
             this->value -= newVal;
-            if(this->parent) this->parent->ForcePaint();
+            UpdateGUIPropertyTargetGUI(this->parent);
             return *this;
         }
 

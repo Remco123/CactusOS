@@ -1,7 +1,7 @@
 INCLUDEDIRS := include
 DEBUG := -g
 
-GCCPARAMS := -m32 $(DEBUG) -I $(INCLUDEDIRS) -fno-omit-frame-pointer -O3 -msse2 -fno-use-cxa-atexit -nostdlib -fno-builtin -fno-exceptions -fno-rtti -fno-leading-underscore -Wno-write-strings -fpermissive -Wall
+GCCPARAMS := -m32 $(DEBUG) -I $(INCLUDEDIRS) -Wall -fno-omit-frame-pointer -O3 -msse2 -fno-use-cxa-atexit -nostdlib -fno-builtin -fno-exceptions -fno-rtti -fno-leading-underscore -Wno-write-strings -fpermissive -Wno-unknown-pragmas
 ASPARAMS := --32
 
 SRCDIR := src

@@ -108,7 +108,7 @@ int ExecCommand(char* cmd)
         for(ProcessInfo* item : items)
         {
             termWindow->Write(item->fileName);
-            for(int i = 0; i < (32-strlen(item->fileName)); i++)
+            for(int i = 0; i < (int)(32-strlen(item->fileName)); i++)
                 termWindow->Write(' ');
 
             termWindow->Write(" PID=");
