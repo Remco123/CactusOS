@@ -17,7 +17,7 @@ Thread* ThreadHelper::CreateFromFunction(void (*entryPoint)(), bool isKernel, ui
     Thread* result = new Thread();
 
     //Create stack for process
-    result->stack = (uint8_t*)KernelHeap::allignedMalloc(THREAD_STACK_SIZE, THREAD_STACK_SIZE);
+    result->stack = (uint8_t*)KernelHeap::alignedMalloc(THREAD_STACK_SIZE, THREAD_STACK_SIZE);
     MemoryOperations::memset(result->stack, 0, THREAD_STACK_SIZE);
 
     //Assign user stack, needs to be mapped into address space by elf loader if we are loading a .bin
@@ -52,7 +52,7 @@ Thread* ThreadHelper::CreateFromFunction(void (*entryPoint)(), bool isKernel, ui
     result->parent = parent;
 
     //Create a buffer for the fpu
-    result->FPUBuffer = (uint8_t*)KernelHeap::allignedMalloc(512, 16);
+    result->FPUBuffer = (uint8_t*)KernelHeap::alignedMalloc(512, 16);
     MemoryOperations::memset(result->FPUBuffer, 0, 512);
 
     //Return the result

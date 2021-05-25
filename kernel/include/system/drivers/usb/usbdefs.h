@@ -8,14 +8,14 @@ namespace CactusOS
     namespace system
     {
         // Reset wait times.  USB 2.0 specs, page 153, section 7.1.7.5, paragraph 3
-        #define USB_TDRSTR   50   // reset on a root hub
-        #define USB_TDRST    10   // minimum delay for a reset
-        #define USB_TRHRSI    3   // No more than this between resets for root hubs
-        #define USB_TRSTRCY  10   // reset recovery
-        #define PINDC_OFF 0b00
-        #define PINDC_AMBER 0b01
-        #define PINDC_GREEN 0b10
-        #define ENDP_CONTROL 0
+        #define USB_TDRSTR      50   // reset on a root hub
+        #define USB_TDRST       10   // minimum delay for a reset
+        #define USB_TRHRSI      3   // No more than this between resets for root hubs
+        #define USB_TRSTRCY     10   // reset recovery
+        #define PINDC_OFF       0b00
+        #define PINDC_AMBER     0b01
+        #define PINDC_GREEN     0b10
+        #define ENDP_CONTROL    0
 
         struct DEVICE_DESC {
             common::uint8_t  len;

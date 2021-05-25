@@ -52,7 +52,7 @@ Process* ProcessHelper::Create(char* fileName, bool isKernel)
     Create addres space
     */////////////////////
     uint32_t pageDirPhys = 0;
-    PageDirectory* pageDir = (PageDirectory*)KernelHeap::allignedMalloc(sizeof(PageDirectory), sizeof(PageDirectory), &pageDirPhys);
+    PageDirectory* pageDir = (PageDirectory*)KernelHeap::alignedMalloc(sizeof(PageDirectory), sizeof(PageDirectory), &pageDirPhys);
     MemoryOperations::memset(pageDir, 0, sizeof(PageDirectory));
 
     //Copy kernel pages

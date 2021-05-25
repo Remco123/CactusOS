@@ -50,7 +50,7 @@ namespace CactusOS
             static void* malloc(common::uint32_t size, common::uint32_t* physReturn = 0);
             static void free(void* ptr);
 
-            static void* allignedMalloc(common::uint32_t size, common::uint32_t align, common::uint32_t* physReturn = 0);
+            static void* alignedMalloc(common::uint32_t size, common::uint32_t align, common::uint32_t* physReturn = 0);
             static void allignedFree(void* ptr);
 
             static bool CheckForErrors();

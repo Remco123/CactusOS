@@ -159,7 +159,7 @@ void* KernelHeap::malloc(uint32_t size, uint32_t* physReturn)
     return addr;
 }
 
-void* KernelHeap::allignedMalloc(uint32_t size, uint32_t align, uint32_t* physReturn)
+void* KernelHeap::alignedMalloc(uint32_t size, uint32_t align, uint32_t* physReturn)
 {
     void* ptr = 0;
     if(!(align & (align - 1)) == 0)

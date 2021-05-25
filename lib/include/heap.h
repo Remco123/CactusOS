@@ -39,7 +39,7 @@ namespace LIBCactusOS
         static void* Malloc(uint32_t size);
         static void Free(void* ptr);
 
-        static void* allignedMalloc(uint32_t size, uint32_t align);
+        static void* alignedMalloc(uint32_t size, uint32_t align);
         static void allignedFree(void* ptr);
     };
 }

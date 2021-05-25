@@ -11,6 +11,10 @@ namespace CactusOS
 {
     namespace system
     {
+        #define PCI_CMDREG_IO   (1<<0)
+        #define PCI_CMDREG_MEM  (1<<1)
+        #define PCI_CMDREG_BM   (1<<2)
+
         struct PCIDevice
         {
             common::uint8_t interrupt;

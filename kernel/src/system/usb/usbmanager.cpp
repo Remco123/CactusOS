@@ -23,7 +23,7 @@ void USBManager::USBPoll()
 
 void USBManager::AddController(USBController* c)
 {
-    controllerList.push_back(c);
+    controllerList.push_front(c);
 }
 void USBManager::RemoveController(USBController* c)
 {
@@ -53,7 +53,7 @@ void USBManager::RemoveDevice(USBController* controller, uint8_t port)
         Log(Error, "Device was removed from port but no USBDevice was found!");
     else
     {
-        Log(Info, "Device %s Removed at port %d from %s controller", dev->deviceName, port, USBControllerStrings[dev->controller->type]);
+        Log(Info, "Device %s Removed at port %d from %s controller", dev->deviceName != 0 ? dev->deviceName : "Unnamed", port, USBControllerStrings[dev->controller->type]);
         deviceList.Remove(dev);
         dev->OnUnplugged();
         delete dev;

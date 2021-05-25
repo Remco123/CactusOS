@@ -471,9 +471,9 @@ bool IDEController::Initialize()
                 }
 
                 // Setup DMA Stuff
-                dev->prdt = (IDEPhysRegionDescriptor*)KernelHeap::allignedMalloc(sizeof(IDEPhysRegionDescriptor), 32, &dev->prdtPhys);
+                dev->prdt = (IDEPhysRegionDescriptor*)KernelHeap::alignedMalloc(sizeof(IDEPhysRegionDescriptor), 32, &dev->prdtPhys);
                 MemoryOperations::memset(dev->prdt, 0, sizeof(IDEPhysRegionDescriptor));
-                dev->prdtBuffer = (uint8_t*)KernelHeap::allignedMalloc(PAGE_SIZE, PAGE_SIZE, &dev->prdtBufferPhys);
+                dev->prdtBuffer = (uint8_t*)KernelHeap::alignedMalloc(PAGE_SIZE, PAGE_SIZE, &dev->prdtBufferPhys);
                 MemoryOperations::memset(dev->prdtBuffer, 0, PAGE_SIZE);
 
                 // Setup PRDT

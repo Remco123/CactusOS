@@ -72,7 +72,7 @@ void KernelDebugger::Initialize()
     Log(Info, "Debugger initialized with %d symbols", KernelDebugger::symbolTable.size());
 
 #if ENABLE_ADV_DEBUG
-    KernelDebugger::pageAccessAddress = (uint32_t)KernelHeap::allignedMalloc(PAGE_SIZE, PAGE_SIZE);
+    KernelDebugger::pageAccessAddress = (uint32_t)KernelHeap::alignedMalloc(PAGE_SIZE, PAGE_SIZE);
 
     // Send message to external debugger that we are initalized and ready to receive commmands
     if(Serialport::Initialized && !System::gdbEnabled) {

@@ -24,7 +24,7 @@ namespace CactusOS
             #define EHCI_OPS_USBStatus        0x04
             #define EHCI_OPS_USBInterrupt     0x08
             #define EHCI_OPS_FrameIndex       0x0C
-            #define EHCI_OPS_CtrlDSSegemnt    0x10
+            #define EHCI_OPS_CtrlDSSegment    0x10
             #define EHCI_OPS_PeriodicListBase 0x14
             #define EHCI_OPS_AsyncListBase    0x18
             #define EHCI_OPS_ConfigFlag       0x40
@@ -140,8 +140,11 @@ namespace CactusOS
                 bool Initialize() override;
                 void Setup() override;
 
-                // Reset port of this controller, returns true when succesfull
+                // Reset port of this controller, returns true when successful
                 bool ResetPort(uint8_t port);
+
+                // Reset the controller to its default settings
+                bool ResetController();
 
                 // Release BIOS ownership of controller
                 // On Entry:
@@ -156,9 +159,6 @@ namespace CactusOS
                 //   (It is unknown the exact time limit that the BIOS has to release ownership.)
                 // 
                 bool StopLegacy(const uint32_t params);
-
-                // Enable or disable the periodic or async list
-                bool EnableList(const bool enable, const uint8_t bit);
 
                 void InitializeAsyncList();
                 void InitializePeriodicList();

@@ -27,7 +27,7 @@ bool OHCIController::Initialize()
     uint32_t memEnd = pageRoundUp((uint32_t)BAR0.address + BAR0.size);
     
     // Allocate virtual chuck of memory that we can use for device
-    this->regBase = DeviceHeap::AllocateChunck(memEnd - memStart) + ((uint32_t)BAR0.address % PAGE_SIZE);
+    this->regBase = DeviceHeap::AllocateChunk(memEnd - memStart) + ((uint32_t)BAR0.address % PAGE_SIZE);
 
     // Map memory so that we can use it
     VirtualMemoryManager::mapVirtualToPhysical((void*)memStart, (void*)this->regBase, memEnd - memStart, true, true);
@@ -69,9 +69,9 @@ void OHCIController::Setup()
     // Read back modified address
     uint32_t ret = readMemReg(regBase + OHCHCCA);
     // Allocate Memory for HCCA
-    this->hcca = (OHCI_HCCA*)KernelHeap::allignedMalloc(131072, ~ret + 1, &hccaPhys);
+    this->hcca = (OHCI_HCCA*)KernelHeap::alignedMalloc(131072, ~ret + 1, &hccaPhys);
     if(this->hcca == 0){
-        Log(Error, "Error Allocating HCCA Memory, Alignment = %x", ~ret + 1);
+        Log(Error, "[OHCI] Error Allocating HCCA Memory, Alignment = %x", ~ret + 1);
         return;
     }
     // Clear structure
@@ -81,7 +81,7 @@ void OHCIController::Setup()
     /////////////////
     // Create Control list
     /////////////////
-    uint32_t controlEDBase = (uint32_t)KernelHeap::allignedMalloc(sizeof(o_endpointDescriptor_t) * NUM_CONTROL_EDS, 16);
+    uint32_t controlEDBase = (uint32_t)KernelHeap::alignedMalloc(sizeof(o_endpointDescriptor_t) * NUM_CONTROL_EDS, 16);
     for(int i = 0; i < NUM_CONTROL_EDS; i++) { // First Allocate all ED's
         this->controlEndpoints[i] = (o_endpointDescriptor_t*)(controlEDBase + sizeof(o_endpointDescriptor_t) * i);
         this->controlEndpointsPhys[i] = (uint32_t)VirtualMemoryManager::virtualToPhysical(this->controlEndpoints[i]);
@@ -97,7 +97,7 @@ void OHCIController::Setup()
     /////////////////
     // Create Bulk list
     /////////////////
-    uint32_t bulkEDBase = (uint32_t)KernelHeap::allignedMalloc(sizeof(o_endpointDescriptor_t) * NUM_BULK_EDS, 16);
+    uint32_t bulkEDBase = (uint32_t)KernelHeap::alignedMalloc(sizeof(o_endpointDescriptor_t) * NUM_BULK_EDS, 16);
     for(int i = 0; i < NUM_BULK_EDS; i++) { // First Allocate all ED's
         this->bulkEndpoints[i] = (o_endpointDescriptor_t*)(bulkEDBase + sizeof(o_endpointDescriptor_t) * i);
         this->bulkEndpointsPhys[i] = (uint32_t)VirtualMemoryManager::virtualToPhysical(this->bulkEndpoints[i]);
@@ -113,7 +113,7 @@ void OHCIController::Setup()
     // Create Interrupt list
     /////////////////
     uint32_t interruptPhysical = 0;
-    this->interruptEndpoints = (o_endpointDescriptor_t*)KernelHeap::allignedMalloc(sizeof(o_endpointDescriptor_t) * 32, 16, &interruptPhysical);
+    this->interruptEndpoints = (o_endpointDescriptor_t*)KernelHeap::alignedMalloc(sizeof(o_endpointDescriptor_t) * 32, 16, &interruptPhysical);
     uint8_t  routingTable[16] = { 0, 8, 4, 12, 2, 10, 6, 14, 1, 9, 5, 13, 3, 11, 7, 15 };
     for(int i = 0; i < 16; i++) {
         hcca->HccaInterruptTable[i] = hcca->HccaInterruptTable[i+16] = interruptPhysical + sizeof(o_endpointDescriptor_t) * routingTable[i];
@@ -142,7 +142,7 @@ void OHCIController::Setup()
 
     // Get the number of downstream ports
     numPorts = (uint8_t)(readMemReg(regBase + OHCRhDescriptorA) & 0x000000FF);
-    Log(Info, "OHCI Found %d root hub ports.", numPorts);
+    Log(Info, "[OHCI] Found %d root hub ports.", numPorts);
     
     // Write the offset of our HCCA
     writeMemReg(regBase + OHCHCCA, hccaPhys);
@@ -186,7 +186,7 @@ void OHCIController::SetupNewDevice(uint8_t port)
 
     // Port has been reset, and is ready to be used
     bool ls_device = (readMemReg(regBase + OHCRhPortStatus + (port * 4)) & (1<<9)) ? 1 : 0;
-    Log(Info, "OHCI, Found Device at port %d, low speed = %b", port, ls_device);
+    Log(Info, "[OHCI] Found Device at port %d, low speed = %b", port, ls_device);
 
     // Some devices will only send the first 8 bytes of the device descriptor
     // while in the default state.  We must request the first 8 bytes, then reset
@@ -200,7 +200,7 @@ void OHCIController::SetupNewDevice(uint8_t port)
         // Set address
         good_ret = ControlOut(ls_device, 0, devDesc.max_packet_size, 0, STDRD_SET_REQUEST, SET_ADDRESS, 0, this->newDeviceAddress);
         if (!good_ret) {
-            Log(Error, "Error when trying to set device address to %d", this->newDeviceAddress);
+            Log(Error, "[OHCI] Error when trying to set device address to %d", this->newDeviceAddress);
             return;
         }
 
@@ -223,7 +223,7 @@ void OHCIController::ControllerChecksThread()
         if(portSts & (1<<16)) // Port Connection Change Bit
         {
             writeMemReg(regBase + OHCRhPortStatus + (i * 4), (1<<16));
-            Log(Info, "OHCI Port %d Connection change, now %s", i, (portSts & (1<<0)) ? "Connected" : "Not Connected");
+            Log(Info, "[OHCI] Port %d Connection change, now %s", i, (portSts & (1<<0)) ? "Connected" : "Not Connected");
 
             if((portSts & (1<<0)) == 1) { // Connected
                 if(ResetPort(i))
@@ -244,7 +244,7 @@ bool OHCIController::ResetPort(uint8_t port) {
             break;
     }
     if (timeout == 0) {
-        Log(Warning, "Port %d did not reset after 300mS.", port);
+        Log(Warning, "[OHCI] Port %d did not reset after 300mS.", port);
         return false;
     }
     System::pit->Sleep(USB_TRSTRCY);  // Hold for USB_TRSTRCY ms (reset recovery time)
@@ -258,7 +258,7 @@ bool OHCIController::ControlOut(const bool lsDevice, const int devAddress, const
 {
     // Create setupPacket
     uint32_t setupPacketPhys;
-    REQUEST_PACKET* setupPacket = (REQUEST_PACKET*)KernelHeap::allignedMalloc(sizeof(REQUEST_PACKET), 16, &setupPacketPhys);
+    REQUEST_PACKET* setupPacket = (REQUEST_PACKET*)KernelHeap::alignedMalloc(sizeof(REQUEST_PACKET), 16, &setupPacketPhys);
     {
         setupPacket->request_type = requestType;
         setupPacket->request = request;
@@ -269,7 +269,7 @@ bool OHCIController::ControlOut(const bool lsDevice, const int devAddress, const
 
     // Allocate Transfer Descriptors
     uint32_t tdPhys;
-    o_transferDescriptor_t* td = (o_transferDescriptor_t*)KernelHeap::allignedMalloc(sizeof(o_transferDescriptor_t) * 2, 16, &tdPhys);
+    o_transferDescriptor_t* td = (o_transferDescriptor_t*)KernelHeap::alignedMalloc(sizeof(o_transferDescriptor_t) * 2, 16, &tdPhys);
     MemoryOperations::memset(td, 0, sizeof(o_transferDescriptor_t) * 2);
     
     // Create the setup td
@@ -312,7 +312,7 @@ bool OHCIController::ControlOut(const bool lsDevice, const int devAddress, const
     for (int i = 0; i < 2; i++) {
         if ((td[i].flags & 0xF0000000) != 0) {
             ret = false;
-            Log(Error, "OCHI: our_tds[%d].cc != 0  (%d)", i, (td[i].flags & 0xF0000000) >> 28);
+            Log(Error, "[OHCI] our_tds[%d].cc != 0  (%d)", i, (td[i].flags & 0xF0000000) >> 28);
             break;
         }
     }
@@ -327,7 +327,7 @@ bool OHCIController::ControlOut(const bool lsDevice, const int devAddress, const
 bool OHCIController::ControlIn(void* targ, const bool lsDevice, const int devAddress, const int packetSize, const int len, const uint8_t requestType, const uint8_t request, const uint16_t valueHigh, const uint16_t valueLow, const uint16_t index) {
     // Create Request Packet
     uint32_t requestPacketPhys;
-    REQUEST_PACKET* requestPacket = (REQUEST_PACKET*)KernelHeap::allignedMalloc(sizeof(REQUEST_PACKET), 16, &requestPacketPhys);
+    REQUEST_PACKET* requestPacket = (REQUEST_PACKET*)KernelHeap::alignedMalloc(sizeof(REQUEST_PACKET), 16, &requestPacketPhys);
     {
         requestPacket->request_type = requestType;
         requestPacket->request = request;
@@ -343,7 +343,7 @@ bool OHCIController::ControlIn(void* targ, const bool lsDevice, const int devAdd
     
     // Allocate Transfer Descriptors
     uint32_t tdPhys;
-    o_transferDescriptor_t* td = (o_transferDescriptor_t*)KernelHeap::allignedMalloc(sizeof(o_transferDescriptor_t) * 10, 16, &tdPhys);
+    o_transferDescriptor_t* td = (o_transferDescriptor_t*)KernelHeap::alignedMalloc(sizeof(o_transferDescriptor_t) * 10, 16, &tdPhys);
     MemoryOperations::memset(td, 0, sizeof(o_transferDescriptor_t) * 10);
     
     // Create the setup td
@@ -407,7 +407,7 @@ bool OHCIController::ControlIn(void* targ, const bool lsDevice, const int devAdd
         if ((td[i].flags & 0xF0000000) != 0) {
             uint8_t err = (td[i].flags & 0xF0000000) >> 28;
             ret = false;
-            Log(Error, "OHCI: our_tds[%d].cc != 0  (%d)", i, err);
+            Log(Error, "[OHCI] our_tds[%d].cc != 0  (%d)", i, err);
             break;
         }
     }
@@ -432,7 +432,7 @@ bool OHCIController::BulkOut(const bool lsDevice, const int devAddress, const in
 
     // Allocate Transfer Descriptors
     uint32_t tdPhys;
-    o_transferDescriptor_t* td = (o_transferDescriptor_t*)KernelHeap::allignedMalloc(sizeof(o_transferDescriptor_t) * 10, 16, &tdPhys);
+    o_transferDescriptor_t* td = (o_transferDescriptor_t*)KernelHeap::alignedMalloc(sizeof(o_transferDescriptor_t) * 10, 16, &tdPhys);
     MemoryOperations::memset(td, 0, sizeof(o_transferDescriptor_t) * 10);
     
     // Create the rest of the in td's
@@ -479,7 +479,7 @@ bool OHCIController::BulkOut(const bool lsDevice, const int devAddress, const in
     for (int c = 0; c < i; c++) {
         if ((td[c].flags & 0xF0000000) != 0) {
             ret = false;
-            Log(Error, "OHCI: our_tds[%d].cc != 0  (%d)", c, (td[c].flags & 0xF0000000) >> 28);
+            Log(Error, "[OHCI] our_tds[%d].cc != 0  (%d)", c, (td[c].flags & 0xF0000000) >> 28);
             break;
         }
     }
@@ -497,7 +497,7 @@ bool OHCIController::BulkIn(const bool lsDevice, const int devAddress, const int
     
     // Allocate Transfer Descriptors
     uint32_t tdPhys;
-    o_transferDescriptor_t* td = (o_transferDescriptor_t*)KernelHeap::allignedMalloc(sizeof(o_transferDescriptor_t) * 10, 16, &tdPhys);
+    o_transferDescriptor_t* td = (o_transferDescriptor_t*)KernelHeap::alignedMalloc(sizeof(o_transferDescriptor_t) * 10, 16, &tdPhys);
     MemoryOperations::memset(td, 0, sizeof(o_transferDescriptor_t) * 10);
     
     // Create the rest of the in td's
@@ -543,7 +543,7 @@ bool OHCIController::BulkIn(const bool lsDevice, const int devAddress, const int
         if ((td[c].flags & 0xF0000000) != 0) {
             uint8_t err = (td[c].flags & 0xF0000000) >> 28;
             ret = false;
-            Log(Error, "OHCI our_tds[%d].cc != 0  (%d)", c, err);
+            Log(Error, "[OHCI] our_tds[%d].cc != 0  (%d)", c, err);
             break;
         }
     }
@@ -611,7 +611,7 @@ void OHCIController::InterruptIn(const bool lsDevice, const int devAddress, cons
     
     // Allocate Transfer Descriptors
     uint32_t tdPhys;
-    o_transferDescriptor_t* td = (o_transferDescriptor_t*)KernelHeap::allignedMalloc(sizeof(o_transferDescriptor_t) * 10, 16, &tdPhys);
+    o_transferDescriptor_t* td = (o_transferDescriptor_t*)KernelHeap::alignedMalloc(sizeof(o_transferDescriptor_t) * 10, 16, &tdPhys);
     MemoryOperations::memset(td, 0, sizeof(o_transferDescriptor_t) * 10);
     
     // Create the rest of the in td's
@@ -636,7 +636,7 @@ void OHCIController::InterruptIn(const bool lsDevice, const int devAddress, cons
 
     transfer->queueIndex = CalculateRequiredQueue(interval);
     if(transfer->queueIndex == -1) {
-        Log(Error, "OHCI no place left inside queue for interval %d", interval);
+        Log(Error, "[OHCI] no place left inside queue for interval %d", interval);
         return;
     }
 
@@ -688,17 +688,17 @@ uint32_t OHCIController::HandleInterrupt(uint32_t esp)
 
     if (!((val & (1<<2)) || (val & (1<<6))))
     {
-        Log(Info, "USB OHCI %d: ", this->hcca->HccaFrameNumber);
+        Log(Info, "[OHCI] USB OHCI %d: ", this->hcca->HccaFrameNumber);
     }
 
     if (val & (1<<0))
     {
-        Log(Info, "OHCI: Scheduling overrun.");
+        Log(Info, "[OHCI] Scheduling overrun.");
     }
 
     if(val & (1<<1))
     {
-        //Log(Info, "OHCI: Writeback Done Head");
+        //Log(Info, "[OHCI] Writeback Done Head");
     }
 
     if(val & (1<<2))
@@ -716,7 +716,7 @@ uint32_t OHCIController::HandleInterrupt(uint32_t esp)
                     MemoryOperations::memset(transfer->bufferPointer, 0, transfer->bufferLen);
 
                 if(status == 2)
-                    Log(Warning, "OHCI: Received NAK");
+                    Log(Warning, "[OHCI] Received NAK");
                 
                 bool rescedule = transfer->handler->HandleInterruptPacket(transfer);
                 
@@ -758,25 +758,25 @@ uint32_t OHCIController::HandleInterrupt(uint32_t esp)
 
     if (val & (1<<3))
     {
-        Log(Info, "OHCI: Resume detected.");
+        Log(Info, "[OHCI] Resume detected.");
     }
 
     if (val & (1<<4))
     {
-        Log(Info, "OHCI: Unrecoverable HC error.");
+        Log(Info, "[OHCI] Unrecoverable HC error.");
     }
 
     if (val & (1<<5))
     {
-        Log(Info, "OHCI, Frame number overflow");
+        Log(Info, "[OHCI] Frame number overflow");
     }
     if ((val & (1<<6)))
     {
-        Log(Info, "OHCI, Root hub status change");
+        Log(Info, "[OHCI] Root hub status change");
     }
     if (val & (1<<30))
     {
-        Log(Info, "OHCI, ownership change");
+        Log(Info, "[OHCI] ownership change");
     }
 
     writeMemReg(regBase + OHCInterruptStatus, val); // reset interrupts

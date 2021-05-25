@@ -58,7 +58,7 @@ bool AHCIController::Initialize()
     uint32_t memEnd = pageRoundUp((uint32_t)BAR5.address + BAR5.size);
     
     // Allocate virtual chuck of memory that we can use for device
-    this->regBase = DeviceHeap::AllocateChunck(memEnd - memStart) + ((uint32_t)BAR5.address % PAGE_SIZE);
+    this->regBase = DeviceHeap::AllocateChunk(memEnd - memStart) + ((uint32_t)BAR5.address % PAGE_SIZE);
 
     // Map memory so that we can use it
     VirtualMemoryManager::mapVirtualToPhysical((void*)memStart, (void*)this->regBase, memEnd - memStart, true, true);

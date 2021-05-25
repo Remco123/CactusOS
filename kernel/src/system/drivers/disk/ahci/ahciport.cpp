@@ -75,8 +75,8 @@ bool AHCIPort::PreparePort()
 		return false;
 
     // Allocate required structures for this port
-    this->commandList = (a_commandHeader_t*)KernelHeap::allignedMalloc(sizeof(a_commandHeader_t) * COMMAND_LIST_COUNT, 1_KB, &this->commandListPhys);
-    this->fis = (a_fis_t*)KernelHeap::allignedMalloc(sizeof(a_fis_t), 256, &this->fisPhys);
+    this->commandList = (a_commandHeader_t*)KernelHeap::alignedMalloc(sizeof(a_commandHeader_t) * COMMAND_LIST_COUNT, 1_KB, &this->commandListPhys);
+    this->fis = (a_fis_t*)KernelHeap::alignedMalloc(sizeof(a_fis_t), 256, &this->fisPhys);
 
     // Clear out the allocated memory
     MemoryOperations::memset(this->commandList, 0, sizeof(a_commandHeader_t) * COMMAND_LIST_COUNT);
@@ -238,14 +238,14 @@ bool AHCIPort::Identify(uint8_t* buffer)
 		return false;
 
 	uint32_t bufPhys = 0;
-	uint8_t* buf = (uint8_t*)KernelHeap::allignedMalloc(512, 16, &bufPhys);
+	uint8_t* buf = (uint8_t*)KernelHeap::alignedMalloc(512, 16, &bufPhys);
 	MemoryOperations::memset(buf, 0, 512);
  
 	a_commandHeader_t* cmdheader = &this->commandList[slot];
 	cmdheader->flags = (sizeof(FIS_REG_H2D) / sizeof(uint32_t)) | (0<<6) | (1<<16);
 
 	uint32_t cmdTablePhys = 0;
-	a_commandTable_t* cmdTable = (a_commandTable_t*)KernelHeap::allignedMalloc(sizeof(a_commandTable_t), 128, &cmdTablePhys);
+	a_commandTable_t* cmdTable = (a_commandTable_t*)KernelHeap::alignedMalloc(sizeof(a_commandTable_t), 128, &cmdTablePhys);
 	MemoryOperations::memset(cmdTable, 0, sizeof(a_commandTable_t));
 
 	// Make header point to allocated table
@@ -319,14 +319,14 @@ bool AHCIPort::TransferData(bool dirIn, uint32_t lba, uint8_t* buffer, uint32_t 
 	uint32_t count2 = count;
 
 	uint32_t bufPhys = 0;
-	uint8_t* buf = (uint8_t*)KernelHeap::allignedMalloc(size, 16, &bufPhys);
+	uint8_t* buf = (uint8_t*)KernelHeap::alignedMalloc(size, 16, &bufPhys);
 	MemoryOperations::memset(buf, 0, size);
  
 	a_commandHeader_t* cmdheader = &this->commandList[slot];
 	cmdheader->flags = (sizeof(FIS_REG_H2D) / sizeof(uint32_t)) | (0<<6) | (entryCount<<16);
 
 	uint32_t cmdTablePhys = 0;
-	a_commandTable_t* cmdTable = (a_commandTable_t*)KernelHeap::allignedMalloc(sizeof(a_commandTable_t) + (entryCount-1) * sizeof(a_prdtEntry_t), 128, &cmdTablePhys);
+	a_commandTable_t* cmdTable = (a_commandTable_t*)KernelHeap::alignedMalloc(sizeof(a_commandTable_t) + (entryCount-1) * sizeof(a_prdtEntry_t), 128, &cmdTablePhys);
 	MemoryOperations::memset(cmdTable, 0, sizeof(a_commandTable_t) + (entryCount-1) * sizeof(a_prdtEntry_t));
 
 	// Make header point to allocated table
@@ -453,7 +453,7 @@ bool AHCIPort::Eject()
 	cmdheader->flags = (sizeof(FIS_REG_H2D) / sizeof(uint32_t)) | (0<<6) | (0<<16);
 
 	uint32_t cmdTablePhys = 0;
-	a_commandTable_t* cmdTable = (a_commandTable_t*)KernelHeap::allignedMalloc(sizeof(a_commandTable_t), 128, &cmdTablePhys);
+	a_commandTable_t* cmdTable = (a_commandTable_t*)KernelHeap::alignedMalloc(sizeof(a_commandTable_t), 128, &cmdTablePhys);
 	MemoryOperations::memset(cmdTable, 0, sizeof(a_commandTable_t));
 
 	// Make header point to allocated table

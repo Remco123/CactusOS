@@ -176,7 +176,7 @@ void XHCIController::Setup()
     const uint32_t max_slots = hcsparams1 & 0xFF;
     
     //Allocate Device Context Area
-    devContextAreaVirt = (uint32_t)KernelHeap::allignedMalloc(2048, pageSize, &devContextAreaPhys);
+    devContextAreaVirt = (uint32_t)KernelHeap::alignedMalloc(2048, pageSize, &devContextAreaPhys);
     MemoryOperations::memset((void*)devContextAreaVirt, 0, 2048); //And set it to zero's
 
     //Write physical address of Context Data Structure
@@ -469,7 +469,7 @@ uint32_t XHCIController::GetProtoOffset(uint32_t list_off, const int version, in
 }
 
 uint32_t XHCIController::CreateRing(const int trbs) {
-    const uint32_t addr = (uint32_t)KernelHeap::allignedMalloc(trbs * sizeof(struct xHCI_TRB), 0x10000);
+    const uint32_t addr = (uint32_t)KernelHeap::alignedMalloc(trbs * sizeof(struct xHCI_TRB), 0x10000);
     MemoryOperations::memset((void*)addr, 0, trbs * sizeof(struct xHCI_TRB));
     
     // make the last one a link TRB to point to the first one
@@ -484,9 +484,9 @@ uint32_t XHCIController::CreateRing(const int trbs) {
 uint32_t XHCIController::CreateEventRing(const int trbs, uint32_t* ret_addr) {
     // Please note that 'trbs' should be <= 4096 or you will need to make multiple segments
     // I only use one here.
-    const uint32_t table_addr = (uint32_t)KernelHeap::allignedMalloc(64, 64);  // min 16 bytes on a 64 byte alignment, no boundary requirements
+    const uint32_t table_addr = (uint32_t)KernelHeap::alignedMalloc(64, 64);  // min 16 bytes on a 64 byte alignment, no boundary requirements
     MemoryOperations::memset((void*)table_addr, 0, 64);
-    const uint32_t addr = (uint32_t)KernelHeap::allignedMalloc((trbs * sizeof(struct xHCI_TRB)), 0x10000); // 16 * trbs, 64 byte alignment, 64k boundary
+    const uint32_t addr = (uint32_t)KernelHeap::alignedMalloc((trbs * sizeof(struct xHCI_TRB)), 0x10000); // 16 * trbs, 64 byte alignment, 64k boundary
     MemoryOperations::memset((void*)addr, 0, trbs * sizeof(struct xHCI_TRB));
 
     // we only use 1 segment for this example

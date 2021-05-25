@@ -9,7 +9,7 @@ using namespace CactusOS::system;
 
 uint32_t DeviceHeap::currentAddress = DEVICE_HEAP_START;
 
-uint32_t DeviceHeap::AllocateChunck(uint32_t size)
+uint32_t DeviceHeap::AllocateChunk(uint32_t size)
 {
     uint32_t ret = DeviceHeap::currentAddress;
     DeviceHeap::currentAddress += pageRoundUp(size);

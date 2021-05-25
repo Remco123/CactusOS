@@ -104,7 +104,7 @@ void System::Start()
     PCIDrivers::AssignDriversFromPCI(System::pci, System::driverManager);
 
     Log(Info, "Creating shared region for system info");
-    System::systemInfo = (SharedSystemInfo*)KernelHeap::allignedMalloc(PAGE_SIZE, PAGE_SIZE);
+    System::systemInfo = (SharedSystemInfo*)KernelHeap::alignedMalloc(PAGE_SIZE, PAGE_SIZE);
     MemoryOperations::memset(System::systemInfo, 0, PAGE_SIZE);
 
     Log(Info, "Added drivers for integrated devices");

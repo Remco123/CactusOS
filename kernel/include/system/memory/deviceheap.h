@@ -25,7 +25,7 @@ namespace CactusOS
             // Allocate a chunck of memory in the virtual address space
             // Must be a page aligned size
             // Note: Memory needs to be mapped to right address afterwards, function does not include this
-            static common::uint32_t AllocateChunck(common::uint32_t size);
+            static common::uint32_t AllocateChunk(common::uint32_t size);
         };
     }
 }

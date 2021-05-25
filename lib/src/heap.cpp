@@ -117,7 +117,7 @@ void UserHeap::PrintMemoryLayout()
         Print("## Size: %d Allocated: %s\n", hdr->size, hdr->allocated ? "True" : "False");
     }
 }
-void* UserHeap::allignedMalloc(uint32_t size, uint32_t align)
+void* UserHeap::alignedMalloc(uint32_t size, uint32_t align)
 {
     void* ptr = 0;
 

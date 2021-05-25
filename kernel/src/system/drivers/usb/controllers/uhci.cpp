@@ -144,12 +144,12 @@ void UHCIController::Setup()
     outportw(pciDevice->portBase + UHCI_FRAME_NUM, 0x0000);
 
     // Allocate Stack frame
-    this->frameList = (uint32_t*)KernelHeap::allignedMalloc(1024 * sizeof(uint32_t), 4096, &this->frameListPhys);
+    this->frameList = (uint32_t*)KernelHeap::alignedMalloc(1024 * sizeof(uint32_t), 4096, &this->frameListPhys);
     MemoryOperations::memset(this->frameList, 0x0, 1024 * sizeof(uint32_t));
 
     // Allocate queue stack list
     uint32_t queuePhysStart = 0;
-    this->queueStackList = (uhci_queue_head_t*)KernelHeap::allignedMalloc(sizeof(uhci_queue_head_t) * NUM_UHCI_QUEUES, 16, &queuePhysStart);
+    this->queueStackList = (uhci_queue_head_t*)KernelHeap::alignedMalloc(sizeof(uhci_queue_head_t) * NUM_UHCI_QUEUES, 16, &queuePhysStart);
     MemoryOperations::memset(this->queueStackList, 0x0, sizeof(uhci_queue_head_t) * NUM_UHCI_QUEUES);
 
     // Set all queue entries to invalid
@@ -206,7 +206,7 @@ void UHCIController::SetupNewDevice(uint8_t port)
     struct DEVICE_DESC dev_desc;
 
     bool ls_device = (inportw(pciDevice->portBase + port) & (1<<8)) ? true : false;
-    Log(Info, "UHCI, Found Device at port %d, low speed = %b", (port - 0x10) / 2, ls_device);
+    Log(Info, "[UHCI] Found Device at port %d, low speed = %b", (port - 0x10) / 2, ls_device);
 
     // Get first 8 bytes of descriptor
     if (ControlIn(&dev_desc, ls_device, 0, 8, 8, STDRD_GET_REQUEST, DeviceRequest::GET_DESCRIPTOR, DescriptorTypes::DEVICE)) 
@@ -226,10 +226,10 @@ void UHCIController::SetupNewDevice(uint8_t port)
             System::usbManager->AddDevice(newDev);
         } 
         else
-            Log(Error, "Error setting device address.");
+            Log(Error, "[UHCI] Error setting device address.");
     } 
     else
-        Log(Error, "Error getting first 8 bytes of descriptor.");
+        Log(Error, "[UHCI] Error getting first 8 bytes of descriptor.");
 }
 void UHCIController::ControllerChecksThread()
 {
@@ -241,7 +241,7 @@ void UHCIController::ControllerChecksThread()
         if(portSts & (1<<1)) // Port Connection Change Bit
         {
             outportw(pciDevice->portBase + port, (1<<1));
-            Log(Info, "UHCI Port %d Connection change, now %s", i, (portSts & (1<<0)) ? "Connected" : "Not Connected");
+            Log(Info, "[UHCI] Port %d Connection change, now %s", i, (portSts & (1<<0)) ? "Connected" : "Not Connected");
 
             if((portSts & (1<<0)) == 1) { // Connected
                 if(ResetPort(port))
@@ -340,7 +340,7 @@ int UHCIController::CheckTransferDone(u_transferDescriptor_t* td, int numTDs)
 bool UHCIController::ControlIn(void* targ, const bool lsDevice, const int devAddress, const int packetSize, const int len, const uint8_t requestType, const uint8_t request, const uint16_t valueHigh, const uint16_t valueLow, const uint16_t index) {
     // Create Request Packet
     uint32_t requestPacketPhys;
-    REQUEST_PACKET* requestPacket = (REQUEST_PACKET*)KernelHeap::allignedMalloc(sizeof(REQUEST_PACKET), 16, &requestPacketPhys);
+    REQUEST_PACKET* requestPacket = (REQUEST_PACKET*)KernelHeap::alignedMalloc(sizeof(REQUEST_PACKET), 16, &requestPacketPhys);
     {
         requestPacket->request_type = requestType;
         requestPacket->request = request;
@@ -356,12 +356,12 @@ bool UHCIController::ControlIn(void* targ, const bool lsDevice, const int devAdd
     
     // Allocate Transfer Descriptors
     uint32_t tdPhys;
-    u_transferDescriptor_t* td = (u_transferDescriptor_t*)KernelHeap::allignedMalloc(sizeof(u_transferDescriptor_t) * 10, 16, &tdPhys);
+    u_transferDescriptor_t* td = (u_transferDescriptor_t*)KernelHeap::alignedMalloc(sizeof(u_transferDescriptor_t) * 10, 16, &tdPhys);
     MemoryOperations::memset(td, 0, sizeof(u_transferDescriptor_t) * 10);
 
     // Allocate queue head
     uint32_t queuePhys;
-    uhci_queue_head_t* queue = (uhci_queue_head_t*)KernelHeap::allignedMalloc(sizeof(uhci_queue_head_t), 16, &queuePhys);
+    uhci_queue_head_t* queue = (uhci_queue_head_t*)KernelHeap::alignedMalloc(sizeof(uhci_queue_head_t), 16, &queuePhys);
     MemoryOperations::memset(queue, 0, sizeof(uhci_queue_head_t));
     queue->horz_ptr = QUEUE_HEAD_T;
     queue->vert_ptr = tdPhys;
@@ -407,7 +407,7 @@ bool UHCIController::ControlIn(void* targ, const bool lsDevice, const int devAdd
     RemoveQueue(queue, U_QUEUE_QControl);
 
     if (timeout == 0) {
-        Log(Warning, "UHCI timed out.");
+        Log(Warning, "[UHCI] timed out.");
         return false;
     }
     
@@ -430,7 +430,7 @@ bool UHCIController::ControlIn(void* targ, const bool lsDevice, const int devAdd
 bool UHCIController::ControlOut(const bool lsDevice, const int devAddress, const int packetSize, const int len, const uint8_t requestType, const uint8_t request, const uint16_t valueHigh, const uint16_t valueLow, const uint16_t index) {
     // Create setupPacket
     uint32_t setupPacketPhys;
-    REQUEST_PACKET* setupPacket = (REQUEST_PACKET*)KernelHeap::allignedMalloc(sizeof(REQUEST_PACKET), 16, &setupPacketPhys);
+    REQUEST_PACKET* setupPacket = (REQUEST_PACKET*)KernelHeap::alignedMalloc(sizeof(REQUEST_PACKET), 16, &setupPacketPhys);
     {
         setupPacket->request_type = requestType;
         setupPacket->request = request;
@@ -441,12 +441,12 @@ bool UHCIController::ControlOut(const bool lsDevice, const int devAddress, const
     
     // Allocate Transfer Descriptors
     uint32_t tdPhys;
-    u_transferDescriptor_t* td = (u_transferDescriptor_t*)KernelHeap::allignedMalloc(sizeof(u_transferDescriptor_t) * 2, 16, &tdPhys);
+    u_transferDescriptor_t* td = (u_transferDescriptor_t*)KernelHeap::alignedMalloc(sizeof(u_transferDescriptor_t) * 2, 16, &tdPhys);
     MemoryOperations::memset(td, 0, sizeof(u_transferDescriptor_t) * 2);
 
     // Allocate queue head
     uint32_t queuePhys;
-    uhci_queue_head_t* queue = (uhci_queue_head_t*)KernelHeap::allignedMalloc(sizeof(uhci_queue_head_t), 16, &queuePhys);
+    uhci_queue_head_t* queue = (uhci_queue_head_t*)KernelHeap::alignedMalloc(sizeof(uhci_queue_head_t), 16, &queuePhys);
     MemoryOperations::memset(queue, 0, sizeof(uhci_queue_head_t));
     queue->horz_ptr = QUEUE_HEAD_T;
     queue->vert_ptr = tdPhys;
@@ -492,12 +492,12 @@ bool UHCIController::BulkOut(const bool lsDevice, const int devAddress, const in
 
     // Allocate Transfer Descriptors
     uint32_t tdPhys;
-    u_transferDescriptor_t* td = (u_transferDescriptor_t*)KernelHeap::allignedMalloc(sizeof(u_transferDescriptor_t) * 10, 16, &tdPhys);
+    u_transferDescriptor_t* td = (u_transferDescriptor_t*)KernelHeap::alignedMalloc(sizeof(u_transferDescriptor_t) * 10, 16, &tdPhys);
     MemoryOperations::memset(td, 0, sizeof(u_transferDescriptor_t) * 10);
 
     // Allocate queue head
     uint32_t queuePhys;
-    uhci_queue_head_t* queue = (uhci_queue_head_t*)KernelHeap::allignedMalloc(sizeof(uhci_queue_head_t), 16, &queuePhys);
+    uhci_queue_head_t* queue = (uhci_queue_head_t*)KernelHeap::alignedMalloc(sizeof(uhci_queue_head_t), 16, &queuePhys);
     MemoryOperations::memset(queue, 0, sizeof(uhci_queue_head_t));
     queue->horz_ptr = QUEUE_HEAD_T;
     queue->vert_ptr = tdPhys;
@@ -545,12 +545,12 @@ bool UHCIController::BulkIn(const bool lsDevice, const int devAddress, const int
     
     // Allocate Transfer Descriptors
     uint32_t tdPhys;
-    u_transferDescriptor_t* td = (u_transferDescriptor_t*)KernelHeap::allignedMalloc(sizeof(u_transferDescriptor_t) * 10, 16, &tdPhys);
+    u_transferDescriptor_t* td = (u_transferDescriptor_t*)KernelHeap::alignedMalloc(sizeof(u_transferDescriptor_t) * 10, 16, &tdPhys);
     MemoryOperations::memset(td, 0, sizeof(u_transferDescriptor_t) * 10);
 
     // Allocate queue head
     uint32_t queuePhys;
-    uhci_queue_head_t* queue = (uhci_queue_head_t*)KernelHeap::allignedMalloc(sizeof(uhci_queue_head_t), 16, &queuePhys);
+    uhci_queue_head_t* queue = (uhci_queue_head_t*)KernelHeap::alignedMalloc(sizeof(uhci_queue_head_t), 16, &queuePhys);
     MemoryOperations::memset(queue, 0, sizeof(uhci_queue_head_t));
     queue->horz_ptr = QUEUE_HEAD_T;
     queue->vert_ptr = tdPhys;
@@ -605,12 +605,12 @@ void UHCIController::InterruptIn(const bool lsDevice, const int devAddress, cons
 
     // Allocate Transfer Descriptors
     uint32_t tdPhys;
-    u_transferDescriptor_t* td = (u_transferDescriptor_t*)KernelHeap::allignedMalloc(sizeof(u_transferDescriptor_t) * 10, 16, &tdPhys);
+    u_transferDescriptor_t* td = (u_transferDescriptor_t*)KernelHeap::alignedMalloc(sizeof(u_transferDescriptor_t) * 10, 16, &tdPhys);
     MemoryOperations::memset(td, 0, sizeof(u_transferDescriptor_t) * 10);
 
     // Allocate queue head
     uint32_t queuePhys;
-    uhci_queue_head_t* queue = (uhci_queue_head_t*)KernelHeap::allignedMalloc(sizeof(uhci_queue_head_t), 16, &queuePhys);
+    uhci_queue_head_t* queue = (uhci_queue_head_t*)KernelHeap::alignedMalloc(sizeof(uhci_queue_head_t), 16, &queuePhys);
     MemoryOperations::memset(queue, 0, sizeof(uhci_queue_head_t));
     queue->horz_ptr = QUEUE_HEAD_T;
     queue->vert_ptr = tdPhys;
@@ -675,7 +675,7 @@ uint32_t UHCIController::HandleInterrupt(uint32_t esp)
                     MemoryOperations::memset(transfer->bufferPointer, 0, transfer->bufferLen);
 
                 if(status == 2) {
-                    Log(Warning, "UHCI: Received NAK");
+                    Log(Warning, "[UHCI] Received NAK");
                 }
                 
                 bool rescedule = transfer->handler->HandleInterruptPacket(transfer);
@@ -690,7 +690,7 @@ uint32_t UHCIController::HandleInterrupt(uint32_t esp)
                         td[i].info = (td[i].info & ~(1 << 19)) | (transfer->handler->device->endpoints[transfer->endpoint-1]->Toggle() << 19);
                     }
 
-                    // Queue head automaticly points to next transfer descriptor on completion
+                    // Queue head automaticaly points to next transfer descriptor on completion
                     // So we need to set it to the initial position
                     qh->vert_ptr = transfer->tdPhys;
                 }
@@ -713,34 +713,34 @@ uint32_t UHCIController::HandleInterrupt(uint32_t esp)
 
     if (val & UHCI_STS_RESUME_DETECT)
     {
-        Log(Info, "UHCI: Resume Detect");
+        Log(Info, "[UHCI] Resume Detect");
         writeBack |= UHCI_STS_RESUME_DETECT;
     }
 
     if (val & UHCI_STS_HCHALTED)
     {
-        Log(Error, "UHCI: Host Controller Halted");
+        Log(Error, "[UHCI] Host Controller Halted");
         writeBack |= UHCI_STS_HCHALTED;
     }
 
     if (val & UHCI_STS_HC_PROCESS_ERROR)
     {
-        Log(Error, "UHCI: Host Controller Process Error");
+        Log(Error, "[UHCI] Host Controller Process Error");
         writeBack |= UHCI_STS_HC_PROCESS_ERROR;
     }
 
     if (val & UHCI_STS_USB_ERROR)
     {
-        Log(Error, "UHCI: USB Error");
+        Log(Error, "[UHCI] USB Error");
         int num = inportw(pciDevice->portBase + UHCI_FRAME_NUM) & 0b1111111111;
-        Log(Info, "UHCI: Frame Base: %x Frame Num: %d Frame: %x", inportl(pciDevice->portBase + UHCI_FRAME_BASE), num, this->frameList[num]);
+        Log(Info, "[UHCI] Frame Base: %x Frame Num: %d Frame: %x", inportl(pciDevice->portBase + UHCI_FRAME_BASE), num, this->frameList[num]);
         
         writeBack |= UHCI_STS_USB_ERROR;
     }
 
     if (val & UHCI_STS_HOST_SYSTEM_ERROR)
     {
-        Log(Error, "UHCI: Host System Error");
+        Log(Error, "[UHCI] Host System Error");
         writeBack |= UHCI_STS_HOST_SYSTEM_ERROR;
     }
 
