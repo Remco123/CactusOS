@@ -266,12 +266,22 @@ void Compositor::ProcessEvents()
         
         if(prevMouseInfo != 0) {
             IPCSend(prevMouseInfo->clientID, IPCMessageType::GUIEvent, GUIEvents::MouseMove, this->prevMouseX, this->prevMouseY, this->curMouseX, this->curMouseY);
-            prevMouseInfo->AddDirtyArea(0, 0, prevMouseInfo->width, prevMouseInfo->height);
         }
         if(curMouseInfo != 0 && curMouseInfo != prevMouseInfo) {
             IPCSend(curMouseInfo->clientID, IPCMessageType::GUIEvent, GUIEvents::MouseMove, this->prevMouseX, this->prevMouseY, this->curMouseX, this->curMouseY);
-            curMouseInfo->AddDirtyArea(0, 0, curMouseInfo->width, curMouseInfo->height);
         }
+
+        // Apply dirty rectangles if required
+        Rectangle prevMouseRect = Rectangle(CURSOR_W, CURSOR_H, this->prevMouseX, this->prevMouseY);
+        Rectangle curMouseRect = Rectangle(CURSOR_W, CURSOR_H, this->curMouseX, this->curMouseY);
+        ApplyDesktopBounds(&prevMouseRect);
+        ApplyDesktopBounds(&curMouseRect);
+
+        for(ContextInfo* c : contextManager->FindTargetContexts(prevMouseRect))
+            c->AddDirtyArea(0, 0, c->width, c->height);
+
+        for(ContextInfo* c : contextManager->FindTargetContexts(curMouseRect))
+            c->AddDirtyArea(0, 0, c->width, c->height);
     }
 
     // Update variables for next iteration

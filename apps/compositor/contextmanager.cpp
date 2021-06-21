@@ -21,6 +21,17 @@ ContextInfo* ContextManager::FindTargetContext(int x, int y)
 
     return 0;
 }
+List<ContextInfo*> ContextManager::FindTargetContexts(Rectangle area)
+{
+    List<ContextInfo*> result;
+    for(ContextInfo* c : contextList)
+    {
+        Rectangle item = Rectangle(c->width, c->height, c->x, c->y);
+        if(area.Intersect(item, 0))
+            result.push_back(c);
+    }
+    return result;
+}
 
 void ContextManager::MoveToFront(ContextInfo* info)
 {

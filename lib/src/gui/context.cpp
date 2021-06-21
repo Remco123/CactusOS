@@ -76,6 +76,7 @@ void Context::MoveToPosition(int newX, int newY)
     }
 
     IPCSend(GUI::compositorPID, IPCMessageType::GUIRequest, GUICommunction::CONTEXT_MOVED, oldX, oldY, this->sharedContextInfo->width, this->sharedContextInfo->height);
+    this->sharedContextInfo->AddDirtyArea(0, 0, this->sharedContextInfo->width, this->sharedContextInfo->height);
 }
 
 void Context::CloseContext()

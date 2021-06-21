@@ -30,10 +30,12 @@ bool Rectangle::Intersect(Rectangle other, Rectangle* result)
     int left = Math::Max(this->x, other.x);
     int right = Math::Min(this->x + this->width, other.x + other.width);
 
-    result->x = left;
-    result->y = top;
-    result->width = right - left;
-    result->height = bottom - top;
+    if(result) {
+        result->x = left;
+        result->y = top;
+        result->width = right - left;
+        result->height = bottom - top;
+    }
 
     return (top < bottom && left < right);
 }

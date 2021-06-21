@@ -26,6 +26,9 @@ public:
     // The order is from top to bottom!
     ContextInfo* FindTargetContext(int x, int y);
 
+    // Find all contexts that exist in the given area
+    List<ContextInfo*> FindTargetContexts(Rectangle area);
+
     // Move a context to the front of the desktop
     void MoveToFront(ContextInfo* info);
 };
