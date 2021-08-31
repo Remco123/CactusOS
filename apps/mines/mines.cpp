@@ -227,7 +227,7 @@ void BlockClickHandler(void* sender, MouseButtonArgs args)
     }
 }
 
-int main()
+int main(int argc, char** argv)
 {
     GUI::SetDefaultFont();
 

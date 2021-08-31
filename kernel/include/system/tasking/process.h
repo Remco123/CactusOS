@@ -25,6 +25,7 @@ namespace CactusOS
             int id;
             int syscallID;
             bool isUserspace;
+            char* args;
             ProcessState state;
             List<Thread*> Threads;
             common::uint32_t pageDirPhys;
@@ -44,7 +45,7 @@ namespace CactusOS
             Stream* stdInput;
             Stream* stdOutput;
 
-            //For Debuging
+            // For Debuging
             char fileName[32];
         };
 
@@ -55,7 +56,7 @@ namespace CactusOS
         public:
             static List<Process*> Processes;
             
-            static Process* Create(char* fileName, bool isKernel = false);
+            static Process* Create(char* fileName, char* arguments = 0, bool isKernel = false);
             static Process* CreateKernelProcess();
             static void RemoveProcess(Process* proc);
             static void UpdateHeap(Process* proc, common::uint32_t newEndAddr);

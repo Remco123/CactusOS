@@ -53,5 +53,9 @@ void InterruptManager::AddHandler(InterruptHandler* handler, uint8_t interrupt)
 }
 void InterruptManager::RemoveHandler(InterruptHandler* handler, uint8_t interrupt)
 {
-    //TODO: Implement this
+    interruptCallbacks[interrupt]->Remove(handler);
+    if(interruptCallbacks[interrupt]->size() == 0) {
+        delete interruptCallbacks[interrupt];
+        interruptCallbacks[interrupt] = 0;
+    }
 }

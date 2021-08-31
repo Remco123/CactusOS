@@ -19,7 +19,7 @@ using namespace LIBCactusOS::Imaging;
 
 char* path = "B:\\boot.jpg";
 
-int main()
+int main(int argc, char** argv)
 {
     Log(Info, "Init process started!");
 

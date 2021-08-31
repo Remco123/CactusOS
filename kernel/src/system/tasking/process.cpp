@@ -15,21 +15,21 @@ List<Process*> ProcessHelper::Processes;
 ProcessHelper::ProcessHelper()
 {   }
 
-Process* ProcessHelper::Create(char* fileName, bool isKernel)
+Process* ProcessHelper::Create(char* fileName, char* arguments, bool isKernel)
 {
-    //Check if the file exists
+    // Check if the file exists
     if(!System::vfs->FileExists(fileName))
         return 0;
 
-    //Get the filesize
+    // Get the filesize
     int fileSize = System::vfs->GetFileSize(fileName);
     if(fileSize == -1)
         return 0;
 
-    //Allocate a buffer to read the bin
+    // Allocate a buffer to read the bin
     uint8_t* fileBuffer = new uint8_t[fileSize];
 
-    if(System::vfs->ReadFile(fileName, fileBuffer) != 0) //An error occured
+    if(System::vfs->ReadFile(fileName, fileBuffer) != 0) //An error occurred
     {
         delete fileBuffer;
         return 0;
@@ -55,20 +55,20 @@ Process* ProcessHelper::Create(char* fileName, bool isKernel)
     PageDirectory* pageDir = (PageDirectory*)KernelHeap::alignedMalloc(sizeof(PageDirectory), sizeof(PageDirectory), &pageDirPhys);
     MemoryOperations::memset(pageDir, 0, sizeof(PageDirectory));
 
-    //Copy kernel pages
+    // Copy kernel pages
     pageDir->entries[KERNEL_PTNUM] = ((PageDirectory*)&BootPageDirectory)->entries[KERNEL_PTNUM];
     
-    //Copy kernel heap as well
+    // Copy kernel heap as well
     for(uint32_t i = 0; i < KERNEL_HEAP_SIZE / 4_MB; i++)
         pageDir->entries[KERNEL_PTNUM + i + 1] = ((PageDirectory*)&BootPageDirectory)->entries[KERNEL_PTNUM + i + 1];
 
-    //We also need to copy memory used by devices to this process
-    //We assume all memory is initialized when the first process is started
+    // We also need to copy memory used by devices to this process
+    // We assume all memory is initialized when the first process is started
     for(uint32_t i = DEVICE_HEAP_START; i < (DEVICE_HEAP_START + DEVICE_HEAP_SIZE); i += 4_MB)
         pageDir->entries[PAGEDIR_INDEX(i)] = ((PageDirectory*)&BootPageDirectory)->entries[PAGEDIR_INDEX(i)];
 
-    //Set the last pde to the page directory itself
-    //With this we can use recursive page tables
+    // Set the last pde to the page directory itself
+    // With this we can use recursive page tables
     PageDirectoryEntry lastPDE;
     MemoryOperations::memset(&lastPDE, 0, sizeof(PageDirectoryEntry));
     lastPDE.frame = pageDirPhys / PAGE_SIZE;
@@ -109,23 +109,24 @@ Process* ProcessHelper::Create(char* fileName, bool isKernel)
     
     VirtualMemoryManager::ReloadCR3();
 
-    //Reset it otherwise the code will not be copied
+    // Reset it otherwise the code will not be copied
     prgmHeader = (ElfProgramHeader*)(fileBuffer + header->e_phoff);
 
     for(int i = 0; i < header->e_phnum; i++, prgmHeader++)
         if(prgmHeader->p_type == 1) 
             MemoryOperations::memcpy((void*)prgmHeader->p_vaddr, fileBuffer + prgmHeader->p_offset, prgmHeader->p_memsz);
 
-    //Put information in PCB
+    // Put information in PCB
     proc->id = currentPID++;
     proc->pageDirPhys = pageDirPhys;
     proc->state = ProcessState::Active;
     proc->isUserspace = !isKernel;
+    proc->args = arguments;
     proc->Threads.push_back(ThreadHelper::CreateFromFunction((void (*)())header->e_entry, isKernel));
 
     Thread* mainThread = proc->Threads[0];
 
-    //Create userstack for process
+    // Create userstack for process
     for(uint32_t i = (uint32_t)mainThread->userStack; i < ((uint32_t)mainThread->userStack + mainThread->userStackSize); i+=PAGE_SIZE)
         VirtualMemoryManager::AllocatePage(VirtualMemoryManager::GetPageForAddress(i, true, true, !isKernel), isKernel, true);
 

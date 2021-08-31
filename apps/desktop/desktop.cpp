@@ -22,7 +22,7 @@ void ButtonHandler(void* sender, MouseButtonArgs arg)
             Process::Run(item->filename);
 }
 
-int main()
+int main(int argc, char** argv)
 {
     GUI::SetDefaultFont();
 

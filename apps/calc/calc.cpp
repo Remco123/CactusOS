@@ -21,7 +21,7 @@ void NewClickHandler(void* sender, MouseButtonArgs arg)
 
 Label* textLabel = 0;
 bool calculated = true;
-int main()
+int main(int argc, char** argv)
 {
     Print("Starting Calculator\n");
     GUI::SetDefaultFont();
@@ -135,7 +135,7 @@ void CalculateButtonHandler(void* sender, MouseButtonArgs arg)
     
     char* resultStr = Convert::IntToString(result);
     int resultLen = strlen(resultStr);
-    char* realStr = new char[resultLen];
+    char* realStr = new char[resultLen + 1];
     memcpy(realStr, resultStr, resultLen);
     realStr[resultLen] = '\0';
 

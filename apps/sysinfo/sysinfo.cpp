@@ -240,7 +240,7 @@ void PrintProcessorInfo()
     delete version;
 }
 
-int main()
+int main(int argc, char** argv)
 {
     Print("---------- Start of system information dump ----------\n");
     PrintDiskInfo();

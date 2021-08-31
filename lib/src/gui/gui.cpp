@@ -92,7 +92,7 @@ void GUI::ProcessEvents()
         int curY = guiEvent.arg5;
 
         Context* prevTargetControl = FindTargetContext(prevX, prevY);
-        Context* newTargetControl = FindTargetContext(prevX, prevY);
+        Context* newTargetControl = FindTargetContext(curX, curY);
         
         if(prevTargetControl != 0)
             prevTargetControl->OnMouseMove(prevX - prevTargetControl->sharedContextInfo->x, prevY - prevTargetControl->sharedContextInfo->y, curX - prevTargetControl->sharedContextInfo->x, curY - prevTargetControl->sharedContextInfo->y);

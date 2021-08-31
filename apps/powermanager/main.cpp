@@ -12,7 +12,7 @@ void PoweroffButtonCallback(void* sender, MouseButtonArgs arg);
 void RebootButtonCallback(void* sender, MouseButtonArgs arg);
 void PoweroffAndEjectButtonCallback(void* sender, MouseButtonArgs arg);
 
-int main()
+int main(int argc, char** argv)
 {
     GUI::SetDefaultFont();
     

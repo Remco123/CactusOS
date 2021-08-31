@@ -85,10 +85,30 @@ void Control::OnMouseUp(int x_abs, int y_abs, uint8_t button)
 
 void Control::OnMouseMove(int prevX_abs, int prevY_abs, int newX_abs, int newY_abs)
 {
-    //TODO: Implement mouseEnter and mouseLeave here
-    for(Control* c : this->childs)
-        if(c->Contains(newX_abs, newY_abs) || c->Contains(prevX_abs, prevY_abs))
+    //Print("Control mouse move %d %d %d %d\n", prevX_abs, prevY_abs, newX_abs, newY_abs);
+    for(Control* c : this->childs) {
+        bool inNewArea = c->Contains(newX_abs, newY_abs);
+        bool inOldArea = c->Contains(prevX_abs, prevY_abs);
+
+        if(inNewArea || inOldArea)
             c->OnMouseMove(prevX_abs - c->x, prevY_abs - c->y, newX_abs - c->x, newY_abs - c->y);
+
+        if(inNewArea && !inOldArea)
+            c->OnMouseEnter(prevX_abs - c->x, prevY_abs - c->y, newX_abs - c->x, newY_abs - c->y);
+        
+        if(!inNewArea && inOldArea)
+            c->OnMouseLeave(prevX_abs - c->x, prevY_abs - c->y, newX_abs - c->x, newY_abs - c->y);
+    }
+}
+
+void Control::OnMouseEnter(int prevX_abs, int prevY_abs, int newX_abs, int newY_abs)
+{
+    this->backColor += 0xFFAA;
+}
+
+void Control::OnMouseLeave(int prevX_abs, int prevY_abs, int newX_abs, int newY_abs)
+{
+    this->backColor -= 0xFFAA;
 }
 
 void Control::OnKeyDown(uint8_t key, KEYPACKET_FLAGS modifiers)

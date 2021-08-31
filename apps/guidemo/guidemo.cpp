@@ -91,7 +91,7 @@ void DrawShapesDemo(Canvas* canv)
     canv->DrawFillRoundedRect(Colors::Blue, x + 100, y + 20, 80, 80, d % 40);
 }
 
-int main()
+int main(int argc, char** argv)
 {
     GUI::SetDefaultFont();
     

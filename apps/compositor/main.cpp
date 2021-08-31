@@ -8,7 +8,7 @@
 
 using namespace LIBCactusOS;
 
-int main()
+int main(int argc, char** argv)
 {
     Compositor* mainCompositor = new Compositor();
     while(1) 

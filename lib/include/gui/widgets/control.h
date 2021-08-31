@@ -121,6 +121,14 @@ namespace LIBCactusOS
         */
         virtual void OnMouseMove(int prevX_abs, int prevY_abs, int newX_abs, int newY_abs);
         /**
+         * Called when mouse enters control
+        */
+        virtual void OnMouseEnter(int prevX_abs, int prevY_abs, int newX_abs, int newY_abs);
+        /**
+         * Called when mouse leaves control
+        */
+        virtual void OnMouseLeave(int prevX_abs, int prevY_abs, int newX_abs, int newY_abs);
+        /**
          * Called when key is held down
         */
         virtual void OnKeyDown(uint8_t key, KEYPACKET_FLAGS modifiers);

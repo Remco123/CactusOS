@@ -155,7 +155,7 @@ CPUState* CactusOSSyscalls::HandleSyscall(CPUState* state)
                     break;
                 }
 
-                Process* newProc = ProcessHelper::Create(applicationPath, false);
+                Process* newProc = ProcessHelper::Create(applicationPath);
                 if(newProc != 0) {
                     if(block) {
                         newProc->Threads[0]->state = Blocked;
@@ -225,6 +225,16 @@ CPUState* CactusOSSyscalls::HandleSyscall(CPUState* state)
             {
                 bool active = (bool)state->EBX;
                 System::scheduler->Enabled = active;
+            }
+            break;
+        case LIBCactusOS::SYSCALL_GET_ARGUMENTS:
+            {
+                char* target = (char*)state->EBX;
+                char* src = proc->args;
+                if(!src)
+                    break;
+                
+                MemoryOperations::memcpy(target, src, String::strlen(src) <= PROC_ARG_LEN_MAX ? String::strlen(src) : PROC_ARG_LEN_MAX);
             }
             break;
 

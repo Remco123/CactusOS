@@ -34,7 +34,7 @@ void GUIThread()
             Process::Yield();
     }
 }
-int main()
+int main(int argc, char** argv)
 {
     GUI::SetDefaultFont();
     
@@ -71,7 +71,7 @@ int main()
     return 0;
 }
 
-// Excecute command and return pid of created process if necessary
+// Execute command and return pid of created process if necessary
 int ExecCommand(char* cmd)
 {
     if(memcmp(cmd, "ls", 3) == 0)

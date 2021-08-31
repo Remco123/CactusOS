@@ -9,7 +9,7 @@
 #include <log.h>
 #include <proc.h>
 
-int main()
+int main(int argc, char** argv)
 {
     GUI::SetDefaultFont();
     Context* mainScreen = GUI::RequestContext(160, 160, GUI::Width-160, 0);

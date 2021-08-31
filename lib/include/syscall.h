@@ -5,6 +5,7 @@ namespace LIBCactusOS
 {
     #define SYSCALL_RET_SUCCES 1
     #define SYSCALL_RET_ERROR 0
+    #define PROC_ARG_LEN_MAX 100
 
     enum Systemcalls {
         SYSCALL_EXIT = 0, // Tells kernel that procces is done and can be removed
@@ -58,6 +59,7 @@ namespace LIBCactusOS
         SYSCALL_PROC_EXIST,
         SYSCALL_UNBLOCK,
         SYSCALL_SET_SCHEDULER,
+        SYSCALL_GET_ARGUMENTS,
 
         //////////////
         // IPC
