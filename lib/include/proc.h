@@ -93,10 +93,6 @@ namespace LIBCactusOS
          * Dissable or enable kernel scheduler
         */
         static void SetScheduler(bool active);
-        /**
-         * Get a list from the kernel containing all known processes
-        */
-        static List<ProcessInfo*> GetProcessList();
     };
 }
 

@@ -104,23 +104,22 @@ int ExecCommand(char* cmd)
     }
     else if(memcmp(cmd, "proc", 5) == 0)
     {
-        List<ProcessInfo*> items = Process::GetProcessList();
-        for(ProcessInfo* item : items)
-        {
-            termWindow->Write(item->fileName);
-            for(int i = 0; i < (int)(32-strlen(item->fileName)); i++)
-                termWindow->Write(' ');
+        int procCount = SystemInfo::Properties["processes"].size();
+        for(int i = 0; i < procCount; i++) {
+            char* id = (char*)SystemInfo::Properties["processes"][i]["filename"];
 
-            termWindow->Write(" PID=");
-            termWindow->Write(Convert::IntToString(item->id));
-            termWindow->Write(" Treads ");
-            termWindow->Write(Convert::IntToString(item->threads));
-            termWindow->Write(item->blocked ? (char*)" Blocked" : (char*)" !Blocked");
-            termWindow->Write(" Memory ");
-            termWindow->Write(Convert::IntToString(item->heapMemory / 1_KB));
+            termWindow->Write("  ");
+            termWindow->Write(id);
+            termWindow->Write("\n  -> PID = ");
+            termWindow->Write(Convert::IntToString((int)SystemInfo::Properties["processes"][i]["pid"]));
+            termWindow->Write("\n  -> State = ");
+            termWindow->Write(Convert::IntToString((int)SystemInfo::Properties["processes"][i]["state"]));
+            termWindow->Write("\n  -> Heap = ");
+            termWindow->Write(Convert::IntToString(((uint32_t)SystemInfo::Properties["processes"][i]["heap-end"] - (uint32_t)SystemInfo::Properties["processes"][i]["heap-start"]) / 1_KB));
             termWindow->Write(" Kb");
             termWindow->Write('\n');
-            delete item;
+
+            delete id;
         }
 
         return 0;

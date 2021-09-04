@@ -70,22 +70,3 @@ void Process::Unblock(int procPID, int thread)
 {
     DoSyscall(SYSCALL_UNBLOCK, procPID, thread);
 }
-List<ProcessInfo*> Process::GetProcessList()
-{
-    List<ProcessInfo*> result;
-
-    int items = DoSyscall(SYSCALL_BEGIN_LISTING, PROCESS_LISTING);
-    for(int i = 0; i < items; i++) {
-        ProcessInfo* buf = new ProcessInfo();
-        bool succes = (bool)DoSyscall(SYSCALL_LISTING_ENTRY, PROCESS_LISTING, (uint32_t)i, (uint32_t)buf);
-        if(succes == false) {
-            delete buf;
-            return result; //End of items
-        }
-
-        result += buf;
-    }
-
-    DoSyscall(SYSCALL_END_LISTING, PROCESS_LISTING);
-    return result;
-}

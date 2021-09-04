@@ -177,15 +177,10 @@ void List<T>::Clear()
 template <typename T>
 T List<T>::GetAt(int index)
 {
-    if(index == 0)
-        return this->head_->data;
-    else
-    {
-        ListNode<T>* cur = head_;
-        for(int i = 0; i < index; ++i)
-            cur = cur->next;
-        return cur->data;
-    }
+    ListNode<T>* cur = head_;
+    for(int i = 0; i < index; ++i)
+        cur = cur->next;
+    return cur->data;
 }
 
 template <typename T>

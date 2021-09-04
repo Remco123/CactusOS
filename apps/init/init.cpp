@@ -41,9 +41,15 @@ int main(int argc, char** argv)
     bar->SetValue(70);
 
     Print("Launched Compositor pid: %d\n", Process::Run("B:\\apps\\compositor.bin"));
+
+    // Prevent that one of the other launch processes gets the PID of 3
+    // There can be (a very small) chance that the desktop will get launched before the compositor if there is a weird task switch
+    while (Process::Active(GUI::compositorPID) == false)
+        Time::Sleep(100);
+    
     Print("Launched Desktop pid: %d\n", Process::Run("B:\\apps\\desktop.bin"));
     Print("Launched Clock pid: %d\n", Process::Run("B:\\apps\\clock.bin"));
-    Print("Launched Sysinfo pid: %d\n", Process::Run("B:\\apps\\powermanager.bin"));
+    //Print("Launched Sysinfo pid: %d\n", Process::Run("B:\\apps\\powermanager.bin"));
 
     bar->SetValue(100); 
 

@@ -218,7 +218,7 @@ bool SystemInfoManager::HandleSysinfoRequest(void* arrayPointer, int count, comm
                 return true;
             }
             else if(String::strcmp(items[3].id, "state")) {
-                *((int*)retAddr) = (int)ProcessHelper::Processes[index]->state;
+                *((int*)retAddr) = (int)ProcessHelper::Processes[index]->Threads[0]->state;
                 return true;
             }
             else if(String::strcmp(items[3].id, "membase")) {

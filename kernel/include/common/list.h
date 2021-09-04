@@ -198,19 +198,14 @@ void List<T>::Clear()
 template <typename T>
 T List<T>::GetAt(int index)
 {
-    if(index == 0)
-        return this->head_->data;
-    else
-    {
-        this->lock.Lock();
-        ListNode<T>* cur = head_;
-        for(int i = 0; i < index; ++i)
-            cur = cur->next;
+    this->lock.Lock();
+    ListNode<T>* cur = head_;
+    for(int i = 0; i < index; ++i)
+        cur = cur->next;
 
-        T ret = cur->data;
-        this->lock.Unlock();
-        return ret;
-    }
+    T ret = cur->data;
+    this->lock.Unlock();
+    return ret;
 }
 
 template <typename T>

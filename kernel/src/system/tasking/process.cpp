@@ -175,8 +175,11 @@ Process* ProcessHelper::CreateKernelProcess()
     proc->pageDirPhys = virt2phys((uint32_t)&BootPageDirectory);
     proc->state = ProcessState::Active;
     proc->syscallID = 1;
-
-    Processes.push_back(proc); //Finally add it to all known processes
+    proc->heap.heapStart = KERNEL_HEAP_START;
+    proc->heap.heapEnd = KERNEL_HEAP_SIZE;
+    
+    //Finally add it to all known processes
+    Processes.push_back(proc);
 
     return proc;
 }
