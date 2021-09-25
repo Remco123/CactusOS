@@ -4,7 +4,7 @@
 #include <gui/context.h>
 #include <gui/gui.h>
 #include <imaging/image.h>
-#include <imaging/bmpformat.h>
+#include <imaging/pngformat.h>
 
 using namespace LIBCactusOS;
 using namespace LIBCactusOS::Imaging;
@@ -35,14 +35,11 @@ void DesktopItem::DrawToContext()
 {
     if(this->iconBuffer)
     {
-        Image img = ConvertBMPRaw(this->iconBuffer);
+        Image img = PNGDecoder::ConvertRAW(this->iconBuffer);
         for(int x = 0; x < img.GetWidth(); x++)
             for(int y = 0; y < img.GetHeight(); y++) {
                 uint32_t argb = img[y * img.GetWidth() + x];
-                if(argb != 0xFFFFFFFF)
-                    this->context->canvas->SetPixel(x, y, argb);
-                else
-                    this->context->canvas->SetPixel(x, y, 0x00000000);
+                this->context->canvas->SetPixel(x, y, argb);
             }
     }
     if(this->drawLabel) {

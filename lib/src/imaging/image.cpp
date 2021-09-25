@@ -7,6 +7,7 @@
 
 #include <imaging/bmpformat.h>
 #include <imaging/jpeg_decoder.h>
+#include <imaging/pngformat.h>
 
 using namespace LIBCactusOS;
 using namespace LIBCactusOS::Imaging;
@@ -125,6 +126,9 @@ Image Image::CreateFromFile(const char* filepath, const char* ext)
                 return result;
             }
         }
+    }
+    else if(strcmp(extension, "png") == 1) {
+        return PNGDecoder::Convert(filepath);
     }
     else
         Print("Could not found a image converter for extension %s\n", extension);

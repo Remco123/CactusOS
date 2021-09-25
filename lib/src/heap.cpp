@@ -37,7 +37,7 @@ void* UserHeap::Malloc(uint32_t size)
         Log(Warning, "Heap needs to be expanded for this process");
         
         //Call Kernel
-        if(DoSyscall(SYSCALL_SET_HEAP_SIZE, endAddress + size + HEAP_INCREASE_SIZE) == SYSCALL_RET_SUCCES) {
+        if(DoSyscall(SYSCALL_SET_HEAP_SIZE, pageRoundUp(endAddress + size + HEAP_INCREASE_SIZE)) == SYSCALL_RET_SUCCES) {
             MemoryHeader* lastHeader = 0;
             
             //Find last block

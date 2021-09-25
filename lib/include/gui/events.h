@@ -12,7 +12,7 @@ namespace LIBCactusOS
     class IEventCallback
     {
     public:
-        virtual void Invoke(void*, ArgumentType) = 0;
+        virtual void Invoke(void*, ArgumentType) {}
     };
 
     // A callback that is a class method

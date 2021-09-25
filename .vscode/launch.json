@@ -46,7 +46,7 @@
                 {
                     "description": "Load additional app binary",
                     "ignoreFailures": true,
-                    "text": "add-symbol-file ${workspaceRoot}/isofiles/apps/init.bin 0x800000"
+                    "text": "add-symbol-file ${workspaceRoot}/isofiles/apps/compositor.bin 0x800000"
                 }
             ]
         },
@@ -79,7 +79,7 @@
                 {
                     "description": "Load additional app binary",
                     "ignoreFailures": true,
-                    "text": "add-symbol-file ${workspaceRoot}/isofiles/apps/init.bin 0x800000"
+                    "text": "add-symbol-file ${workspaceRoot}/isofiles/apps/compositor.bin 0x800000"
                 }
             ]
         }
