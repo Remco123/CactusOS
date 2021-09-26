@@ -78,7 +78,7 @@ Image Image::CreateFromFile(const char* filepath, const char* ext)
         int i = str_IndexOf(filepath, '.');
         if(i == -1) {
             Print("Image path %s not valid\n", filepath);
-            return Image(0, 0);
+            return Image::Zero();
         }
 
         // Create extension from filepath
@@ -107,7 +107,7 @@ Image Image::CreateFromFile(const char* filepath, const char* ext)
                 if (decoder->GetResult() != Jpeg::Decoder::OK)
                 {
                     Print("[JPEG] Error decoding the input file\n");
-                    return Image(0, 0);
+                    return Image::Zero();
                 }
                 Image result = Image(decoder->GetWidth(), decoder->GetHeight());
                 const uint8_t* data = decoder->GetImage();
@@ -133,7 +133,7 @@ Image Image::CreateFromFile(const char* filepath, const char* ext)
     else
         Print("Could not found a image converter for extension %s\n", extension);
     
-    return Image(0, 0);
+    return Image::Zero();
 }
 
 Image Image::Resize(Image source, int newWidth, int newHeight, ResizeMethod method)

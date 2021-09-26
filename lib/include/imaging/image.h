@@ -58,6 +58,11 @@ namespace LIBCactusOS
 
             // Resize source image and return result
             static Image Resize(Image source, int newWidth, int newHeight, ResizeMethod method = NearestNeighbor);
+
+            // Returns a image of 0 size
+            static Image Zero(){
+                return Image(0, 0);
+            }
         private:
             static Image ResizeNearestNeighbor(Image source, int newWidth, int newHeight);
             static Image ResizeBilinear(Image source, int newWidth, int newHeight);

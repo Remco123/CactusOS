@@ -6,8 +6,6 @@
 #include <vfs.h>
 #include <heap.h>
 
-//#include <imaging/pngtest.h>
-
 using namespace LIBCactusOS;
 using namespace LIBCactusOS::Imaging;
 
@@ -108,14 +106,14 @@ Image PNGDecoder::Convert(const char* filepath)
     }
 
     Print("[PNG] Error processing file %s\n", filepath);
-    return Image(0, 0);
+    return Image::Zero();
 }
 
 Image PNGDecoder::ConvertRAW(const uint8_t* rawData)
 {
     const uint8_t signature[8] = { 137, 80, 78, 71, 13, 10, 26, 10 };
 
-    Image errorImage(0, 0);
+    Image errorImage = Image::Zero();
     IHDRChunk* ihdr = 0;
     List<uint8_t*> imgDataPtrs;
     List<uint32_t> imgDataLens;
@@ -131,8 +129,6 @@ Image PNGDecoder::ConvertRAW(const uint8_t* rawData)
     while(1) {
         PNGChunk* chunk = (PNGChunk*)dataPtr;
         uint32_t dataLength = __builtin_bswap32(chunk->length);
-
-        //Print("[PNG] Chunk type = %c%c%c%c Len = %d\n", chunk->type[0], chunk->type[1], chunk->type[2], chunk->type[3], dataLength);
 
         // Check for chunk type
         if(memcmp(chunk->type, "IHDR", 4) == 0) {
@@ -197,13 +193,14 @@ Image PNGDecoder::ConvertRAW(const uint8_t* rawData)
     }
 
     // Decompress image data
-    uint8_t* imageData = ZLIBDecompressor::Decompress(IDAT, &IDATLength);
+    Vector<uint8_t>* imageData = ZLIBDecompressor::Decompress(IDAT);
+    uint8_t* imageDataRaw = imageData->data();
+
     // We don't need this anymore
     delete IDAT;
 
     // Create resulting image
     Image result = Image(ihdr->width, ihdr->height);
-    result.GetCanvas()->Clear(0xFFFFFFFF);
     uint8_t* recon = (uint8_t*)result.GetBufferPtr();
     uint32_t reconIndex = 0;
     uint32_t stride = ihdr->width * BYTES_PER_PIXEL;
@@ -211,11 +208,11 @@ Image PNGDecoder::ConvertRAW(const uint8_t* rawData)
     uint32_t index = 0;
     for(uint32_t r = 0; r < ihdr->height; r++)
     {
-        uint8_t filterType = imageData[index++];
+        uint8_t filterType = imageDataRaw[index++];
         uint8_t reconX = 0;
         for(uint32_t c = 0; c < stride; c++)
         {
-            uint8_t filtX = imageData[index++];
+            uint8_t filtX = imageDataRaw[index++];
             if(filterType == 0)
                 reconX = filtX;
             else if(filterType == 1)
@@ -238,10 +235,10 @@ Image PNGDecoder::ConvertRAW(const uint8_t* rawData)
     // Convert to right pixel format
     for(uint32_t i = 0; i < (result.GetHeight() * stride); i += 4)
     {
-        uint8_t a = recon[i + 3];
-        uint8_t b = recon[i + 2];
-        uint8_t g = recon[i + 1];
-        uint8_t r = recon[i + 0];
+        const uint8_t a = recon[i + 3];
+        const uint8_t b = recon[i + 2];
+        const uint8_t g = recon[i + 1];
+        const uint8_t r = recon[i + 0];
 
         recon[i + 3] = a;
         recon[i + 2] = r;
@@ -249,6 +246,7 @@ Image PNGDecoder::ConvertRAW(const uint8_t* rawData)
         recon[i + 0] = b;
     }    
 
+    delete imageData;
     return result;
 }
 
@@ -302,7 +300,7 @@ uint8_t PNGDecoder::Recon_c(uint8_t* recon, uint32_t stride, uint32_t r, uint32_
 
 
 
-uint8_t* ZLIBDecompressor::Decompress(uint8_t* input, uint32_t* lenOut)
+Vector<uint8_t>* ZLIBDecompressor::Decompress(uint8_t* input)
 {
     /*
         Manely checking that this buffer is supported and valid, main function is the inflate method
@@ -324,7 +322,7 @@ uint8_t* ZLIBDecompressor::Decompress(uint8_t* input, uint32_t* lenOut)
     if(FDICT != 0) return 0; // FDICT is not supported
 
     // Perform actual decompression
-    uint8_t* result = ZLIBDecompressor::Inflate(reader, lenOut);
+    Vector<uint8_t>* result = ZLIBDecompressor::Inflate(reader);
     
     // Ignored for now
     uint32_t adler32 = reader->ReadBytes<uint32_t>(4);
@@ -332,10 +330,10 @@ uint8_t* ZLIBDecompressor::Decompress(uint8_t* input, uint32_t* lenOut)
     delete reader;
     return result;
 }
-uint8_t* ZLIBDecompressor::Inflate(BitReader* reader, uint32_t* lenOut)
+Vector<uint8_t>* ZLIBDecompressor::Inflate(BitReader* reader)
 {
     uint8_t endOfBlocks = 0;
-    PNGBuffer buffer(ZLIB_BUFFER_SIZE);
+    Vector<uint8_t>* buffer = new Vector<uint8_t>();
     while (!endOfBlocks) 
     {
         endOfBlocks = reader->ReadBit();
@@ -343,13 +341,13 @@ uint8_t* ZLIBDecompressor::Inflate(BitReader* reader, uint32_t* lenOut)
 
         //Print("[ZLIBDecompressor] Blocktype %d\n", blockType);
         if(blockType == 0) {
-            ZLIBDecompressor::InflateBlockNoCompression(reader, &buffer);
+            ZLIBDecompressor::InflateBlockNoCompression(reader, buffer);
         }
         else if(blockType == 1) {
-            ZLIBDecompressor::InflateBlockStatic(reader, &buffer);
+            ZLIBDecompressor::InflateBlockStatic(reader, buffer);
         }
         else if(blockType == 2) {
-            ZLIBDecompressor::InflateBlockDynamic(reader, &buffer);
+            ZLIBDecompressor::InflateBlockDynamic(reader, buffer);
         }
         else {
             Print("[ZLIBDecompressor] Invalid blocktype %d\n", blockType);
@@ -357,16 +355,15 @@ uint8_t* ZLIBDecompressor::Inflate(BitReader* reader, uint32_t* lenOut)
         }
     }
 
-    if(lenOut) *lenOut = buffer.Size();
-    return buffer.buffer;
+    return buffer;
 }
-void ZLIBDecompressor::InflateBlockNoCompression(BitReader* reader, PNGBuffer* target)
+void ZLIBDecompressor::InflateBlockNoCompression(BitReader* reader, Vector<uint8_t>* target)
 {
     uint16_t len = reader->ReadBytes<uint16_t>(2);
     uint16_t nlen = reader->ReadBytes<uint16_t>(2);
 
     for(uint16_t i = 0; i < len; i++)
-        target->Add(reader->ReadByte());
+        target->push_back(reader->ReadByte());
 }
 uint32_t ZLIBDecompressor::DecodeSymbol(BitReader* reader, HuffmanTree* tree)
 {
@@ -377,16 +374,15 @@ uint32_t ZLIBDecompressor::DecodeSymbol(BitReader* reader, HuffmanTree* tree)
         if(b) node = node->right;
         else node = node->left;
     }
-    //Print("[ZLIBDecompressor] node is %x!\n", (uint32_t)node);
     return node->symbol;
 }
-void ZLIBDecompressor::InflateBlockData(BitReader* reader, HuffmanTree* literalLengthTree, HuffmanTree* distanceTree, PNGBuffer* target)
+void ZLIBDecompressor::InflateBlockData(BitReader* reader, HuffmanTree* literalLengthTree, HuffmanTree* distanceTree, Vector<uint8_t>* target)
 {
     while(true)
     {
         uint32_t sym = DecodeSymbol(reader, literalLengthTree);
         if (sym <= 255) { // Literal byte
-            target->Add(sym & 0xFF);
+            target->push_back(sym & 0xFF);
         }
         else if(sym == 256) { // End of block
             return;
@@ -397,18 +393,14 @@ void ZLIBDecompressor::InflateBlockData(BitReader* reader, HuffmanTree* literalL
             uint32_t distSym = DecodeSymbol(reader, distanceTree);
             uint32_t dist = reader->ReadBits<uint32_t>(distanceExtraBits[distSym]) + distanceBase[distSym];
             
-            //memcpy(&target->buffer[target->Size()-1], &target->buffer[target->index - dist], length);
-            //target->index += length;
-            
             dist = target->Size() - dist;
             for(uint32_t i = 0; i < length; i++, dist++) {
-                target->Add(target->Get(dist));
+                target->push_back(target->GetAt(dist));
             }
-            //    out.append(out[-dist])
         }
     }
 }
-HuffmanTree* ZLIBDecompressor::BitListToTree(List<uint32_t>* bitList, List<uint8_t>* alphabet)
+HuffmanTree* ZLIBDecompressor::BitListToTree(Vector<uint32_t>* bitList, Vector<uint8_t>* alphabet)
 {
     uint32_t maxBits = 0;
     for(uint32_t d : *bitList)
@@ -433,9 +425,9 @@ HuffmanTree* ZLIBDecompressor::BitListToTree(List<uint32_t>* bitList, List<uint8
     }
     
     HuffmanTree* result = new HuffmanTree();
-    for(int i = 0; i < alphabet->size(); i++) {
-        uint32_t c = i; //(i < alphabet->size()) ? alphabet->GetAt(i) : 0;
-        uint32_t bitLen = (i < bitList->size()) ? bitList->GetAt(i) : 0;
+    for(int i = 0; i < alphabet->Size(); i++) {
+        uint32_t c = i;
+        uint32_t bitLen = (i < bitList->Size()) ? bitList->GetAt(i) : 0;
         if(bitLen) {
             result->Insert(nextCode[bitLen], bitLen, c);
             nextCode[bitLen] += 1;
@@ -467,8 +459,8 @@ DecodeTreesResult ZLIBDecompressor::DecodeTrees(BitReader* reader)
     for(uint32_t i = 0; i < HCLEN; i++)
         codeLengthTreeBitList[codeLengthCodesOrder[i]] = reader->ReadBits<uint8_t>(3);
 
-    List<uint32_t> codeLengthBitList;
-    List<uint8_t> codeLengthAlphaList;
+    Vector<uint32_t> codeLengthBitList;
+    Vector<uint8_t> codeLengthAlphaList;
     for(int i = 0; i < 19; i++) {
         codeLengthBitList.push_back(codeLengthTreeBitList[i]);
         codeLengthAlphaList.push_back(i);
@@ -478,8 +470,8 @@ DecodeTreesResult ZLIBDecompressor::DecodeTrees(BitReader* reader)
     HuffmanTree* codeLengthTree = BitListToTree(&codeLengthBitList, &codeLengthAlphaList);
 
     // Read literal/length + distance code length list
-    List<uint32_t> bl;
-    while (bl.size() < HLIT + HDIST)
+    Vector<uint32_t> bl;
+    while (bl.Size() < HLIT + HDIST)
     {
         uint32_t sym = DecodeSymbol(reader, codeLengthTree);
         if((sym >= 0) && (sym <= 15)) { // literal value
@@ -488,7 +480,7 @@ DecodeTreesResult ZLIBDecompressor::DecodeTrees(BitReader* reader)
         else if(sym == 16) {
             // copy the previous code length 3..6 times.
             // the next 2 bits indicate repeat length ( 0 = 3, ..., 3 = 6 )
-            uint32_t prev_code_length = bl.GetAt(bl.size() - 1);
+            uint32_t prev_code_length = bl.GetAt(bl.Size() - 1);
             uint32_t repeat_length = reader->ReadBits<uint8_t>(2) + 3;
             for(uint32_t i = 0; i < repeat_length; i++)
                 bl.push_back(prev_code_length);
@@ -511,8 +503,8 @@ DecodeTreesResult ZLIBDecompressor::DecodeTrees(BitReader* reader)
     delete codeLengthTree;
 
     // Construct trees
-    List<uint32_t> blTemp;
-    List<uint8_t> alphaTemp;
+    Vector<uint32_t> blTemp;
+    Vector<uint8_t> alphaTemp;
     for(uint32_t i = 0; i < HLIT; i++)
         blTemp.push_back(bl[i]);
     
@@ -523,10 +515,10 @@ DecodeTreesResult ZLIBDecompressor::DecodeTrees(BitReader* reader)
     result.literalLengthTree = BitListToTree(&blTemp, &alphaTemp);
 
     // Reset lists for re-use
-    blTemp.Clear();
-    alphaTemp.Clear();
+    blTemp.clear();
+    alphaTemp.clear();
 
-    for(int i = HLIT; i < bl.size(); i++)
+    for(int i = HLIT; i < bl.Size(); i++)
         blTemp.push_back(bl[i]);
     
     for(int i = 0; i < 30; i++)
@@ -538,25 +530,24 @@ DecodeTreesResult ZLIBDecompressor::DecodeTrees(BitReader* reader)
     // And exit function
     return result;
 }
-void ZLIBDecompressor::InflateBlockDynamic(BitReader* reader, PNGBuffer* target)
+void ZLIBDecompressor::InflateBlockDynamic(BitReader* reader, Vector<uint8_t>* target)
 {
     DecodeTreesResult ret = ZLIBDecompressor::DecodeTrees(reader);
-    //printBT(ret.literalLengthTree->root);
-    //printBT(ret.distanceTree->root);
+
     InflateBlockData(reader, ret.literalLengthTree, ret.distanceTree, target);
     delete ret.literalLengthTree;
     delete ret.distanceTree;
 }
 
-void ZLIBDecompressor::InflateBlockStatic(BitReader* reader, PNGBuffer* target)
+void ZLIBDecompressor::InflateBlockStatic(BitReader* reader, Vector<uint8_t>* target)
 {
     static HuffmanTree* literalLengthTree = 0;
     static HuffmanTree* distanceTree = 0;
 
     if(literalLengthTree == 0) {
-        List<uint32_t> bl1;
+        Vector<uint32_t> bl1;
         
-        List<uint8_t> alphaTemp;
+        Vector<uint8_t> alphaTemp;
         for(int i = 0; i < 286; i++)
             alphaTemp.push_back(i);
 
@@ -570,17 +561,15 @@ void ZLIBDecompressor::InflateBlockStatic(BitReader* reader, PNGBuffer* target)
             bl1.push_back(8);
         
         literalLengthTree = BitListToTree(&bl1, &alphaTemp);
-        //printBT(literalLengthTree->root);
 
-        bl1.Clear();
-        alphaTemp.Clear();
+        bl1.clear();
+        alphaTemp.clear();
         for(int i = 0; i < 30; i++) {
             bl1.push_back(5);
             alphaTemp.push_back(i);
         }
 
         distanceTree = BitListToTree(&bl1, &alphaTemp);
-        //printBT(distanceTree->root);
     }
 
     ZLIBDecompressor::InflateBlockData(reader, literalLengthTree, distanceTree, target);

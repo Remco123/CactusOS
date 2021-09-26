@@ -5,13 +5,12 @@
 #include <bitreader.h>
 #include <list.h>
 #include <string.h>
+#include <vector.h>
 
 namespace LIBCactusOS
 {
     namespace Imaging
     {
-        #define ZLIB_BUFFER_SIZE 10_MB
-
         struct PNGChunk
         {
             uint32_t length;
@@ -30,33 +29,6 @@ namespace LIBCactusOS
             uint8_t filter;
             uint8_t interlace;
         } __attribute__((packed));
-
-        class PNGBuffer
-        {
-        public:
-            uint32_t index = 0;
-        public:
-            uint8_t* buffer = 0;
-            PNGBuffer(uint32_t size)
-            {
-                buffer = new uint8_t[size];
-                memset(buffer, 0, size);
-            }
-            ~PNGBuffer() { }
-
-            void Add(uint8_t byte)
-            {
-                buffer[index++] = byte;
-            }
-            uint8_t Get(uint32_t i)
-            {
-                return buffer[i];
-            }
-            uint32_t Size()
-            {
-                return index;
-            }
-        };
 
         class PNGDecoder
         {
@@ -90,12 +62,23 @@ namespace LIBCactusOS
         };
         class HuffmanTree
         {
+        private:
+            void DeleteNode(HuffmanNode* node)
+            {
+                if(node->left) DeleteNode(node->left);
+                if(node->right) DeleteNode(node->right);
+                delete node;
+            }
         public:
             HuffmanNode* root = 0;
 
             HuffmanTree()
             {
                 this->root = new HuffmanNode();
+            }
+            ~HuffmanTree()
+            {
+                this->DeleteNode(this->root);
             }
             void Insert(uint32_t codeWord, uint32_t n, uint32_t symbol)
             {
@@ -134,28 +117,28 @@ namespace LIBCactusOS
         {
         private:
             // Reads data from a non compression block
-            static void InflateBlockNoCompression(BitReader* reader, PNGBuffer* target);
+            static void InflateBlockNoCompression(BitReader* reader, Vector<uint8_t>* target);
             
             // Reads data from dynamic block
-            static void InflateBlockDynamic(BitReader* reader, PNGBuffer* target);
+            static void InflateBlockDynamic(BitReader* reader, Vector<uint8_t>* target);
 
             // Reads data from static block
-            static void InflateBlockStatic(BitReader* reader, PNGBuffer* target);
+            static void InflateBlockStatic(BitReader* reader, Vector<uint8_t>* target);
 
             // Decodes one symbol from bitstream using a HuffmanTree
             static uint32_t DecodeSymbol(BitReader* reader, HuffmanTree* tree);
 
-            static void InflateBlockData(BitReader* reader, HuffmanTree* literalLengthTree, HuffmanTree* distanceTree, PNGBuffer* target);
+            static void InflateBlockData(BitReader* reader, HuffmanTree* literalLengthTree, HuffmanTree* distanceTree, Vector<uint8_t>* target);
 
-            static HuffmanTree* BitListToTree(List<uint32_t>* bitList, List<uint8_t>* alphabet);
+            static HuffmanTree* BitListToTree(Vector<uint32_t>* bitList, Vector<uint8_t>* alphabet);
         
             static DecodeTreesResult DecodeTrees(BitReader* reader);
         public:
             // Perform decompression on input and return the complete set of data
-            static uint8_t* Decompress(uint8_t* input, uint32_t* lenOut = 0);
+            static Vector<uint8_t>* Decompress(uint8_t* input);
 
             // Perform the actual inflation of the DEFLATE block
-            static uint8_t* Inflate(BitReader* reader, uint32_t* lenOut = 0);
+            static Vector<uint8_t>* Inflate(BitReader* reader);
         };
     }
 }

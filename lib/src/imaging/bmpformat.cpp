@@ -26,13 +26,13 @@ Image Imaging::ConvertBMP(const char* filepath)
     }
 
     Print("[BMP] Error processing file %s\n", filepath);
-    return Image(0, 0);
+    return Image::Zero();
 }
 
 Image Imaging::ConvertBMPRaw(const uint8_t* rawData)
 {
     const uint8_t* realBuffPtr = rawData;
-    Image errorImage(0, 0);
+    Image errorImage = Image::Zero();
 
     BMPFileHeader* fileHeader = (BMPFileHeader*)rawData;
     if(fileHeader->fileType != 0x4D42)
