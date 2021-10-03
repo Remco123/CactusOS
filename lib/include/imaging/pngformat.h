@@ -39,10 +39,10 @@ namespace LIBCactusOS
             static uint8_t Recon_c(uint8_t* recon, uint32_t stride, uint32_t r, uint32_t c);
         public:
             // Convert image file into image buffer
-            static Image Convert(const char* filepath);
+            static Image* Convert(const char* filepath);
 
             // Create image from array of bytes in png format
-            static Image ConvertRAW(const uint8_t* rawData);
+            static Image* ConvertRAW(const uint8_t* rawData);
         };
 
         // Represents a single node in the huffman tree

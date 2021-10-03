@@ -35,12 +35,17 @@ void DesktopItem::DrawToContext()
 {
     if(this->iconBuffer)
     {
-        Image img = PNGDecoder::ConvertRAW(this->iconBuffer);
-        for(int x = 0; x < img.GetWidth(); x++)
-            for(int y = 0; y < img.GetHeight(); y++) {
-                uint32_t argb = img[y * img.GetWidth() + x];
-                this->context->canvas->SetPixel(x, y, argb);
-            }
+        Image* img = PNGDecoder::ConvertRAW(this->iconBuffer);
+        if(img) {
+            uint32_t* src = img->GetBufferPtr();
+            for(int x = 0; x < img->GetWidth(); x++)
+                for(int y = 0; y < img->GetHeight(); y++) {
+                    uint32_t argb = src[y * img->GetWidth() + x];
+                    this->context->canvas->SetPixel(x, y, argb);
+                }
+        }
+        else
+            this->context->canvas->Clear(Colors::Black);
     }
     if(this->drawLabel) {
         this->context->canvas->DrawRect(0xFF000000, 0, height-20, width-1, 20-1);

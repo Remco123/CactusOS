@@ -20,8 +20,7 @@ using namespace LIBCactusOS::Imaging;
 extern uint8_t ConvertKeycode(KeypressPacket* packet); //In scancodes.cpp
 
 Compositor::Compositor()
-: backgroundImage(0, 0) // Make background image 0x0 at the start, it must have a initializer.
-, dirtyRectList()
+: dirtyRectList()
 {
     GUI::SetDefaultFont();
     
@@ -43,14 +42,22 @@ Compositor::Compositor()
     this->backBufferCanvas = new Canvas(backBuffer, GUI::Width, GUI::Height);
 
     DirectGUI::DrawString("Loading Background from disk....", 3, 3, 0xFF000000);
-    Image orgBackground = Image::CreateFromFile("B:\\wallpap.jpg");
+    Image* orgBackground = Image::CreateFromFile("B:\\wallpap.jpg");
 
     DirectGUI::DrawString("Resizing Background...", 3, 16, 0xFF000000);
     this->backgroundImage = Image::Resize(orgBackground, GUI::Width, GUI::Height, Bilinear);
+    if(this->backgroundImage == 0) // Error with loading background
+    {
+        Print("[Compositor] Creating custom background\n");
+        this->backgroundImage = new Image(GUI::Width, GUI::Height);
+        this->backgroundImage->GetCanvas()->Clear(COMPOSITOR_DEFAULT_BACKGROUND);
+
+        if(orgBackground) delete orgBackground;
+    }
     
     // Point buffer and canvas to this resized image we use as the background
-    this->backgroundBuffer = (uint8_t*)(this->backgroundImage.GetBufferPtr());
-    this->backgroundCanvas = this->backgroundImage.GetCanvas();
+    this->backgroundBuffer = (uint8_t*)(this->backgroundImage->GetBufferPtr());
+    this->backgroundCanvas = this->backgroundImage->GetCanvas();
 
     // Copy background to backbuffer, otherwise it contains noise at the start
     memcpy(this->backBuffer, this->backgroundBuffer, GUI::Width*GUI::Height*4);

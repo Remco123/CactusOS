@@ -9,7 +9,7 @@ namespace LIBCactusOS
     namespace Imaging
     {
         // Enable alpha for bilinear image scaling or not?
-        #define BILINEAR_ALPHA 0
+        #define BILINEAR_ALPHA 1
 
         enum ResizeMethod
         {
@@ -47,25 +47,14 @@ namespace LIBCactusOS
             // Draw this image directly to a canvas
             void DrawTo(Canvas* target, int x = 0, int y = 0);
 
-            // Array Operator
-            uint32_t& operator [] (const uint32_t i)
-            {
-                return buffer[i];
-            }
-
             // Create image from a file present on disk
-            static Image CreateFromFile(const char* filepath, const char* ext = 0);
+            static Image* CreateFromFile(const char* filepath, const char* ext = 0);
 
             // Resize source image and return result
-            static Image Resize(Image source, int newWidth, int newHeight, ResizeMethod method = NearestNeighbor);
-
-            // Returns a image of 0 size
-            static Image Zero(){
-                return Image(0, 0);
-            }
+            static Image* Resize(Image* source, int newWidth, int newHeight, ResizeMethod method = NearestNeighbor);
         private:
-            static Image ResizeNearestNeighbor(Image source, int newWidth, int newHeight);
-            static Image ResizeBilinear(Image source, int newWidth, int newHeight);
+            static Image* ResizeNearestNeighbor(Image* source, int newWidth, int newHeight);
+            static Image* ResizeBilinear(Image* source, int newWidth, int newHeight);
         };
     }
 }

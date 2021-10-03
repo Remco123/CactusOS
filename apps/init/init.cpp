@@ -35,8 +35,9 @@ int main(int argc, char** argv)
     bar->SetValue(0);
 
     Log(Info, "Loading Boot Logo");
-    Image logo = Image::CreateFromFile(path);
-    logo.DrawTo(DirectGUI::GetCanvas(), GUI::Width / 2 - logo.GetWidth()/2, GUI::Height / 2 - logo.GetHeight()/2);
+    Image* logo = Image::CreateFromFile(path);
+    if(logo)
+        logo->DrawTo(DirectGUI::GetCanvas(), GUI::Width / 2 - logo->GetWidth()/2, GUI::Height / 2 - logo->GetHeight()/2);
 
     bar->SetValue(70);
 

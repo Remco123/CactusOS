@@ -87,7 +87,7 @@ void printBT(const HuffmanNode* node)
     printBT("", node, false);    
 }
 
-Image PNGDecoder::Convert(const char* filepath)
+Image* PNGDecoder::Convert(const char* filepath)
 {
     Print("[PNG] Converting image file %s\n", filepath);
 
@@ -99,28 +99,27 @@ Image PNGDecoder::Convert(const char* filepath)
             uint8_t* fileBuf = new uint8_t[fileSize];
             ReadFile((char*)filepath, fileBuf);
             
-            Image result = ConvertRAW(fileBuf);
+            Image* result = ConvertRAW(fileBuf);
             delete fileBuf;
             return result;
         }
     }
 
     Print("[PNG] Error processing file %s\n", filepath);
-    return Image::Zero();
+    return 0;
 }
 
-Image PNGDecoder::ConvertRAW(const uint8_t* rawData)
+Image* PNGDecoder::ConvertRAW(const uint8_t* rawData)
 {
     const uint8_t signature[8] = { 137, 80, 78, 71, 13, 10, 26, 10 };
 
-    Image errorImage = Image::Zero();
     IHDRChunk* ihdr = 0;
     List<uint8_t*> imgDataPtrs;
     List<uint32_t> imgDataLens;
     uint8_t* dataPtr = (uint8_t*)rawData;
 
     if(memcmp(dataPtr, signature, 8) != 0)
-        return errorImage;
+        return 0;
 
     // Move past the signature
     dataPtr += 8;
@@ -142,25 +141,25 @@ Image PNGDecoder::ConvertRAW(const uint8_t* rawData)
             // Perform some sanity checking
             if(ihdr->compression != 0) {
                 Log(Error, "[PNG] Compression method is not 0, can not parse this image");
-                return errorImage;
+                return 0;
             }
             if(ihdr->filter != 0) {
                 Log(Error, "[PNG] Filter method is not 0, can not parse this image");
-                return errorImage;
+                return 0;
             }
 
             // Check if we can read this type of image file
             if(ihdr->colorType != 6) {
                 Log(Error, "[PNG] Color type is not 6, can not parse this image");
-                return errorImage;
+                return 0;
             }
             if(ihdr->bits != 8) {
                 Log(Error, "[PNG] Bits is not 8, can not parse this image");
-                return errorImage;
+                return 0;
             }
             if(ihdr->interlace != 0) {
                 Log(Error, "[PNG] Interlace method is not 0, can not parse this image");
-                return errorImage;
+                return 0;
             }
         }
         else if(memcmp(chunk->type, "IDAT", 4) == 0) {
@@ -200,8 +199,8 @@ Image PNGDecoder::ConvertRAW(const uint8_t* rawData)
     delete IDAT;
 
     // Create resulting image
-    Image result = Image(ihdr->width, ihdr->height);
-    uint8_t* recon = (uint8_t*)result.GetBufferPtr();
+    Image* result = new Image(ihdr->width, ihdr->height);
+    uint8_t* recon = (uint8_t*)result->GetBufferPtr();
     uint32_t reconIndex = 0;
     uint32_t stride = ihdr->width * BYTES_PER_PIXEL;
 
@@ -233,7 +232,7 @@ Image PNGDecoder::ConvertRAW(const uint8_t* rawData)
     }
 
     // Convert to right pixel format
-    for(uint32_t i = 0; i < (result.GetHeight() * stride); i += 4)
+    for(uint32_t i = 0; i < (result->GetHeight() * stride); i += 4)
     {
         const uint8_t a = recon[i + 3];
         const uint8_t b = recon[i + 2];

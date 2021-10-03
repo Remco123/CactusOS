@@ -9,6 +9,8 @@
 #include "contextmanager.h"
 #include "debugger.h"
 
+#define COMPOSITOR_DEFAULT_BACKGROUND 0xFFBFFFD0
+
 class CompositorDebugger;
 
 // Main class of the compositor software
@@ -68,7 +70,7 @@ protected:
     /**
      * Image class of the background
     */
-    LIBCactusOS::Imaging::Image backgroundImage;
+    LIBCactusOS::Imaging::Image* backgroundImage = 0;
 
 #pragma endregion
 #pragma region Canvasses

@@ -39,9 +39,9 @@ namespace LIBCactusOS
         } __attribute__((packed));
 
         // Convert image file into image buffer
-        Image ConvertBMP(const char* filepath);
+        Image* ConvertBMP(const char* filepath);
         // Create image from array of bytes in bmp format
-        Image ConvertBMPRaw(const uint8_t* rawData);   
+        Image* ConvertBMPRaw(const uint8_t* rawData);   
     }
 }
 

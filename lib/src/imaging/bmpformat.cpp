@@ -7,7 +7,7 @@
 using namespace LIBCactusOS;
 using namespace LIBCactusOS::Imaging;
 
-Image Imaging::ConvertBMP(const char* filepath)
+Image* Imaging::ConvertBMP(const char* filepath)
 {
     Print("[BMP] Converting image file %s\n", filepath);
 
@@ -19,39 +19,38 @@ Image Imaging::ConvertBMP(const char* filepath)
             uint8_t* fileBuf = new uint8_t[fileSize];
             ReadFile((char*)filepath, fileBuf);
             
-            Image result = ConvertBMPRaw(fileBuf);
+            Image* result = ConvertBMPRaw(fileBuf);
             delete fileBuf;
             return result;
         }
     }
 
     Print("[BMP] Error processing file %s\n", filepath);
-    return Image::Zero();
+    return 0;
 }
 
-Image Imaging::ConvertBMPRaw(const uint8_t* rawData)
+Image* Imaging::ConvertBMPRaw(const uint8_t* rawData)
 {
     const uint8_t* realBuffPtr = rawData;
-    Image errorImage = Image::Zero();
 
     BMPFileHeader* fileHeader = (BMPFileHeader*)rawData;
     if(fileHeader->fileType != 0x4D42)
-        return errorImage;
+        return 0;
     
     rawData += sizeof(BMPFileHeader);
     BMPInfoHeader* infoHeader = (BMPInfoHeader*)rawData;
 
     if(infoHeader->BitCount != 24 || infoHeader->Compression != 0) {
         Log(Error, "[BMP] Image not supported");
-        return errorImage;
+        return 0;
     }
 
     // Jump to begin of pixel data
     rawData = (realBuffPtr + fileHeader->dataOffset);
 
     // Create result image
-    Image result = Image(infoHeader->Width, infoHeader->Height);
-    uint32_t* resultBuffer = result.GetBufferPtr();
+    Image* result = new Image(infoHeader->Width, infoHeader->Height);
+    uint32_t* resultBuffer = result->GetBufferPtr();
 
     // Copy data to result image
     int align = (infoHeader->Width * 3) % 4;
@@ -68,7 +67,7 @@ Image Imaging::ConvertBMPRaw(const uint8_t* rawData)
             uint32_t g = rawData[offset + 1];
             uint32_t r = rawData[offset + 2];
 
-            resultBuffer[y * infoHeader->Width + x] = 0xFF000000 | r << 16 | g << 8  | b;;
+            resultBuffer[y * infoHeader->Width + x] = 0xFF000000 | r << 16 | g << 8  | b;
         }
     }
 

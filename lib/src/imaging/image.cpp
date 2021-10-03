@@ -70,7 +70,7 @@ void Image::DrawTo(Canvas* target, int x, int y)
 // Static Functions
 //////////////////
 
-Image Image::CreateFromFile(const char* filepath, const char* ext)
+Image* Image::CreateFromFile(const char* filepath, const char* ext)
 {
     const char* extension = 0;
 
@@ -78,7 +78,7 @@ Image Image::CreateFromFile(const char* filepath, const char* ext)
         int i = str_IndexOf(filepath, '.');
         if(i == -1) {
             Print("Image path %s not valid\n", filepath);
-            return Image::Zero();
+            return 0;
         }
 
         // Create extension from filepath
@@ -107,18 +107,18 @@ Image Image::CreateFromFile(const char* filepath, const char* ext)
                 if (decoder->GetResult() != Jpeg::Decoder::OK)
                 {
                     Print("[JPEG] Error decoding the input file\n");
-                    return Image::Zero();
+                    return 0;
                 }
-                Image result = Image(decoder->GetWidth(), decoder->GetHeight());
+                Image* result = new Image(decoder->GetWidth(), decoder->GetHeight());
                 const uint8_t* data = decoder->GetImage();
-                Print("[JPEG] Conversion Succes! (%dx%d)\n", result.width, result.height);
+                Print("[JPEG] Conversion Succes! (%dx%d)\n", result->width, result->height);
 
                 // Move pixels to result image
-                for(uint32_t pixel = 0; pixel < (uint32_t)(result.width * result.height); pixel++) {
+                for(uint32_t pixel = 0; pixel < (uint32_t)(result->width * result->height); pixel++) {
                     const uint8_t r = data[pixel * 3];
                     const uint8_t g = data[pixel * 3 + 1];
                     const uint8_t b = data[pixel * 3 + 2];
-                    result.buffer[pixel] = 0xFF000000 | (r << 16) | (g << 8) | b;
+                    result->buffer[pixel] = 0xFF000000 | (r << 16) | (g << 8) | b;
                 }
                 
                 delete fileBuf;
@@ -133,13 +133,15 @@ Image Image::CreateFromFile(const char* filepath, const char* ext)
     else
         Print("Could not found a image converter for extension %s\n", extension);
     
-    return Image::Zero();
+    return 0;
 }
 
-Image Image::Resize(Image source, int newWidth, int newHeight, ResizeMethod method)
+Image* Image::Resize(Image* source, int newWidth, int newHeight, ResizeMethod method)
 {
-    if(source.width == newWidth && source.height == newHeight) // No change in resolution
-        return source; //TODO: Is this correct and logical? Or should we copy it?
+    if(source == 0) return 0;
+
+    if(source->width == newWidth && source->height == newHeight) // No change in resolution
+        return source;
     
     switch(method)
     {
@@ -155,33 +157,35 @@ Image Image::Resize(Image source, int newWidth, int newHeight, ResizeMethod meth
 // Resize Implementations
 ///////////
 // http://jankristanto.com/info/nearest-neighbor-interpolation-for-resize-image/
-Image Image::ResizeNearestNeighbor(Image source, int newWidth, int newHeight)
+Image* Image::ResizeNearestNeighbor(Image* source, int newWidth, int newHeight)
 {
-    Image result = Image(newWidth, newHeight);
-    uint32_t* src = (uint32_t*)source.GetBufferPtr();
-    uint32_t* dest = (uint32_t*)result.GetBufferPtr();
+    Image* result = new Image(newWidth, newHeight);
+    uint32_t* src = (uint32_t*)source->GetBufferPtr();
+    uint32_t* dest = (uint32_t*)result->GetBufferPtr();
 
-    double x_ratio = source.width / (double)newWidth;
-	double y_ratio = source.height / (double)newHeight;
+    double x_ratio = source->width / (double)newWidth;
+	double y_ratio = source->height / (double)newHeight;
 	double px, py;
 	for (int y = 0; y < newHeight; y++) {
 		for (int x = 0; x < newWidth; x++) {
 			px = Math::floor((double)x * x_ratio);
 			py = Math::floor((double)y * y_ratio);
-			dest[(y*newWidth) + x] = src[(uint32_t)((py*source.width) + px)];
+			dest[(y*newWidth) + x] = src[(uint32_t)((py*source->width) + px)];
 		}
 	}
     
     return result;
 }
 // http://tech-algorithm.com/articles/bilinear-image-scaling/
-Image Image::ResizeBilinear(Image source, int newWidth, int newHeight)
+Image* Image::ResizeBilinear(Image* source, int newWidth, int newHeight)
 {
-    Image result = Image(newWidth, newHeight);
+    Image* result = new Image(newWidth, newHeight);
+    uint8_t* src = (uint8_t*)source->GetBufferPtr();
+    uint8_t* dest = (uint8_t*)result->GetBufferPtr();
     int a, b, c, d, x, y, index;
 
-    float x_ratio = ((float)(source.width-1))/newWidth;
-    float y_ratio = ((float)(source.height-1))/newHeight;
+    float x_ratio = ((float)(source->width-1))/newWidth;
+    float y_ratio = ((float)(source->height-1))/newHeight;
 
     float x_diff, y_diff, blue, red, green;
     #if BILINEAR_ALPHA
@@ -195,12 +199,12 @@ Image Image::ResizeBilinear(Image source, int newWidth, int newHeight)
             y = (int)(y_ratio * i);
             x_diff = (x_ratio * j) - x;
             y_diff = (y_ratio * i) - y;
-            index = (y*source.width+x);   
+            index = (y*source->width+x);   
 
-            a = source[index];
-            b = source[index+1];
-            c = source[index+source.width];
-            d = source[index+source.width+1];
+            a = src[index];
+            b = src[index+1];
+            c = src[index+source->width];
+            d = src[index+source->width+1];
 
             // blue element
             // Yb = Ab(1-w)(1-h) + Bb(w)(1-h) + Cb(h)(1-w) + Db(wh)
@@ -221,13 +225,13 @@ Image Image::ResizeBilinear(Image source, int newWidth, int newHeight)
             alpha = ((a>>24)&0xff)*(1-x_diff)*(1-y_diff) + ((b>>24)&0xff)*(x_diff)*(1-y_diff) +
                     ((c>>24)&0xff)*(y_diff)*(1-x_diff)   + ((d>>24)&0xff)*(x_diff*y_diff);
 
-            result[offset++] = 
+            dest[offset++] = 
                     ((((int)alpha)<<24)&0xff000000) |
                     ((((int)red)<<16)&0xff0000) |
                     ((((int)green)<<8)&0xff00) |
                     ((int)blue);
             #else
-            result[offset++] = 
+            dest[offset++] = 
                     0xff000000 | // hardcode alpha
                     ((((int)red)<<16)&0xff0000) |
                     ((((int)green)<<8)&0xff00) |
