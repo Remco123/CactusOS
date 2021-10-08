@@ -41,3 +41,7 @@ void Button::OnMouseUp(int x_abs, int y_abs, uint8_t button)
     this->backColor = 0xFF190A39;
     Control::OnMouseUp(x_abs, y_abs, button);
 }
+void Button::OnMouseEnter(int prevX_abs, int prevY_abs, int newX_abs, int newY_abs)
+{ }
+void Button::OnMouseLeave(int prevX_abs, int prevY_abs, int newX_abs, int newY_abs)
+{ }

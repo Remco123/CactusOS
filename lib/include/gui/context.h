@@ -84,6 +84,10 @@ namespace LIBCactusOS
          * Called when contex is resized
         */
         void OnResize(Rectangle old);
+        /**
+         * Called when scroll wheel is used on context
+        */
+        void OnScroll(int32_t deltaZ, int x_abs, int y_abs);
     };
 }
 

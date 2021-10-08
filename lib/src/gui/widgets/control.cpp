@@ -102,14 +102,10 @@ void Control::OnMouseMove(int prevX_abs, int prevY_abs, int newX_abs, int newY_a
 }
 
 void Control::OnMouseEnter(int prevX_abs, int prevY_abs, int newX_abs, int newY_abs)
-{
-    this->backColor += 0xFFAA;
-}
+{ }
 
 void Control::OnMouseLeave(int prevX_abs, int prevY_abs, int newX_abs, int newY_abs)
-{
-    this->backColor -= 0xFFAA;
-}
+{ }
 
 void Control::OnKeyDown(uint8_t key, KEYPACKET_FLAGS modifiers)
 {
@@ -166,4 +162,13 @@ void Control::ForcePaint()
     Control* win = GUI::GetControlWindow(this);
     if(win)
         win->needsRepaint = true;
+}
+void Control::OnScroll(int32_t deltaZ, int x_abs, int y_abs)
+{
+    this->MouseScroll.Invoke(this, MouseScrollArgs(deltaZ, x_abs, y_abs));
+
+    // Send event to children if they are in bounds
+    for(Control* c : this->childs)
+        if(c->Contains(x_abs, y_abs))
+            c->OnScroll(deltaZ, x_abs - c->x, y_abs - c->y);
 }

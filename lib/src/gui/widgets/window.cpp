@@ -127,3 +127,9 @@ void Window::OnKeyDown(uint8_t key, KEYPACKET_FLAGS modifiers)
     if((key == 'W' || key == 'w') && (modifiers & LeftControl))
         this->Close();
 }
+void Window::OnScroll(int32_t deltaZ, int x_abs, int y_abs)
+{
+    // TODO: Create window fold event?
+
+    Control::OnScroll(deltaZ, x_abs, y_abs - this->titleBarHeight);
+}

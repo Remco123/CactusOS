@@ -140,6 +140,10 @@ namespace LIBCactusOS
          * Called when control is resized
         */
         virtual void OnResize(Rectangle old);
+        /**
+         * Called when there is a scroll event on control
+        */
+        virtual void OnScroll(int32_t deltaZ, int x_abs, int y_abs);
     };
 }
 

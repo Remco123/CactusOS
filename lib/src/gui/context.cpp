@@ -149,3 +149,12 @@ void Context::OnResize(Rectangle oldSize)
     Window->height = this->sharedContextInfo->height;
     Window->OnResize(oldSize);
 }
+void Context::OnScroll(int32_t deltaZ, int x_abs, int y_abs)
+{
+    this->MouseScroll.Invoke(this, MouseScrollArgs(deltaZ, x_abs, y_abs));
+    
+    if(this->Window == 0)
+        return;
+    
+    Window->OnScroll(deltaZ, x_abs, y_abs);
+}

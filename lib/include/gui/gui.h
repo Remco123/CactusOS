@@ -14,6 +14,7 @@ namespace LIBCactusOS
         MouseUp,
         MouseMove,
         Keypress,
+        MouseScroll,
     };
     
     // Communication to the compositor definitions

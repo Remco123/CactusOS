@@ -121,6 +121,19 @@ void GUI::ProcessEvents()
             }
         }
     }
+    else if(guiEventType == GUIEvents::MouseScroll)
+    {
+        for(int i = 0; i < contextList->size(); i++) {
+            Context* c = contextList->GetAt(i);
+            if(c->sharedContextInfo == 0)
+                continue;
+
+            if(c->sharedContextInfo->id == guiEvent.arg2) {
+                c->OnScroll(guiEvent.arg3, guiEvent.arg4 - c->sharedContextInfo->x, guiEvent.arg5 - c->sharedContextInfo->y);
+                break; // Quit loop
+            }
+        }
+    }
     /*
     else if(guiEventType == EVENT_TYPE_RESIZE)
     {

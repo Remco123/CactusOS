@@ -83,6 +83,10 @@ namespace LIBCactusOS
          * Called when key is held down
         */
         void OnKeyDown(uint8_t key, KEYPACKET_FLAGS modifiers) override;
+        /**
+         * Called when there is a scroll event on window
+        */
+        void OnScroll(int32_t deltaZ, int x_abs, int y_abs) override;
     };
 }
 

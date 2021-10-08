@@ -200,7 +200,7 @@ void PS2MouseDriver::ProcessPacket()
     System::systemInfo->MouseLeftButton = packet->LeftBTN;
     System::systemInfo->MouseMiddleButton = packet->MiddleBTN;
     System::systemInfo->MouseRightButton = packet->RightBTN;
-    System::systemInfo->MouseZ = (this->MouseID == 3 ? packet->ZMovement : 0);
+    System::systemInfo->MouseZ += (int8_t)(this->MouseID == 3 ? packet->ZMovement : 0);
 
     int newX = (System::systemInfo->MouseX + realX);
     if((newX >= 0) && (newX < (int)System::gfxDevice->width))

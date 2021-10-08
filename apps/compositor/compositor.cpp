@@ -291,6 +291,20 @@ void Compositor::ProcessEvents()
             c->AddDirtyArea(0, 0, c->width, c->height);
     }
 
+    // Mouse scroll wheel position has changed
+    if(this->curMouseZ != this->prevMouseZ)
+    {
+        // Calculate difference
+        int32_t delta = this->curMouseZ - this->prevMouseZ;
+
+        // Get context that is below the cursor
+        ContextInfo* info = this->contextManager->FindTargetContext(this->curMouseX, this->curMouseY);
+
+        // Send event to context
+        if(info)
+            IPCSend(info->clientID, IPCMessageType::GUIEvent, GUIEvents::MouseScroll, info->id, delta, this->curMouseX, this->curMouseY);
+    }
+
     // Update variables for next iteration
     this->prevMouseLeft     = mouseLeft;
     this->prevMouseMiddle   = mouseMiddle;

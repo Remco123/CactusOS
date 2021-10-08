@@ -28,6 +28,10 @@ public:
      * Mouse current Y position
     */
     int32_t curMouseY = -1;
+    /**
+     * Mouse current Z position
+    */
+    int32_t curMouseZ = -1;
 
     /**
      * The previous X position of the mouse
@@ -37,6 +41,10 @@ public:
      * The previous Y position of the mouse
     */
     int32_t prevMouseY = -1;
+    /**
+     * The previous Z position of the mouse
+    */
+    int32_t prevMouseZ = -1;
 
 protected:
     /**

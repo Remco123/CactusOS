@@ -163,6 +163,7 @@ namespace LIBCactusOS
     CREATE_ARGUMENT_CLASS4(MouseMoveArgs, int, prevX, int, prevY, int, newX, int, newY)
     CREATE_ARGUMENT_CLASS3(MouseButtonArgs, int, x, int, y, int, button)
     CREATE_ARGUMENT_CLASS2(KeypressArgs, uint8_t, key, KEYPACKET_FLAGS, modifiers)
+    CREATE_ARGUMENT_CLASS3(MouseScrollArgs, int, delta, int, x, int, y);
 
     /**
      * An object that hosts multiple gui events
@@ -175,9 +176,10 @@ namespace LIBCactusOS
         EventHandlerList<MouseButtonArgs> MouseClick;
         EventHandlerList<KeypressArgs> KeyDown;
         EventHandlerList<KeypressArgs> KeyUp;
+        EventHandlerList<MouseScrollArgs> MouseScroll;
 
         EventObject()
-        : MouseDown(), MouseUp(), MouseClick(), KeyDown(), KeyUp()
+        : MouseDown(), MouseUp(), MouseClick(), KeyDown(), KeyUp(), MouseScroll()
         {        }
     };
 }

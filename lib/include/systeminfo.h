@@ -74,7 +74,7 @@ namespace LIBCactusOS
     {
         unsigned int MouseX;
         unsigned int MouseY;
-        signed char MouseZ;
+        signed int   MouseZ;
 
         bool MouseLeftButton;
         bool MouseRightButton;

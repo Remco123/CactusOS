@@ -16,6 +16,7 @@ int main(int argc, char** argv)
         // Update cursor position with the value stored in SysInfo
         mainCompositor->curMouseX = Process::systemInfo->MouseX;
         mainCompositor->curMouseY = Process::systemInfo->MouseY;
+        mainCompositor->curMouseZ = Process::systemInfo->MouseZ;
 
         ///////////////////////////
         // Process GUI Events
@@ -35,6 +36,7 @@ int main(int argc, char** argv)
         // Update cursor variables for next run
         mainCompositor->prevMouseX = mainCompositor->curMouseX;
         mainCompositor->prevMouseY = mainCompositor->curMouseY;
+        mainCompositor->prevMouseZ = mainCompositor->curMouseZ;
 
         // Switch processes after drawing desktop
         // It is useless to draw it like 30 times in a couple milliseconds.
