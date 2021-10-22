@@ -60,32 +60,60 @@ bool Control::Focused()
     return (this->parent != 0 && this->parent->focusedChild == this);
 }
 
+Rectangle Control::GetParentsBounds()
+{
+    if(this->parent == 0)
+        return Rectangle::Zero();
+    
+    Rectangle result;
+
+    // Get the dimensions of the parent window/control
+    Rectangle parentRect = *this->parent;
+    parentRect.x = 0;
+    parentRect.y = 0;
+    
+    // Check if the parent is a window, if so we need to take in account the title bar
+    // TODO: Make title bar a control itself??
+    if(this->parent == GUI::GetControlWindow(this)) {
+        parentRect.y += ((Window*)this->parent)->titleBarHeight;
+        parentRect.height -= ((Window*)this->parent)->titleBarHeight;
+    }
+
+    // Calculate intersection
+    if(parentRect.Intersect(*this, &result))
+        return result;
+    
+    return Rectangle::Zero();
+}
+
 void Control::OnMouseDown(int x_abs, int y_abs, uint8_t button)
 {
     this->MouseDown.Invoke(this, MouseButtonArgs(x_abs, y_abs, button));
 
-    //Send event to children
-    for(Control* c : this->childs)
+    // Send event to children
+    for(Control* c : this->childs) {
         if(c->Contains(x_abs, y_abs)) {
             this->focusedChild = c;
-            //Print("Foccused is now -> %x (%d,%d,%d,%d)\n", (uint32_t)c, c->width, c->height, c->x, c->y);
+            
             c->OnMouseDown(x_abs - c->x, y_abs - c->y, button);
         }
+    }
 }
 void Control::OnMouseUp(int x_abs, int y_abs, uint8_t button)
 {
     this->MouseUp.Invoke(this, MouseButtonArgs(x_abs, y_abs, button));
     this->MouseClick.Invoke(this, MouseButtonArgs(x_abs, y_abs, button));
 
-    //Send event to children
-    for(Control* c : this->childs)
-        if(c->Contains(x_abs, y_abs))
+    // Send event to children
+    for(Control* c : this->childs) {
+        if(c->Contains(x_abs, y_abs)) {
             c->OnMouseUp(x_abs - c->x, y_abs - c->y, button);
+        }
+    }
 }
 
 void Control::OnMouseMove(int prevX_abs, int prevY_abs, int newX_abs, int newY_abs)
 {
-    //Print("Control mouse move %d %d %d %d\n", prevX_abs, prevY_abs, newX_abs, newY_abs);
     for(Control* c : this->childs) {
         bool inNewArea = c->Contains(newX_abs, newY_abs);
         bool inOldArea = c->Contains(prevX_abs, prevY_abs);
@@ -156,9 +184,7 @@ void Control::OnResize(Rectangle old)
     }    
 }
 void Control::ForcePaint()
-{
-    //Log(Info, "Force paint of control!");
-    
+{    
     Control* win = GUI::GetControlWindow(this);
     if(win)
         win->needsRepaint = true;

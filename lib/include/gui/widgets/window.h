@@ -12,10 +12,10 @@ namespace LIBCactusOS
     
     class Window : public Control
     {
-    private:
+    public:
         GUIProperty<uint32_t> titleBarColor = GUIProperty<uint32_t>(this, 0xFF1E9AFF);
         GUIProperty<uint16_t> titleBarHeight = GUIProperty<uint16_t>(this, 30);
-
+    private:
         // Is the mouse down on the title bar?
         GUIProperty<bool> titleBarMouseDown = GUIProperty<bool>(this, false);
 

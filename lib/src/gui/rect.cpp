@@ -204,3 +204,7 @@ void Rectangle::PushToClipList(List<Rectangle>* targetList)
     //we just created
     targetList->push_back(*this);
 }
+Rectangle Rectangle::Zero()
+{
+    return Rectangle(0, 0, 0, 0);
+}

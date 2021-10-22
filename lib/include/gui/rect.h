@@ -71,6 +71,9 @@ namespace LIBCactusOS
         {
             return (this->width == right.width && this->height == right.height && this->x == right.x && this->y == right.y);
         }
+
+        // Return a rectangle of size 0, like Rectangle(0, 0, 0, 0)
+        static Rectangle Zero();
     };
 }
 

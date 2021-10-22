@@ -102,6 +102,9 @@ namespace LIBCactusOS
         // Force this control to be drawn aggain
         virtual void ForcePaint();
 
+        // Return the visual portion of this control in aspect with the parent
+        virtual Rectangle GetParentsBounds();
+
     /*/////////
     // Events called by parent or context
     *//////////
