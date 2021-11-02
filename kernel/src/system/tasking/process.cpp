@@ -112,9 +112,23 @@ Process* ProcessHelper::Create(char* fileName, char* arguments, bool isKernel)
     // Reset it otherwise the code will not be copied
     prgmHeader = (ElfProgramHeader*)(fileBuffer + header->e_phoff);
 
-    for(int i = 0; i < header->e_phnum; i++, prgmHeader++)
-        if(prgmHeader->p_type == 1) 
-            MemoryOperations::memcpy((void*)prgmHeader->p_vaddr, fileBuffer + prgmHeader->p_offset, prgmHeader->p_memsz);
+    // Load application by copying all loadable sections into memory
+    for(int i = 0; i < header->e_phnum; i++, prgmHeader++) {
+        //Log(Info, "[Process.Create] Program header type %d", prgmHeader->p_type);
+        if(prgmHeader->p_type == 1) {
+            //Log(Info, "[Process.Create] p_memsz = %d, p_filesz = %d", prgmHeader->p_memsz, prgmHeader->p_filesz);
+            
+            // First copy part that is actually present in file
+            MemoryOperations::memcpy((void*)prgmHeader->p_vaddr, fileBuffer + prgmHeader->p_offset, prgmHeader->p_filesz);
+
+            // Calculate remaning space (if there is some)
+            uint32_t rem = prgmHeader->p_memsz - prgmHeader->p_filesz;
+            uint32_t off = prgmHeader->p_filesz;
+
+            // And clear remaning memory if necessary
+            if(rem) MemoryOperations::memset((void*)(prgmHeader->p_vaddr + off), 0, rem);
+        }
+    }
 
     // Put information in PCB
     proc->id = currentPID++;
