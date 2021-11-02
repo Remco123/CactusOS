@@ -18,6 +18,7 @@ Slider* slider1 = 0;
 Slider* slider2 = 0;
 Slider* slider3 = 0;
 Slider* slider4 = 0;
+Button* trButton = 0;
 
 class DragControl : public Control
 {
@@ -48,8 +49,8 @@ public:
     }
     void DrawTo(Canvas* context, int x_abs, int y_abs) override
     {
-        Rectangle visual = this->GetParentsBounds();
-        // Print("Visual = (%d, %d)   :   Abs = (%d, %d)\n", visual.x, visual.y, x_abs, y_abs);
+        Rectangle visual = this->GetParentsBounds(x_abs, y_abs);
+        //Print("Visual = (%d, %d, %d, %d)   :   Abs = (%d, %d)\n", visual.x, visual.y, visual.width, visual.height, x_abs, y_abs);
         context->DrawFillRect(this->backColor, visual.x, visual.y, visual.width, visual.height);
         context->DrawRect(this->borderColor, visual.x, visual.y, visual.width, visual.height);
     }
@@ -58,6 +59,16 @@ public:
 void SliderChanged(void* sender, int newValue)
 {
     mainWindow->backColor = Colors::FromARGB(slider4->position, slider1->position, slider2->position, slider3->position);
+}
+
+void ButtonClick(void* sender, MouseButtonArgs args)
+{
+    static bool value = false;
+
+    mainWindow->contextBase->sharedContextInfo->supportsTransparency = value;
+    value = !value;
+    Print("Transparent = %d\n", value);
+    mainWindow->ForcePaint();
 }
 
 int main(int argc, char** argv)
@@ -95,11 +106,14 @@ int main(int argc, char** argv)
     slider4->OnValueChanged += SliderChanged;
     mainWindow->AddChild(slider4);
 
+    trButton = new Button("Transparent Toggle");
+    trButton->width = 200;
+    trButton->MouseClick += ButtonClick;
+    mainWindow->AddChild(trButton);
+
     DragControl* drag = new DragControl(150, 150, 50, 50);
     drag->backColor = Colors::Red;
     mainWindow->AddChild(drag);
-
-    mainWindow->contextBase->sharedContextInfo->supportsTransparency = true;
 
     SliderChanged(0, 0);
     while (GUI::HasItems()) {

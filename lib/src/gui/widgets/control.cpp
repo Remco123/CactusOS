@@ -24,13 +24,14 @@ Control::~Control()
 
 void Control::DrawTo(Canvas* context, int x_abs, int y_abs)
 {
+    Rectangle visual = Control::GetParentsBounds(x_abs, y_abs);
     if(this->cornerStyle == CornerStyle::Rounded) {
-        context->DrawFillRoundedRect(this->backColor, x_abs, y_abs, this->width, this->height, this->cornerRadius);
-        context->DrawRoundedRect(this->borderColor, x_abs, y_abs, this->width, this->height, this->cornerRadius);
+        context->DrawFillRoundedRect(this->backColor, visual.x, visual.y, visual.width, visual.height, this->cornerRadius);
+        context->DrawRoundedRect(this->borderColor, visual.x, visual.y, visual.width, visual.height, this->cornerRadius);
     }
     else if(this->cornerStyle == CornerStyle::Sharp) {
-        context->DrawFillRect(this->backColor, x_abs, y_abs, this->width, this->height);
-        context->DrawRect(this->borderColor, x_abs, y_abs, this->width, this->height);
+        context->DrawFillRect(this->backColor, visual.x, visual.y, visual.width, visual.height);
+        context->DrawRect(this->borderColor, visual.x, visual.y, visual.width, visual.height);
     }
 
     for(Control* c : this->childs)
@@ -60,12 +61,15 @@ bool Control::Focused()
     return (this->parent != 0 && this->parent->focusedChild == this);
 }
 
-Rectangle Control::GetParentsBounds()
+Rectangle Control::GetParentsBounds(int xOffset, int yOffset)
 {
     if(this->parent == 0)
         return Rectangle::Zero();
     
     Rectangle result;
+    Rectangle source = *this;
+    source.x = xOffset;
+    source.y = yOffset;
 
     // Get the dimensions of the parent window/control
     Rectangle parentRect = *this->parent;
@@ -76,11 +80,11 @@ Rectangle Control::GetParentsBounds()
     // TODO: Make title bar a control itself??
     if(this->parent == GUI::GetControlWindow(this)) {
         parentRect.y += ((Window*)this->parent)->titleBarHeight;
-        parentRect.height -= ((Window*)this->parent)->titleBarHeight;
+        parentRect.height -= ((Window*)this->parent)->titleBarHeight + 1;
     }
-
+    
     // Calculate intersection
-    if(parentRect.Intersect(*this, &result))
+    if(parentRect.Intersect(source, &result))
         return result;
     
     return Rectangle::Zero();

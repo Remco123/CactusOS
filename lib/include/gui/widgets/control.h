@@ -103,7 +103,7 @@ namespace LIBCactusOS
         virtual void ForcePaint();
 
         // Return the visual portion of this control in aspect with the parent
-        virtual Rectangle GetParentsBounds();
+        virtual Rectangle GetParentsBounds(int xOffset, int yOffset);
 
     /*/////////
     // Events called by parent or context

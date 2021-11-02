@@ -16,13 +16,17 @@ Button::Button(char* text)
 }
 void Button::DrawTo(Canvas* context, int x_abs, int y_abs)
 {
+    Rectangle visual = Control::GetParentsBounds(x_abs, y_abs);
+    if(visual.Area() == 0)
+        return; // No need to draw something if it isn't going to be visible anyway
+    
     if(this->cornerStyle == CornerStyle::Rounded) {
-        context->DrawFillRoundedRect(this->backColor, x_abs, y_abs, this->width, this->height, this->cornerRadius);
-        context->DrawRoundedRect(this->borderColor, x_abs, y_abs, this->width, this->height, this->cornerRadius);
+        context->DrawFillRoundedRect(this->backColor, visual.x, visual.y, visual.width, visual.height, this->cornerRadius);
+        context->DrawRoundedRect(this->borderColor, visual.x, visual.y, visual.width, visual.height, this->cornerRadius);
     }
     else if(this->cornerStyle == CornerStyle::Sharp) {
-        context->DrawFillRect(this->backColor, x_abs, y_abs, this->width, this->height);
-        context->DrawRect(this->borderColor, x_abs, y_abs, this->width, this->height);
+        context->DrawFillRect(this->backColor, visual.x, visual.y, visual.width, visual.height);
+        context->DrawRect(this->borderColor, visual.x, visual.y, visual.width, visual.height);
     }
 
     if(this->label != 0)

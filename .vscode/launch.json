@@ -46,7 +46,7 @@
                 {
                     "description": "Load additional app binary",
                     "ignoreFailures": true,
-                    "text": "add-symbol-file ${workspaceRoot}/isofiles/apps/compositor.bin 0x800000"
+                    "text": "add-symbol-file ${workspaceRoot}/isofiles/apps/${input:additionalApp} 0x800000"
                 }
             ]
         },
@@ -79,9 +79,26 @@
                 {
                     "description": "Load additional app binary",
                     "ignoreFailures": true,
-                    "text": "add-symbol-file ${workspaceRoot}/isofiles/apps/compositor.bin 0x800000"
+                    "text": "add-symbol-file ${workspaceRoot}/isofiles/apps/${input:additionalApp} 0x800000"
                 }
             ]
         }
-    ]
+    ],
+    "inputs": [{
+        "type": "pickString",
+        "id": "additionalApp",
+        "description": "Add an extra userspace app to debug",
+        "options": [
+            "browser.bin",
+            "calc.bin",
+            "clock.bin",
+            "compositor.bin",
+            "desktop.bin",
+            "init.bin",
+            "mines.bin",
+            "powermanager.bin",
+            "sysinfo.bin",
+            "terminal.bin"
+        ]
+    }]
 }

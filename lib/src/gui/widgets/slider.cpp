@@ -15,8 +15,12 @@ Slider::Slider(int min, int max, int current)
 
 void Slider::DrawTo(Canvas* context, int x_abs, int y_abs)
 {
-    context->DrawFillRect(this->backColor, x_abs, y_abs, this->width, this->height);
-    context->DrawRect(this->borderColor, x_abs, y_abs, this->width, this->height);
+    Rectangle visual = Control::GetParentsBounds(x_abs, y_abs);
+    if(visual.Area() == 0)
+        return; // No need to draw something if it isn't going to be visible anyway
+    
+    context->DrawFillRect(this->backColor, visual.x, visual.y, visual.width, visual.height);
+    context->DrawRect(this->borderColor, visual.x, visual.y, visual.width, visual.height);
     
     double percent = (double)position / (double)(this->maxValue - this->minValue);
     context->DrawFillCircle(this->knobColor, x_abs + (int)((double)this->width * percent), y_abs + this->height/2, this->knobSize);

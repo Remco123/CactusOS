@@ -172,7 +172,7 @@ void Canvas::DrawFillRect(uint32_t color, int x_start, int y_start, int width, i
 {
     for (int y = y_start; y < y_start + height; y++)
     {
-        DrawLine(color, x_start, y, x_start + width - 1, y);
+        DrawLine(color, x_start, y, x_start + width, y);
     }
 }
 void Canvas::DrawCircle(uint32_t color, int x, int y, int radius)
