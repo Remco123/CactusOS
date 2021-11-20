@@ -935,7 +935,7 @@ bool FAT::ModifyEntry(FATEntryInfo* entry, DirectoryEntry newVersion)
     // Overwrite old entry
     MemoryOperations::memcpy(entryPtr, &newVersion, sizeof(DirectoryEntry));
 
-    // And finaly write sector back to disk
+    // And finally write sector back to disk
     if(this->disk->WriteSector(this->StartLBA + entry->sector, this->readBuffer) != 0)
         return false;
 
@@ -960,9 +960,9 @@ uint16_t FAT::FatDate()
 
 
 
-List<char*>* FAT::DirectoryList(const char* path)
+List<LIBCactusOS::VFSEntry>* FAT::DirectoryList(const char* path)
 { 
-    List<char*>* ret = new List<char*>();
+    List<LIBCactusOS::VFSEntry>* ret = new List<LIBCactusOS::VFSEntry>();
     uint32_t parentCluster = this->rootDirCluster;
     bool rootdir = String::strlen(path) == 0;
 
@@ -977,7 +977,25 @@ List<char*>* FAT::DirectoryList(const char* path)
 
     List<FATEntryInfo> childs = GetDirectoryEntries(parentCluster, rootdir);
     for(FATEntryInfo item : childs) {
-        ret->push_back(item.filename);
+        // Create new entry and clear it to 0's
+        LIBCactusOS::VFSEntry entry;
+        MemoryOperations::memset(&entry, 0, sizeof(LIBCactusOS::VFSEntry));
+        
+        // Fill in the info
+        entry.size = item.entry.FileSize;
+        entry.isDir = item.entry.Attributes & ATTR_DIRECTORY;
+        entry.creationDate.day = item.entry.CreationDate & 0b11111;
+        entry.creationDate.month = (item.entry.CreationDate >> 5) & 0b1111;
+        entry.creationDate.year = ((item.entry.CreationDate >> 9) & 0b1111111) + 1980;
+
+        entry.creationTime.sec = (item.entry.CreationTime & 0b11111) * 2;
+        entry.creationTime.min = (item.entry.CreationTime >> 5) & 0b111111;
+        entry.creationTime.hour = (item.entry.CreationTime >> 11) & 0b11111;
+
+        int len = String::strlen(item.filename);
+        MemoryOperations::memcpy(entry.name, item.filename, len < VFS_NAME_LENGTH ? len : VFS_NAME_LENGTH);
+        
+        ret->push_back(entry);
     }
 
     return ret;

@@ -209,15 +209,12 @@ DirectoryRecord* ISO9660::GetEntry(const char* path)
     return 0;
 }
 
-List<char*>* ISO9660::DirectoryList(const char* path)
+List<LIBCactusOS::VFSEntry>* ISO9660::DirectoryList(const char* path)
 {
-    List<char*>* result = new List<char*>();
+    List<LIBCactusOS::VFSEntry>* result = new List<LIBCactusOS::VFSEntry>();
     DirectoryRecord* parent = String::strlen(path) > 0 ? GetEntry(path) : rootDirectory;
     if(parent == 0 || GetEntryType(parent) == Iso_File)
-    {
-        result->push_back("[Error]");
         return result;
-    }
 
     int Offset = ((parent == rootDirectory) ? parent->length : 0);
     int SectorOffset = 1;
@@ -240,9 +237,27 @@ List<char*>* ISO9660::DirectoryList(const char* path)
         else
             if(record->name[0] != '\0' && record->name[0] != '\1') //We ignore the . and .. directories
             {
-                char* entry = GetRecordName(record);
-                if(entry != 0)
+                char* entryName = GetRecordName(record);
+                if(entryName != 0) {
+                    LIBCactusOS::VFSEntry entry;
+                    MemoryOperations::memset(&entry, 0, sizeof(LIBCactusOS::VFSEntry));
+
+                    // Fill in the info
+                    entry.size = record->data_length;
+                    entry.isDir = (GetEntryType(record) == Iso_EntryType::Iso_Directory);
+                    entry.creationDate.day = record->datetime[2];
+                    entry.creationDate.month = record->datetime[1];
+                    entry.creationDate.year = record->datetime[0] + 1900;
+
+                    entry.creationTime.sec = record->datetime[5];
+                    entry.creationTime.min = record->datetime[5];
+                    entry.creationTime.hour = record->datetime[3];
+
+                    int len = String::strlen(entryName);
+                    MemoryOperations::memcpy(entry.name, entryName, len < VFS_NAME_LENGTH ? len : VFS_NAME_LENGTH);
+
                     result->push_back(entry);
+                }
             }
 
         Offset += record->length;

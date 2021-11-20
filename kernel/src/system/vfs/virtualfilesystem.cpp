@@ -58,7 +58,7 @@ uint32_t VirtualFileSystem::GetFileSize(const char* filename)
     Log(Error, "Virtual function called directly %s:%d", __FILE__, __LINE__);
     return -1;
 }
-List<char*>* VirtualFileSystem::DirectoryList(const char* path)
+List<LIBCactusOS::VFSEntry>* VirtualFileSystem::DirectoryList(const char* path)
 {
     Log(Error, "Virtual function called directly %s:%d", __FILE__, __LINE__);
     return 0;

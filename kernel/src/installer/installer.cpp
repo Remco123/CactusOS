@@ -361,21 +361,21 @@ void CopyFile(VirtualFileSystem* src, VirtualFileSystem* dest, char* path)
 void CopyDirectory(VirtualFileSystem* src, VirtualFileSystem* dest, char* path)
 {
     auto content = src->DirectoryList(path);
-    for(char* item : *content)
+    for(LIBCactusOS::VFSEntry item : *content)
     {
         char itemPath[255];
         MemoryOperations::memset(itemPath, 0, 255);
 
         int i1 = String::strlen(path);
-        int i2 = String::strlen(item);
+        int i2 = String::strlen(item.name);
 
         if(i1 != 0) { // Not in the root directory
             MemoryOperations::memcpy(itemPath, path, i1);
             itemPath[i1] = '\\';
-            MemoryOperations::memcpy(itemPath + i1 + 1, item, i2);
+            MemoryOperations::memcpy(itemPath + i1 + 1, item.name, i2);
         }
         else
-            MemoryOperations::memcpy(itemPath + i1, item, i2);
+            MemoryOperations::memcpy(itemPath + i1, item.name, i2);
 
         if(src->FileExists(itemPath)) {
             if(String::strncmp(itemPath, "boot\\grub\\i386-pc\\", 17) == true) // We only need a couple of grub modules, not all from the liveCD
@@ -405,8 +405,6 @@ void CopyDirectory(VirtualFileSystem* src, VirtualFileSystem* dest, char* path)
         else {
             Installer::SetupError();
         }
-
-        delete item;
     }
 
     delete content;

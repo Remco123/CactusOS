@@ -37,23 +37,21 @@ bool LIBCactusOS::EjectDisk(char* path)
 {
     return (bool)DoSyscall(SYSCALL_EJECT_DISK, (uint32_t)path);
 }
-List<char*> LIBCactusOS::DirectoryListing(char* path)
+List<VFSEntry> LIBCactusOS::DirectoryListing(char* path)
 {
-    List<char*> result;
+    List<VFSEntry> result;
 
     int items = DoSyscall(SYSCALL_BEGIN_LISTING, DIRECTORY_LISTING, (uint32_t)path);
     if(items == -1)
         return result;
     
     for(int i = 0; i < items; i++) {
-        char* strBuf = new char[100];
-        int strLen = DoSyscall(SYSCALL_LISTING_ENTRY, DIRECTORY_LISTING, (uint32_t)i, (uint32_t)strBuf);
-        if(strLen == 0) {
-            delete strBuf;
-            return result; //End of items
-        }
+        VFSEntry entry;
+        int strLen = DoSyscall(SYSCALL_LISTING_ENTRY, DIRECTORY_LISTING, (uint32_t)i, (uint32_t)&entry);
+        if(strLen == 0)
+            return result; // End of items
 
-        result += strBuf;
+        result += entry;
     }
     DoSyscall(SYSCALL_END_LISTING, DIRECTORY_LISTING);
     return result;
@@ -68,8 +66,8 @@ List<DiskInfo> LIBCactusOS::DiskListing()
     
     for(int i = 0; i < items; i++) {
         DiskInfo buf;
-        int succes = DoSyscall(SYSCALL_LISTING_ENTRY, DISK_LISTING, (uint32_t)i, (uint32_t)&buf);
-        if(succes == 0) {
+        int success = DoSyscall(SYSCALL_LISTING_ENTRY, DISK_LISTING, (uint32_t)i, (uint32_t)&buf);
+        if(success == 0) {
             return result; //End of items
         }
 

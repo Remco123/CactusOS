@@ -76,11 +76,12 @@ int ExecCommand(char* cmd)
 {
     if(memcmp(cmd, "ls", 3) == 0)
     {
-        List<char*> items = DirectoryListing(workingDir);
-        for(char* item : items)
+        List<VFSEntry> items = DirectoryListing(workingDir);
+        for(VFSEntry item : items)
         {
-            termWindow->Write(item); termWindow->Write('\n');
-            delete item;
+            //termWindow->Write(item.isDir ? (char*)"DIR: " : (char*)"FILE: ");
+            termWindow->Write(item.name); termWindow->Write('\n');
+            //Print("[Terminal ls] File = %s Size = %d Date = %d:%d:%d Time = %d:%d:%d IsDir = %d\n", item.name, item.size, item.creationDate.year, item.creationDate.month, item.creationDate.day, item.creationTime.hour, item.creationTime.min, item.creationTime.sec, item.isDir);
         }
         return 0;
     }

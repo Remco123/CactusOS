@@ -63,11 +63,11 @@ void SliderChanged(void* sender, int newValue)
 
 void ButtonClick(void* sender, MouseButtonArgs args)
 {
-    static bool value = false;
+    static bool value = true;
 
     mainWindow->contextBase->sharedContextInfo->supportsTransparency = value;
     value = !value;
-    Print("Transparent = %d\n", value);
+
     mainWindow->ForcePaint();
 }
 

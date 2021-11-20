@@ -5,6 +5,7 @@
 #include <common/list.h>
 
 #include <system/disks/disk.h>
+#include <../../lib/include/shared.h>
 
 namespace CactusOS
 {
@@ -51,7 +52,7 @@ namespace CactusOS
             // Get size of specified file in bytes
             virtual uint32_t GetFileSize(const char* filename);
             // Returns list of context inside a directory
-            virtual List<char*>* DirectoryList(const char* path);
+            virtual List<LIBCactusOS::VFSEntry>* DirectoryList(const char* path);
         };
     }
 }

@@ -7,7 +7,7 @@ using namespace CactusOS::core;
 using namespace CactusOS::system;
 
 // List which holds the files in the current requested directory.
-List<char*>* currentDirectoryList = 0;
+List<LIBCactusOS::VFSEntry>* currentDirectoryList = 0;
 
 DirectoryListing::DirectoryListing()
 : ListingController() { }
@@ -41,18 +41,10 @@ int DirectoryListing::GetEntry(Thread* thread, int entry, uint32_t bufPtr)
 
     if(entry >= 0 && currentDirectoryList->size() > entry && buf != 0)
     {
-        char* str = currentDirectoryList->GetAt(entry);
-        int len = String::strlen(str);
+        LIBCactusOS::VFSEntry item = currentDirectoryList->GetAt(entry);
+        MemoryOperations::memcpy(buf, &item, sizeof(LIBCactusOS::VFSEntry));
 
-        if(len > (100-1))
-            return 0; //String is to large
-
-        MemoryOperations::memcpy(buf, str, len);
-        buf[len] = '\0';
-
-        delete str; //Free memory used by string
-
-        return len;
+        return 1;
     }
     
     // End of items

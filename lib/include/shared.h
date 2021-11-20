@@ -7,6 +7,8 @@
 
 namespace LIBCactusOS
 {
+    #define VFS_NAME_LENGTH 255
+
     // Holds data about a specific process, data is readonly
     struct ProcessInfo
     {
@@ -41,6 +43,27 @@ namespace LIBCactusOS
         // 2 -> Floppy
         // 3 -> CDROM
         uint8_t type;
+    };
+
+    // Info about a item represent on the disk
+    struct VFSEntry
+    {
+        uint32_t size;  // Size of the entry in bytes
+        bool isDir;     // Is this item a directory or not?
+        struct
+        {
+            uint8_t sec;
+            uint8_t min;
+            uint8_t hour;
+        } creationTime; // Time file was created
+        struct
+        {
+            uint8_t day;
+            uint8_t month;
+            uint16_t year;
+        } creationDate; // Date time was created
+        char name[VFS_NAME_LENGTH]; // Name of the file 
+        // TODO: Is there a better way for buffering this?
     };
 
     #define KEYPACKET_START 0xFF
