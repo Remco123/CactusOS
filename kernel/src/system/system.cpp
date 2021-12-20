@@ -33,6 +33,7 @@ KeyboardManager* System::keyboardManager = 0;
 Stream* System::ProcStandardOut = 0;
 List<ListingController*>* System::listings = 0;
 USBManager* System::usbManager = 0;
+SymbolDebugger* System::kernelDebugger = 0;
 #if BOCHS_GFX_HACK
 bool System::isBochs = false; //are we running inside bochs
 #endif
@@ -133,7 +134,7 @@ void System::Start()
         BootConsole::WriteLine(" [Not found]");
 
     Log(Info, "Starting Debugger");
-    KernelDebugger::Initialize();
+    System::kernelDebugger = new SymbolDebugger("B:\\debug.sym", true);
 
     Log(Info, "Starting Systemcalls");
     System::syscalls = new SystemCallHandler();

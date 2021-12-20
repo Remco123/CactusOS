@@ -28,9 +28,6 @@ namespace LIBCactusOS
     // Get list of files/directories in specified path
     List<VFSEntry> DirectoryListing(char* path);
 
-    // Get list of disks connected to system
-    List<DiskInfo> DiskListing();
-
     // Request to eject a specific disk (only works for CD's at the moment, TODO: usb as well?)
     bool EjectDisk(char* path);
 }

@@ -4,7 +4,7 @@
 #define BOCHS_GFX_HACK 0        // Enable or disable the bochs hack
 #define ENABLE_USB 1            // Enable USB-Stack
 #define ENABLE_MEMORY_CHECKS 1  // Enable the checking of memory on a specified interval
-#define ENABLE_ADV_DEBUG 1
+#define ENABLE_ADV_DEBUG 1      // Enable advanced debugging features
 
 #include <system/bootconsole.h>
 #include <system/components/systemcomponent.h>
@@ -111,6 +111,7 @@ namespace CactusOS
             static Stream* ProcStandardOut;
             static List<ListingController*>* listings;
             static USBManager* usbManager;
+            static SymbolDebugger* kernelDebugger;
             #if BOCHS_GFX_HACK
             static bool isBochs; //are we running inside bochs
             #endif

@@ -144,16 +144,17 @@ DirectoryRecord* ISO9660::SearchInDirectory(DirectoryRecord* searchIn, const cha
 
     while(true)
     {
-        if(Offset + sizeof(DirectoryRecord) > CDROM_SECTOR_SIZE) //We reached the end of the sector, so we need to read the next one
+        // TODO: there has to be a better way
+        if(CDROM_SECTOR_SIZE - Offset < (sizeof(DirectoryRecord) - sizeof(DirectoryRecord::name))) //We reached the end of the sector, so we need to read the next one
         {
-            Offset = 0; //Reset the offset in the sector
+            Offset = 0; // Reset the offset in the sector
             if(this->disk->ReadSector(searchIn->extent_location + SectorOffset, readBuffer) != 0)
                 return 0;
             SectorOffset++;
         }
 
         DirectoryRecord* record = (DirectoryRecord*)(readBuffer + Offset);
-        if(record->length == 0) //We reached the end of the entry's
+        if(record->length == 0) // We reached the end of the entry's
         {
             break;
         }

@@ -8,33 +8,26 @@ using namespace CactusOS::common;
 using namespace CactusOS::system;
 using namespace CactusOS::core;
 
-// Filename of the kernel symbol file
-const char* symbolFileName = "B:\\debug.sym";
-
-// Static initializers
-List<KernelSymbol_t> KernelDebugger::symbolTable = List<KernelSymbol_t>();
-char KernelDebugger::messageBuffer[200] = {};
-uint32_t KernelDebugger::pageAccessAddress = 0;
-
-void KernelDebugger::Initialize()
+SymbolDebugger::SymbolDebugger(char* symFile, bool kernel)
 {
-    MemoryOperations::memset(KernelDebugger::messageBuffer, 0, sizeof(KernelDebugger::messageBuffer));
+    MemoryOperations::memset(this->messageBuffer, 0, sizeof(this->messageBuffer));
+    this->isKernel = kernel;
 
     // Check if file even exists
-    if(System::vfs->FileExists(symbolFileName) == false) {
-        Log(Error, "Could not initialize debugger %s does not exist!", symbolFileName);
+    if(System::vfs->FileExists(symFile) == false) {
+        Log(Error, "Could not initialize debugger %s does not exist!", symFile);
         return;
     }
 
     // Get length and read file
-    uint32_t fileLen = System::vfs->GetFileSize(symbolFileName);
+    uint32_t fileLen = System::vfs->GetFileSize(symFile);
     if(fileLen == (uint32_t)-1)
         return; // Error while getting size
     
     // Create buffer
     uint8_t* fileBuffer = new uint8_t[fileLen];
-    if(System::vfs->ReadFile(symbolFileName, fileBuffer) != 0) {
-        Log(Error, "Could not read file: %s!", symbolFileName);
+    if(System::vfs->ReadFile(symFile, fileBuffer) != 0) {
+        Log(Error, "Could not read file: %s!", symFile);
 
         delete fileBuffer;
         return;
@@ -48,7 +41,7 @@ void KernelDebugger::Initialize()
         char* strPtr = (char*)(fileBuffer + dataOffset);
 
         // Create item
-        KernelSymbol_t item;
+        GenericSymbol_t item;
 
         // Get address
         strPtr[8] = '\0'; // Replace space with terminator temporarily
@@ -65,64 +58,66 @@ void KernelDebugger::Initialize()
         item.name[len-1] = '\0';
 
         dataOffset += len + 11;
-        KernelDebugger::symbolTable.push_back(item);
+        this->symbolTable.push_back(item);
     }
     delete fileBuffer;
 
-    Log(Info, "Debugger initialized with %d symbols", KernelDebugger::symbolTable.size());
+    Log(Info, "Debugger initialized with %d symbols for %s", this->symbolTable.size(), symFile);
 
 #if ENABLE_ADV_DEBUG
-    KernelDebugger::pageAccessAddress = (uint32_t)KernelHeap::alignedMalloc(PAGE_SIZE, PAGE_SIZE);
+    // allocate free page to use for debugging
+    this->pageAccessAddress = (uint32_t)KernelHeap::alignedMalloc(PAGE_SIZE, PAGE_SIZE);
+    if(this->isKernel) {
+        // Send message to external debugger that we are initalized and ready to receive commands
+        if(Serialport::Initialized && !System::gdbEnabled) {
+            Serialport::WriteStr("$DebugReady\n");
 
-    // Send message to external debugger that we are initalized and ready to receive commmands
-    if(Serialport::Initialized && !System::gdbEnabled) {
-        Serialport::WriteStr("$DebugReady\n");
+            // Send system general info
+            Serialport::WriteStr("$DebugSysSummary|");
+            Serialport::WriteStr(__DATE__ "  " __TIME__ "|");
 
-        // Send system general info
-        Serialport::WriteStr("$DebugSysSummary|");
-        Serialport::WriteStr(__DATE__ "  " __TIME__ "|");
+            // Info about system
+            Serialport::WriteStr(SystemInfoManager::system.manufacturer);
+            Serialport::WriteStr("|");
+            Serialport::WriteStr(SystemInfoManager::system.product);
+            Serialport::WriteStr("|");
+            Serialport::WriteStr(SystemInfoManager::system.version);
+            Serialport::WriteStr("|");
 
-        // Info about system
-        Serialport::WriteStr(SystemInfoManager::system.manufacturer);
-        Serialport::WriteStr("|");
-        Serialport::WriteStr(SystemInfoManager::system.product);
-        Serialport::WriteStr("|");
-        Serialport::WriteStr(SystemInfoManager::system.version);
-        Serialport::WriteStr("|");
+            // Info about bios
+            Serialport::WriteStr(SystemInfoManager::bios.vendor);
+            Serialport::WriteStr("|");
+            Serialport::WriteStr(SystemInfoManager::bios.version);
+            Serialport::WriteStr("|");
 
-        // Info about bios
-        Serialport::WriteStr(SystemInfoManager::bios.vendor);
-        Serialport::WriteStr("|");
-        Serialport::WriteStr(SystemInfoManager::bios.version);
-        Serialport::WriteStr("|");
+            // Info about memory
+            Serialport::WriteStr(Convert::IntToString32(PhysicalMemoryManager::AmountOfMemory()));
+            Serialport::WriteStr("\n"); // Terminate info
 
-        // Info about memory
-        Serialport::WriteStr(Convert::IntToString32(PhysicalMemoryManager::AmountOfMemory()));
-        Serialport::WriteStr("\n"); // Terminate info
-
-        //KernelDebugger::PrintPageTables();
+            //KernelDebugger::PrintPageTables();
+        }
     }
 #endif
 }
-const char* KernelDebugger::FindSymbol(uint32_t address, uint32_t* offset)
+const char* SymbolDebugger::FindSymbol(uint32_t address, uint32_t* offset)
 {    
-	KernelSymbol_t prevItem = KernelDebugger::symbolTable[0];
-	for (int i = 0; i < KernelDebugger::symbolTable.size(); i++)
+	GenericSymbol_t prevItem = this->symbolTable[0];
+	for (int i = 0; i < this->symbolTable.size(); i++)
 	{
         // Check if address is between this entry or the last one
         // Then the address belongs to this function
-		if (address >= prevItem.address && address <= KernelDebugger::symbolTable[i].address)
+		if (address >= prevItem.address && address <= this->symbolTable[i].address)
 		{
 			*offset = address - prevItem.address;
 			return prevItem.name;
 		}
-		prevItem = KernelDebugger::symbolTable[i];
+		prevItem = this->symbolTable[i];
 	}
 	return 0;
 }
-void KernelDebugger::Stacktrace(CPUState* esp)
+void SymbolDebugger::Stacktrace(CPUState* esp)
 {
-    if(KernelDebugger::symbolTable.size() == 0) {
+    if(this->symbolTable.size() == 0) {
         Log(Error, "Debugger symbols not loaded!");
         return;
     }
@@ -140,38 +135,39 @@ void KernelDebugger::Stacktrace(CPUState* esp)
 		frame = frame->next;
 	}
 }
-void KernelDebugger::Update()
+void SymbolDebugger::Update()
 {
-    static int index = 0;
-
+    if(this->isKernel == false) // Only kernel debugger has acces to serial
+        return;
+    
     while(Serialport::SerialReceiveReady()) {
         char c = Serialport::Read();
         if(c != '\n') {
-            messageBuffer[index++] = c;
+            messageBuffer[this->serialIndex++] = c;
         }
         else {
             // Terminate string
-            messageBuffer[index] = '\0';
+            messageBuffer[this->serialIndex] = '\0';
 
             // Prevent a task-switch from happening while excecuting a debug command
             System::scheduler->Enabled = false;
             
             // Handle command
-            KernelDebugger::HandleDebugCommand(index);
+            this->HandleDebugCommand(this->serialIndex);
 
             // And enable scheduler again
             System::scheduler->Enabled = true;
 
-            index = 0;
+            this->serialIndex = 0;
         }
     }
 }
-void KernelDebugger::HandleDebugCommand(int size)
+void SymbolDebugger::HandleDebugCommand(int size)
 {
     //Log(Info, "%s", messageBuffer);
     if (String::strncmp(messageBuffer, "ReqDebugUpdate", 14)) {
         // Update from kernel
-        KernelDebugger::SendUpdateToHost();
+        SymbolDebugger::SendUpdateToHost();
     }
     else if(String::strncmp(messageBuffer, "xp ", 3)) {
         // Physical memory dump
@@ -180,7 +176,7 @@ void KernelDebugger::HandleDebugCommand(int size)
         uint32_t address = args[1][1] == 'x' ? Convert::HexToInt(args[1] + 2) : Convert::StringToInt(args[1]);
         uint32_t size = args[2][1] == 'x' ? Convert::HexToInt(args[2] + 2) : Convert::StringToInt(args[2]);
 
-        KernelDebugger::PrintMemoryDump(address, size, false);
+        SymbolDebugger::PrintMemoryDump(address, size, false);
 
         for(char* c : args)
             delete c;
@@ -192,7 +188,7 @@ void KernelDebugger::HandleDebugCommand(int size)
         uint32_t address = args[1][1] == 'x' ? Convert::HexToInt(args[1] + 2) : Convert::StringToInt(args[1]);
         uint32_t size = args[2][1] == 'x' ? Convert::HexToInt(args[2] + 2) : Convert::StringToInt(args[2]);
 
-        KernelDebugger::PrintMemoryDump(address, size, true);
+        SymbolDebugger::PrintMemoryDump(address, size, true);
 
         for(char* c : args)
             delete c;
@@ -201,7 +197,7 @@ void KernelDebugger::HandleDebugCommand(int size)
         List<char*> args = String::Split(messageBuffer, ' ');
 
         // Page table dump
-        KernelDebugger::PrintPageTables(args.size() > 1 ? Convert::StringToInt(args[1]) : -1);
+        SymbolDebugger::PrintPageTables(args.size() > 1 ? Convert::StringToInt(args[1]) : -1);
 
         for(char* c : args)
             delete c;
@@ -210,8 +206,11 @@ void KernelDebugger::HandleDebugCommand(int size)
         Log(Error, "Unknown debug command %s", messageBuffer);
     }
 }
-void KernelDebugger::SendUpdateToHost()
+void SymbolDebugger::SendUpdateToHost()
 {
+    if(this->isKernel == false) // Only kernel debugger has acces to serial
+        return;
+    
     // Send update about host to debugger
     Serialport::WriteStr("$DebugUpdate|");
 
@@ -234,7 +233,7 @@ void KernelDebugger::SendUpdateToHost()
 
     Serialport::WriteStr("\n");
 }
-void KernelDebugger::PrintMemoryDump(uint32_t address, uint32_t size, bool virtMemory)
+void SymbolDebugger::PrintMemoryDump(uint32_t address, uint32_t size, bool virtMemory)
 {
     //Log(Info, "KernelDebugger::PrintMemoryDump(%x, %x, %d)", address, size, virtMemory);
 
@@ -259,7 +258,7 @@ void KernelDebugger::PrintMemoryDump(uint32_t address, uint32_t size, bool virtM
     {   
         // We have section at the start we need to print
         if(address % PAGE_SIZE != 0) {
-            uint32_t start = KernelDebugger::pageAccessAddress + (address % PAGE_SIZE);
+            uint32_t start = this->pageAccessAddress + (address % PAGE_SIZE);
             uint16_t firstBlockSize = PAGE_SIZE - (address % PAGE_SIZE);
             if(firstBlockSize > size)
                 firstBlockSize = size;
@@ -271,7 +270,7 @@ void KernelDebugger::PrintMemoryDump(uint32_t address, uint32_t size, bool virtM
             address = pageRoundDown(address);
 
             // Make sure we can access this physical block of memory
-            VirtualMemoryManager::mapVirtualToPhysical((void*)address, (void*)KernelDebugger::pageAccessAddress, true, false);
+            VirtualMemoryManager::mapVirtualToPhysical((void*)address, (void*)this->pageAccessAddress, true, false);
 
             uint8_t width = 0;
             for(uint32_t item = 0; item < firstBlockSize; item++) {
@@ -289,13 +288,13 @@ void KernelDebugger::PrintMemoryDump(uint32_t address, uint32_t size, bool virtM
         for(uint32_t x = address; x < address + size; x += PAGE_SIZE)
         {
             // Make sure we can access this physical block of memory
-            VirtualMemoryManager::mapVirtualToPhysical((void*)x, (void*)KernelDebugger::pageAccessAddress, true, false);
+            VirtualMemoryManager::mapVirtualToPhysical((void*)x, (void*)this->pageAccessAddress, true, false);
 
             uint16_t blockSize = (x - (address + size)) > PAGE_SIZE ? PAGE_SIZE : (x - (address + size));
 
             uint8_t width = 0;
             for(uint32_t item = 0; item < blockSize; item++) {
-                BootConsole::Write(Convert::IntToHexString((*(uint8_t*)(KernelDebugger::pageAccessAddress + item))));
+                BootConsole::Write(Convert::IntToHexString((*(uint8_t*)(this->pageAccessAddress + item))));
                 BootConsole::Write(" ");
                 
                 if (width++ > maxWidth) {
@@ -308,7 +307,7 @@ void KernelDebugger::PrintMemoryDump(uint32_t address, uint32_t size, bool virtM
     BootConsole::WriteLine();
     BootConsole::WriteLine("-----------------------------------");
 }
-void KernelDebugger::PrintPageTables(int pid)
+void SymbolDebugger::PrintPageTables(int pid)
 {
     uint32_t prevPageDir = VirtualMemoryManager::GetPageDirectoryAddress();
     if(pid != -1) {
@@ -332,7 +331,7 @@ void KernelDebugger::PrintPageTables(int pid)
         
         if(pdEntry.pageSize == FOUR_MB) {
             if(pdEntry.present) {
-                KernelDebugger::PrintPageItem(&pdEntry, true, pageDirIndex, 0);
+                this->PrintPageItem(&pdEntry, true, pageDirIndex, 0);
             }
         }
         else {
@@ -346,7 +345,7 @@ void KernelDebugger::PrintPageTables(int pid)
                     if(!ptEntry.present)
                         continue;
                     
-                    KernelDebugger::PrintPageItem(&ptEntry, false, pageDirIndex, pageTabIndex);
+                    this->PrintPageItem(&ptEntry, false, pageDirIndex, pageTabIndex);
                 }
             }
         }
@@ -357,7 +356,7 @@ void KernelDebugger::PrintPageTables(int pid)
     if(pid != -1)
         VirtualMemoryManager::SwitchPageDirectory(prevPageDir);
 }
-void KernelDebugger::PrintPageItem(void* item, bool table, uint16_t pdIndex, uint16_t ptIndex)
+void SymbolDebugger::PrintPageItem(void* item, bool table, uint16_t pdIndex, uint16_t ptIndex)
 {
     static uint32_t curChainSize = 0;
     static uint32_t curChainStart = 0;

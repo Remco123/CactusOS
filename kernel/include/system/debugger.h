@@ -9,13 +9,13 @@ namespace CactusOS
 {
     namespace system
     {
-        // Entry in a kernel symbol dump
+        // Entry in a symbol dump
         typedef struct
         {
             char*               name;
             common::uint32_t    address;
             char                type;
-        } KernelSymbol_t;
+        } GenericSymbol_t;
 
         // Entry in a stacktrace
         typedef struct StackFrame {
@@ -24,42 +24,45 @@ namespace CactusOS
         } __attribute__((packed)) StackFrame_t;
 
 
-        // A class that handles debugging of the kernel
-        // Stuff like monitoring and providing stacktraces
-        class KernelDebugger
+        // A debugging class that works of a file with symbol definitions
+        // Keeping this a class makes it possible to use this for userspace processes as well (if the symbol file is generated of course)
+        class SymbolDebugger
         {
         private:
-            // List of all known kernel symbols
-            static List<KernelSymbol_t> symbolTable;
+            // List of all known symbols
+            List<GenericSymbol_t> symbolTable;
 
             // Buffer to store debug commands
-            static char messageBuffer[200];
+            char messageBuffer[200] = {0};
 
             // Address which we can map to physical regions
-            static uint32_t pageAccessAddress;
+            uint32_t pageAccessAddress = 0;
 
-            static const char* FindSymbol(uint32_t address, uint32_t* offset);
+            bool isKernel = false;
+            int serialIndex = 0;
 
-            static void HandleDebugCommand(int size);
-            static void PrintPageItem(void* item, bool table, uint16_t pdIndex, uint16_t ptIndex);
+            const char* FindSymbol(uint32_t address, uint32_t* offset);
+
+            void HandleDebugCommand(int size);
+            void PrintPageItem(void* item, bool table, uint16_t pdIndex, uint16_t ptIndex);
         public:
             // Initialize debugger by loading symbol file from disk
-            static void Initialize();
+            SymbolDebugger(char* symFile, bool kernel = false);
 
             // Print a stacktrace to console of given cpu state
-            static void Stacktrace(core::CPUState* esp);
+            void Stacktrace(core::CPUState* esp);
             
             // Perform a update on statistics and send info to debugger via serial
-            static void Update();
+            void Update();
 
-            // Send a update on kernel stats to debugging host
-            static void SendUpdateToHost();
+            // Send a update on stats to debugging host
+            void SendUpdateToHost();
 
             // Print a memory dump to the console
-            static void PrintMemoryDump(uint32_t address, uint32_t size, bool virtMemory);
+            void PrintMemoryDump(uint32_t address, uint32_t size, bool virtMemory);
 
             // Print all page tables to the console
-            static void PrintPageTables(int pid = -1);
+            void PrintPageTables(int pid = -1);
         };
     }
 }

@@ -56,23 +56,3 @@ List<VFSEntry> LIBCactusOS::DirectoryListing(char* path)
     DoSyscall(SYSCALL_END_LISTING, DIRECTORY_LISTING);
     return result;
 }
-List<DiskInfo> LIBCactusOS::DiskListing()
-{
-    List<DiskInfo> result;
-
-    int items = DoSyscall(SYSCALL_BEGIN_LISTING, DISK_LISTING);
-    if(items == -1)
-        return result;
-    
-    for(int i = 0; i < items; i++) {
-        DiskInfo buf;
-        int success = DoSyscall(SYSCALL_LISTING_ENTRY, DISK_LISTING, (uint32_t)i, (uint32_t)&buf);
-        if(success == 0) {
-            return result; //End of items
-        }
-
-        result += buf;
-    }
-    DoSyscall(SYSCALL_END_LISTING, DISK_LISTING);
-    return result;
-}

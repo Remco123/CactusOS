@@ -11,6 +11,8 @@ namespace CactusOS
 {
     namespace system
     {
+        class SymbolDebugger;
+        
         enum ProcessState
         {
             Active
@@ -47,6 +49,9 @@ namespace CactusOS
 
             // For Debuging
             char fileName[32];
+
+            // Debugger assigned to this process
+            SymbolDebugger* symDebugger = 0;
         };
 
         class ProcessHelper

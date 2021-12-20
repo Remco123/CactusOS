@@ -1,10 +1,13 @@
+CONFIG = ../makefile.config
+include ${CONFIG}
+
 LIBINCLUDE := ../lib/include
 LIBDIR := ../lib
 LIBFILE := ../lib/libcactusos.a
 DEBUG := -g
 
-G++PARAMS := -m32 $(DEBUG) -I $(LIBINCLUDE) -O3 -msse2 -Wall -fno-omit-frame-pointer -fno-use-cxa-atexit -nostdlib -fno-builtin -fno-exceptions -fno-rtti -fno-leading-underscore -Wno-write-strings -fpermissive -Wno-unknown-pragmas
-GCCPARAMS := -m32 $(DEBUG) -I $(LIBINCLUDE) -O3 -msse2 -Wall -fno-omit-frame-pointer -nostdlib -fno-builtin -fleading-underscore -Wno-unknown-pragmas
+G++PARAMS := -m32 $(DEBUG) -I $(LIBINCLUDE) $(OPTIMIZE_FLAGS) -Wall -fno-omit-frame-pointer -fno-use-cxa-atexit -nostdlib -fno-builtin -fno-exceptions -fno-rtti -fno-leading-underscore -Wno-write-strings -fpermissive -Wno-unknown-pragmas
+GCCPARAMS := -m32 $(DEBUG) -I $(LIBINCLUDE) $(OPTIMIZE_FLAGS) -Wall -fno-omit-frame-pointer -nostdlib -fno-builtin -fleading-underscore -Wno-unknown-pragmas
 LDPARAMS := -m elf_i386
 
 APPS := $(shell find * -type d)
@@ -19,6 +22,7 @@ all: linker.ld $(LIBFILE) $(OBJFILES)
 	for app in $(APPS) ; do \
 		echo building $$app.bin to $(APPOUT)/$$app.bin; \
     	i686-elf-ld $(LDPARAMS) -T $< -o $(APPOUT)/$$app.bin $$app/*.o -L$(LIBDIR) --library=cactusos; \
+		nm -a $(APPOUT)/$$app.bin | sort -d > $(APPOUT)/$$app.sym; \
 	done
 
 clean:

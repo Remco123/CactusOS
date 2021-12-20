@@ -1,7 +1,10 @@
+CONFIG = ../makefile.config
+include ${CONFIG}
+
 INCLUDEDIRS := include
 DEBUG := -g
 
-GCCPARAMS := -m32 $(DEBUG) -I $(INCLUDEDIRS) -Wall -fno-omit-frame-pointer -O3 -msse2 -fno-use-cxa-atexit -nostdlib -fno-builtin -fno-exceptions -fno-rtti -fno-leading-underscore -Wno-write-strings -fpermissive -Wno-unknown-pragmas
+GCCPARAMS := -m32 $(DEBUG) -I $(INCLUDEDIRS) $(OPTIMIZE_FLAGS) -Wall -fno-omit-frame-pointer -fno-use-cxa-atexit -nostdlib -fno-builtin -fno-exceptions -fno-rtti -fno-leading-underscore -Wno-write-strings -fpermissive -Wno-unknown-pragmas
 ASPARAMS := --32
 
 SRCDIR := src

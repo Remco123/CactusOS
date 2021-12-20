@@ -32,14 +32,16 @@ namespace LIBCactusOS
     public:
         static void EnableFPU();
 
-        static int Abs(int v);
+        static long Abs(long v);
         static double fAbs(double x);
-        static int Sign(int v);
+        static long Sign(long v);
         static double sin(double x);
         static double cos(double x);
 
-        static int Max (int a, int b);
-        static int Min (int a, int b);
+        static long Max (long a, long b);
+        static long Min (long a, long b);
+        static long Constrain(long x, long a, long b);
+        static long Map(long x, long in_min, long in_max, long out_min, long out_max);
 
         static float fMod(float a, float b);
         static double floor(double x);

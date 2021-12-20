@@ -2,9 +2,8 @@
 #include <gui/gui.h>
 #include <gui/widgets/button.h>
 #include <gui/widgets/control.h>
+#include <gui/widgets/scrollbar.h>
 #include <gui/widgets/window.h>
-#include <gui/widgets/label.h>
-#include <gui/widgets/slider.h>
 #include <gui/directgui.h>
 #include <convert.h>
 #include <string.h>
@@ -14,61 +13,10 @@
 using namespace LIBCactusOS;
 
 Window* mainWindow = 0;
-Slider* slider1 = 0;
-Slider* slider2 = 0;
-Slider* slider3 = 0;
-Slider* slider4 = 0;
-Button* trButton = 0;
 
-class DragControl : public Control
+void ValueChanged(void* s, int v)
 {
-private:
-    bool mouseDown = false;
-    int mouseDownX = 0;
-    int mouseDownY = 0;
-public:
-    DragControl(int w, int h, int x = 0, int y = 0)
-    : Control(w,h,x,y) {}
-    void OnMouseDown(int x_abs, int y_abs, uint8_t button) override
-    {
-        this->mouseDown = true;
-        this->mouseDownX = x_abs;
-        this->mouseDownY = y_abs;
-    }
-    void OnMouseUp(int x_abs, int y_abs, uint8_t button) override
-    {
-        this->mouseDown = false;
-    }
-    void OnMouseMove(int prevX_abs, int prevY_abs, int newX_abs, int newY_abs) override
-    {
-        if(this->mouseDown) {
-            this->x = this->x + newX_abs - mouseDownX;
-            this->y = this->y + newY_abs - mouseDownY;
-            this->ForcePaint();
-        }
-    }
-    void DrawTo(Canvas* context, int x_abs, int y_abs) override
-    {
-        Rectangle visual = this->GetParentsBounds(x_abs, y_abs);
-        //Print("Visual = (%d, %d, %d, %d)   :   Abs = (%d, %d)\n", visual.x, visual.y, visual.width, visual.height, x_abs, y_abs);
-        context->DrawFillRect(this->backColor, visual.x, visual.y, visual.width, visual.height);
-        context->DrawRect(this->borderColor, visual.x, visual.y, visual.width, visual.height);
-    }
-};
-
-void SliderChanged(void* sender, int newValue)
-{
-    mainWindow->backColor = Colors::FromARGB(slider4->position, slider1->position, slider2->position, slider3->position);
-}
-
-void ButtonClick(void* sender, MouseButtonArgs args)
-{
-    static bool value = true;
-
-    mainWindow->contextBase->sharedContextInfo->supportsTransparency = value;
-    value = !value;
-
-    mainWindow->ForcePaint();
+    mainWindow->backColor = v * 1000;
 }
 
 int main(int argc, char** argv)
@@ -78,47 +26,20 @@ int main(int argc, char** argv)
     mainWindow = new Window(600, 600, 300, 300);
     mainWindow->titleString = "CactusOS File Browser";
 
-    slider1 = new Slider(0, 255, 255/2);
-    slider1->x = 100;
-    slider1->y = 100;
-    slider1->knobColor = Colors::Red;
-    slider1->OnValueChanged += SliderChanged;
-    mainWindow->AddChild(slider1);
+    ScrollBar* scroll = new ScrollBar(Vertical);
+    scroll->x = 100;
+    scroll->y = 200;
+    scroll->value.onChanged += ValueChanged;
+    mainWindow->AddChild(scroll);
 
-    slider2 = new Slider(0, 255, 255/2);
-    slider2->x = 100;
-    slider2->y = 200;
-    slider2->knobColor = Colors::Green;
-    slider2->OnValueChanged += SliderChanged;
-    mainWindow->AddChild(slider2);
-
-    slider3 = new Slider(0, 255, 255/2);
-    slider3->x = 100;
-    slider3->y = 300;
-    slider3->knobColor = Colors::Blue;
-    slider3->OnValueChanged += SliderChanged;
-    mainWindow->AddChild(slider3);
-
-    slider4 = new Slider(0, 255, 255/2);
-    slider4->x = 100;
-    slider4->y = 400;
-    slider4->knobColor = Colors::White;
-    slider4->OnValueChanged += SliderChanged;
-    mainWindow->AddChild(slider4);
-
-    trButton = new Button("Transparent Toggle");
-    trButton->width = 200;
-    trButton->MouseClick += ButtonClick;
-    mainWindow->AddChild(trButton);
-
-    DragControl* drag = new DragControl(150, 150, 50, 50);
-    drag->backColor = Colors::Red;
-    mainWindow->AddChild(drag);
-
-    SliderChanged(0, 0);
     while (GUI::HasItems()) {
         GUI::DrawGUI();
         GUI::ProcessEvents();
+        //scroll->value += 1;
+        if(scroll->value >= scroll->maxValue) {
+            scroll->value = 0;
+            scroll->maxValue += 20;
+        }
     }
 
     return 0;

@@ -94,11 +94,15 @@ Process* ProcessHelper::Create(char* fileName, char* arguments, bool isKernel)
     for(int i = 0; i < header->e_phnum; i++, prgmHeader++)
         if(prgmHeader->p_type == 1)
         {
-            //Allocate pages for section
-            for(uint32_t x = 0; x < prgmHeader->p_memsz; x+=PAGE_SIZE)
-                VirtualMemoryManager::AllocatePage(VirtualMemoryManager::GetPageForAddress(prgmHeader->p_vaddr + x, true, true, !isKernel), isKernel, true);
+            // Should the pages for section be read only or write as well?
+            // This way we can prevent that usercode modifies itself
+            bool rw = prgmHeader->p_flags & (1<<1);
 
-            //Store memory information about excecutable
+            // Allocate pages for section
+            for(uint32_t x = 0; x < prgmHeader->p_memsz; x+=PAGE_SIZE)
+                VirtualMemoryManager::AllocatePage(VirtualMemoryManager::GetPageForAddress(prgmHeader->p_vaddr + x, true, true, !isKernel), isKernel, rw);
+
+            // Store memory information about excecutable
 			if (prgmHeader->p_vaddr < proc->excecutable.memBase || proc->excecutable.memBase == 0) {
 				proc->excecutable.memBase = prgmHeader->p_vaddr;
 			}
@@ -170,6 +174,16 @@ Process* ProcessHelper::Create(char* fileName, char* arguments, bool isKernel)
     MemoryOperations::memcpy(proc->fileName, fileName, fileNameLen <= 32 ? fileNameLen : 32);
 
     InterruptDescriptorTable::EnableInterrupts();
+
+    // Assign debugger if demanded
+#if ENABLE_ADV_DEBUG
+    char* symbolFile = new char[fileNameLen+1];
+    MemoryOperations::memset(symbolFile, 0, fileNameLen);
+    MemoryOperations::memcpy(symbolFile, fileName, fileNameLen - 3);
+    MemoryOperations::memcpy(symbolFile + fileNameLen - 3, "sym", 4);
+    proc->symDebugger = new SymbolDebugger(symbolFile);
+    delete symbolFile;
+#endif
 
     Processes.push_back(proc); //Finally add it to all known processes
 

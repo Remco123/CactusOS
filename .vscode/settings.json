@@ -54,5 +54,8 @@
         "cinttypes": "cpp"
     },
     "C_Cpp.clang_format_fallbackStyle": "{ BasedOnStyle: WebKit, PointerAlignment: Left}",
-    "python.pythonPath": "/usr/bin/python3"
+    "python.pythonPath": "/usr/bin/python3",
+    "cSpell.words": [
+        "LIBCACTUSOS"
+    ]
 }

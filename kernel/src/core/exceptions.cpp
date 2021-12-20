@@ -7,7 +7,7 @@ using namespace CactusOS::common;
 using namespace CactusOS::core;
 using namespace CactusOS::system;
 
-//Should we try to automaticly fix pagefaults?
+// Should we try to automaticaly fix pagefaults?
 bool autoFixPagefaults = false;
 
 uint32_t Exceptions::DivideByZero(uint32_t esp)
@@ -19,8 +19,7 @@ uint32_t Exceptions::DivideByZero(uint32_t esp)
 
     BootConsole::WriteLine();
 
-    Log(Info, "---------- Stacktrace -----------");
-    KernelDebugger::Stacktrace((CPUState*)esp);
+    Exceptions::ShowStacktrace(esp);
     System::Panic();
     return esp; // We don't get here
 }
@@ -46,8 +45,7 @@ uint32_t Exceptions::GeneralProtectionFault(uint32_t esp)
     
     BootConsole::WriteLine();
 
-    Log(Info, "---------- Stacktrace -----------");
-    KernelDebugger::Stacktrace((CPUState*)esp);
+    Exceptions::ShowStacktrace(esp);
     System::Panic();
     return esp; // We don't get here
 }
@@ -108,8 +106,7 @@ uint32_t Exceptions::PageFault(uint32_t esp)
     }
     BootConsole::WriteLine();
 
-    Log(Info, "---------- Stacktrace -----------");
-    KernelDebugger::Stacktrace((CPUState*)esp);
+    Exceptions::ShowStacktrace(esp);
     System::Panic();
     return esp; // We don't get here
 }
@@ -134,8 +131,7 @@ uint32_t Exceptions::FloatingPointException(uint32_t esp)
 
     BootConsole::WriteLine();
 
-    Log(Info, "---------- Stacktrace -----------");
-    KernelDebugger::Stacktrace((CPUState*)esp);
+    Exceptions::ShowStacktrace(esp);
     System::Panic();
     return esp; // We don't get here
 }
@@ -158,8 +154,7 @@ uint32_t Exceptions::StackSegmentFault(uint32_t esp)
     InterruptDescriptorTable::DisableInterrupts();
     BootConsole::WriteLine();
 
-    Log(Info, "---------- Stacktrace -----------");
-    KernelDebugger::Stacktrace((CPUState*)esp);
+    Exceptions::ShowStacktrace(esp);
     System::Panic();
     return esp; // We don't get here
 }
@@ -199,4 +194,18 @@ void Exceptions::EnablePagefaultAutoFix()
 void Exceptions::DisablePagefaultAutoFix()
 {
     autoFixPagefaults = false;
+}
+
+void Exceptions::ShowStacktrace(common::uint32_t esp)
+{
+    Log(Info, "---------- Stacktrace -----------");
+    if(System::scheduler != 0 && System::scheduler->CurrentProcess() != 0) {
+        Process* curProc = System::scheduler->CurrentProcess();
+        #if ENABLE_ADV_DEBUG
+        if(curProc->symDebugger)
+            curProc->symDebugger->Stacktrace((CPUState*)esp);
+        #else
+        System::kernelDebugger->Stacktrace((CPUState*)esp);
+        #endif
+    }
 }

@@ -134,17 +134,21 @@ int ExecCommand(char* cmd)
         return 0;
     }
     else if(memcmp(cmd, "lv", 2) == 0) {
-        List<DiskInfo> items = DiskListing();
-        for(DiskInfo item : items) {
-            static char* diskTypes[] = {
+        static char* diskTypes[] = {
                 "HardDisk",
                 "USBDisk",
                 "Floppy",
                 "CDROM"
-            };
+        };
 
-            termWindow->Write(diskTypes[item.type]); termWindow->Write(" ["); termWindow->Write(Convert::IntToString((uint32_t)item.size / 1_MB)); termWindow->Write(" MB] -> ");
-            termWindow->Write(item.identifier); termWindow->Write('\n');
+        int diskCount = SystemInfo::Properties["disks"].size();
+        for(int i = 0; i < diskCount; i++) {
+            char* id = (char*)SystemInfo::Properties["disks"][i]["identifier"];
+            
+            termWindow->Write(diskTypes[(int)SystemInfo::Properties["disks"][i]["type"]]); termWindow->Write(" ["); termWindow->Write(Convert::IntToString((uint32_t)SystemInfo::Properties["disks"][i]["size"] / 1_MB)); termWindow->Write(" MB] -> ");
+            termWindow->Write(id); termWindow->Write('\n');
+
+            delete id;
         }
         return 0;
     }

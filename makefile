@@ -98,6 +98,7 @@ clean:
 	cd lib/ && $(MAKE) clean
 	cd apps/ && $(MAKE) clean
 	rm -rf isofiles/apps/*.bin
+	rm -rf isofiles/apps/*.sym
 
 qemu: CactusOS.iso
 	qemu-system-i386 -cdrom CactusOS.iso -serial stdio $(QEMUOPTIONS)

@@ -28,23 +28,6 @@ namespace LIBCactusOS
         char fileName[32];
     };
 
-    // Contains information about a disk device present on system
-    struct DiskInfo
-    {
-        // Disk identifier string
-        char identifier[100];
-
-        // Size of complete disk
-        uint64_t size;
-
-        // Type of disk
-        // 0 -> HardDisk
-        // 1 -> USBDisk
-        // 2 -> Floppy
-        // 3 -> CDROM
-        uint8_t type;
-    };
-
     // Info about a item represent on the disk
     struct VFSEntry
     {

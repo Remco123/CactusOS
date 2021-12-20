@@ -30,7 +30,7 @@ void Math::EnableFPU()
     setMXCSR(v);
 }
 
-int Math::Abs(int v)
+long Math::Abs(long v)
 {
     if(v == 0)
         return 0;
@@ -50,7 +50,7 @@ double Math::fAbs(double x)
         return x;
     return x;
 }
-int Math::Sign(int v)
+long Math::Sign(long v)
 {
     if(v < 0)
         return -1;
@@ -79,11 +79,24 @@ double Math::sin(double x)
 double Math::cos(double x) {
     return sin(x + MATH_PI / 2.0);
 }
-int Math::Max (int a, int b) {
+long Math::Max (long a, long b) {
   return (a < b) ? b : a;
 }
-int Math::Min(int a, int b) {
+long Math::Min(long a, long b) {
   return !(b < a) ? a : b;
+}
+long Math::Constrain(long x, long a, long b)
+{
+    if(x < a)
+        return a;
+    else if(b < x)
+        return b;
+    else
+        return x;
+}
+long Math::Map(long x, long in_min, long in_max, long out_min, long out_max)
+{
+    return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
 }
 float Math::fMod(float a, float b)
 {

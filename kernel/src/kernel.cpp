@@ -74,7 +74,7 @@ void IdleThread()
         // If we are sending messages over the serial port that don't go to gdb
         // We can send debug statistics to the debugging system
         if(Serialport::Initialized && !System::gdbEnabled) {
-            KernelDebugger::Update();
+            System::kernelDebugger->Update();
         }
 
         // Calculate system utilisation by measuring how much the idle process is active
